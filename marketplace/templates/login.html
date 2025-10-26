@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Login" %}{% endblock %}
+{% block content %}
+<h2>{% trans "Login" %}</h2>
+{% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+<form method="POST">
+  {% csrf_token %}
+  <label for="username">{% trans "Username" %}</label>
+  <input type="text" name="username" id="username" required>
+
+  <label for="password">{% trans "Password" %}</label>
+  <input type="password" name="password" id="password" required>
+
+  <button type="submit">{% trans "Login" %}</button>
+</form>
+<a href="{% url 'register' %}">{% trans "Register" %}</a>
+{% endblock %}

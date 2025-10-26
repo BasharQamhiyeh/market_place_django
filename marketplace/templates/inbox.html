@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<h2>{% trans "My Conversations" %}</h2>
+
+{% for convo in convos %}
+    <div style="margin-bottom:10px;">
+        <a href="{% url 'chat_room' convo.id %}">
+            {% trans "Conversation about" %} "{{ convo.item.title }}"
+            <br>
+            <small>
+            {% trans "With" %}:
+            {% if request.user == convo.buyer %}
+                {{ convo.seller.username }}
+            {% else %}
+                {{ convo.buyer.username }}
+            {% endif %}
+            </small>
+        </a>
+        <hr>
+    </div>
+{% empty %}
+<p>{% trans "No conversations yet." %}</p>
+{% endfor %}
+{% endblock %}

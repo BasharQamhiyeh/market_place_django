@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ category.name }} - Attributes</title>
+</head>
+<body>
+    <h2>Category: {{ category.name }}</h2>
+    <p>{{ category.description }}</p>
+
+    <hr>
+    <h3>Attributes</h3>
+    {% if attributes %}
+        <table border="1" cellpadding="6">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Options</th>
+                <th>Add Option</th>
+            </tr>
+            {% for attr in attributes %}
+            <tr>
+              <td>{{ attr }}</td>
+              <td>{{ attr.input_type }}</td>
+              <td>{{ attr.is_required|yesno:"Yes,No" }}</td>
+              <td>
+                {% if attr.input_type == 'select' %}
+                  {% if attr.options.all %}
+                    <ul>
+                      {% for opt in attr.options.all %}
+                        <li>{{ opt }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    <em>No options yet</em>
+                  {% endif %}
+              </td>
+              <td>
+                <form method="POST">
+                  {% csrf_token %}
+                  <input type="hidden" name="attribute_id" value="{{ attr.id }}">
+                  <input type="text" name="value_en" placeholder="English">
+                  <input type="text" name="value_ar" placeholder="العربية">
+                  <button name="add_option" type="submit">Add</button>
+                </form>
+              </td>
+              {% else %}
+                <td>N/A</td>
+                <td>N/A</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+
+        </table>
+    {% else %}
+        <p>No attributes yet.</p>
+    {% endif %}
+
+    <hr>
+    <h3>Add New Attribute</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ attribute_form.as_p }}
+        <button type="submit" name="add_attribute">Add Attribute</button>
+    </form>
+
+    <p><a href="{% url 'category_list' %}">Back to Categories</a></p>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Items" %}{% endblock %}
+
+{% block content %}
+<h2>{% trans "Items" %}</h2>
+
+{% if user.is_authenticated %}
+    <a href="{% url 'create_item' %}">{% trans "Post new item" %}</a> |
+    <a href="{% url 'logout' %}">{% trans "Logout" %}</a>
+{% else %}
+    <a href="{% url 'login' %}">{% trans "Login" %}</a> |
+    <a href="{% url 'register' %}">{% trans "Register" %}</a>
+{% endif %}
+
+<hr>
+
+{# ✅ Live search (no button needed) #}
+<form>
+    <input type="text"
+           name="q"
+           placeholder="{% trans 'Search...' %}"
+           value="{{ q }}"
+           hx-get="."
+           hx-trigger="keyup changed delay:100ms[target.value.length > 1]"
+           hx-target="#results"
+           hx-push-url="true"
+           style="width: 250px; padding: 5px;">
+</form>
+
+<br>
+
+{# ✅ Container where dynamic results load #}
+<div id="results">
+    {% include 'partials/item_results.html' %}
+</div>
+
+{% endblock %}

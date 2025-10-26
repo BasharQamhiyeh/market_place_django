@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Categories" %}{% endblock %}
+{% block content %}
+<h2>{% trans "All Categories" %}</h2>
+<a href="{% url 'category_create' %}">{% trans "Add New Category" %}</a>
+<hr>
+{% for cat in categories %}
+    <div>
+        <strong><a href="{% url 'category_detail' cat.id %}">{{ cat }}</a></strong><br>
+        {{ cat.description }}
+    </div>
+    <hr>
+{% empty %}
+    <p>{% trans "No categories yet." %}</p>
+{% endfor %}
+<a href="/">{% trans "Back to home" %}</a>
+{% endblock %}

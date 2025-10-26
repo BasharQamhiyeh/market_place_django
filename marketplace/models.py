@@ -1,0 +1,148 @@
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+
+# -----------------------
+# Custom User
+# -----------------------
+class UserManager(BaseUserManager):
+    def create_user(self, phone, username, password=None, email=None):
+        if not phone:
+            raise ValueError("Users must have a phone number")
+        user = self.model(phone=phone, username=username, email=email)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, phone, username, password, email=None):
+        user = self.create_user(phone=phone, username=username, password=password, email=email)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+        return user
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    user_id = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=100, unique=True)
+    phone = models.CharField(max_length=20, unique=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    USERNAME_FIELD = "username"
+    REQUIRED_FIELDS = ["phone"]
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.username
+
+
+# -----------------------
+# Categories and Attributes
+# -----------------------
+class Category(models.Model):
+    name_en = models.CharField(max_length=255, unique=True)
+    name_ar = models.CharField(max_length=255, unique=True)
+    description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        from django.utils import translation
+        lang = translation.get_language()
+        return self.name_ar if lang == 'ar' else self.name_en
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+
+
+class Attribute(models.Model):
+    INPUT_TYPE_CHOICES = [
+        ('text', 'Text'),
+        ('number', 'Number'),
+        ('select', 'Select'),
+    ]
+    name_en = models.CharField(max_length=255)
+    name_ar = models.CharField(max_length=255)
+    input_type = models.CharField(max_length=50, choices=INPUT_TYPE_CHOICES, default='text')
+    is_required = models.BooleanField(default=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="attributes")
+
+    def __str__(self):
+        from django.utils import translation
+        lang = translation.get_language()
+        return self.name_ar if lang == 'ar' else self.name_en
+
+
+
+class AttributeOption(models.Model):
+    value_en = models.CharField(max_length=255)
+    value_ar = models.CharField(max_length=255)
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name="options")
+
+    def __str__(self):
+        from django.utils import translation
+        lang = translation.get_language()
+        return self.value_ar if lang == 'ar' else self.value_en
+
+
+
+# -----------------------
+# Items and related tables
+# -----------------------
+class Item(models.Model):
+    title = models.TextField()
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items')
+    description = models.TextField(blank=True)
+    price = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='items')
+
+    # ✅ NEW FIELDS
+    is_approved = models.BooleanField(default=False)  # admin must approve
+    is_active = models.BooleanField(default=True)     # owner controls activation
+
+    def __str__(self):
+        return self.title
+
+
+
+class ItemPhoto(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='items/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Photo for {self.item.title}"
+
+
+class ItemAttributeValue(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='attribute_values')
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+    value = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.attribute.name}: {self.value}"
+
+
+
+class Conversation(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="conversations")
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="buyer_conversations")
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="seller_conversations")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Conversation on {self.item.title} between {self.buyer} and {self.seller}"
+
+
+class Message(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"From {self.sender}: {self.body[:20]}"
+
+

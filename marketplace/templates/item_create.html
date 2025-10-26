@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Create Item" %}{% endblock %}
+{% block content %}
+
+<h2>{% trans "Create Item" %}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <label>{% trans "Category" %}:</label>
+    <select name="category" id="categorySelect" onchange="window.location.href='?category=' + this.value;">
+        <option value="">{% trans "Select Category" %}</option>
+        {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>
+                {{ cat }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    {# ✅ Render fields only AFTER category is chosen #}
+    {% if selected_category %}
+        {% for field in form %}
+            {% if field.name != 'category' %}
+                <div style="margin-bottom:10px;">
+                    {{ field.label_tag }}<br>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div style="color:red;">{{ field.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <br>
+
+    <button type="submit" style="padding:8px 14px; border-radius:6px;">
+        {% trans "Post Item" %}
+    </button>
+</form>
+
+{% endblock %}

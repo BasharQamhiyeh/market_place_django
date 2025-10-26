@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Edit Item" %}{% endblock %}
+{% block content %}
+
+<h2>{% trans "Edit Item" %}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% for field in form %}
+        {% if field.name != 'category' %}
+            <div style="margin-bottom:10px;">
+                {{ field.label_tag }}<br>
+                {{ field }}
+                {% if field.errors %}
+                    <div style="color:red;">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <button type="submit" style="padding:8px 14px; border-radius:6px;">
+        {% trans "Save Changes" %}
+    </button>
+</form>
+
+<p style="color:orange;">
+    {% trans "Note: Edits require admin approval again." %}
+</p>
+
+{% endblock %}

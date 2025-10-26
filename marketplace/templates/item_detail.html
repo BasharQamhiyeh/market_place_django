@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+
+<h2>{{ item.title }}</h2>
+
+{# --- PHOTO SLIDER --- #}
+{% if item.photos.exists %}
+<div class="slider">
+    <div class="slides">
+        {% for photo in item.photos.all %}
+            <img src="{{ photo.image.url }}" alt="{{ item.title }}">
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+    <p>{% trans "No photos available." %}</p>
+{% endif %}
+
+<p><b>{% trans "Seller" %}:</b>
+    <a href="{% url 'user_profile' item.user.user_id %}">
+        {{ item.user.username }}
+    </a>
+</p>
+
+<p><b>{% trans "Category" %}:</b> {{ item.category }}</p>
+<p><b>{% trans "Price" %}:</b> ${{ item.price }}</p>
+<p><b>{% trans "Description" %}:</b> {{ item.description }}</p>
+
+<hr>
+
+{# ---------- STATUS MESSAGES ---------- #}
+
+{% if not item.is_approved %}
+<p style="color:orange; font-weight:bold;">
+    {% trans "This item is pending admin approval and not visible to others." %}
+</p>
+{% endif %}
+
+{% if not item.is_active %}
+<p style="color:red; font-weight:bold;">
+    {% trans "This item has expired and is no longer visible to others." %}
+</p>
+{% endif %}
+
+<hr>
+
+<h3>{% trans "Attributes" %}:</h3>
+<ul>
+    {% for attr in attributes %}
+        <li>{{ attr.attribute }}: {{ attr.value }}</li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+{# ---------- OWNER ACTIONS ---------- #}
+
+{% if request.user == item.user %}
+<a href="{% url 'item_edit' item.id %}"
+   style="display:inline-block; margin:10px 0; padding:10px; background:#6c757d; color:white; border-radius:6px; text-decoration:none;">
+    {% trans "Edit Item" %}
+</a>
+{% endif %}
+
+{% if request.user == item.user and not item.is_active %}
+<a href="{% url 'reactivate_item' item.id %}"
+   style="display:inline-block; margin:10px 0; padding:10px; background:#28a745; color:white; border-radius:6px; text-decoration:none;">
+    {% trans "Reactivate Item" %}
+</a>
+{% endif %}
+
+{# ---------- MESSAGE BUTTON ---------- #}
+
+{% if request.user.is_authenticated and request.user != item.user and item.is_approved and item.is_active %}
+<a href="{% url 'start_conversation' item.id %}"
+   style="display:inline-block; margin:10px 0; padding:10px; background:#007bff; color:white; border-radius:6px; text-decoration:none;">
+    {% trans "Message Seller" %}
+</a>
+{% endif %}
+
+<br><br>
+
+<a href="{% url 'item_list' %}">{% trans "Back to items" %}</a>
+
+<style>
+/* --- Simple Mobile-Friendly Slider --- */
+.slider {
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}
+
+.slides {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 8px;
+}
+
+.slides img {
+    width: 350px;
+    height: 350px;
+    object-fit: cover;
+    border-radius: 6px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+}
+</style>
+
+{% endblock %}

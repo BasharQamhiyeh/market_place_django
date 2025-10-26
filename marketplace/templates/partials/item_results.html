@@ -1,0 +1,27 @@
+{% load i18n %}
+{% for item in page_obj %}
+<div style="margin-bottom:20px;">
+
+    {% if item.photos.exists %}
+        {% with first_photo=item.photos.first %}
+            <img src="{{ first_photo.image.url }}"
+                 width="150"
+                 height="150"
+                 style="object-fit:cover; border-radius: 6px;">
+        {% endwith %}
+    {% endif %}
+
+    <h3>
+        <a href="{% url 'item_detail' item.id %}">
+            {{ item.title }}
+        </a>
+    </h3>
+
+    <p>{% trans "Price" %}: ${{ item.price }}</p>
+    <p>{% trans "Posted by" %}: {{ item.user.username }}</p>
+
+</div>
+<hr>
+{% empty %}
+<p>{% trans "No items found." %}</p>
+{% endfor %}

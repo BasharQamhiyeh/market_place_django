@@ -1,0 +1,136 @@
+# Arabic translation for the Marketplace project.
+# Copyright (C) 2025
+# This file is distributed under the same license as the Marketplace package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Marketplace 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-10-23 21:55+0200\n"
+"PO-Revision-Date: 2025-10-23 22:00+0200\n"
+"Last-Translator: ChatGPT <>\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#: .\market_place\marketplace\templates\base.html:6
+msgid "Marketplace"
+msgstr "المتجر"
+
+#: .\market_place\marketplace\templates\base.html:14
+#: .\market_place\marketplace\templates\home.html:3
+msgid "Home"
+msgstr "الصفحة الرئيسية"
+
+#: .\market_place\marketplace\templates\base.html:16
+#: .\market_place\marketplace\templates\home.html:7
+#: .\market_place\marketplace\templates\item_list.html:7
+msgid "Logout"
+msgstr "تسجيل الخروج"
+
+#: .\market_place\marketplace\templates\base.html:18
+#: .\market_place\marketplace\templates\home.html:9
+#: .\market_place\marketplace\templates\item_list.html:9
+#: .\market_place\marketplace\templates\login.html:3
+#: .\market_place\marketplace\templates\login.html:5
+#: .\market_place\marketplace\templates\login.html:11
+msgid "Login"
+msgstr "تسجيل الدخول"
+
+#: .\market_place\marketplace\templates\base.html:19
+#: .\market_place\marketplace\templates\home.html:9
+#: .\market_place\marketplace\templates\item_list.html:9
+#: .\market_place\marketplace\templates\login.html:13
+#: .\market_place\marketplace\templates\register.html:3
+#: .\market_place\marketplace\templates\register.html:5
+#: .\market_place\marketplace\templates\register.html:9
+msgid "Register"
+msgstr "إنشاء حساب"
+
+#: .\market_place\marketplace\templates\category_list.html:3
+msgid "Categories"
+msgstr "الفئات"
+
+#: .\market_place\marketplace\templates\category_list.html:5
+msgid "All Categories"
+msgstr "جميع الفئات"
+
+#: .\market_place\marketplace\templates\category_list.html:6
+msgid "Add New Category"
+msgstr "إضافة فئة جديدة"
+
+#: .\market_place\marketplace\templates\category_list.html:15
+msgid "No categories yet."
+msgstr "لا توجد فئات بعد."
+
+#: .\market_place\marketplace\templates\category_list.html:17
+msgid "Back to home"
+msgstr "العودة إلى الصفحة الرئيسية"
+
+#: .\market_place\marketplace\templates\home.html:5
+msgid "Welcome"
+msgstr "مرحباً"
+
+#: .\market_place\marketplace\templates\item_create.html:3
+#: .\market_place\marketplace\templates\item_create.html:5
+msgid "Create Item"
+msgstr "إنشاء عنصر"
+
+#: .\market_place\marketplace\templates\item_create.html:8
+#: .\market_place\marketplace\templates\item_detail.html:6
+#: .\market_place\marketplace\templates\item_list.html:15
+msgid "Category"
+msgstr "الفئة"
+
+#: .\market_place\marketplace\templates\item_create.html:10
+msgid "Select Category"
+msgstr "اختر فئة"
+
+#: .\market_place\marketplace\templates\item_create.html:29
+msgid "Post Item"
+msgstr "نشر العنصر"
+
+#: .\market_place\marketplace\templates\item_detail.html:7
+#: .\market_place\marketplace\templates\item_list.html:16
+msgid "Price"
+msgstr "السعر"
+
+#: .\market_place\marketplace\templates\item_detail.html:8
+msgid "Description"
+msgstr "الوصف"
+
+#: .\market_place\marketplace\templates\item_detail.html:10
+msgid "Attributes"
+msgstr "الخصائص"
+
+#: .\market_place\marketplace\templates\item_detail.html:16
+msgid "Back to items"
+msgstr "العودة إلى العناصر"
+
+#: .\market_place\marketplace\templates\item_list.html:3
+#: .\market_place\marketplace\templates\item_list.html:5
+msgid "Items"
+msgstr "العناصر"
+
+#: .\market_place\marketplace\templates\item_list.html:7
+msgid "Post new item"
+msgstr "نشر عنصر جديد"
+
+#: .\market_place\marketplace\templates\item_list.html:17
+msgid "Posted by"
+msgstr "نُشر بواسطة"
+
+#: .\market_place\marketplace\templates\login.html:9
+msgid "Phone"
+msgstr "رقم الهاتف"
+
+#: .\market_place\marketplace\templates\login.html:10
+msgid "Password"
+msgstr "كلمة المرور"
+
+#: .\market_place\marketplace\templates\register.html:11
+msgid "Already have an account? Login"
+msgstr "هل لديك حساب؟ تسجيل الدخول"

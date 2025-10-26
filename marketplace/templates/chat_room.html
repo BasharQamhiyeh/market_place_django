@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<h2>{% trans "Chat about" %} "{{ conversation.item.title }}"</h2>
+
+<div style="border:1px solid #ccc;padding:10px;height:300px;overflow-y:scroll;border-radius:6px;">
+    {% for msg in messages %}
+        <p style="margin-bottom:12px;">
+            <strong>
+                <a href="{% url 'user_profile' msg.sender.user_id %}">
+                    {{ msg.sender.username }}
+                </a>
+            </strong>
+            <small style="color:gray;">{{ msg.created_at|date:"Y-m-d H:i" }}</small><br>
+            {{ msg.body }}
+        </p>
+        <hr>
+    {% empty %}
+        <p>{% trans "No messages yet." %}</p>
+    {% endfor %}
+</div>
+
+<form method="post" style="margin-top:10px;">
+    {% csrf_token %}
+    <textarea name="body" rows="3" style="width:100%; padding:8px; border-radius:6px;"></textarea>
+    <button type="submit" style="padding:8px 14px; margin-top:8px; border-radius:6px;">
+        {% trans "Send" %}
+    </button>
+</form>
+
+<br>
+<a href="{% url 'item_detail' conversation.item.id %}">{% trans "Back to item" %}</a>
+
+{% endblock %}
