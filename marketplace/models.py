@@ -91,16 +91,24 @@ class AttributeOption(models.Model):
 # Items and related tables
 # -----------------------
 class Item(models.Model):
+    CONDITION_CHOICES = [
+        ('new', 'New'),
+        ('used', 'Used'),
+    ]
+
     title = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items')
     description = models.TextField(blank=True)
     price = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='items')
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='items')
 
-    # ✅ NEW FIELDS
-    is_approved = models.BooleanField(default=False)  # admin must approve
-    is_active = models.BooleanField(default=True)     # owner controls activation
+    # moderation/state
+    is_approved = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    # ✅ NEW
+    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
 
     def __str__(self):
         return self.title
@@ -124,6 +132,15 @@ class ItemAttributeValue(models.Model):
     def __str__(self):
         return f"{self.attribute.name}: {self.value}"
 
+    # TODO: see why chatgpt changed it to this ?
+    # def __str__(self):
+    #     # safe label
+    #     try:
+    #         from django.utils import translation
+    #         return f"{self.attribute.name_ar if translation.get_language() == 'ar' else self.attribute.name_en}: {self.value}"
+    #     except Exception:
+    #         return f"{self.attribute_id}: {self.value}"
+
 
 
 class Conversation(models.Model):
@@ -146,3 +163,13 @@ class Message(models.Model):
         return f"From {self.sender}: {self.body[:20]}"
 
 
+class Notification(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    body = models.TextField(blank=True)
+    item = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user} - {self.title}"

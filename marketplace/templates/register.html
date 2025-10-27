@@ -1,12 +1,63 @@
+{# templates/register.html #}
 {% extends 'base.html' %}
 {% load i18n %}
 {% block title %}{% trans "Register" %}{% endblock %}
 {% block content %}
-<h2>{% trans "Register" %}</h2>
+
+<h2>{% trans "Create account" %}</h2>
+
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
+
+    {{ form.non_field_errors }}
+
+    <div>
+        {{ form.username.label_tag }}<br>
+        {{ form.username }}
+        {{ form.username.errors }}
+    </div>
+
+    <div>
+        {{ form.phone.label_tag }}<br>
+        {{ form.phone }}
+        <small>{% trans "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx." %}</small>
+        {{ form.phone.errors }}
+    </div>
+
+    <div>
+        {{ form.email.label_tag }}<br>
+        {{ form.email }}
+        {{ form.email.errors }}
+    </div>
+
+    <div>
+        {{ form.password.label_tag }}<br>
+        <div style="display:flex; gap:8px; align-items:center;">
+            {{ form.password }}
+            <button type="button" id="togglePwd" style="padding:4px 8px;">👁</button>
+        </div>
+        <small>{% trans "Password must be at least 8 characters and contain only letters and numbers." %}</small>
+        {{ form.password.errors }}
+    </div>
+
+    <div>
+        {{ form.password2.label_tag }}<br>
+        {{ form.password2 }}
+        {{ form.password2.errors }}
+    </div>
+
     <button type="submit">{% trans "Register" %}</button>
 </form>
-<a href="{% url 'login' %}">{% trans "Already have an account? Login" %}</a>
+
+<script>
+document.getElementById('togglePwd').addEventListener('click', function(){
+    var p1 = document.getElementById('id_password');
+    var p2 = document.getElementById('id_password2');
+    [p1, p2].forEach(function(inp){
+        if (!inp) return;
+        inp.type = (inp.type === 'password') ? 'text' : 'password';
+    });
+});
+</script>
+
 {% endblock %}

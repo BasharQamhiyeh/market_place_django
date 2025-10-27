@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<h2>{% trans "Reject Item" %}: "{{ original.title }}"</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <label>{% trans "Reason for rejection" %}</label><br>
+    <textarea name="reason" rows="4" cols="50"></textarea><br><br>
+
+    <button type="submit" class="button default">
+        {% trans "Reject" %}
+    </button>
+</form>
+{% endblock %}

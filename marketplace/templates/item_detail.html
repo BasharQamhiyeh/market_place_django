@@ -24,7 +24,28 @@
     </a>
 </p>
 
+{# ✅ CLICK TO REVEAL PHONE #}
+<p><b>{% trans "Phone" %}:</b>
+    {% if request.user.is_authenticated %}
+        <span id="seller-phone"
+              data-phone="{{ item.user.phone|default_if_none:'' }}"
+              style="cursor:pointer; color:#007bff; text-decoration:underline;">
+            {% trans "Click to show phone" %}
+        </span>
+    {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}" style="color:#007bff; text-decoration:underline;">
+            {% trans "Login to view phone number" %}
+        </a>
+    {% endif %}
+</p>
+
 <p><b>{% trans "Category" %}:</b> {{ item.category }}</p>
+
+{# ✅ Show condition #}
+<p><b>{% trans "Condition" %}:</b>
+   {% if item.condition == 'new' %}{% trans "New" %}{% else %}{% trans "Used" %}{% endif %}
+</p>
+
 <p><b>{% trans "Price" %}:</b> ${{ item.price }}</p>
 <p><b>{% trans "Description" %}:</b> {{ item.description }}</p>
 
@@ -33,15 +54,15 @@
 {# ---------- STATUS MESSAGES ---------- #}
 
 {% if not item.is_approved %}
-<p style="color:orange; font-weight:bold;">
-    {% trans "This item is pending admin approval and not visible to others." %}
-</p>
+    <p style="color:orange; font-weight:bold;">
+        {% trans "This item is pending admin approval and not visible to others." %}
+    </p>
 {% endif %}
 
 {% if not item.is_active %}
-<p style="color:red; font-weight:bold;">
-    {% trans "This item has expired and is no longer visible to others." %}
-</p>
+    <p style="color:red; font-weight:bold;">
+        {% trans "This item has expired and is no longer visible to others." %}
+    </p>
 {% endif %}
 
 <hr>
@@ -58,26 +79,26 @@
 {# ---------- OWNER ACTIONS ---------- #}
 
 {% if request.user == item.user %}
-<a href="{% url 'item_edit' item.id %}"
-   style="display:inline-block; margin:10px 0; padding:10px; background:#6c757d; color:white; border-radius:6px; text-decoration:none;">
-    {% trans "Edit Item" %}
-</a>
+    <a href="{% url 'item_edit' item.id %}"
+       style="display:inline-block; margin:10px 0; padding:10px; background:#6c757d; color:white; border-radius:6px; text-decoration:none;">
+        {% trans "Edit Item" %}
+    </a>
 {% endif %}
 
 {% if request.user == item.user and not item.is_active %}
-<a href="{% url 'reactivate_item' item.id %}"
-   style="display:inline-block; margin:10px 0; padding:10px; background:#28a745; color:white; border-radius:6px; text-decoration:none;">
-    {% trans "Reactivate Item" %}
-</a>
+    <a href="{% url 'reactivate_item' item.id %}"
+       style="display:inline-block; margin:10px 0; padding:10px; background:#28a745; color:white; border-radius:6px; text-decoration:none;">
+        {% trans "Reactivate Item" %}
+    </a>
 {% endif %}
 
 {# ---------- MESSAGE BUTTON ---------- #}
 
 {% if request.user.is_authenticated and request.user != item.user and item.is_approved and item.is_active %}
-<a href="{% url 'start_conversation' item.id %}"
-   style="display:inline-block; margin:10px 0; padding:10px; background:#007bff; color:white; border-radius:6px; text-decoration:none;">
-    {% trans "Message Seller" %}
-</a>
+    <a href="{% url 'start_conversation' item.id %}"
+       style="display:inline-block; margin:10px 0; padding:10px; background:#007bff; color:white; border-radius:6px; text-decoration:none;">
+        {% trans "Message Seller" %}
+    </a>
 {% endif %}
 
 <br><br>
@@ -110,5 +131,25 @@
     flex-shrink: 0;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var sp = document.getElementById('seller-phone');
+  if (!sp) return;
+  sp.addEventListener('click', function(){
+    var p = sp.getAttribute('data-phone') || '';
+    if (!p) return;
+
+    // If stored as 9627xxxxxxx, display 07xxxxxxxx
+    if (p.startsWith('9627') && p.length === 12) {
+      p = '0' + p.slice(3);
+    }
+    sp.textContent = p;
+    sp.style.textDecoration = 'none';
+    sp.style.color = 'inherit';
+    sp.style.cursor = 'default';
+  });
+});
+</script>
 
 {% endblock %}

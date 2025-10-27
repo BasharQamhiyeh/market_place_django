@@ -19,6 +19,9 @@ urlpatterns = [
     path('inbox/', views.user_inbox, name='user_inbox'),
     path('item/edit/<int:item_id>/', views.item_edit, name='item_edit'),
     path('profile/<int:user_id>/', views.user_profile, name='user_profile'),
+    path('notifications/', views.notifications, name='notifications'),
+    path('my-items/', views.my_items, name='my_items'),
+    path('my-items/<int:item_id>/reactivate/', views.reactivate_item, name='reactivate_item'),
 ]
 
 if settings.DEBUG:

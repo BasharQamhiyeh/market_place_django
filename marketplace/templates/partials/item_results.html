@@ -1,27 +1,47 @@
 {% load i18n %}
-{% for item in page_obj %}
-<div style="margin-bottom:20px;">
 
-    {% if item.photos.exists %}
-        {% with first_photo=item.photos.first %}
-            <img src="{{ first_photo.image.url }}"
-                 width="150"
-                 height="150"
-                 style="object-fit:cover; border-radius: 6px;">
-        {% endwith %}
+{% for item in page_obj %}
+    <div>
+        {% if item.photos.first %}
+            <img src="{{ item.photos.first.image.url }}"
+                 width="150" height="150"
+                 style="object-fit:cover;">
+        {% endif %}
+
+        <h3><a href="{% url 'item_detail' item.id %}">{{ item.title }}</a></h3>
+        <p>{% trans "Price" %}: ${{ item.price }}</p>
+        <p>{% trans "Posted by" %}: {{ item.user.username }}</p>
+    </div>
+    <hr>
+{% empty %}
+    <p>{% trans "No items found." %}</p>
+{% endfor %}
+
+<!-- ✅ Pagination -->
+<div style="margin-top:20px;">
+
+    {% if page_obj.has_previous %}
+        <a
+            hx-get="?page={{ page_obj.previous_page_number }}&q={{ q }}"
+            hx-target="#results"
+            hx-push-url="true"
+        >
+            &laquo; {% trans "Previous" %}
+        </a>
     {% endif %}
 
-    <h3>
-        <a href="{% url 'item_detail' item.id %}">
-            {{ item.title }}
-        </a>
-    </h3>
+    <span style="margin:0 10px;">
+        {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+    </span>
 
-    <p>{% trans "Price" %}: ${{ item.price }}</p>
-    <p>{% trans "Posted by" %}: {{ item.user.username }}</p>
+    {% if page_obj.has_next %}
+        <a
+            hx-get="?page={{ page_obj.next_page_number }}&q={{ q }}"
+            hx-target="#results"
+            hx-push-url="true"
+        >
+            {% trans "Next" %} &raquo;
+        </a>
+    {% endif %}
 
 </div>
-<hr>
-{% empty %}
-<p>{% trans "No items found." %}</p>
-{% endfor %}

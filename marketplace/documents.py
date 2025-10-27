@@ -6,7 +6,9 @@ from elasticsearch_dsl import analyzer, token_filter
 
 from .models import Item
 
-# Index configuration
+# -----------------------------------
+# Index config
+# -----------------------------------
 item_index = Index('items')
 item_index.settings(
     number_of_shards=1,
@@ -28,7 +30,7 @@ item_index.settings(
     }
 )
 
-# Edge N-gram Analyzer
+# Reusable analyzer
 edge_ngram_filter = token_filter(
     'edge_ngram_filter',
     type='edge_ngram',
@@ -46,21 +48,19 @@ edge_ngram_analyzer = analyzer(
 @registry.register_document
 class ItemDocument(Document):
 
-    # category indexing
+    # ✅ Localized category indexed
     category = fields.ObjectField(properties={
         'name': fields.TextField(analyzer=edge_ngram_analyzer)
     })
 
-    # photos
-    photos = fields.ObjectField(properties={
-        'image': fields.TextField()
-    }, multi=True)
-
-    # attributes indexing
+    # ✅ Indexed attributes
     attributes = fields.ObjectField(properties={
         'name': fields.TextField(analyzer=edge_ngram_analyzer),
         'value': fields.TextField(analyzer=edge_ngram_analyzer)
     }, multi=True)
+
+    # ✅ Explicit condition field
+    condition = fields.TextField(analyzer=edge_ngram_analyzer)
 
     class Index:
         name = 'items'
@@ -71,8 +71,9 @@ class ItemDocument(Document):
             'title',
             'description',
             'price',
+            # DO NOT repeat condition here!
+            'created_at',
         ]
-        # analyzer override
         settings = {
             'analysis': {
                 'analyzer': {
@@ -80,26 +81,17 @@ class ItemDocument(Document):
                         'tokenizer': 'standard',
                         'filter': ['lowercase', 'edge_ngram_filter']
                     }
-                },
-                'filter': {
-                    'edge_ngram_filter': {
-                        'type': 'edge_ngram',
-                        'min_gram': 2,
-                        'max_gram': 20
-                    }
                 }
             }
         }
 
+    # Optimize queries
     def get_queryset(self):
         return (
             super()
             .get_queryset()
-            .select_related('category')
-            .prefetch_related(
-                'photos',
-                'attribute_values',
-            )
+            .select_related("category")
+            .prefetch_related("attribute_values")
         )
 
     def get_indexing_queryset(self):
@@ -108,18 +100,15 @@ class ItemDocument(Document):
     def prepare_category(self, instance):
         lang = translation.get_language()
         return {
-            'name': instance.category.name_ar if lang == 'ar' else instance.category.name_en
+            "name": instance.category.name_ar if lang == "ar" else instance.category.name_en
         }
-
-    def prepare_photos(self, instance):
-        return [{'image': p.image.url} for p in instance.photos.all()]
 
     def prepare_attributes(self, instance):
         lang = translation.get_language()
         return [
             {
-                'name': av.attribute.name_ar if lang == 'ar' else av.attribute.name_en,
-                'value': av.value
+                "name": av.attribute.name_ar if lang == "ar" else av.attribute.name_en,
+                "value": av.value,
             }
             for av in instance.attribute_values.all()
         ]

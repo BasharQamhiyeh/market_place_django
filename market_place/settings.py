@@ -23,13 +23,13 @@ ALLOWED_HOSTS = []  # e.g., ['localhost', '127.0.0.1']
 # Installed apps
 # ---------------------------------------------------
 INSTALLED_APPS = [
+    'marketplace',  # your app
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'marketplace',  # your app
     'django_elasticsearch_dsl'
 ]
 
@@ -56,7 +56,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # Point to a global templates directory in case you want to use it later
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / "marketplace" / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'builtins': ['django.templatetags.static'],
         },
     },
 ]
