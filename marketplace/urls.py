@@ -22,6 +22,9 @@ urlpatterns = [
     path('notifications/', views.notifications, name='notifications'),
     path('my-items/', views.my_items, name='my_items'),
     path('my-items/<int:item_id>/reactivate/', views.reactivate_item, name='reactivate_item'),
+    path('item/<int:item_id>/edit/', views.item_edit, name='item_edit'),
+    path("photo/<int:photo_id>/delete/", views.delete_item_photo, name="delete_item_photo"),
+    path('item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
 ]
 
 if settings.DEBUG:

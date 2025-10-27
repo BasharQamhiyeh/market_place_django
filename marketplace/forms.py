@@ -4,6 +4,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils import translation
 from .models import Item
+from django.forms import ClearableFileInput
+
 
 from .widgets import MultipleFileInput  # your existing widget
 
@@ -58,14 +60,16 @@ class UserRegistrationForm(forms.ModelForm):
         return phone
 
 
+class MultipleFileInput(ClearableFileInput):
+    allow_multiple_selected = True
+
+
 class ItemForm(forms.ModelForm):
-    # ✅ real file field
     images = forms.CharField(
         widget=MultipleFileInput(attrs={'multiple': True}),
         required=False
     )
 
-    # ✅ Used/New radio
     condition = forms.ChoiceField(
         choices=[('new', 'New'), ('used', 'Used')],
         widget=forms.RadioSelect,
@@ -74,11 +78,17 @@ class ItemForm(forms.ModelForm):
 
     class Meta:
         model = Item
-        fields = ['title', 'condition', 'price', 'description']  # ORDER MATTERS
+        fields = ['title', 'condition', 'price', 'description']
 
     def __init__(self, *args, **kwargs):
         category = kwargs.pop('category', None)
+        instance = kwargs.get('instance', None)
         super().__init__(*args, **kwargs)
+
+        existing_attrs = {}
+        if instance:
+            for av in instance.attribute_values.all():
+                existing_attrs[av.attribute.id] = av.value
 
         if category:
             for attribute in category.attributes.all():
@@ -86,54 +96,59 @@ class ItemForm(forms.ModelForm):
                 lang = translation.get_language()
                 label = attribute.name_ar if lang == 'ar' else attribute.name_en
 
+                # TEXT
                 if attribute.input_type == 'text':
                     self.fields[field_name] = forms.CharField(
-                        required=attribute.is_required, label=label
+                        required=attribute.is_required,
+                        label=label,
+                        initial=existing_attrs.get(attribute.id, "")
                     )
 
+                # NUMBER
                 elif attribute.input_type == 'number':
                     self.fields[field_name] = forms.FloatField(
-                        required=attribute.is_required, label=label
+                        required=attribute.is_required,
+                        label=label,
+                        initial=existing_attrs.get(attribute.id, "")
                     )
 
-
-
+                # SELECT
                 elif attribute.input_type == 'select':
-
                     choices = [
-
                         (opt.id, opt.value_ar if lang == 'ar' else opt.value_en)
-
                         for opt in attribute.options.all()
-
                     ]
-
                     choices.append(('__other__', 'Other'))
 
+                    current = existing_attrs.get(attribute.id)
+                    selected_choice = None
+
+                    # Select match
+                    for opt in attribute.options.all():
+                        if opt.value_en == current or opt.value_ar == current:
+                            selected_choice = opt.id
+
+                    if selected_choice is None and current:
+                        selected_choice = '__other__'
+
                     self.fields[field_name] = forms.ChoiceField(
-
                         choices=choices,
-
                         required=attribute.is_required,
-
-                        label=label
-
+                        label=label,
+                        initial=selected_choice
                     )
 
+                    # Field for other
                     self.fields[f"{field_name}_other"] = forms.CharField(
-
                         required=False,
-
-                        label=f"{label} (Other)"
-
+                        label=f"{label} (Other)",
+                        initial=current if selected_choice == '__other__' else ""
                     )
 
-    # ✅ prevents Django from throwing "No file submitted"
     def clean(self):
-        cleaned_data = super().clean()
-        # ignore missing images validation completely
-        cleaned_data['images'] = self.files.getlist('images')
-        return cleaned_data
+        cleaned = super().clean()
+        cleaned['images'] = self.files.getlist('images')
+        return cleaned
 
     def clean_images(self):
         return self.files.getlist('images')

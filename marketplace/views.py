@@ -14,6 +14,7 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
+from django.http import HttpResponseForbidden
 
 # Registration
 def register(request):
@@ -260,6 +261,60 @@ def item_create(request):
     })
 
 
+@login_required
+def item_edit(request, item_id):
+    item = get_object_or_404(Item, id=item_id, user=request.user)
+    category = item.category  # same category, cannot change it
+
+    # ---- Prefill initial dynamic attribute values ----
+    initial = {
+        f"attribute_{av.attribute.id}": av.value
+        for av in item.attribute_values.all()
+    }
+
+    form = ItemForm(request.POST or None, request.FILES or None,
+                    category=category, initial=initial, instance=item)
+
+    if request.method == "POST" and form.is_valid():
+
+        # Save base item fields
+        item = form.save(commit=False)
+        item.is_approved = False  # requires review again
+        item.save()
+
+        # Remove old attributes
+        ItemAttributeValue.objects.filter(item=item).delete()
+
+        # Save new dynamic attributes
+        for key, val in request.POST.items():
+            if key.startswith("attribute_") and not key.endswith("_other"):
+                try:
+                    attr_id = int(key.split("_")[1])
+                except:
+                    continue
+
+                if val == "__other__":
+                    val = request.POST.get(f"{key}_other", "").strip()
+
+                if val:
+                    ItemAttributeValue.objects.create(
+                        item=item, attribute_id=attr_id, value=val
+                    )
+
+        # Append newly uploaded files
+        for img in request.FILES.getlist("images"):
+            ItemPhoto.objects.create(item=item, image=img)
+
+        messages.success(request, "✅ تم حفظ التعديلات وإرسال الإعلان للمراجعة.")
+        return redirect("item_detail", item_id=item.id)
+
+    return render(request, "item_edit.html", {
+        "form": form,
+        "item": item,
+        "category": category,
+    })
+
+
 
 # Category form (simple)
 class CategoryForm(forms.ModelForm):
@@ -400,41 +455,59 @@ def user_inbox(request):
 def item_edit(request, item_id):
     item = get_object_or_404(Item, id=item_id)
 
-    # Security: Only the owner can edit
     if item.user != request.user:
-        return redirect('item_detail', item_id=item_id)
+        return HttpResponseForbidden("Not allowed")
 
-    # Get category for dynamic attributes
-    category = item.category
+    categories = Category.objects.all()
+    category_id = request.POST.get('category') or request.GET.get('category')
+    selected_category = Category.objects.filter(id=category_id).first() if category_id else item.category
 
-    if request.method == 'POST':
-        form = ItemForm(request.POST, request.FILES, category=category, instance=item)
+    if request.method == "POST":
+        form = ItemForm(request.POST, request.FILES, category=selected_category, instance=item)
 
         if form.is_valid():
-            edited_item = form.save(commit=False)
+            item = form.save(commit=False)
+            item.category = selected_category
+            item.is_approved = False  # requires re-approval
+            item.save()
 
-            # ✅ Require approval again
-            edited_item.is_approved = False
+            # Remove old attributes
+            item.attribute_values.all().delete()
 
-            for admin in User.objects.filter(is_staff=True):
-                Notification.objects.create(
-                    user=admin,
-                    message=f"New item '{item.title}' pending approval."
-                )
+            # Save attributes again
+            for key, value in request.POST.items():
+                if key.startswith("attribute_") and not key.endswith("_other"):
+                    try:
+                        attr_id = int(key.split('_')[1])
+                    except Exception:
+                        continue
 
-            # Save any new uploaded photos
-            for img in request.FILES.getlist('images'):
+                    if value == "__other__":
+                        value = request.POST.get(f"{key}_other", "").strip()
+
+                    if value:
+                        ItemAttributeValue.objects.create(item=item, attribute_id=attr_id, value=value)
+
+            # Save new photos
+            for img in request.FILES.getlist("images"):
                 ItemPhoto.objects.create(item=item, image=img)
 
-            messages.success(request, "Item updated. Pending admin approval.")
-            return redirect('item_detail', item_id=item.id)
+            return redirect("my_items")
 
-    else:
-        form = ItemForm(category=category, instance=item)
+        return render(request, "item_edit.html", {
+            "form": form,
+            "categories": categories,
+            "selected_category": selected_category,
+            "item": item
+        })
 
-    return render(request, 'item_edit.html', {
-        'form': form,
-        'item': item
+    form = ItemForm(category=selected_category, instance=item)
+
+    return render(request, "item_edit.html", {
+        "form": form,
+        "categories": categories,
+        "selected_category": selected_category,
+        "item": item
     })
 
 
@@ -469,7 +542,6 @@ def notifications(request):
     })
 
 
-@login_required
 def my_items(request):
     items = (
         Item.objects
@@ -478,7 +550,14 @@ def my_items(request):
         .select_related('category')
         .prefetch_related('photos')
     )
-    return render(request, 'my_items.html', {'items': items})
+
+    paginator = Paginator(items, 8)   # 8 per page (you can change)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'my_items.html', {
+        'page_obj': page_obj
+    })
 
 @login_required
 def reactivate_item(request, item_id):
@@ -491,4 +570,24 @@ def reactivate_item(request, item_id):
         messages.success(request, "✅ Your item is active again.")
     else:
         messages.info(request, "ℹ️ Item is already active.")
+    return redirect('my_items')
+
+
+@login_required
+def delete_item_photo(request, photo_id):
+    photo = get_object_or_404(ItemPhoto, id=photo_id)
+
+    if photo.item.user != request.user:
+        return HttpResponseForbidden("Not allowed")
+
+    item_id = photo.item.id
+    photo.image.delete(save=False)
+    photo.delete()
+    return redirect("item_edit", item_id=item_id)
+
+@login_required
+def delete_item(request, item_id):
+    item = get_object_or_404(Item, id=item_id, user=request.user)
+    item.delete()
+    messages.success(request, "Item deleted successfully.")
     return redirect('my_items')

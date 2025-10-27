@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n form_extras %}
+
 {% block title %}{% trans "Edit Item" %}{% endblock %}
 {% block content %}
 
@@ -8,25 +9,83 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
-    {% for field in form %}
-        {% if field.name != 'category' %}
-            <div style="margin-bottom:10px;">
+    <label>{% trans "Category" %}:</label>
+    <select name="category" id="categorySelect">
+        {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>
+                {{ cat }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    {# Loop through form fields but skip category & images #}
+    {% for field in form.visible_fields %}
+        {% if field.name != "images" and field.name != "category" and "_other" not in field.name %}
+            <div style="margin-bottom:8px;">
                 {{ field.label_tag }}<br>
                 {{ field }}
-                {% if field.errors %}
-                    <div style="color:red;">{{ field.errors }}</div>
+
+                {# Handle attribute_X fields with "other" text input #}
+                {% if field.name|slice:"0:10" == "attribute_" %}
+                    {% with other_name=field.name|add:"_other" %}
+                        <div id="{{ field.name }}_other_box"
+                             style="margin-top:5px;display:none;">
+                            {{ form|get_bound_field:other_name }}
+                        </div>
+                    {% endwith %}
                 {% endif %}
             </div>
         {% endif %}
     {% endfor %}
 
-    <button type="submit" style="padding:8px 14px; border-radius:6px;">
-        {% trans "Save Changes" %}
-    </button>
+    <h3>{% trans "Existing Photos" %}</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        {% for photo in item.photos.all %}
+            <div style="position:relative;">
+                <img src="{{ photo.image.url }}"
+                     style="width:120px;height:120px;border-radius:6px;">
+                <a href="{% url 'delete_item_photo' photo.id %}"
+                   style="position:absolute;top:3px;right:3px;background:red;color:white;padding:2px 6px;border-radius:50%;">
+                   X
+                </a>
+            </div>
+        {% empty %}
+            <p>{% trans "No photos uploaded." %}</p>
+        {% endfor %}
+    </div>
+
+    <br><br>
+
+    <label>{% trans "Add More Photos" %}</label><br>
+    {{ form.images }}
+
+    <br><br>
+    <button type="submit">{% trans "Save Changes" %}</button>
 </form>
 
-<p style="color:orange;">
-    {% trans "Note: Edits require admin approval again." %}
-</p>
+
+<script>
+document.getElementById('categorySelect').addEventListener('change', function() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('category', this.value);
+    window.location.href = url.toString();
+});
+
+function updateOthers() {
+    document.querySelectorAll("select[name^='attribute_']").forEach(function(sel) {
+        const box = document.getElementById(sel.name + "_other_box");
+        if (!box) return;
+        box.style.display = sel.value === "__other__" ? "block" : "none";
+    });
+}
+
+updateOthers();
+
+document.addEventListener("change", function(e){
+    if (e.target.matches("select[name^='attribute_']")) updateOthers();
+});
+</script>
 
 {% endblock %}

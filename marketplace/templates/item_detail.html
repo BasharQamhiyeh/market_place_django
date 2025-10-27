@@ -85,6 +85,15 @@
     </a>
 {% endif %}
 
+{% if request.user == item.user %}
+    <a href="{% url 'delete_item' item.id %}"
+       onclick="return confirm('Are you sure?');"
+       title="Delete Item"
+       style="color:red;font-size:20px;">
+        ✖
+    </a>
+{% endif %}
+
 {% if request.user == item.user and not item.is_active %}
     <a href="{% url 'reactivate_item' item.id %}"
        style="display:inline-block; margin:10px 0; padding:10px; background:#28a745; color:white; border-radius:6px; text-decoration:none;">
