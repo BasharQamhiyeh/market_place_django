@@ -17,6 +17,19 @@ class UserRegistrationForm(forms.ModelForm):
         model = User
         fields = ['username', 'phone', 'email']
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip()
+
+        # Require the first character to be a letter (A–Z or a–z)
+        if not re.match(r'^[A-Za-z]', username):
+            raise forms.ValidationError("اسم المستخدم يجب أن يبدأ بحرف.")
+
+        # (Optional) If you ALSO want to restrict the rest of the characters:
+        # if not re.match(r'^[A-Za-z][A-Za-z0-9._-]*$', username):
+        #     raise forms.ValidationError("اسم المستخدم يجب أن يبدأ بحرف ويمكن أن يحتوي على حروف، أرقام، ونقاط/شرطات/شرطات سفلية.")
+
+        return username
+
     def clean_password(self):
         pwd = self.cleaned_data.get('password', '')
         # if len(pwd) < 8 or not re.fullmatch(r'[A-Za-z0-9]+', pwd):

@@ -32,14 +32,30 @@ def register(request):
 # Login
 def user_login(request):
     if request.method == 'POST':
-        username = request.POST['username']
+        identifier = request.POST['username'].strip()
         password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
+
+        # Normalize phones like registration
+        if identifier.startswith("07") and len(identifier) == 10:
+            identifier = "962" + identifier[1:]
+
+        # Try login by USERNAME
+        user = authenticate(request, username=identifier, password=password)
+
+        # Try login by PHONE
+        if not user:
+            try:
+                user_obj = User.objects.get(phone=identifier)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
+
         if user:
             login(request, user)
             return redirect('item_list')
-        else:
-            return render(request, 'login.html', {'error': 'Invalid credentials'})
+
+        return render(request, 'login.html', {'error': "بيانات تسجيل الدخول غير صحيحة"})
+
     return render(request, 'login.html')
 
 # Logout
