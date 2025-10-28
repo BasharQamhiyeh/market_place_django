@@ -54,9 +54,11 @@ class ItemAdmin(admin.ModelAdmin):
     change_form_template = "admin/marketplace/item/change_form.html"
 
     list_display = ("id", "title", "category", "price", "user", "created_at",
-                    "condition", "is_active", "is_approved", "moderate_actions")
+                    "condition", "is_active", "is_approved", "moderate_actions", "photo_gallery")
     list_filter = ("category", "user", "is_active", "is_approved", "condition")
     actions = ["approve_items", "reject_items", "deactivate_items"]
+
+    readonly_fields = ("photo_gallery",)
 
     # Extra URLs
     def get_urls(self):
@@ -166,6 +168,18 @@ class ItemAdmin(admin.ModelAdmin):
     def deactivate_items(self, request, queryset):
         queryset.update(is_active=False)
         self.message_user(request, f"Deactivated {queryset.count()} items.")
+
+    def photo_gallery(self, obj):
+        photos = obj.photos.all()
+        if not photos:
+            return "No photos uploaded."
+
+        html = ""
+        for p in photos:
+            html += f'<img src="{p.image.url}" style="width:120px;border-radius:6px;margin:4px;">'
+        return format_html(html)
+
+    photo_gallery.short_description = "Item Photos"
 
 
 

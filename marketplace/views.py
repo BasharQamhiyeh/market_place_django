@@ -422,17 +422,27 @@ def start_conversation(request, item_id):
 
 @login_required
 def chat_room(request, conversation_id):
-    convo = Conversation.objects.get(id=conversation_id)
+    convo = get_object_or_404(Conversation, id=conversation_id)
 
-    # Security: Only buyer or seller can view
+    # ✅ Security check
     if request.user not in [convo.buyer, convo.seller]:
         return redirect('item_list')
 
+    # ✅ Mark other user's messages as read
+    Message.objects.filter(
+        conversation=convo,
+        is_read=False
+    ).exclude(sender=request.user).update(is_read=True)
+
+    # ✅ Handle message sending
     if request.method == 'POST':
-        body = request.POST.get('body')
+        body = request.POST.get('body', '').strip()
         if body:
             Message.objects.create(conversation=convo, sender=request.user, body=body)
+            # You could redirect to avoid resubmission
+            return redirect('chat_room', conversation_id=conversation_id)
 
+    # ✅ Load messages after marking read
     messages = convo.messages.order_by('created_at')
 
     return render(request, 'chat_room.html', {

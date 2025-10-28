@@ -158,6 +158,8 @@ class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE)
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)  # 👈 add this field
+
 
     def __str__(self):
         return f"From {self.sender}: {self.body[:20]}"
