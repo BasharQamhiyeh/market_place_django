@@ -25,6 +25,9 @@ urlpatterns = [
     path('item/<int:item_id>/edit/', views.item_edit, name='item_edit'),
     path("photo/<int:photo_id>/delete/", views.delete_item_photo, name="delete_item_photo"),
     path('item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
+    path('item/<int:item_id>/cancel/', views.cancel_item, name='cancel_item'),
+    path('favorites/', views.my_favorites, name='my_favorites'),
+    path('favorites/toggle/<int:item_id>/', views.toggle_favorite, name='toggle_favorite'),
 ]
 
 if settings.DEBUG:

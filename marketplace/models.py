@@ -108,6 +108,9 @@ class Item(models.Model):
     city = models.ForeignKey('City', on_delete=models.SET_NULL, null=True, blank=True, related_name='items')
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='items')
 
+    sold_on_site = models.BooleanField(null=True, blank=True)  # null = user didn’t answer yet
+    cancel_reason = models.CharField(max_length=255, blank=True, null=True)
+
     # moderation/state
     is_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -195,3 +198,22 @@ class City(models.Model):
         from django.utils import translation
         lang = translation.get_language()
         return self.name_ar if lang == "ar" else self.name_en
+
+
+# -----------------------
+# Favorites (Wishlist)
+# -----------------------
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorites")
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="favorited_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "item")
+        indexes = [
+            models.Index(fields=["user", "item"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} → {self.item.title}"

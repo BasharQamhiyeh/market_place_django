@@ -91,6 +91,9 @@ class ItemForm(forms.ModelForm):
         instance = kwargs.get('instance', None)
         super().__init__(*args, **kwargs)
 
+        # ✅ make city dropdown searchable
+        self.fields['city'].widget.attrs.update({'class': 'searchable-select'})
+
         existing_attrs = {}
         if instance:
             for av in instance.attribute_values.all():
@@ -144,7 +147,10 @@ class ItemForm(forms.ModelForm):
                         initial=selected_choice
                     )
 
-                    # Field for other
+                    # ✅ make attribute select searchable
+                    self.fields[field_name].widget.attrs.update({'class': 'searchable-select'})
+
+                    # Field for other (text)
                     self.fields[f"{field_name}_other"] = forms.CharField(
                         required=False,
                         label=f"{label} (Other)",

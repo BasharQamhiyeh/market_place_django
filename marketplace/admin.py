@@ -214,3 +214,13 @@ class CityAdmin(admin.ModelAdmin):
     list_display = ("id", "name_en", "name_ar", "is_active")
     search_fields = ("name_en", "name_ar")
     list_filter = ("is_active",)
+
+
+from .models import Favorite  # add to the big import list if not present
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ("user", "item", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username", "item__title")
+

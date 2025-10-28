@@ -10,7 +10,7 @@
     {% csrf_token %}
 
     <label>{% trans "Category" %}:</label>
-    <select name="category" id="categorySelect">
+    <select name="category" id="categorySelect" class="searchable-select" placeholder="{% trans 'Select Category' %}">
         {% for cat in categories %}
             <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>
                 {{ cat }}

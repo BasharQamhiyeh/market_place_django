@@ -2,10 +2,13 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
+  <!-- ✅ Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{% block title %}Site{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -16,8 +19,6 @@
   </div>
 
   <div style="display:flex;align-items:center;gap:14px;">
-
-
     {% if user.is_authenticated and user.is_staff %}
         <a href="{% url 'admin:index' %}">{% trans "Admin Dashboard" %}</a> |
     {% endif %}
@@ -42,7 +43,6 @@
       </a>
     {% endif %}
 
-
     {% if request.user.is_authenticated %}
       <div class="profile-dropdown" id="profileDropdown">
         <button type="button" class="profile-button" onclick="toggleDropdown()"
@@ -55,6 +55,7 @@
         <div class="dropdown-menu">
           <a href="{% url 'user_profile' request.user.user_id %}">{% trans "My Profile" %}</a>
           <a href="{% url 'my_items' %}">{% trans "My Items" %}</a>
+          <a href="{% url 'my_favorites' %}">{% trans "My Favorites" %}</a>
           <a href="{% url 'user_inbox' %}">{% trans "My Messages" %}</a>
           <a href="{% url 'notifications' %}">{% trans "Notifications" %}</a>
           <a href="{% url 'create_item' %}">{% trans "Post an Ad" %}</a>
@@ -73,7 +74,6 @@
         <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>العربية</option>
       </select>
     </form>
-
   </div>
 </header>
 
@@ -81,7 +81,14 @@
   {% block content %}{% endblock %}
 </main>
 
+<!-- ✅ HTMX -->
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+<!-- ✅ jQuery (required by Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- ✅ Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 function toggleDropdown() {
@@ -91,8 +98,16 @@ document.addEventListener("click", function(e){
   const dd = document.getElementById("profileDropdown");
   if (dd && !e.target.closest("#profileDropdown")) dd.classList.remove("active");
 });
-</script>
 
+// ✅ Initialize all searchable selects
+document.addEventListener("DOMContentLoaded", function() {
+  $("select.searchable-select").select2({
+    width: "100%",
+    placeholder: "Select an option",
+    allowClear: true
+  });
+});
+</script>
 
 {% block scripts %}{% endblock %}
 </body>

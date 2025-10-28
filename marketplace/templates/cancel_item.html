@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Cancel Ad" %}{% endblock %}
+{% block content %}
+<h2>{% trans "Cancel Ad" %}: {{ item.title }}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <p>{% trans "Did you sell this item through our site?" %}</p>
+  <label><input type="radio" name="sold_on_site" value="yes" required> {% trans "Yes" %}</label><br>
+  <label><input type="radio" name="sold_on_site" value="no"> {% trans "No" %}</label>
+
+  <p style="margin-top:15px;">{% trans "Reason for cancellation (optional)" %}:</p>
+  <textarea name="reason" rows="3" cols="50"></textarea>
+
+  <br><br>
+  <button type="submit">{% trans "Confirm Cancelation" %}</button>
+</form>
+
+<a href="{% url 'my_items' %}">{% trans "Back to My Items" %}</a>
+{% endblock %}

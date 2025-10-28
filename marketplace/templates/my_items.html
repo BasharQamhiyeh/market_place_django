@@ -34,7 +34,7 @@
           <div style="margin-top:6px;">
             {% if item.is_active and item.is_approved %}
               <span style="padding:2px 8px;background:#e8f7ee;color:#1f7a4d;border-radius:999px;font-size:12px;">{% trans "Active" %}</span>
-            {% elif not item.is_approved %}
+            {% elif item.is_active and not item.is_approved %}
               <span style="padding:2px 8px;background:#fff7e6;color:#b26b00;border-radius:999px;font-size:12px;">{% trans "Pending approval" %}</span>
             {% else %}
               <span style="padding:2px 8px;background:#f3f4f6;color:#374151;border-radius:999px;font-size:12px;">{% trans "Inactive" %}</span>
@@ -44,6 +44,12 @@
           <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
             <a href="{% url 'item_detail' item.id %}">{% trans "View" %}</a>
             <a href="{% url 'item_edit' item.id %}">{% trans "Edit" %}</a>
+
+            {% if item.is_active %}
+              <a href="{% url 'cancel_item' item.id %}" style="color:#dc3545;">
+                {% trans "Cancel Ad" %}
+              </a>
+            {% endif %}
 
             {% if not item.is_active %}
               <form action="{% url 'reactivate_item' item.id %}" method="post" style="display:inline;">

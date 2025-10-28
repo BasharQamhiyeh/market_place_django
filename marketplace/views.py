@@ -15,6 +15,8 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 from django.http import HttpResponseForbidden
+from django.views.decorators.http import require_POST
+from .models import Favorite  # ensure Favorite is imported
 
 # Registration
 def register(request):
@@ -154,7 +156,17 @@ def item_list(request):
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     attributes = item.attribute_values.select_related('attribute')
-    return render(request, 'item_detail.html', {'item': item, 'attributes': attributes})
+
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = Favorite.objects.filter(user=request.user, item=item).exists()
+
+    return render(request, 'item_detail.html', {
+        'item': item,
+        'attributes': attributes,
+        'is_favorited': is_favorited,
+    })
+
 
 # Only logged-in users can post
 @login_required
@@ -601,3 +613,65 @@ def delete_item(request, item_id):
     item.delete()
     messages.success(request, "Item deleted successfully.")
     return redirect('my_items')
+
+
+@login_required
+def cancel_item(request, item_id):
+    item = get_object_or_404(Item, id=item_id, user=request.user)
+
+    if request.method == "POST":
+        sold = request.POST.get("sold_on_site")
+        reason = request.POST.get("reason", "").strip()
+
+        item.is_active = False
+        item.is_approved = False
+        item.sold_on_site = (sold == "yes")
+        item.cancel_reason = reason
+        item.save()
+
+        messages.success(request, "✅ Your ad has been canceled.")
+        return redirect("my_items")
+
+    return render(request, "cancel_item.html", {"item": item})
+
+
+@login_required
+@require_POST
+def toggle_favorite(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+
+    # Optional: prevent favoriting your own item
+    if item.user == request.user:
+        messages.info(request, "ℹ️ You cannot favorite your own item.")
+        return redirect("item_detail", item_id=item.id)
+
+    fav, created = Favorite.objects.get_or_create(user=request.user, item=item)
+    if created:
+        messages.success(request, "⭐ Added to your favorites.")
+    else:
+        fav.delete()
+        messages.info(request, "✳️ Removed from your favorites.")
+
+    # Redirect back to item page or favorites page if query param present
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
+    return redirect(next_url)
+
+
+
+@login_required
+def my_favorites(request):
+    fav_qs = (
+        Favorite.objects
+        .filter(user=request.user)
+        .select_related("item", "item__user", "item__category")
+        .prefetch_related("item__photos")
+        .order_by("-created_at")
+    )
+
+    paginator = Paginator(fav_qs, 12)  # 12 per page
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "my_favorites.html", {
+        "page_obj": page_obj
+    })
