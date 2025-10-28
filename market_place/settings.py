@@ -141,8 +141,20 @@ LOCALE_PATHS = [
 # ---------------------------------------------------
 # Elasticsearch
 # ---------------------------------------------------
-ELASTICSEARCH_DSL = {
-    'default': {
-        'hosts': os.getenv('ELASTICSEARCH_URL', 'http://localhost:9200')  # ✅ dynamic host
-    },
-}
+
+IS_RENDER = os.environ.get("RENDER", "") == "true"
+if IS_RENDER:
+    # 🚫 Disable Elasticsearch on Render
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': '',
+        },
+    }
+    ELASTICSEARCH_DSL_AUTOSYNC = False
+else:
+    # ✅ Local: use your real Elasticsearch
+    ELASTICSEARCH_DSL = {
+        'default': {
+            'hosts': 'http://localhost:9200',  # or your local Elastic URL
+        },
+    }
