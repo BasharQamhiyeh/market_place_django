@@ -112,3 +112,8 @@ class ItemDocument(Document):
             }
             for av in instance.attribute_values.all()
         ]
+
+
+# Disable Elasticsearch completely (no indexing or signals)
+from django_elasticsearch_dsl.registries import registry
+registry._active = False
