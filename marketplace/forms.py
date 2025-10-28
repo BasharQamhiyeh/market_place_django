@@ -3,7 +3,7 @@ import re
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils import translation
-from .models import Item
+from .models import Item, City
 from django.forms import ClearableFileInput
 
 
@@ -17,7 +17,7 @@ class UserRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'phone', 'email']
+        fields = ['username', 'phone', 'first_name', 'last_name', 'email']
 
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()
@@ -76,9 +76,15 @@ class ItemForm(forms.ModelForm):
         required=True
     )
 
+    city = forms.ModelChoiceField(
+        queryset=City.objects.filter(is_active=True).order_by('name_en'),
+        required=False,
+        label="City"
+    )
+
     class Meta:
         model = Item
-        fields = ['title', 'condition', 'price', 'description']
+        fields = ['title', 'condition', 'price', 'description', 'city']
 
     def __init__(self, *args, **kwargs):
         category = kwargs.pop('category', None)

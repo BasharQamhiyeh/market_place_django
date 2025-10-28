@@ -7,7 +7,8 @@ from .models import (
     Item,
     ItemAttributeValue,
     ItemPhoto,
-    Notification
+    Notification,
+    City
 )
 from django.utils.html import format_html
 from django.urls import path
@@ -208,5 +209,8 @@ class ItemPhotoAdmin(admin.ModelAdmin):
     search_fields = ("item__title",)
 
 
-
-
+@admin.register(City)
+class CityAdmin(admin.ModelAdmin):
+    list_display = ("id", "name_en", "name_ar", "is_active")
+    search_fields = ("name_en", "name_ar")
+    list_filter = ("is_active",)

@@ -26,6 +26,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=100, unique=True)
     phone = models.CharField(max_length=20, unique=True)
     email = models.EmailField(unique=True, blank=True, null=True)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -35,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return self.username
+        return f"{self.username} ({self.first_name or ''} {self.last_name or ''})".strip()
 
 
 # -----------------------
@@ -101,6 +104,8 @@ class Item(models.Model):
     description = models.TextField(blank=True)
     price = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    city = models.ForeignKey('City', on_delete=models.SET_NULL, null=True, blank=True, related_name='items')
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='items')
 
     # moderation/state
@@ -175,3 +180,18 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.title}"
+
+
+class City(models.Model):
+    name_en = models.CharField(max_length=150, unique=True)
+    name_ar = models.CharField(max_length=150, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = "Cities"
+        ordering = ["name_en"]
+
+    def __str__(self):
+        from django.utils import translation
+        lang = translation.get_language()
+        return self.name_ar if lang == "ar" else self.name_en

@@ -23,6 +23,8 @@
         {{ item.user.username }}
     </a>
 </p>
+<p><b>{% trans "City" %}:</b> {{ item.city|default:_("Not specified") }}</p>
+
 
 {# ✅ CLICK TO REVEAL PHONE #}
 <p><b>{% trans "Phone" %}:</b>
@@ -64,6 +66,8 @@
         {% trans "This item has expired and is no longer visible to others." %}
     </p>
 {% endif %}
+
+<p><b>{% trans "Last updated" %}:</b> {{ item.updated_at|date:"Y-m-d H:i" }}</p>
 
 <hr>
 

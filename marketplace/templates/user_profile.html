@@ -5,6 +5,8 @@
 
 {% block content %}
 <h2>{{ seller.username }}</h2>
+<h2>{{ seller.first_name }}</h2>
+<h2>{{ seller.last_name }}</h2>
 
 <p><b>{% trans "Phone" %}:</b> {{ seller.phone }}</p>
 {% if seller.email %}

@@ -27,7 +27,8 @@
 
           <div style="font-size:14px; color:#555;">
             {% trans "Price" %}: {{ item.price }} |
-            {% trans "Created" %}: {{ item.created_at|date:"Y-m-d H:i" }}
+            {% trans "Created" %}: {{ item.created_at|date:"Y-m-d H:i" }} |
+            {% trans "Updated" %}: {{ item.updated_at|date:"Y-m-d H:i" }}
           </div>
 
           <div style="margin-top:6px;">
