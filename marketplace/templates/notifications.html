@@ -2,42 +2,35 @@
 {% load i18n %}
 
 {% block title %}{% trans "Notifications" %}{% endblock %}
+
 {% block content %}
-
-<h2>{% trans "Notifications" %}</h2>
-
-{% if notifications %}
-<ul style="list-style:none; padding:0;">
-    {% for n in notifications %}
-        <li style="margin-bottom:15px; padding:10px; border-bottom:1px solid #ddd;
-                   {% if not n.is_read %}font-weight:bold; background:#f7f7f7;{% endif %}">
-
-            <strong>{{ n.title }}</strong><br>
-            {{ n.body }}<br>
-
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-dark text-white">
+    <h5 class="mb-0">{% trans "Notifications" %}</h5>
+  </div>
+  <div class="card-body">
+    {% if notifications %}
+      <div class="list-group">
+        {% for n in notifications %}
+          <div class="list-group-item list-group-item-action {% if not n.is_read %}active bg-light text-dark{% endif %}">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">{{ n.title }}</h6>
+              <small class="text-muted">{{ n.created_at }}</small>
+            </div>
+            <p class="mb-2">{{ n.body }}</p>
             {% if n.item_id %}
-                {% if request.user.is_staff %}
-                    {# ✅ staff sees admin moderation page #}
-                    <a href="{% url 'admin:marketplace_item_change' n.item_id %}"
-                       style="font-size:14px;">
-                        {% trans "Review Item" %}
-                    </a>
-                {% else %}
-                    {# ✅ normal users see the public item page #}
-                    <a href="{% url 'item_detail' n.item_id %}"
-                       style="font-size:14px;">
-                        {% trans "View Item" %}
-                    </a>
-                {% endif %}
+              {% if request.user.is_staff %}
+                <a class="btn btn-sm btn-jordan-outline" href="{% url 'admin:marketplace_item_change' n.item_id %}">{% trans "Review Item" %}</a>
+              {% else %}
+                <a class="btn btn-sm btn-jordan-outline" href="{% url 'item_detail' n.item_id %}">{% trans "View Item" %}</a>
+              {% endif %}
             {% endif %}
-
-            <br>
-            <small style="color:#666;">{{ n.created_at }}</small>
-        </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p>{% trans "No notifications." %}</p>
-{% endif %}
-
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">{% trans "No notifications." %}</div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

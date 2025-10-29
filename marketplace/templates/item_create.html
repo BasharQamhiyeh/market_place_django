@@ -5,41 +5,33 @@
 {% block title %}{% trans "Create Item" %}{% endblock %}
 
 {% block content %}
-
 <div class="card shadow-sm border-0">
   <div class="card-header bg-dark text-white">
     <h4 class="mb-0">{% trans "Create Item" %}</h4>
   </div>
 
   <div class="card-body bg-white">
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="vstack gap-3">
       {% csrf_token %}
 
-      <!-- Category -->
-      <div class="mb-4">
+      <div>
         <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
-        <select name="category" id="categorySelect"
-                class="form-select searchable-select"
-                data-placeholder="{% trans 'Select Category' %}">
+        <select name="category" id="categorySelect" class="form-select searchable-select" data-placeholder="{% trans 'Select Category' %}">
           <option value="">{% trans "Select Category" %}</option>
           {% for cat in categories %}
-            <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>
-              {{ cat }}
-            </option>
+            <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
           {% endfor %}
         </select>
       </div>
 
       {% if selected_category %}
-        <!-- Dynamic Form Fields -->
         {% for field in form %}
           {% if field.name != 'images' and "_other" not in field.name %}
-            <div class="mb-3">
-              <label class="form-label fw-semibold">{{ field.label }}</label><br>
+            <div>
+              <label class="form-label fw-semibold">{{ field.label }}</label>
               {{ field }}
-
               {% if "attribute_" in field.name %}
-                <div id="{{ field.name }}_other_box" style="display:none; margin-top:5px;">
+                <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
                   {% with other_name=field.name|add:"_other" %}
                     {% if other_name in form.fields %}
                       {{ form|get_bound_field:other_name }}
@@ -47,7 +39,6 @@
                   {% endwith %}
                 </div>
               {% endif %}
-
               {% if field.errors %}
                 <div class="text-danger small mt-1">{{ field.errors }}</div>
               {% endif %}
@@ -55,9 +46,8 @@
           {% endif %}
         {% endfor %}
 
-        <!-- Images -->
-        <div class="mb-3">
-          <label class="form-label fw-semibold">{{ form.images.label }}</label><br>
+        <div>
+          <label class="form-label fw-semibold">{{ form.images.label }}</label>
           {{ form.images }}
           {% if form.images.errors %}
             <div class="text-danger small mt-1">{{ form.images.errors }}</div>
@@ -65,28 +55,21 @@
         </div>
       {% endif %}
 
-      <div class="text-end mt-4">
-        <button type="submit" class="btn btn-jordan px-4">
-          {% trans "Post Item" %}
-        </button>
+      <div class="d-flex justify-content-end">
+        <button type="submit" class="btn btn-jordan px-4">{% trans "Post Item" %}</button>
       </div>
     </form>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
+{{ block.super }}
 <script>
 (function() {
-  // ---- Category selection ----
   function redirectWithCategory(val) {
     const url = new URL(window.location.href);
-    if (val) {
-      url.searchParams.set('category', val);
-    } else {
-      url.searchParams.delete('category');
-    }
+    if (val) { url.searchParams.set('category', val); } else { url.searchParams.delete('category'); }
     url.searchParams.delete('page');
     window.location.href = url.toString();
   }
@@ -94,17 +77,10 @@
   function bindCategoryChange() {
     const $select = $('#categorySelect');
     if (!$select.length) return;
-
-    // Unbind previous handlers
     $select.off('change.souq select2:select.souq');
-
-    // Bind both native and Select2 change events
-    $select.on('change.souq select2:select.souq', function() {
-      redirectWithCategory(this.value);
-    });
+    $select.on('change.souq select2:select.souq', function(){ redirectWithCategory(this.value); });
   }
 
-  // ---- Handle "_other" dynamic fields ----
   function updateOtherInputs() {
     document.querySelectorAll("select[name^='attribute_']").forEach(function(select) {
       const box = document.getElementById(select.name + "_other_box");
@@ -113,29 +89,24 @@
     });
   }
 
+  function onAttrChange(e) {
+    if (e.target && e.target.matches("select[name^='attribute_']")) updateOtherInputs();
+  }
+
   function bindOtherInputs() {
     document.removeEventListener('change', onAttrChange, true);
     document.addEventListener('change', onAttrChange, true);
-
-    $(document)
-      .off('select2:select.souqAttr', "select[name^='attribute_']")
-      .on('select2:select.souqAttr', "select[name^='attribute_']", updateOtherInputs);
+    $(document).off('select2:select.souqAttr', "select[name^='attribute_']")
+               .on('select2:select.souqAttr', "select[name^='attribute_']", updateOtherInputs);
   }
 
-  function onAttrChange(e) {
-    if (e.target && e.target.matches("select[name^='attribute_']")) {
-      updateOtherInputs();
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function(){
     bindCategoryChange();
     updateOtherInputs();
     bindOtherInputs();
   });
 
-  // Re-bind after HTMX swaps (if dynamic content reloads)
-  document.body.addEventListener('htmx:afterSwap', function() {
+  document.body.addEventListener('htmx:afterSwap', function(){
     bindCategoryChange();
     updateOtherInputs();
     bindOtherInputs();

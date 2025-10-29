@@ -2,89 +2,86 @@
 {% load i18n form_extras %}
 
 {% block title %}{% trans "Edit Item" %}{% endblock %}
+
 {% block content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-dark text-white">
+    <h4 class="mb-0">{% trans "Edit Item" %}</h4>
+  </div>
 
-<h2>{% trans "Edit Item" %}</h2>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" class="vstack gap-3">
+      {% csrf_token %}
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+      <div>
+        <label class="form-label fw-semibold" for="categorySelect">{% trans "Category" %}</label>
+        <select name="category" id="categorySelect" class="form-select searchable-select" placeholder="{% trans 'Select Category' %}">
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-    <label>{% trans "Category" %}:</label>
-    <select name="category" id="categorySelect" class="searchable-select" placeholder="{% trans 'Select Category' %}">
-        {% for cat in categories %}
-            <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>
-                {{ cat }}
-            </option>
-        {% endfor %}
-    </select>
-    <br><br>
-
-    {# Loop through form fields but skip category & images #}
-    {% for field in form.visible_fields %}
+      {% for field in form.visible_fields %}
         {% if field.name != "images" and field.name != "category" and "_other" not in field.name %}
-            <div style="margin-bottom:8px;">
-                {{ field.label_tag }}<br>
-                {{ field }}
-
-                {# Handle attribute_X fields with "other" text input #}
-                {% if field.name|slice:"0:10" == "attribute_" %}
-                    {% with other_name=field.name|add:"_other" %}
-                        <div id="{{ field.name }}_other_box"
-                             style="margin-top:5px;display:none;">
-                            {{ form|get_bound_field:other_name }}
-                        </div>
-                    {% endwith %}
-                {% endif %}
-            </div>
+          <div>
+            <label class="form-label fw-semibold">{{ field.label }}</label>
+            {{ field }}
+            {% if field.name|slice:"0:10" == "attribute_" %}
+              {% with other_name=field.name|add:"_other" %}
+                <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
+                  {{ form|get_bound_field:other_name }}
+                </div>
+              {% endwith %}
+            {% endif %}
+          </div>
         {% endif %}
-    {% endfor %}
+      {% endfor %}
 
-    <h3>{% trans "Existing Photos" %}</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        {% for photo in item.photos.all %}
-            <div style="position:relative;">
-                <img src="{{ photo.image.url }}"
-                     style="width:120px;height:120px;border-radius:6px;">
-                <a href="{% url 'delete_item_photo' photo.id %}"
-                   style="position:absolute;top:3px;right:3px;background:red;color:white;padding:2px 6px;border-radius:50%;">
-                   X
-                </a>
+      <div>
+        <h6 class="fw-semibold mb-2">{% trans "Existing Photos" %}</h6>
+        <div class="d-flex flex-wrap gap-2">
+          {% for photo in item.photos.all %}
+            <div class="position-relative">
+              <img src="{{ photo.image.url }}" class="rounded" style="width:120px;height:120px;object-fit:cover;">
+              <a href="{% url 'delete_item_photo' photo.id %}" class="btn btn-sm btn-danger position-absolute top-0 end-0 translate-middle badge rounded-pill">×</a>
             </div>
-        {% empty %}
-            <p>{% trans "No photos uploaded." %}</p>
-        {% endfor %}
-    </div>
+          {% empty %}
+            <p class="text-muted mb-0">{% trans "No photos uploaded." %}</p>
+          {% endfor %}
+        </div>
+      </div>
 
-    <br><br>
+      <div>
+        <label class="form-label fw-semibold">{% trans "Add More Photos" %}</label>
+        {{ form.images }}
+      </div>
 
-    <label>{% trans "Add More Photos" %}</label><br>
-    {{ form.images }}
+      <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'item_detail' item.id %}" class="btn btn-jordan-outline">{% trans "Cancel" %}</a>
+        <button type="submit" class="btn btn-jordan">{% trans "Save Changes" %}</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-    <br><br>
-    <button type="submit">{% trans "Save Changes" %}</button>
-</form>
-
-
+{% block scripts %}
+{{ block.super }}
 <script>
 document.getElementById('categorySelect').addEventListener('change', function() {
-    const url = new URL(window.location.href);
-    url.searchParams.set('category', this.value);
-    window.location.href = url.toString();
+  const url = new URL(window.location.href);
+  url.searchParams.set('category', this.value);
+  window.location.href = url.toString();
 });
-
 function updateOthers() {
-    document.querySelectorAll("select[name^='attribute_']").forEach(function(sel) {
-        const box = document.getElementById(sel.name + "_other_box");
-        if (!box) return;
-        box.style.display = sel.value === "__other__" ? "block" : "none";
-    });
+  document.querySelectorAll("select[name^='attribute_']").forEach(function(sel) {
+    const box = document.getElementById(sel.name + "_other_box");
+    if (!box) return;
+    box.style.display = sel.value === "__other__" ? "block" : "none";
+  });
 }
-
 updateOthers();
-
-document.addEventListener("change", function(e){
-    if (e.target.matches("select[name^='attribute_']")) updateOthers();
-});
+document.addEventListener("change", function(e){ if (e.target.matches("select[name^='attribute_']")) updateOthers(); });
 </script>
-
+{% endblock %}
 {% endblock %}

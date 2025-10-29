@@ -134,7 +134,7 @@ def item_list(request):
     # ----------------------------------------------
     # ✅ Pagination
     # ----------------------------------------------
-    paginator = Paginator(queryset, 10)
+    paginator = Paginator(queryset, 12)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 

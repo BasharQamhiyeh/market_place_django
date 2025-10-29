@@ -1,205 +1,194 @@
 {% extends 'base.html' %}
 {% load i18n %}
+
 {% block title %}{{ item.title }}{% endblock %}
+
 {% block content %}
+<div class="row g-3">
+  <div class="col-12">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h3 class="mb-3">{{ item.title }}</h3>
 
-<h2>{{ item.title }}</h2>
-
-{# --- PHOTO SLIDER --- #}
-{% if item.photos.exists %}
-<div class="slider">
-    <div class="slides">
-        {% for photo in item.photos.all %}
-            <img src="{{ photo.image.url }}" alt="{{ item.title }}">
-        {% endfor %}
-    </div>
-</div>
-{% else %}
-    <p>{% trans "No photos available." %}</p>
-{% endif %}
-
-<p><b>{% trans "Seller" %}:</b>
-    <a href="{% url 'user_profile' item.user.user_id %}">
-        {{ item.user.username }}
-    </a>
-</p>
-<p><b>{% trans "City" %}:</b> {{ item.city|default:_("Not specified") }}</p>
-
-{# ✅ CLICK TO REVEAL PHONE #}
-<p><b>{% trans "Phone" %}:</b>
-  {% if request.user.is_authenticated %}
-      <span id="seller-phone"
-            data-phone="{{ item.user.phone|default_if_none:'' }}"
-            data-show-phone="{{ item.user.show_phone|yesno:'true,false' }}"
-            style="cursor:pointer; color:#007bff; text-decoration:underline;">
-          {% trans "Click to show phone" %}
-      </span>
-  {% else %}
-      <a href="{% url 'login' %}?next={{ request.path }}" style="color:#007bff; text-decoration:underline;">
-          {% trans "Login to view phone number" %}
-      </a>
-  {% endif %}
-</p>
-
-<p><b>{% trans "Category" %}:</b> {{ item.category }}</p>
-
-{# ✅ Show condition #}
-<p><b>{% trans "Condition" %}:</b>
-   {% if item.condition == 'new' %}{% trans "New" %}{% else %}{% trans "Used" %}{% endif %}
-</p>
-
-<p><b>{% trans "Price" %}:</b> ${{ item.price }}</p>
-<p><b>{% trans "Description" %}:</b> {{ item.description }}</p>
-
-<hr>
-
-{# ---------- STATUS MESSAGES ---------- #}
-{% if not item.is_approved %}
-    <p style="color:orange; font-weight:bold;">
-        {% trans "This item is pending admin approval and not visible to others." %}
-    </p>
-{% endif %}
-
-{% if not item.is_active %}
-    <p style="color:red; font-weight:bold;">
-        {% trans "This item has expired and is no longer visible to others." %}
-    </p>
-{% endif %}
-
-<p><b>{% trans "Last updated" %}:</b> {{ item.updated_at|date:"Y-m-d H:i" }}</p>
-
-<hr>
-
-<h3>{% trans "Attributes" %}:</h3>
-<ul>
-    {% for attr in attributes %}
-        <li>{{ attr.attribute }}: {{ attr.value }}</li>
-    {% endfor %}
-</ul>
-
-<hr>
-
-{# ---------- OWNER ACTIONS ---------- #}
-{% if request.user == item.user %}
-    <a href="{% url 'item_edit' item.id %}"
-       style="display:inline-block; margin:10px 0; padding:10px; background:#6c757d; color:white; border-radius:6px; text-decoration:none;">
-        {% trans "Edit" %}
-    </a>
-
-    <a href="{% url 'cancel_item' item.id %}"
-       style="display:inline-block; margin:10px 0; padding:10px; background:#dc3545; color:white; border-radius:6px; text-decoration:none;">
-       {% trans "Delete" %}
-    </a>
-{% endif %}
-
-{% if request.user == item.user and not item.is_active %}
-    <a href="{% url 'reactivate_item' item.id %}"
-       style="display:inline-block; margin:10px 0; padding:10px; background:#28a745; color:white; border-radius:6px; text-decoration:none;">
-        {% trans "Reactivate Item" %}
-    </a>
-{% endif %}
-
-{# ---------- BUYER ACTIONS ---------- #}
-{% if request.user.is_authenticated and request.user != item.user and item.is_approved and item.is_active %}
-    <a href="{% url 'start_conversation' item.id %}"
-       style="display:inline-block; margin:10px 0; padding:10px; background:#007bff; color:white; border-radius:6px; text-decoration:none;">
-        {% trans "Message Seller" %}
-    </a>
-
-    {# ⭐ Favorite toggle button #}
-    <form method="post" action="{% url 'toggle_favorite' item.id %}" style="display:inline;">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.path }}">
-        {% if is_favorited %}
-            <button type="submit"
-                    style="display:inline-block; margin:10px 8px; padding:10px; background:#f3f4f6; color:#111; border-radius:6px; border:1px solid #ddd;">
-                ✳️ {% trans "Remove from Favorites" %}
-            </button>
+        {% if item.photos.exists %}
+          <div class="mb-3">
+            <div class="d-flex gap-2 overflow-auto pb-2">
+              {% for photo in item.photos.all %}
+                <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="rounded" style="width:340px;height:340px;object-fit:cover;flex:0 0 auto;">
+              {% endfor %}
+            </div>
+          </div>
         {% else %}
-            <button type="submit"
-                    style="display:inline-block; margin:10px 8px; padding:10px; background:#ffd166; color:#111; border-radius:6px; border:1px solid #eab308;">
-                ⭐ {% trans "Add to Favorites" %}
-            </button>
+          <div class="alert alert-light border">{% trans "No photos available." %}</div>
         {% endif %}
-    </form>
-{% endif %}
 
-<hr>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <ul class="list-group">
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">{% trans "Seller" %}</span>
+                <a class="text-decoration-none" href="{% url 'user_profile' item.user.user_id %}">{{ item.user.username }}</a>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">{% trans "City" %}</span>
+                <span>{{ item.city|default:_("Not specified") }}</span>
+              </li>
+              <li class="list-group-item">
+                <span class="fw-semibold me-2">{% trans "Phone" %}:</span>
+                {% if request.user.is_authenticated %}
+                  <span id="seller-phone"
+                        data-phone="{{ item.user.phone|default_if_none:'' }}"
+                        data-show-phone="{{ item.user.show_phone|yesno:'true,false' }}"
+                        class="text-decoration-underline" style="cursor:pointer; color:#0d6efd;">
+                    {% trans "Click to show phone" %}
+                  </span>
+                {% else %}
+                  <a class="text-decoration-underline" href="{% url 'login' %}?next={{ request.path }}">{% trans "Login to view phone number" %}</a>
+                {% endif %}
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">{% trans "Category" %}</span>
+                <span>{{ item.category }}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">{% trans "Condition" %}</span>
+                <span>{% if item.condition == 'new' %}{% trans "New" %}{% else %}{% trans "Used" %}{% endif %}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span class="fw-semibold">{% trans "Price" %}</span>
+                <span class="badge text-bg-warning fs-6">${{ item.price }}</span>
+              </li>
+            </ul>
+          </div>
 
-{# ---------- SIMILAR ITEMS SECTION ---------- #}
-{% if similar_items %}
-<h3>{% trans "Similar Items" %}</h3>
-<div style="display:grid; gap:12px;">
-  {% for s in similar_items %}
-    <div style="display:flex; gap:10px; align-items:flex-start; border:1px solid #eee; padding:8px; border-radius:6px;">
-      {% with photo=s.photos.first %}
-        {% if photo %}
-          <img src="{{ photo.image.url }}" alt="{{ s.title }}" width="80" height="80" style="object-fit:cover;border-radius:4px;">
+          <div class="col-12 col-md-6">
+            <div class="card h-100 border-0 bg-light-subtle">
+              <div class="card-body">
+                <h6 class="fw-semibold">{% trans "Description" %}</h6>
+                <p class="mb-0">{{ item.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        {% if not item.is_approved %}
+          <div class="alert alert-warning">
+            {% trans "This item is pending admin approval and not visible to others." %}
+          </div>
         {% endif %}
-      {% endwith %}
-      <div>
-        <a href="{% url 'item_detail' s.id %}">{{ s.title }}</a><br>
-        <small>${{ s.price }}</small>
+        {% if not item.is_active %}
+          <div class="alert alert-danger">
+            {% trans "This item has expired and is no longer visible to others." %}
+          </div>
+        {% endif %}
+
+        <p class="text-muted small mb-0">
+          <strong>{% trans "Last updated" %}:</strong> {{ item.updated_at|date:"Y-m-d H:i" }}
+        </p>
+      </div>
+
+      <div class="card-footer bg-white d-flex flex-wrap gap-2">
+        {% if request.user == item.user %}
+          <a href="{% url 'item_edit' item.id %}" class="btn btn-secondary">{% trans "Edit" %}</a>
+          <a href="{% url 'cancel_item' item.id %}" class="btn btn-danger">{% trans "Delete" %}</a>
+          {% if not item.is_active %}
+            <a href="{% url 'reactivate_item' item.id %}" class="btn btn-success">{% trans "Reactivate Item" %}</a>
+          {% endif %}
+        {% endif %}
+
+        {% if request.user.is_authenticated and request.user != item.user and item.is_approved and item.is_active %}
+          <a href="{% url 'start_conversation' item.id %}" class="btn btn-jordan">{% trans "Message Seller" %}</a>
+          <form method="post" action="{% url 'toggle_favorite' item.id %}" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            {% if is_favorited %}
+              <button type="submit" class="btn btn-outline-secondary">✳️ {% trans "Remove from Favorites" %}</button>
+            {% else %}
+              <button type="submit" class="btn btn-warning">⭐ {% trans "Add to Favorites" %}</button>
+            {% endif %}
+          </form>
+        {% endif %}
       </div>
     </div>
-  {% endfor %}
+  </div>
+
+  {% if attributes %}
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">{% trans "Attributes" %}</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group">
+            {% for attr in attributes %}
+              <li class="list-group-item d-flex justify-content-between">
+                <span>{{ attr.attribute }}</span>
+                <span class="fw-semibold">{{ attr.value }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if similar_items %}
+    <div class="col-12">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">{% trans "Similar Items" %}</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            {% for s in similar_items %}
+              <div class="col-12 col-sm-6 col-lg-4">
+                <div class="card h-100 border-0">
+                  {% with photo=s.photos.first %}
+                    {% if photo %}
+                      <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ s.title }}" style="height:180px;object-fit:cover;">
+                    {% endif %}
+                  {% endwith %}
+                  <div class="card-body">
+                    <h6 class="card-title mb-1"><a class="text-decoration-none" href="{% url 'item_detail' s.id %}">{{ s.title }}</a></h6>
+                    <div class="text-muted">${{ s.price }}</div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="col-12">
+    <a href="{% url 'item_list' %}" class="btn btn-jordan-outline">{% trans "Back to items" %}</a>
+  </div>
 </div>
-{% endif %}
 
-<br><br>
-<a href="{% url 'item_list' %}">{% trans "Back to items" %}</a>
-
-<style>
-/* --- Simple Mobile-Friendly Slider --- */
-.slider {
-    width: 100%;
-    overflow: hidden;
-    margin-bottom: 15px;
-    border-radius: 8px;
-}
-.slides {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 8px;
-}
-.slides img {
-    width: 350px;
-    height: 350px;
-    object-fit: cover;
-    border-radius: 6px;
-    scroll-snap-align: start;
-    flex-shrink: 0;
-}
-</style>
-
+{% block scripts %}
+{{ block.super }}
 <script>
 document.addEventListener('DOMContentLoaded', function(){
   var sp = document.getElementById('seller-phone');
   if (!sp) return;
-
   sp.addEventListener('click', function(){
     const showPhone = sp.getAttribute('data-show-phone') === 'true';
     const phone = sp.getAttribute('data-phone') || '';
-
     if (showPhone && phone) {
-      // Normalize format (07xxxxxxxx)
       let display = phone;
-      if (phone.startsWith('9627') && phone.length === 12) {
-        display = '0' + phone.slice(3);
-      }
+      if (phone.startsWith('9627') && phone.length === 12) { display = '0' + phone.slice(3); }
       sp.textContent = display;
     } else {
       sp.textContent = "{{ _('Seller prefers to be contacted via messages') }}";
     }
-
-    // Disable further clicks
-    sp.style.textDecoration = 'none';
+    sp.classList.remove('text-decoration-underline');
     sp.style.color = 'inherit';
     sp.style.cursor = 'default';
   });
 });
 </script>
-
+{% endblock %}
 {% endblock %}

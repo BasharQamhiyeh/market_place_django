@@ -4,36 +4,61 @@
 {% block title %}{{ seller.username }}{% endblock %}
 
 {% block content %}
-<h2>{{ seller.username }}</h2>
-<h2>{{ seller.first_name }}</h2>
-<h2>{{ seller.last_name }}</h2>
+<div class="row g-3">
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <h4 class="mb-1">{{ seller.username }}</h4>
+        {% if seller.first_name or seller.last_name %}
+          <div class="text-muted mb-3">{{ seller.first_name }} {{ seller.last_name }}</div>
+        {% endif %}
+        <ul class="list-group">
+          <li class="list-group-item d-flex justify-content-between">
+            <span class="fw-semibold">{% trans "Phone" %}</span>
+            <span>{{ seller.phone }}</span>
+          </li>
+          {% if seller.email %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="fw-semibold">{% trans "Email" %}</span>
+              <span>{{ seller.email }}</span>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
 
-<p><b>{% trans "Phone" %}:</b> {{ seller.phone }}</p>
-{% if seller.email %}
-    <p><b>{% trans "Email" %}:</b> {{ seller.email }}</p>
-{% endif %}
-
-<hr>
-
-<h3>{% trans "Active Listings" %}</h3>
-
-{% if items %}
-    {% for item in items %}
-        <div style="margin-bottom:15px;">
-            {% with first_photo=item.photos.first %}
-                {% if first_photo %}
-                    <img src="{{ first_photo.image.url }}" width="100" height="100"
-                         style="object-fit:cover; border-radius:6px;">
-                {% endif %}
-            {% endwith %}
-            <a href="{% url 'item_detail' item.id %}"
-               style="margin-left:10px;">
-               {{ item.title }} - ${{ item.price }}
-            </a>
-        </div>
-    {% endfor %}
-{% else %}
-    <p>{% trans "This seller has no active items at the moment." %}</p>
-{% endif %}
-
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white">
+        <h5 class="mb-0">{% trans "Active Listings" %}</h5>
+      </div>
+      <div class="card-body">
+        {% if items %}
+          <div class="row g-3">
+            {% for item in items %}
+              <div class="col-12 col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                  {% with first_photo=item.photos.first %}
+                    {% if first_photo %}
+                      <img src="{{ first_photo.image.url }}" width="100%" height="180" class="card-img-top" style="object-fit:cover;" alt="{{ item.title }}">
+                    {% endif %}
+                  {% endwith %}
+                  <div class="card-body">
+                    <a class="text-decoration-none" href="{% url 'item_detail' item.id %}">
+                      <h6 class="card-title mb-1">{{ item.title }}</h6>
+                    </a>
+                    <div class="text-muted">${{ item.price }}</div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="alert alert-info mb-0">{% trans "This seller has no active items at the moment." %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

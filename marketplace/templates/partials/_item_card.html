@@ -1,0 +1,36 @@
+{% load i18n %}
+
+<div class="card h-100 border-0 shadow-sm">
+  {% with photo=item.photos.first %}
+    {% if photo %}
+      <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="card-img-top"
+           style="height:180px; object-fit:cover;">
+    {% else %}
+      <div class="bg-light text-center d-flex align-items-center justify-content-center"
+           style="height:180px;">
+        <span class="text-muted small">{% trans "No image" %}</span>
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card-body">
+    <h6 class="card-title mb-1">
+      <a href="{% url 'item_detail' item.id %}" class="text-decoration-none text-dark">
+        {{ item.title }}
+      </a>
+    </h6>
+
+    <p class="mb-1 text-muted small">
+      {% trans "Price" %}: <span class="fw-semibold text-dark">${{ item.price }}</span>
+    </p>
+    <p class="mb-0 text-muted small">
+      {% trans "Posted by" %}: {{ item.user.username }}
+    </p>
+  </div>
+
+  <div class="card-footer bg-white border-0">
+    <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-jordan w-100">
+      {% trans "View Details" %}
+    </a>
+  </div>
+</div>

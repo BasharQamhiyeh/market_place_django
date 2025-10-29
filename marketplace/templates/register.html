@@ -1,79 +1,91 @@
-{# templates/register.html #}
 {% extends 'base.html' %}
 {% load i18n %}
+
 {% block title %}{% trans "Register" %}{% endblock %}
+
 {% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-dark text-white">
+        <h4 class="mb-0">{% trans "Create account" %}</h4>
+      </div>
+      <div class="card-body">
+        <form method="post" class="vstack gap-3">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
 
-<h2>{% trans "Create account" %}</h2>
+          <div>
+            {{ form.username.label_tag }}
+            {{ form.username|add_class:"form-control" }}
+            <div class="text-danger small">{{ form.username.errors }}</div>
+          </div>
 
-<form method="post">
-    {% csrf_token %}
+          <div>
+            {{ form.phone.label_tag }}
+            {{ form.phone|add_class:"form-control" }}
+            <small class="text-muted d-block">{% trans "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx." %}</small>
+            <div class="text-danger small">{{ form.phone.errors }}</div>
+          </div>
 
-    {{ form.non_field_errors }}
+          <div class="form-check">
+            {{ form.show_phone|add_class:"form-check-input" }}
+            <label class="form-check-label" for="{{ form.show_phone.id_for_label }}">{{ form.show_phone.label }}</label>
+            <small class="text-muted d-block">{{ form.show_phone.help_text }}</small>
+          </div>
 
-    <div>
-        {{ form.username.label_tag }}<br>
-        {{ form.username }}
-        {{ form.username.errors }}
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              {{ form.first_name.label_tag }}
+              {{ form.first_name|add_class:"form-control" }}
+              <div class="text-danger small">{{ form.first_name.errors }}</div>
+            </div>
+            <div class="col-12 col-md-6">
+              {{ form.last_name.label_tag }}
+              {{ form.last_name|add_class:"form-control" }}
+              <div class="text-danger small">{{ form.last_name.errors }}</div>
+            </div>
+          </div>
+
+          <div>
+            {{ form.email.label_tag }}
+            {{ form.email|add_class:"form-control" }}
+            <div class="text-danger small">{{ form.email.errors }}</div>
+          </div>
+
+          <div>
+            {{ form.password.label_tag }}
+            <div class="input-group">
+              {{ form.password|add_class:"form-control" }}
+              <button type="button" class="btn btn-outline-secondary" id="togglePwd">👁</button>
+            </div>
+            <small class="text-muted">{% trans "Password must be at least 8 characters and contain only letters and numbers." %}</small>
+            <div class="text-danger small">{{ form.password.errors }}</div>
+          </div>
+
+          <div>
+            {{ form.password2.label_tag }}
+            {{ form.password2|add_class:"form-control" }}
+            <div class="text-danger small">{{ form.password2.errors }}</div>
+          </div>
+
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-jordan">{% trans "Register" %}</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
+</div>
 
-    <div>
-        {{ form.phone.label_tag }}<br>
-        {{ form.phone }}
-        <small>{% trans "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx." %}</small>
-        {{ form.phone.errors }}
-    </div>
-    <p>
-      {{ form.show_phone }} {{ form.show_phone.label }}
-      <br><small>{{ form.show_phone.help_text }}</small>
-    </p>
-
-    <div>
-      {{ form.first_name.label_tag }}<br>
-      {{ form.first_name }}
-      {{ form.first_name.errors }}
-    </div>
-
-    <div>
-      {{ form.last_name.label_tag }}<br>
-      {{ form.last_name }}
-      {{ form.last_name.errors }}
-    </div>
-
-    <div>
-        {{ form.email.label_tag }}<br>
-        {{ form.email }}
-        {{ form.email.errors }}
-    </div>
-
-    <div>
-        {{ form.password.label_tag }}<br>
-        <div style="display:flex; gap:8px; align-items:center;">
-            {{ form.password }}
-            <button type="button" id="togglePwd" style="padding:4px 8px;">👁</button>
-        </div>
-        <small>{% trans "Password must be at least 8 characters and contain only letters and numbers." %}</small>
-        {{ form.password.errors }}
-    </div>
-
-    <div>
-        {{ form.password2.label_tag }}<br>
-        {{ form.password2 }}
-        {{ form.password2.errors }}
-    </div>
-
-    <button type="submit">{% trans "Register" %}</button>
-</form>
-
+{% block scripts %}
+{{ block.super }}
 <script>
 document.getElementById('togglePwd').addEventListener('click', function(){
-    var p1 = document.getElementById('id_password');
-    var p2 = document.getElementById('id_password2');
-    [p1, p2].forEach(function(inp){
-        if (!inp) return;
-        inp.type = (inp.type === 'password') ? 'text' : 'password';
-    });
+  var p1 = document.getElementById('id_password');
+  var p2 = document.getElementById('id_password2');
+  [p1, p2].forEach(function(inp){ if (inp) inp.type = (inp.type === 'password') ? 'text' : 'password'; });
 });
 </script>
-
+{% endblock %}
 {% endblock %}

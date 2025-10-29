@@ -1,18 +1,35 @@
 {% extends 'base.html' %}
 {% load i18n %}
+
 {% block title %}{% trans "Categories" %}{% endblock %}
+
 {% block content %}
-<h2>{% trans "All Categories" %}</h2>
-<a href="{% url 'category_create' %}">{% trans "Add New Category" %}</a>
-<hr>
-{% for cat in categories %}
-    <div>
-        <strong><a href="{% url 'category_detail' cat.id %}">{{ cat }}</a></strong><br>
-        {{ cat.description }}
-    </div>
-    <hr>
-{% empty %}
-    <p>{% trans "No categories yet." %}</p>
-{% endfor %}
-<a href="/">{% trans "Back to home" %}</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0">{% trans "All Categories" %}</h4>
+  <a class="btn btn-jordan" href="{% url 'category_create' %}">{% trans "Add New Category" %}</a>
+</div>
+
+{% if categories %}
+  <div class="row g-3">
+    {% for cat in categories %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h5 class="card-title">
+              <a class="text-decoration-none" href="{% url 'category_detail' cat.id %}">{{ cat }}</a>
+            </h5>
+            {% if cat.description %}
+              <p class="card-text text-muted">{{ cat.description }}</p>
+            {% endif %}
+          </div>
+          <div class="card-footer bg-white border-0">
+            <a class="btn btn-sm btn-jordan-outline" href="{% url 'category_detail' cat.id %}">{% trans "View" %}</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info mb-0">{% trans "No categories yet." %}</div>
+{% endif %}
 {% endblock %}

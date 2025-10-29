@@ -1,26 +1,39 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block content %}
-<h2>{% trans "My Conversations" %}</h2>
+{% block title %}{% trans "My Conversations" %}{% endblock %}
 
-{% for convo in convos %}
-    <div style="margin-bottom:10px;">
-        <a href="{% url 'chat_room' convo.id %}">
-            {% trans "Conversation about" %} "{{ convo.item.title }}"
-            <br>
-            <small>
-            {% trans "With" %}:
-            {% if request.user == convo.buyer %}
-                {{ convo.seller.username }}
-            {% else %}
-                {{ convo.buyer.username }}
-            {% endif %}
-            </small>
-        </a>
-        <hr>
-    </div>
-{% empty %}
-<p>{% trans "No conversations yet." %}</p>
-{% endfor %}
+{% block content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-dark text-white">
+    <h5 class="mb-0">{% trans "My Conversations" %}</h5>
+  </div>
+  <div class="card-body">
+    {% if convos %}
+      <div class="list-group">
+        {% for convo in convos %}
+          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
+             href="{% url 'chat_room' convo.id %}">
+            <div class="me-3">
+              <div class="fw-semibold">
+                {% trans "Conversation about" %} “{{ convo.item.title }}”
+              </div>
+              <small class="text-muted">
+                {% trans "With" %}:
+                {% if request.user == convo.buyer %}
+                  {{ convo.seller.username }}
+                {% else %}
+                  {{ convo.buyer.username }}
+                {% endif %}
+              </small>
+            </div>
+            <span class="badge bg-secondary align-self-center">{% trans "Open" %}</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">{% trans "No conversations yet." %}</div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}
