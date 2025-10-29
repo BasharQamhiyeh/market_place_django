@@ -1,97 +1,145 @@
 {% extends 'base.html' %}
 {% load i18n %}
 {% load form_extras %}
+
 {% block title %}{% trans "Create Item" %}{% endblock %}
+
 {% block content %}
 
-<h2>{% trans "Create Item" %}</h2>
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-dark text-white">
+    <h4 class="mb-0">{% trans "Create Item" %}</h4>
+  </div>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
+  <div class="card-body bg-white">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
 
-    <label>{% trans "Category" %}:</label>
-    <select name="category" id="categorySelect" class="searchable-select" placeholder="{% trans 'Select Category' %}">
-        <option value="">{% trans "Select Category" %}</option>
-        {% for cat in categories %}
+      <!-- Category -->
+      <div class="mb-4">
+        <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
+        <select name="category" id="categorySelect"
+                class="form-select searchable-select"
+                data-placeholder="{% trans 'Select Category' %}">
+          <option value="">{% trans "Select Category" %}</option>
+          {% for cat in categories %}
             <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>
-                {{ cat }}
+              {{ cat }}
             </option>
-        {% endfor %}
-    </select>
+          {% endfor %}
+        </select>
+      </div>
 
-    <br><br>
-
-    {% if selected_category %}
+      {% if selected_category %}
+        <!-- Dynamic Form Fields -->
         {% for field in form %}
-            {% if field.name != 'images' and "_other" not in field.name %}
-                <div style="margin-bottom:10px;">
-                    {{ field.label_tag }}<br>
-                    {{ field }}
+          {% if field.name != 'images' and "_other" not in field.name %}
+            <div class="mb-3">
+              <label class="form-label fw-semibold">{{ field.label }}</label><br>
+              {{ field }}
 
-                    {# show Other only for dynamic attributes #}
-                    {% if "attribute_" in field.name %}
-                        <div id="{{ field.name }}_other_box"
-                             style="display:none; margin-top:5px;">
-                            {% with other_name=field.name|add:"_other" %}
-                                {% if other_name in form.fields %}
-                                    {{ form|get_bound_field:other_name }}
-                                {% endif %}
-                            {% endwith %}
-                        </div>
+              {% if "attribute_" in field.name %}
+                <div id="{{ field.name }}_other_box" style="display:none; margin-top:5px;">
+                  {% with other_name=field.name|add:"_other" %}
+                    {% if other_name in form.fields %}
+                      {{ form|get_bound_field:other_name }}
                     {% endif %}
-
-                    {% if field.errors %}
-                        <div style="color:red;">{{ field.errors }}</div>
-                    {% endif %}
+                  {% endwith %}
                 </div>
-            {% endif %}
-        {% endfor %}
+              {% endif %}
 
+              {% if field.errors %}
+                <div class="text-danger small mt-1">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
 
         <!-- Images -->
-        <div style="margin-bottom:10px;">
-            {{ form.images.label_tag }}<br>
-            {{ form.images }}
-            {% if form.images.errors %}
-                <div style="color:red;">{{ form.images.errors }}</div>
-            {% endif %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ form.images.label }}</label><br>
+          {{ form.images }}
+          {% if form.images.errors %}
+            <div class="text-danger small mt-1">{{ form.images.errors }}</div>
+          {% endif %}
         </div>
-    {% endif %}
+      {% endif %}
 
-    <br>
-    <button type="submit">{% trans "Post Item" %}</button>
-</form>
+      <div class="text-end mt-4">
+        <button type="submit" class="btn btn-jordan px-4">
+          {% trans "Post Item" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
 
+{% endblock %}
+
+{% block scripts %}
 <script>
-document.getElementById('categorySelect').addEventListener('change', function() {
+(function() {
+  // ---- Category selection ----
+  function redirectWithCategory(val) {
     const url = new URL(window.location.href);
-    url.searchParams.set('category', this.value);
-    window.location.href = url.toString();
-});
-
-// ✅ Toggle Visibility of Other Inputs
-function updateOtherInputs() {
-    document.querySelectorAll("select[name^='attribute_']").forEach(function(select) {
-        const box = document.getElementById(select.name + "_other_box");
-        if (!box) return;
-
-        if (select.value === "__other__") {
-            box.style.display = "block";
-        } else {
-            box.style.display = "none";
-        }
-    });
-}
-
-// Initialize on load
-updateOtherInputs();
-
-// Listen for selection changes
-document.addEventListener('change', function(e) {
-    if (e.target.matches("select[name^='attribute_']")) {
-        updateOtherInputs();
+    if (val) {
+      url.searchParams.set('category', val);
+    } else {
+      url.searchParams.delete('category');
     }
-});
-</script>
+    url.searchParams.delete('page');
+    window.location.href = url.toString();
+  }
 
+  function bindCategoryChange() {
+    const $select = $('#categorySelect');
+    if (!$select.length) return;
+
+    // Unbind previous handlers
+    $select.off('change.souq select2:select.souq');
+
+    // Bind both native and Select2 change events
+    $select.on('change.souq select2:select.souq', function() {
+      redirectWithCategory(this.value);
+    });
+  }
+
+  // ---- Handle "_other" dynamic fields ----
+  function updateOtherInputs() {
+    document.querySelectorAll("select[name^='attribute_']").forEach(function(select) {
+      const box = document.getElementById(select.name + "_other_box");
+      if (!box) return;
+      box.style.display = (select.value === "__other__") ? "block" : "none";
+    });
+  }
+
+  function bindOtherInputs() {
+    document.removeEventListener('change', onAttrChange, true);
+    document.addEventListener('change', onAttrChange, true);
+
+    $(document)
+      .off('select2:select.souqAttr', "select[name^='attribute_']")
+      .on('select2:select.souqAttr', "select[name^='attribute_']", updateOtherInputs);
+  }
+
+  function onAttrChange(e) {
+    if (e.target && e.target.matches("select[name^='attribute_']")) {
+      updateOtherInputs();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    bindCategoryChange();
+    updateOtherInputs();
+    bindOtherInputs();
+  });
+
+  // Re-bind after HTMX swaps (if dynamic content reloads)
+  document.body.addEventListener('htmx:afterSwap', function() {
+    bindCategoryChange();
+    updateOtherInputs();
+    bindOtherInputs();
+  });
+})();
+</script>
 {% endblock %}
