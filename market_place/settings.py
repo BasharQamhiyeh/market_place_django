@@ -12,30 +12,13 @@ DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']
 
 # ---------------------------------------------------
-# ✅ Cloudinary configuration (MUST come early)
+# Cloudinary (must be early)
 # ---------------------------------------------------
 IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
-
 CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
-
-USE_CLOUDINARY = IS_RENDER and all([
-    CLOUDINARY_CLOUD_NAME,
-    CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET
-])
-
-if USE_CLOUDINARY:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-        'API_KEY': CLOUDINARY_API_KEY,
-        'API_SECRET': CLOUDINARY_API_SECRET,
-    }
-    print(f"[INFO] ✅ Using Cloudinary for media uploads ({CLOUDINARY_CLOUD_NAME})")
-else:
-    print("[INFO] ⚙️ Using local /media/ for media files.")
+USE_CLOUDINARY = IS_RENDER and all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
 
 # ---------------------------------------------------
 # Installed apps
@@ -132,15 +115,34 @@ LANGUAGES = [
 ]
 
 # ---------------------------------------------------
-# Static and Media files
+# Static & Media
 # ---------------------------------------------------
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Django 5.x: use STORAGES (DEFAULT_FILE_STORAGE/STATICFILES_STORAGE are ignored)
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+    "default": (
+        {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        }
+        if USE_CLOUDINARY
+        else {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": str(MEDIA_ROOT),
+                "base_url": MEDIA_URL,
+            },
+        }
+    ),
+}
 
 # ---------------------------------------------------
 # Default primary key field type
