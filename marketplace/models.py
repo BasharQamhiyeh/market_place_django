@@ -29,6 +29,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
+    show_phone = models.BooleanField(
+        default=True,
+        help_text="If true, your phone number will be visible to other users."
+    )
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 

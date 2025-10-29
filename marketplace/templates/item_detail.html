@@ -27,17 +27,18 @@
 
 {# ✅ CLICK TO REVEAL PHONE #}
 <p><b>{% trans "Phone" %}:</b>
-    {% if request.user.is_authenticated %}
-        <span id="seller-phone"
-              data-phone="{{ item.user.phone|default_if_none:'' }}"
-              style="cursor:pointer; color:#007bff; text-decoration:underline;">
-            {% trans "Click to show phone" %}
-        </span>
-    {% else %}
-        <a href="{% url 'login' %}?next={{ request.path }}" style="color:#007bff; text-decoration:underline;">
-            {% trans "Login to view phone number" %}
-        </a>
-    {% endif %}
+  {% if request.user.is_authenticated %}
+      <span id="seller-phone"
+            data-phone="{{ item.user.phone|default_if_none:'' }}"
+            data-show-phone="{{ item.user.show_phone|yesno:'true,false' }}"
+            style="cursor:pointer; color:#007bff; text-decoration:underline;">
+          {% trans "Click to show phone" %}
+      </span>
+  {% else %}
+      <a href="{% url 'login' %}?next={{ request.path }}" style="color:#007bff; text-decoration:underline;">
+          {% trans "Login to view phone number" %}
+      </a>
+  {% endif %}
 </p>
 
 <p><b>{% trans "Category" %}:</b> {{ item.category }}</p>
@@ -123,6 +124,28 @@
     </form>
 {% endif %}
 
+<hr>
+
+{# ---------- SIMILAR ITEMS SECTION ---------- #}
+{% if similar_items %}
+<h3>{% trans "Similar Items" %}</h3>
+<div style="display:grid; gap:12px;">
+  {% for s in similar_items %}
+    <div style="display:flex; gap:10px; align-items:flex-start; border:1px solid #eee; padding:8px; border-radius:6px;">
+      {% with photo=s.photos.first %}
+        {% if photo %}
+          <img src="{{ photo.image.url }}" alt="{{ s.title }}" width="80" height="80" style="object-fit:cover;border-radius:4px;">
+        {% endif %}
+      {% endwith %}
+      <div>
+        <a href="{% url 'item_detail' s.id %}">{{ s.title }}</a><br>
+        <small>${{ s.price }}</small>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
 <br><br>
 <a href="{% url 'item_list' %}">{% trans "Back to items" %}</a>
 
@@ -155,14 +178,23 @@
 document.addEventListener('DOMContentLoaded', function(){
   var sp = document.getElementById('seller-phone');
   if (!sp) return;
+
   sp.addEventListener('click', function(){
-    var p = sp.getAttribute('data-phone') || '';
-    if (!p) return;
-    // If stored as 9627xxxxxxx, display 07xxxxxxxx
-    if (p.startsWith('9627') && p.length === 12) {
-      p = '0' + p.slice(3);
+    const showPhone = sp.getAttribute('data-show-phone') === 'true';
+    const phone = sp.getAttribute('data-phone') || '';
+
+    if (showPhone && phone) {
+      // Normalize format (07xxxxxxxx)
+      let display = phone;
+      if (phone.startsWith('9627') && phone.length === 12) {
+        display = '0' + phone.slice(3);
+      }
+      sp.textContent = display;
+    } else {
+      sp.textContent = "{{ _('Seller prefers to be contacted via messages') }}";
     }
-    sp.textContent = p;
+
+    // Disable further clicks
     sp.style.textDecoration = 'none';
     sp.style.color = 'inherit';
     sp.style.cursor = 'default';

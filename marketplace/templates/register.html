@@ -23,6 +23,10 @@
         <small>{% trans "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx." %}</small>
         {{ form.phone.errors }}
     </div>
+    <p>
+      {{ form.show_phone }} {{ form.show_phone.label }}
+      <br><small>{{ form.show_phone.help_text }}</small>
+    </p>
 
     <div>
       {{ form.first_name.label_tag }}<br>

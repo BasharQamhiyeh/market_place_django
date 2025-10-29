@@ -151,7 +151,6 @@ LOCALE_PATHS = [
 # Elasticsearch
 # ---------------------------------------------------
 
-IS_RENDER = os.environ.get("RENDER", "") == "true"
 if IS_RENDER:
     # 🚫 Disable Elasticsearch on Render
     ELASTICSEARCH_DSL = {

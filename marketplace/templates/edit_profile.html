@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Edit Profile" %}{% endblock %}
+
+{% block content %}
+<h2>{% trans "Edit Profile" %}</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">{% trans "Save Changes" %}</button>
+</form>
+
+<p style="margin-top: 20px;">
+  <a href="{% url 'change_password' %}">{% trans "Change Password" %}</a> |
+  <a href="{% url 'user_profile' request.user.user_id %}">{% trans "Back to profile" %}</a>
+</p>
+{% endblock %}

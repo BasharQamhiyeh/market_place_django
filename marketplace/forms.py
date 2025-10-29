@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils import translation
 from .models import Item, City
 from django.forms import ClearableFileInput
+from django.contrib.auth.forms import PasswordChangeForm
 
 
 from .widgets import MultipleFileInput  # your existing widget
@@ -12,31 +13,37 @@ from .widgets import MultipleFileInput  # your existing widget
 User = get_user_model()
 
 class UserRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput(attrs={"id": "id_password"}))
-    password2 = forms.CharField(widget=forms.PasswordInput(attrs={"id": "id_password2"}), label="Confirm Password")
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={"id": "id_password"})
+    )
+    password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={"id": "id_password2"}),
+        label="Confirm Password"
+    )
+
+    show_phone = forms.BooleanField(
+        required=False,
+        label="عرض رقم الهاتف للمستخدمين الآخرين",
+        help_text="فعّل هذا الخيار إذا كنت تريد أن يظهر رقم هاتفك للمستخدمين الآخرين.",
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )
 
     class Meta:
         model = User
-        fields = ['username', 'phone', 'first_name', 'last_name', 'email']
+        fields = ['username', 'phone', 'first_name', 'last_name', 'email', 'show_phone']
 
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()
-
-        # Require the first character to be a letter (A–Z or a–z)
         if not re.match(r'^[A-Za-z]', username):
             raise forms.ValidationError("اسم المستخدم يجب أن يبدأ بحرف.")
-
-        # (Optional) If you ALSO want to restrict the rest of the characters:
-        # if not re.match(r'^[A-Za-z][A-Za-z0-9._-]*$', username):
-        #     raise forms.ValidationError("اسم المستخدم يجب أن يبدأ بحرف ويمكن أن يحتوي على حروف، أرقام، ونقاط/شرطات/شرطات سفلية.")
-
         return username
 
     def clean_password(self):
         pwd = self.cleaned_data.get('password', '')
-        # if len(pwd) < 8 or not re.fullmatch(r'[A-Za-z0-9]+', pwd):
         if len(pwd) < 8:
-            raise forms.ValidationError("كلمة المرور يجب أن تتكون من 8 أحرف/أرقام على الأقل وتحتوي على أحرف أو أرقام فقط.")
+            raise forms.ValidationError(
+                "كلمة المرور يجب أن تتكون من 8 أحرف/أرقام على الأقل وتحتوي على أحرف أو أرقام فقط."
+            )
         return pwd
 
     def clean_password2(self):
@@ -48,16 +55,44 @@ class UserRegistrationForm(forms.ModelForm):
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone', '').strip().replace(' ', '')
-        # Accept "07xxxxxxxx" (10 digits) OR "9627xxxxxxxxx" (12 digits)
         if re.fullmatch(r'07\d{8}', phone):
-            # normalize to 9627xxxxxxxx
-            phone = '962' + phone[1:]
-        elif re.fullmatch(r'9627\d{8}', phone):
-            # already normalized
-            pass
-        else:
-            raise forms.ValidationError("رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام، وسيتم حفظه بصيغة 9627xxxxxxxx.")
+            phone = '962' + phone[1:]  # normalize 07xxxxxxxx to 9627xxxxxxxxx
+        elif not re.fullmatch(r'9627\d{8}', phone):
+            raise forms.ValidationError(
+                "رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام، وسيتم حفظه بصيغة 9627xxxxxxxx."
+            )
         return phone
+
+
+class UserProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'show_phone']
+        labels = {
+            'first_name': 'الاسم الأول',
+            'last_name': 'الاسم الأخير',
+            'email': 'البريد الإلكتروني',
+            'show_phone': 'عرض رقم الهاتف للمستخدمين الآخرين',
+        }
+        widgets = {
+            'show_phone': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+# Optional: just reuse Django's built-in PasswordChangeForm
+class UserPasswordChangeForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label="كلمة المرور الحالية",
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password'})
+    )
+    new_password1 = forms.CharField(
+        label="كلمة المرور الجديدة",
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'})
+    )
+    new_password2 = forms.CharField(
+        label="تأكيد كلمة المرور الجديدة",
+        widget=forms.PasswordInput(attrs={'autocomplete': 'new-password'})
+    )
 
 
 class MultipleFileInput(ClearableFileInput):

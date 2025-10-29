@@ -54,6 +54,7 @@
 
         <div class="dropdown-menu">
           <a href="{% url 'user_profile' request.user.user_id %}">{% trans "My Profile" %}</a>
+          <a href="{% url 'edit_profile' %}">{% trans "Edit Profile" %}</a>
           <a href="{% url 'my_items' %}">{% trans "My Items" %}</a>
           <a href="{% url 'my_favorites' %}">{% trans "My Favorites" %}</a>
           <a href="{% url 'user_inbox' %}">{% trans "My Messages" %}</a>

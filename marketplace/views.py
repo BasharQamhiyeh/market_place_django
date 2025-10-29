@@ -17,6 +17,9 @@ from datetime import timedelta
 from django.http import HttpResponseForbidden
 from django.views.decorators.http import require_POST
 from .models import Favorite  # ensure Favorite is imported
+from elasticsearch import Elasticsearch
+from django.conf import settings
+from elasticsearch.exceptions import ConnectionError
 
 # Registration
 def register(request):
@@ -155,16 +158,54 @@ def item_list(request):
 # Item details
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
-    attributes = item.attribute_values.select_related('attribute')
+    attributes = item.attribute_values.all()
 
-    is_favorited = False
-    if request.user.is_authenticated:
-        is_favorited = Favorite.objects.filter(user=request.user, item=item).exists()
+    similar_items = []
+
+    # ✅ Try Elasticsearch-based "More Like This" search
+    if not settings.IS_RENDER:
+        try:
+            es = Elasticsearch(settings.ELASTICSEARCH_DSL['default']['hosts'])
+            query = {
+                "query": {
+                    "more_like_this": {
+                        "fields": ["title", "description"],
+                        "like": [
+                            {
+                                "_index": "items",
+                                "_id": item.id
+                            }
+                        ],
+                        "min_term_freq": 1,
+                        "max_query_terms": 12
+                    }
+                },
+                "size": 6
+            }
+            response = es.search(index="items", body=query)
+            hits = response.get("hits", {}).get("hits", [])
+            ids = [hit["_id"] for hit in hits]
+            similar_items = Item.objects.filter(id__in=ids)
+        except ConnectionError as e:
+            print("[WARN] Elasticsearch unavailable:", e)
+            # fallback to same category if ES fails
+            similar_items = (
+                Item.objects.filter(category=item.category)
+                .exclude(id=item.id)
+                .order_by('-created_at')[:6]
+            )
+    else:
+        # ✅ Render fallback: same category + recent
+        similar_items = (
+            Item.objects.filter(category=item.category)
+            .exclude(id=item.id)
+            .order_by('-created_at')[:6]
+        )
 
     return render(request, 'item_detail.html', {
         'item': item,
         'attributes': attributes,
-        'is_favorited': is_favorited,
+        'similar_items': similar_items,
     })
 
 
@@ -675,3 +716,45 @@ def my_favorites(request):
     return render(request, "my_favorites.html", {
         "page_obj": page_obj
     })
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import UserProfileEditForm, UserPasswordChangeForm
+
+
+@login_required
+def edit_profile(request):
+    """Allow user to edit their profile info (not username or phone)."""
+    user = request.user
+    if request.method == "POST":
+        form = UserProfileEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ تم تحديث معلوماتك بنجاح.")
+            return redirect('user_profile', user.user_id)
+        else:
+            messages.error(request, "⚠️ يرجى تصحيح الأخطاء.")
+    else:
+        form = UserProfileEditForm(instance=user)
+
+    return render(request, 'edit_profile.html', {'form': form})
+
+
+@login_required
+def change_password(request):
+    """Allow user to change password."""
+    if request.method == "POST":
+        form = UserPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # keep logged in
+            messages.success(request, "✅ تم تغيير كلمة المرور بنجاح.")
+            return redirect('user_profile', request.user.user_id)
+        else:
+            messages.error(request, "⚠️ يرجى تصحيح الأخطاء.")
+    else:
+        form = UserPasswordChangeForm(user=request.user)
+
+    return render(request, 'change_password.html', {'form': form})
