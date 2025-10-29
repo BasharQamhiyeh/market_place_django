@@ -1,6 +1,6 @@
 from pathlib import Path
 import os
-import dj_database_url  # ✅ add this
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -8,12 +8,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 # ---------------------------------------------------
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-@z7*j5)%3_of%$68h_mfuyhxz4vnspr^_@f%n6i)p5+jd7!z&i')
-
-# On Render, DEBUG should be False (set DJANGO_DEBUG=True while testing)
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
-
-# ✅ Allow all for now — later restrict to your Render domain
 ALLOWED_HOSTS = ['*']
+
+# ---------------------------------------------------
+# ✅ Cloudinary configuration (MUST come early)
+# ---------------------------------------------------
+IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
+
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
+USE_CLOUDINARY = IS_RENDER and all([
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET
+])
+
+if USE_CLOUDINARY:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY': CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
+    }
+    print(f"[INFO] ✅ Using Cloudinary for media uploads ({CLOUDINARY_CLOUD_NAME})")
+else:
+    print("[INFO] ⚙️ Using local /media/ for media files.")
 
 # ---------------------------------------------------
 # Installed apps
@@ -29,12 +51,15 @@ INSTALLED_APPS = [
     'django_elasticsearch_dsl',
 ]
 
+if USE_CLOUDINARY:
+    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+
 # ---------------------------------------------------
 # Middleware
 # ---------------------------------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ✅ added for static file serving
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -74,7 +99,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'market_place.wsgi.application'
 
 # ---------------------------------------------------
-# Database (Render + local fallback)
+# Database
 # ---------------------------------------------------
 DATABASES = {
     'default': dj_database_url.config(
@@ -117,13 +142,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
-
-if IS_RENDER:
-    print("[INFO] Running on Render: MEDIA files served directly for testing.")
-else:
-    print("[INFO] Running locally: MEDIA files served via Django development server.")
-
 # ---------------------------------------------------
 # Default primary key field type
 # ---------------------------------------------------
@@ -141,43 +159,13 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-LOCALE_PATHS = [
-    BASE_DIR / 'locale',
-]
+LOCALE_PATHS = [BASE_DIR / 'locale']
 
 # ---------------------------------------------------
 # Elasticsearch
 # ---------------------------------------------------
 if IS_RENDER:
-    # 🚫 Disable Elasticsearch on Render
-    ELASTICSEARCH_DSL = {
-        'default': {
-            'hosts': '',
-        },
-    }
+    ELASTICSEARCH_DSL = {'default': {'hosts': ''}}
     ELASTICSEARCH_DSL_AUTOSYNC = False
 else:
-    # ✅ Local: use your real Elasticsearch
-    ELASTICSEARCH_DSL = {
-        'default': {
-            'hosts': 'http://localhost:9200',
-        },
-    }
-
-# ---------------------------------------------------
-# ✅ Cloudinary Storage (for Render)
-# ---------------------------------------------------
-if IS_RENDER:
-    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
-
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-    }
-
-    print("[INFO] Using Cloudinary for media files.")
-else:
-    print("[INFO] Using local /media/ for media files.")
+    ELASTICSEARCH_DSL = {'default': {'hosts': 'http://localhost:9200'}}
