@@ -9,10 +9,11 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
 ]
 
-# ✅ Serve /media/ first — not prefixed with /en/ or /ar/
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# ✅ Always serve /media/ on Render or local testing
+if settings.DEBUG or getattr(settings, "IS_RENDER", False):
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# ✅ App URLs under language prefixes
+# ✅ Language-prefixed routes (keep these after)
 urlpatterns += i18n_patterns(
     path('', include('marketplace.urls')),
 )
