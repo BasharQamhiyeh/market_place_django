@@ -117,6 +117,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# ✅ Detect Render (ephemeral filesystem)
+IS_RENDER = os.environ.get("RENDER", "") == "true"
+
+# ✅ When running on Render in DEBUG mode, serve media directly
+if IS_RENDER:
+    print("[INFO] Running on Render: MEDIA files served directly for testing.")
+else:
+    print("[INFO] Running locally: MEDIA files served via Django development server.")
+
 # ---------------------------------------------------
 # Default primary key field type
 # ---------------------------------------------------
