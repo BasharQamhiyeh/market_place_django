@@ -16,7 +16,6 @@
   {% block head %}{% endblock %}
 
   <style>
-    /* === Jordan color palette === */
     :root {
       --jordan-red: #CE1126;
       --jordan-green: #007A3D;
@@ -31,7 +30,6 @@
       font-family: 'Segoe UI', 'Cairo', system-ui, sans-serif;
     }
 
-    /* === Navbar === */
     .navbar-jordan {
       background-color: var(--jordan-black);
     }
@@ -58,7 +56,6 @@
       background-color: var(--jordan-red);
     }
 
-    /* === Buttons === */
     .btn-jordan {
       background-color: var(--jordan-red);
       border: none;
@@ -79,7 +76,6 @@
       color: white;
     }
 
-    /* === Ads === */
     .market-layout {
       display: grid;
       grid-template-columns: 220px 1fr 220px;
@@ -106,7 +102,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    /* === Profile Dropdown === */
     .profile-dropdown {
       position: relative;
     }
@@ -139,13 +134,11 @@
       background-color: var(--jordan-light);
     }
 
-    /* === Footer === */
     footer {
       background-color: var(--jordan-black);
       color: var(--jordan-white);
     }
 
-    /* === Decorative Divider (Subtle Keffiyeh-inspired pattern) === */
     .pattern-divider {
       background: repeating-linear-gradient(
         45deg,
@@ -164,8 +157,16 @@
 <!-- ✅ Navbar -->
 <nav class="navbar navbar-expand-lg navbar-jordan shadow-sm sticky-top">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/">
-      🇯🇴 Souq Jordan
+    <a class="navbar-brand d-flex align-items-center" href="/">
+      <!-- ✅ Inline SVG flag ensures it always displays -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="16" viewBox="0 0 3 2" class="me-2">
+        <rect width="3" height="2" fill="#007A3D"/>
+        <rect width="3" height="1.333" y="0.333" fill="#fff"/>
+        <rect width="3" height="0.666" y="0.666" fill="#000"/>
+        <polygon points="0,0 1,1 0,2" fill="#CE1126"/>
+        <polygon fill="#fff" points="0.36,1 0.25,0.7 0.55,0.7 0.43,1 0.55,1.3 0.25,1.3"/>
+      </svg>
+      Souq Jordan
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
@@ -175,7 +176,6 @@
 
     <div class="collapse navbar-collapse justify-content-end" id="navbarMain">
       <ul class="navbar-nav align-items-center gap-3">
-
         {% if user.is_authenticated and user.is_staff %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin:index' %}">{% trans "Admin Dashboard" %}</a>
@@ -244,13 +244,10 @@
   </div>
 </nav>
 
-<!-- Decorative divider -->
 <div class="pattern-divider"></div>
 
-<!-- ✅ Main Layout -->
 <main class="container-fluid py-4">
   <div class="market-layout">
-    <!-- Left Ad -->
     <aside class="ad-left">
       <div class="ad-box">
         <img src="{% static 'img/ad_left.jpg' %}" alt="ad" class="img-fluid rounded">
@@ -258,12 +255,10 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
     <section id="page-content">
       {% block content %}{% endblock %}
     </section>
 
-    <!-- Right Ad -->
     <aside class="ad-right">
       <div class="ad-box">
         <img src="{% static 'img/ad_right.jpg' %}" alt="ad" class="img-fluid rounded">
@@ -273,14 +268,12 @@
   </div>
 </main>
 
-<!-- ✅ Footer -->
 <footer class="text-center py-4 mt-5">
   <p class="small mb-0">
     © 2025 Souq Jordan | <span style="color: var(--jordan-green)">Made with ❤️ in Jordan</span>
   </p>
 </footer>
 
-<!-- ✅ Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
