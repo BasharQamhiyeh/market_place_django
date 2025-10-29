@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-@z7*j5)%3_of%$68h_mfuyhxz4vnspr^_@f%n6i)p5+jd7!z&i')
 
-# On Render, DEBUG should be False
+# On Render, DEBUG should be False (set DJANGO_DEBUG=True while testing)
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
 # ✅ Allow all for now — later restrict to your Render domain
@@ -114,16 +114,24 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # keep this folder editable
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # ✅ Detect Render (ephemeral filesystem)
 IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
 
-# ✅ When running on Render in DEBUG mode, serve media directly
+# ⬇️ MEDIA settings:
+# Locally keep relative MEDIA_URL so Django dev server serves /media/.
+# On Render, use an ABSOLUTE MEDIA_URL so Django will NOT prefix it with /en/ or /ar/.
+MEDIA_ROOT = BASE_DIR / 'media'
 if IS_RENDER:
-    print("[INFO] Running on Render: MEDIA files served directly for testing.")
+    # Render exposes the public URL in RENDER_EXTERNAL_URL (e.g., https://market-place-xxxxx.onrender.com)
+    RENDER_EXTERNAL_URL = os.getenv('RENDER_EXTERNAL_URL', '').rstrip('/')
+    if RENDER_EXTERNAL_URL:
+        MEDIA_URL = f'{RENDER_EXTERNAL_URL}/media/'
+    else:
+        # Fallback: still works, but language prefix might appear if not combined with the urls.py fix.
+        MEDIA_URL = '/media/'
+    print(f"[INFO] Running on Render: MEDIA_URL set to {MEDIA_URL!r} (absolute if RENDER_EXTERNAL_URL provided).")
 else:
+    MEDIA_URL = '/media/'
     print("[INFO] Running locally: MEDIA files served via Django development server.")
 
 # ---------------------------------------------------
@@ -150,7 +158,6 @@ LOCALE_PATHS = [
 # ---------------------------------------------------
 # Elasticsearch
 # ---------------------------------------------------
-
 if IS_RENDER:
     # 🚫 Disable Elasticsearch on Render
     ELASTICSEARCH_DSL = {

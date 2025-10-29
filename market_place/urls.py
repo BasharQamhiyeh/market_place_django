@@ -9,10 +9,10 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
 ]
 
-# ✅ Serve media before i18n_patterns so it's not prefixed with /en/ or /ar/
+# ✅ Serve /media/ first — not prefixed with /en/ or /ar/
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# ✅ Language-prefixed routes for app URLs
+# ✅ App URLs under language prefixes
 urlpatterns += i18n_patterns(
     path('', include('marketplace.urls')),
 )
