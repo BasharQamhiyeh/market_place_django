@@ -9,11 +9,9 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
 ]
 
-# ✅ Always serve /media/ on Render or local testing
 if settings.DEBUG or getattr(settings, "IS_RENDER", False):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# ✅ Language-prefixed routes (keep these after)
 urlpatterns += i18n_patterns(
     path('', include('marketplace.urls')),
 )

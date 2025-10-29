@@ -110,28 +110,18 @@ LANGUAGES = [
 # Static and Media files
 # ---------------------------------------------------
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # keep this folder editable
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ✅ Detect Render (ephemeral filesystem)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
 
-# ⬇️ MEDIA settings:
-# Locally keep relative MEDIA_URL so Django dev server serves /media/.
-# On Render, use an ABSOLUTE MEDIA_URL so Django will NOT prefix it with /en/ or /ar/.
-MEDIA_ROOT = BASE_DIR / 'media'
 if IS_RENDER:
-    # Render exposes the public URL in RENDER_EXTERNAL_URL (e.g., https://market-place-xxxxx.onrender.com)
-    RENDER_EXTERNAL_URL = os.getenv('RENDER_EXTERNAL_URL', '').rstrip('/')
-    if RENDER_EXTERNAL_URL:
-        MEDIA_URL = f'{RENDER_EXTERNAL_URL}/media/'
-    else:
-        # Fallback: still works, but language prefix might appear if not combined with the urls.py fix.
-        MEDIA_URL = '/media/'
-    print(f"[INFO] Running on Render: MEDIA_URL set to {MEDIA_URL!r} (absolute if RENDER_EXTERNAL_URL provided).")
+    print("[INFO] Running on Render: MEDIA files served directly for testing.")
 else:
-    MEDIA_URL = '/media/'
     print("[INFO] Running locally: MEDIA files served via Django development server.")
 
 # ---------------------------------------------------
