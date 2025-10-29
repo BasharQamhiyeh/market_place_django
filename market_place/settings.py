@@ -118,7 +118,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ✅ Detect Render (ephemeral filesystem)
-IS_RENDER = os.environ.get("RENDER", "") == "true"
+IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
 
 # ✅ When running on Render in DEBUG mode, serve media directly
 if IS_RENDER:
