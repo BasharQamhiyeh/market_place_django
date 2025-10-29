@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'market_place.wsgi.application'
 # ---------------------------------------------------
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgres://postgres:admin@localhost:5432/marketplace_db',  # fallback to local DB
+        default='postgres://postgres:admin@localhost:5432/marketplace_db',
         conn_max_age=600
     )
 }
@@ -160,6 +160,24 @@ else:
     # ✅ Local: use your real Elasticsearch
     ELASTICSEARCH_DSL = {
         'default': {
-            'hosts': 'http://localhost:9200',  # or your local Elastic URL
+            'hosts': 'http://localhost:9200',
         },
     }
+
+# ---------------------------------------------------
+# ✅ Cloudinary Storage (for Render)
+# ---------------------------------------------------
+if IS_RENDER:
+    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+        'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+        'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+    }
+
+    print("[INFO] Using Cloudinary for media files.")
+else:
+    print("[INFO] Using local /media/ for media files.")
