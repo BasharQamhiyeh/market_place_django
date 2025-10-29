@@ -17,6 +17,8 @@ from django.utils.html import format_html
 from django.contrib.admin.views.main import IS_POPUP_VAR
 import tempfile, requests, openpyxl, os
 from django.core.files import File
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 
 @admin.register(User)
@@ -258,14 +260,10 @@ class ItemAdmin(admin.ModelAdmin):
                             try:
                                 resp = requests.get(url, timeout=10)
                                 if resp.status_code == 200:
-                                    tmp_img = tempfile.NamedTemporaryFile(delete=True)
-                                    tmp_img.write(resp.content)
-                                    tmp_img.flush()
                                     photo = ItemPhoto(item=item)
-                                    # safe filename
                                     img_name = os.path.basename(url.split("?")[0]) or f"photo_{item.id}.jpg"
-                                    photo.image.save(img_name, File(tmp_img))
-                                    tmp_img.close()
+                                    # ✅ upload directly to Cloudinary or local default
+                                    photo.image.save(img_name, ContentFile(resp.content), save=True)
                             except Exception as e:
                                 print(f"[WARN] Image fetch failed for '{name_ar}': {e}")
 
