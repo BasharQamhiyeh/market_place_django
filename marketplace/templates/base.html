@@ -16,59 +16,79 @@
   {% block head %}{% endblock %}
 
   <style>
-    /* === Modern Jordan Theme === */
+    /* === Modern Jordan Elegant Theme === */
     :root {
       --jordan-red: #D72638;
       --jordan-green: #005C4B;
-      --jordan-gold: #D8B46E;
+      --jordan-gold: #C8A951;
       --jordan-white: #ffffff;
       --jordan-light: #FAFAF5;
-      --jordan-gray: #EDEDED;
+      --jordan-dark: #1a1a1a;
+      --text-dark: #2b2b2b;
     }
 
     body {
       background-color: var(--jordan-light);
       font-family: 'Segoe UI', 'Cairo', system-ui, sans-serif;
-      color: #333;
+      color: var(--text-dark);
     }
 
-    /* === Navbar === */
+    /* === Fancy Gradient Navbar with Stylized Pattern === */
     .navbar-jordan {
-      background: linear-gradient(90deg, var(--jordan-green) 0%, #007A3D 100%);
+      background: linear-gradient(
+          135deg,
+          rgba(215, 38, 56, 0.9) 0%,
+          rgba(215, 38, 56, 0.85) 25%,
+          rgba(0, 92, 75, 0.95) 90%
+        ),
+        url("data:image/svg+xml,%3Csvg width='160' height='160' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M0 160 L160 0'/%3E%3Cpath d='M-40 160 L120 0'/%3E%3Cpath d='M40 160 L200 0'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: cover;
+      background-blend-mode: overlay;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 10;
     }
 
     .navbar-jordan .navbar-brand {
-      color: var(--jordan-white) !important;
       font-weight: 700;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.5px;
+      color: var(--jordan-white) !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     }
 
     .navbar-jordan .nav-link {
       color: var(--jordan-white) !important;
       position: relative;
       transition: all 0.3s ease;
+      font-weight: 500;
     }
 
     .navbar-jordan .nav-link:hover {
       color: var(--jordan-gold) !important;
     }
 
+    .navbar-toggler {
+      border-color: rgba(255,255,255,0.6);
+    }
+
     /* === Buttons === */
     .btn-jordan {
-      background-color: var(--jordan-red);
+      background: linear-gradient(135deg, var(--jordan-red), var(--jordan-green));
       border: none;
       color: white;
-      border-radius: 6px;
-      transition: 0.2s;
+      border-radius: 8px;
+      transition: all 0.2s ease;
     }
     .btn-jordan:hover {
-      background-color: #b81d2e;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
     }
 
     .btn-jordan-outline {
       color: var(--jordan-green);
       border: 2px solid var(--jordan-green);
       border-radius: 6px;
+      transition: all 0.2s ease;
     }
     .btn-jordan-outline:hover {
       background-color: var(--jordan-green);
@@ -94,13 +114,13 @@
     /* === Ads === */
     .ad-box {
       position: sticky;
-      top: 80px;
+      top: 90px;
       background: var(--jordan-white);
-      border: 1px solid var(--jordan-gray);
-      border-radius: 10px;
-      padding: 12px;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 14px;
       text-align: center;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.05);
     }
 
     /* === Profile Dropdown === */
@@ -114,11 +134,12 @@
       right: 0;
       top: 100%;
       background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      min-width: 170px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      min-width: 180px;
       padding: 6px 0;
       z-index: 10;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .profile-dropdown.active .dropdown-menu {
@@ -127,9 +148,10 @@
 
     .profile-dropdown .dropdown-menu a {
       display: block;
-      padding: 6px 12px;
-      color: #333;
+      padding: 8px 14px;
+      color: var(--text-dark);
       text-decoration: none;
+      transition: 0.2s;
     }
 
     .profile-dropdown .dropdown-menu a:hover {
@@ -138,23 +160,35 @@
 
     /* === Footer === */
     footer {
-      background: var(--jordan-green);
+      background: linear-gradient(135deg, var(--jordan-green), var(--jordan-red));
       color: var(--jordan-white);
+      font-weight: 500;
     }
 
-    /* === Divider (keffiyeh pattern) === */
+    /* === Divider (thin elegant line) === */
     .pattern-divider {
-      background: repeating-linear-gradient(
-        45deg,
+      background: linear-gradient(
+        90deg,
         var(--jordan-red),
-        var(--jordan-red) 10px,
-        var(--jordan-white) 10px,
-        var(--jordan-white) 20px
+        var(--jordan-gold),
+        var(--jordan-green)
       );
-      height: 6px;
-      opacity: 0.8;
+      height: 4px;
+      opacity: 0.9;
+    }
+
+    /* === Subtle card hover style (modern touch) === */
+    .card {
+      transition: all 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
   </style>
+
+
+
 
 </head>
 
@@ -251,7 +285,7 @@
   </div>
 </nav>
 
-<div class="pattern-divider"></div>
+<!--<div class="pattern-divider"></div>-->
 
 <main class="container-fluid py-4">
   <div class="market-layout">
