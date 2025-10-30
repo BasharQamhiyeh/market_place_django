@@ -25,6 +25,7 @@ USE_CLOUDINARY = IS_RENDER and all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, C
 # ---------------------------------------------------
 INSTALLED_APPS = [
     'marketplace',
+    'widget_tweaks'
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
