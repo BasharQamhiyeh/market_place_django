@@ -16,28 +16,31 @@
   {% block head %}{% endblock %}
 
   <style>
+    /* === Modern Jordan Theme === */
     :root {
-      --jordan-red: #CE1126;
-      --jordan-green: #007A3D;
-      --jordan-black: #000000;
+      --jordan-red: #D72638;
+      --jordan-green: #005C4B;
+      --jordan-gold: #D8B46E;
       --jordan-white: #ffffff;
-      --jordan-light: #f5f5f5;
-      --jordan-gold: #C8A951;
+      --jordan-light: #FAFAF5;
+      --jordan-gray: #EDEDED;
     }
 
     body {
       background-color: var(--jordan-light);
       font-family: 'Segoe UI', 'Cairo', system-ui, sans-serif;
+      color: #333;
     }
 
+    /* === Navbar === */
     .navbar-jordan {
-      background-color: var(--jordan-black);
+      background: linear-gradient(90deg, var(--jordan-green) 0%, #007A3D 100%);
     }
 
     .navbar-jordan .navbar-brand {
-      color: var(--jordan-red) !important;
+      color: var(--jordan-white) !important;
       font-weight: 700;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
     }
 
     .navbar-jordan .nav-link {
@@ -46,24 +49,20 @@
       transition: all 0.3s ease;
     }
 
-    .navbar-jordan .nav-link:hover::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      height: 2px;
-      width: 100%;
-      background-color: var(--jordan-red);
+    .navbar-jordan .nav-link:hover {
+      color: var(--jordan-gold) !important;
     }
 
+    /* === Buttons === */
     .btn-jordan {
       background-color: var(--jordan-red);
       border: none;
       color: white;
       border-radius: 6px;
+      transition: 0.2s;
     }
     .btn-jordan:hover {
-      background-color: #a50e1d;
+      background-color: #b81d2e;
     }
 
     .btn-jordan-outline {
@@ -76,6 +75,7 @@
       color: white;
     }
 
+    /* === Layout === */
     .market-layout {
       display: grid;
       grid-template-columns: 220px 1fr 220px;
@@ -91,17 +91,19 @@
       }
     }
 
+    /* === Ads === */
     .ad-box {
       position: sticky;
       top: 80px;
       background: var(--jordan-white);
-      border: 1px solid var(--jordan-gold);
+      border: 1px solid var(--jordan-gray);
       border-radius: 10px;
       padding: 12px;
       text-align: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
+    /* === Profile Dropdown === */
     .profile-dropdown {
       position: relative;
     }
@@ -134,11 +136,13 @@
       background-color: var(--jordan-light);
     }
 
+    /* === Footer === */
     footer {
-      background-color: var(--jordan-black);
+      background: var(--jordan-green);
       color: var(--jordan-white);
     }
 
+    /* === Divider (keffiyeh pattern) === */
     .pattern-divider {
       background: repeating-linear-gradient(
         45deg,
@@ -148,8 +152,10 @@
         var(--jordan-white) 20px
       );
       height: 6px;
+      opacity: 0.8;
     }
   </style>
+
 </head>
 
 <body>
