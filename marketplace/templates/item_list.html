@@ -1,108 +1,108 @@
-{% extends 'base.html' %}
-{% load i18n %}
+  {% extends 'base.html' %}
+  {% load i18n %}
 
-{% block title %}{% trans "Items" %}{% endblock %}
+  {% block title %}{% trans "Items" %}{% endblock %}
 
-{% block content %}
-<div class="card shadow-sm border-0 position-relative">
-  <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">{% trans "Items" %}</h5>
-    <div>
-      {% if user.is_authenticated %}
-        <a class="btn btn-sm btn-jordan me-2" href="{% url 'create_item' %}">{% trans "Post new item" %}</a>
-      {% else %}
-        <a class="btn btn-sm btn-jordan me-2" href="{% url 'login' %}">{% trans "Login" %}</a>
-        <a class="btn btn-sm btn-jordan-outline" href="{% url 'register' %}">{% trans "Register" %}</a>
-      {% endif %}
-    </div>
-  </div>
-
-  <div class="card-body">
-    <!-- ✅ Category / subcategory filter -->
-    <form method="get" class="mb-3 d-flex gap-2 flex-wrap align-items-center position-relative">
-      <select name="category" class="form-select w-auto" onchange="this.form.submit()">
-        <option value="">{% trans 'All Categories' %}</option>
-        {% for cat in categories %}
-          <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
-          {% for sub in cat.subcategories.all %}
-            <option value="{{ sub.id }}" {% if selected_category and selected_category.id == sub.id %}selected{% endif %}>
-              &nbsp;&nbsp;— {{ sub }}
-            </option>
-          {% endfor %}
-        {% endfor %}
-      </select>
-
-      <!-- ✅ Search input with live suggestions -->
-      <div class="flex-grow-1 position-relative" style="max-width:500px;">
-        <input type="text"
-               id="searchBox"
-               name="q"
-               class="form-control"
-               placeholder="{% trans 'Search...' %}"
-               value="{{ q }}"
-               autocomplete="off">
-        <div id="suggestions" class="list-group position-absolute w-100 mt-1 shadow-sm" style="z-index:1000;"></div>
+  {% block content %}
+  <div class="card shadow-sm border-0 position-relative">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">{% trans "Items" %}</h5>
+      <div>
+        {% if user.is_authenticated %}
+          <a class="btn btn-sm btn-jordan me-2" href="{% url 'create_item' %}">{% trans "Post new item" %}</a>
+        {% else %}
+          <a class="btn btn-sm btn-jordan me-2" href="{% url 'login' %}">{% trans "Login" %}</a>
+          <a class="btn btn-sm btn-jordan-outline" href="{% url 'register' %}">{% trans "Register" %}</a>
+        {% endif %}
       </div>
-    </form>
+    </div>
 
-    <!-- ✅ Results -->
-    <div id="results">
-      {% include 'partials/item_results.html' %}
+    <div class="card-body">
+      <!-- ✅ Category / subcategory filter -->
+      <form method="get" class="mb-3 d-flex gap-2 flex-wrap align-items-center position-relative">
+        <select name="category" class="form-select w-auto" onchange="this.form.submit()">
+          <option value="">{% trans 'All Categories' %}</option>
+          {% for cat in categories %}
+            <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
+            {% for sub in cat.subcategories.all %}
+              <option value="{{ sub.id }}" {% if selected_category and selected_category.id == sub.id %}selected{% endif %}>
+                &nbsp;&nbsp;— {{ sub }}
+              </option>
+            {% endfor %}
+          {% endfor %}
+        </select>
+
+        <!-- ✅ Search input with live suggestions -->
+        <div class="flex-grow-1 position-relative" style="max-width:500px;">
+          <input type="text"
+                 id="searchBox"
+                 name="q"
+                 class="form-control"
+                 placeholder="{% trans 'Search...' %}"
+                 value="{{ q }}"
+                 autocomplete="off">
+          <div id="suggestions" class="list-group position-absolute w-100 mt-1 shadow-sm" style="z-index:1000;"></div>
+        </div>
+      </form>
+
+      <!-- ✅ Results -->
+      <div id="results">
+        {% include 'partials/item_results.html' %}
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ✅ Suggestion script -->
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-  const input = document.getElementById("searchBox");
-  const suggestionsBox = document.getElementById("suggestions");
+  <!-- ✅ Suggestion script -->
+  <script>
+  document.addEventListener("DOMContentLoaded", function(){
+    const input = document.getElementById("searchBox");
+    const suggestionsBox = document.getElementById("suggestions");
 
-  input.addEventListener("input", async function(){
-    const q = this.value.trim();
-    if (q.length < 2) { suggestionsBox.innerHTML = ""; return; }
+    input.addEventListener("input", async function(){
+      const q = this.value.trim();
+      if (q.length < 2) { suggestionsBox.innerHTML = ""; return; }
 
-    try {
-      const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      suggestionsBox.innerHTML = "";
+      try {
+        const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        suggestionsBox.innerHTML = "";
 
-      // "See results for ..." generic option
-      const seeAll = document.createElement("a");
-      seeAll.href = `/?q=${encodeURIComponent(q)}`;
-      seeAll.className = "list-group-item list-group-item-action fw-semibold";
-      seeAll.innerHTML = `{% trans "See results for" %} <span class="text-primary">"${q}"</span>`;
-      suggestionsBox.appendChild(seeAll);
+        // "See results for ..." generic option
+        const seeAll = document.createElement("a");
+        seeAll.href = `/?q=${encodeURIComponent(q)}`;
+        seeAll.className = "list-group-item list-group-item-action fw-semibold";
+        seeAll.innerHTML = `{% trans "See results for" %} <span class="text-primary">"${q}"</span>`;
+        suggestionsBox.appendChild(seeAll);
 
-      // Individual suggestions
-      data.results.forEach(s => {
-        const div = document.createElement("a");
-        div.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
-        if (s.type === "category" && s.category_id) {
-          div.href = `/?category=${s.category_id}`;
-        } else {
-          div.href = `/?q=${encodeURIComponent(s.name)}`;
-        }
-        div.innerHTML = `
-          <div>
-            <span class="fw-semibold">${s.name}</span>
-            ${s.parent ? `<small class="text-muted ms-2">${s.parent}</small>` : ""}
-          </div>
-          <small class="text-muted">${s.type === "item" ? "{% trans 'Item' %}" : "{% trans 'Category' %}"}</small>
-        `;
-        suggestionsBox.appendChild(div);
-      });
-    } catch (err) {
-      console.error("Suggestion fetch failed", err);
-    }
+        // Individual suggestions
+        data.results.forEach(s => {
+          const div = document.createElement("a");
+          div.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+          if (s.type === "category" && s.category_id) {
+            div.href = `/?category=${s.category_id}`;
+          } else {
+            div.href = `/?q=${encodeURIComponent(s.name)}`;
+          }
+          div.innerHTML = `
+            <div>
+              <span class="fw-semibold">${s.name}</span>
+              ${s.parent ? `<small class="text-muted ms-2">${s.parent}</small>` : ""}
+            </div>
+            <small class="text-muted">${s.type === "item" ? "{% trans 'Item' %}" : "{% trans 'Category' %}"}</small>
+          `;
+          suggestionsBox.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Suggestion fetch failed", err);
+      }
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener("click", (e) => {
+      if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
+        suggestionsBox.innerHTML = "";
+      }
+    });
   });
-
-  // Hide suggestions when clicking outside
-  document.addEventListener("click", (e) => {
-    if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
-      suggestionsBox.innerHTML = "";
-    }
-  });
-});
-</script>
-{% endblock %}
+  </script>
+  {% endblock %}

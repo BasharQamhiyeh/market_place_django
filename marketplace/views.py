@@ -198,7 +198,6 @@ def item_list(request):
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     attributes = item.attribute_values.all()
-
     similar_items = []
 
     # ✅ Try Elasticsearch-based "More Like This" search
@@ -209,12 +208,7 @@ def item_detail(request, item_id):
                 "query": {
                     "more_like_this": {
                         "fields": ["title", "description"],
-                        "like": [
-                            {
-                                "_index": "items",
-                                "_id": item.id
-                            }
-                        ],
+                        "like": [{"_index": "items", "_id": item.id}],
                         "min_term_freq": 1,
                         "max_query_terms": 12
                     }
@@ -224,19 +218,46 @@ def item_detail(request, item_id):
             response = es.search(index="items", body=query)
             hits = response.get("hits", {}).get("hits", [])
             ids = [hit["_id"] for hit in hits]
-            similar_items = Item.objects.filter(id__in=ids)
+
+            # ✅ Filter out inactive / unapproved items
+            similar_items = (
+                Item.objects.filter(id__in=ids, is_approved=True, is_active=True)
+                .exclude(id=item.id)
+                .order_by('-created_at')[:6]
+            )
+
+            # ✅ Fallback if ES returns no similar results
+            if not similar_items.exists():
+                similar_items = (
+                    Item.objects.filter(
+                        category=item.category,
+                        is_approved=True,
+                        is_active=True,
+                    )
+                    .exclude(id=item.id)
+                    .order_by('-created_at')[:6]
+                )
+
         except ConnectionError as e:
             print("[WARN] Elasticsearch unavailable:", e)
-            # fallback to same category if ES fails
+            # ✅ Fallback if ES server down
             similar_items = (
-                Item.objects.filter(category=item.category)
+                Item.objects.filter(
+                    category=item.category,
+                    is_approved=True,
+                    is_active=True,
+                )
                 .exclude(id=item.id)
                 .order_by('-created_at')[:6]
             )
     else:
-        # ✅ Render fallback: same category + recent
+        # ✅ Render fallback when IS_RENDER=True (no ES on Render)
         similar_items = (
-            Item.objects.filter(category=item.category)
+            Item.objects.filter(
+                category=item.category,
+                is_approved=True,
+                is_active=True,
+            )
             .exclude(id=item.id)
             .order_by('-created_at')[:6]
         )
@@ -246,6 +267,7 @@ def item_detail(request, item_id):
         'attributes': attributes,
         'similar_items': similar_items,
     })
+
 
 
 # Only logged-in users can post

@@ -64,10 +64,12 @@
                 <span class="fw-semibold">{% trans "Seller" %}</span>
                 <a class="text-decoration-none" href="{% url 'user_profile' item.user.user_id %}">{{ item.user.username }}</a>
               </li>
+
               <li class="list-group-item d-flex justify-content-between">
                 <span class="fw-semibold">{% trans "City" %}</span>
                 <span>{{ item.city|default:_("Not specified") }}</span>
               </li>
+
               <li class="list-group-item">
                 <span class="fw-semibold me-2">{% trans "Phone" %}:</span>
                 {% if request.user.is_authenticated %}
@@ -81,18 +83,29 @@
                   <a class="text-decoration-underline" href="{% url 'login' %}?next={{ request.path }}">{% trans "Login to view phone number" %}</a>
                 {% endif %}
               </li>
+
               <li class="list-group-item d-flex justify-content-between">
                 <span class="fw-semibold">{% trans "Category" %}</span>
                 <span>{{ item.category }}</span>
               </li>
+
               <li class="list-group-item d-flex justify-content-between">
                 <span class="fw-semibold">{% trans "Condition" %}</span>
                 <span>{% if item.condition == 'new' %}{% trans "New" %}{% else %}{% trans "Used" %}{% endif %}</span>
               </li>
+
               <li class="list-group-item d-flex justify-content-between">
                 <span class="fw-semibold">{% trans "Price" %}</span>
                 <span class="badge text-bg-warning fs-6">JOD {{ item.price }}</span>
               </li>
+
+              <!-- ✅ Dynamic Attributes merged here -->
+              {% for attr in attributes %}
+                <li class="list-group-item d-flex justify-content-between">
+                  <span class="fw-semibold">{{ attr.attribute }}</span>
+                  <span>{{ attr.value }}</span>
+                </li>
+              {% endfor %}
             </ul>
           </div>
 
@@ -149,26 +162,6 @@
     </div>
   </div>
 
-  {% if attributes %}
-    <div class="col-12">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-          <h5 class="mb-0">{% trans "Attributes" %}</h5>
-        </div>
-        <div class="card-body">
-          <ul class="list-group">
-            {% for attr in attributes %}
-              <li class="list-group-item d-flex justify-content-between">
-                <span>{{ attr.attribute }}</span>
-                <span class="fw-semibold">{{ attr.value }}</span>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-
   {% if similar_items %}
     <div class="col-12">
       <div class="card shadow-sm border-0">
@@ -178,18 +171,8 @@
         <div class="card-body">
           <div class="row g-3">
             {% for s in similar_items %}
-              <div class="col-12 col-sm-6 col-lg-4">
-                <div class="card h-100 border-0">
-                  {% with photo=s.photos.first %}
-                    {% if photo %}
-                      <img src="{{ photo.image.url }}" class="card-img-top" alt="{{ s.title }}" style="height:180px;object-fit:cover;">
-                    {% endif %}
-                  {% endwith %}
-                  <div class="card-body">
-                    <h6 class="card-title mb-1"><a class="text-decoration-none" href="{% url 'item_detail' s.id %}">{{ s.title }}</a></h6>
-                    <div class="text-muted">JOD {{ s.price }}</div>
-                  </div>
-                </div>
+              <div class="col-12 col-sm-6 col-lg-4 position-relative">
+                {% include "partials/_item_card.html" with item=s %}
               </div>
             {% endfor %}
           </div>
@@ -207,7 +190,7 @@
 {{ block.super }}
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-  var sp = document.getElementById('seller-phone');
+  const sp = document.getElementById('seller-phone');
   if (!sp) return;
   sp.addEventListener('click', function(){
     const showPhone = sp.getAttribute('data-show-phone') === 'true';
@@ -225,5 +208,20 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 </script>
+
+<style>
+/* ✅ Make carousel arrows visible on light backgrounds */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(1) grayscale(100%);
+}
+
+/* Slightly bigger for visibility */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  width: 3rem;
+  height: 3rem;
+}
+</style>
 {% endblock %}
 {% endblock %}

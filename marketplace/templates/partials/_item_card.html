@@ -1,6 +1,6 @@
 {% load i18n %}
 
-<div class="card h-100 border-0 shadow-sm">
+<div class="card h-100 border-0 shadow-sm position-relative hoverable">
   {% with photo=item.photos.first %}
     {% if photo %}
       <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="card-img-top"
@@ -14,13 +14,8 @@
   {% endwith %}
 
   <div class="card-body">
-    <h6 class="card-title mb-1">
-      <a href="{% url 'item_detail' item.id %}" class="text-decoration-none text-dark">
-        {{ item.title }}
-      </a>
-    </h6>
+    <h6 class="card-title mb-1 text-truncate">{{ item.title }}</h6>
 
-    <!-- ✅ Category + Subcategory + City -->
     <p class="text-muted small mb-2">
       {% if item.category.parent %}
         {{ item.category.parent }} › {{ item.category }}
@@ -32,18 +27,13 @@
       {% endif %}
     </p>
 
-    <p class="mb-1 text-muted small">
-      {% trans "Price" %}: <span class="fw-semibold text-dark">JOD {{ item.price }}</span>
-    </p>
+    <p class="mb-0 fw-semibold text-dark">JOD {{ item.price }}</p>
 
-    <p class="mb-0 text-muted small">
-      {% trans "Posted by" %}: {{ item.user.username }}
-    </p>
-  </div>
-
-  <div class="card-footer bg-white border-0">
-    <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-jordan w-100">
-      {% trans "View Details" %}
-    </a>
+    <a href="{% url 'item_detail' item.id %}" class="stretched-link" aria-label="{% trans 'View Details' %}"></a>
   </div>
 </div>
+
+<style>
+.hoverable { transition: box-shadow .2s ease, transform .2s ease; }
+.hoverable:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transform: translateY(-2px); }
+</style>
