@@ -943,6 +943,7 @@ def verify_phone(request):
         form = PhoneVerificationForm(request.POST)
         if form.is_valid():
             entered_code = form.cleaned_data['code']
+            print(f"[DEBUG]: entered_code = {entered_code}, sent_code = {sent_code}")
             if entered_code == sent_code:
                 # ✅ Create the user now — only after correct verification
                 user = User.objects.create_user(
