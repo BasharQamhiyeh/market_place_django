@@ -20,6 +20,7 @@ from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 import zipfile
+from django.db import models
 
 
 @admin.register(User)
@@ -193,10 +194,15 @@ class ItemAdmin(admin.ModelAdmin):
 
     def import_excel_view(self, request):
         """
-        Import items from Excel (.xlsx) and photos from ZIP or URLs.
-        Priority:
-          1️⃣ Photos from ZIP file (matched by external_id substring)
-          2️⃣ If none found, use URLs in 'image' column.
+        Import items from an Excel (.xlsx) file and photos from a ZIP file.
+
+        Rules:
+        - Excel columns (case-insensitive): id, name, description, price, category, city
+        - ZIP may contain nested folders.
+        - Match photos by filename containing external_id.
+        - If no photos found → item not approved.
+        - All imported items → condition='new'.
+        - If city doesn't exist → create it.
         """
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
@@ -210,6 +216,7 @@ class ItemAdmin(admin.ModelAdmin):
                 self.message_user(request, "❌ Only .zip files are supported.", level=messages.ERROR)
                 return redirect("..")
 
+            # --- Temporary files setup
             excel_path = tempfile.mktemp(suffix=".xlsx")
             zip_path = tempfile.mktemp(suffix=".zip")
             photos_dir = tempfile.mkdtemp()
@@ -221,6 +228,7 @@ class ItemAdmin(admin.ModelAdmin):
                 for chunk in zip_file.chunks():
                     f.write(chunk)
 
+            # --- Extract ZIP
             try:
                 with zipfile.ZipFile(zip_path, "r") as zip_ref:
                     zip_ref.extractall(photos_dir)
@@ -228,6 +236,7 @@ class ItemAdmin(admin.ModelAdmin):
                 self.message_user(request, f"❌ Failed to extract ZIP: {e}", level=messages.ERROR)
                 return redirect("..")
 
+            # --- Parse Excel
             wb = openpyxl.load_workbook(excel_path)
             sheet = wb.active
             headers = [str(c.value).strip().lower() if c.value else "" for c in sheet[1]]
@@ -243,7 +252,7 @@ class ItemAdmin(admin.ModelAdmin):
             desc_col = col("description")
             price_col = col("price")
             category_col = col("category")
-            image_col = col("image") or col("images")
+            city_col = col("city")
 
             required = [id_col, name_col, price_col, category_col]
             if any(c is None for c in required):
@@ -251,9 +260,11 @@ class ItemAdmin(admin.ModelAdmin):
                 self.message_user(request, f"❌ Missing required columns: {', '.join(missing)}", level=messages.ERROR)
                 return redirect("..")
 
-            created_count, failed_count = 0, 0
-            missing_images = []
+            created_count = 0
+            failed_count = 0
+            no_photo_items = []
 
+            # --- Import rows
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 try:
                     external_id = str(int(row[id_col])).strip() if row[id_col] else None
@@ -261,65 +272,73 @@ class ItemAdmin(admin.ModelAdmin):
                     desc = str(row[desc_col]).strip() if desc_col is not None and row[desc_col] else ""
                     price = float(row[price_col]) if row[price_col] else None
                     category_name = str(row[category_col]).strip() if row[category_col] else None
-                    image_urls = str(row[image_col]).strip() if image_col is not None and row[image_col] else ""
+                    city_name = str(row[city_col]).strip() if city_col is not None and row[city_col] else None
 
                     if not external_id or not title or not price or not category_name:
                         continue
 
+                    # --- Category
                     category, _ = Category.objects.get_or_create(
                         name_ar=category_name,
-                        defaults={"name_en": category_name}
+                        defaults={'name_en': category_name}
                     )
 
+                    # --- City (optional)
+                    city = None
+                    if city_name:
+                        # Clean up the value
+                        city_name = city_name.strip()
+
+                        # Try to find by Arabic or English name, case-insensitive
+                        city = City.objects.filter(
+                            models.Q(name_ar__iexact=city_name) | models.Q(name_en__iexact=city_name)
+                        ).first()
+
+                        # If not found → create new one with both Arabic and English names equal
+                        if not city:
+                            city = City.objects.create(
+                                name_ar=city_name,
+                                name_en=city_name,
+                            )
+
+                    # --- Find photos
+                    image_found = False
+                    for root, _, files in os.walk(photos_dir):
+                        for filename in files:
+                            if external_id.lower() in filename.lower():
+                                image_found = True
+                                break
+                        if image_found:
+                            break
+
+                    # --- Create Item
                     item = Item.objects.create(
                         title=title,
                         description=desc,
                         price=price,
                         category=category,
+                        city=city,  # ✅ new
                         user=request.user,
-                        is_approved=True,
                         is_active=True,
+                        is_approved=image_found,  # only approved if photo exists
+                        condition="new",  # ✅ always new
                     )
 
-                    # --- Try ZIP photos first
-                    image_found = False
+                    # --- Attach ZIP photos
                     for root, _, files in os.walk(photos_dir):
                         for filename in files:
-                            if external_id.lower() in filename.lower():  # relaxed matching
+                            if external_id.lower() in filename.lower():
                                 file_path = os.path.join(root, filename)
                                 try:
                                     with open(file_path, "rb") as img_file:
                                         content = ContentFile(img_file.read())
                                         photo = ItemPhoto(item=item)
                                         photo.image.save(os.path.basename(filename), content, save=True)
-                                    image_found = True
-                                    print(f"[INFO] Added ZIP image for {external_id}: {filename}")
                                 except Exception as e:
-                                    print(f"[WARN] Could not save ZIP image {filename}: {e}")
-
-                    # --- Fallback to URLs
-                    if not image_found and image_urls:
-                        urls = [u.strip() for u in image_urls.replace("\n", ",").replace(" ", ",").split(",") if
-                                u.strip()]
-                        for url in urls:
-                            if not url.startswith("http"):
-                                continue
-                            try:
-                                resp = requests.get(url, timeout=10)
-                                if resp.status_code == 200:
-                                    filename = os.path.basename(url.split("?")[0]) or f"{external_id}.jpg"
-                                    content = ContentFile(resp.content)
-                                    photo = ItemPhoto(item=item)
-                                    photo.image.save(filename, content, save=True)
-                                    image_found = True
-                                    print(f"[INFO] Downloaded image for {external_id} from {url}")
-                                else:
-                                    print(f"[WARN] Bad status {resp.status_code} for {url}")
-                            except Exception as e:
-                                print(f"[WARN] Failed to fetch image from {url}: {e}")
+                                    print(f"[WARN] Could not save image {filename}: {e}")
 
                     if not image_found:
-                        missing_images.append(external_id)
+                        no_photo_items.append(external_id)
 
                     created_count += 1
 
@@ -332,13 +351,14 @@ class ItemAdmin(admin.ModelAdmin):
             os.remove(zip_path)
 
             summary = f"✅ Import finished: {created_count} items created, {failed_count} failed."
-            if missing_images:
-                summary += f" ⚠️ {len(missing_images)} items had no photos."
+            if no_photo_items:
+                summary += f" ⚠️ {len(no_photo_items)} items had no photos (not approved)."
+
             self.message_user(request, summary, level=messages.SUCCESS)
             return redirect("../")
 
+        # --- GET → render upload form
         return render(request, "admin/import_excel.html", {"title": "Import Items from Excel & ZIP"})
-
 
 
 
