@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}تحقق من رقم الهاتف{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-body">
+        <h4 class="mb-3">تحقق من رقم الهاتف</h4>
+        <p class="text-muted">تم إرسال رمز مكون من 6 أرقام إلى رقم الهاتف الذي أدخلته.</p>
+        <form method="post">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-jordan w-100">تحقق</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

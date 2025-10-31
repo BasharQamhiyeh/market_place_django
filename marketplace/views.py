@@ -28,17 +28,29 @@ from collections import deque
 
 # Registration
 def register(request):
+    """
+    Step 1: Collect registration data, send code (no user yet).
+    Step 2: Verify code and create user only after success.
+    """
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-            login(request, user)
-            return redirect('item_list')
+            # Temporarily store the data, not saving user yet
+            request.session['pending_user_data'] = form.cleaned_data
+
+            # Send code to phone (simulated)
+            phone = form.cleaned_data['phone']
+            code = send_sms_code(phone, "verify")
+
+            # Store code in session
+            request.session['verification_code'] = code
+
+            messages.info(request, "📱 تم إرسال رمز التحقق إلى رقم هاتفك (افتح وحدة التحكم لتراه في الوضع التجريبي).")
+            return redirect('verify_phone')
     else:
         form = UserRegistrationForm()
     return render(request, 'register.html', {'form': form})
+
 
 # Login
 def user_login(request):
@@ -899,3 +911,114 @@ def _category_descendant_ids(root):
         for child in node.subcategories.all():
             dq.append(child)
     return ids
+
+
+from .models import PhoneVerificationCode
+from .utils.sms import send_sms_code
+from .forms import PhoneVerificationForm, ForgotPasswordForm, ResetPasswordForm
+from django.contrib.auth.hashers import make_password
+
+@login_required
+def send_verification_code(request):
+    """Send code after registration or from profile if not verified."""
+    user = request.user
+    code = send_sms_code(user.phone, "verify")
+    PhoneVerificationCode.objects.create(user=user, code=code, purpose="verify")
+    messages.info(request, "📱 تم إرسال رمز التحقق إلى رقم هاتفك (افتح وحدة التحكم لتراه في الوضع التجريبي).")
+    return redirect('verify_phone')
+
+
+def verify_phone(request):
+    """
+    Step 2: Verify the SMS code and create the user in DB.
+    """
+    pending_data = request.session.get('pending_user_data')
+    sent_code = request.session.get('verification_code')
+
+    if not pending_data or not sent_code:
+        messages.error(request, "انتهت الجلسة. يرجى التسجيل مجددًا.")
+        return redirect('register')
+
+    if request.method == 'POST':
+        form = PhoneVerificationForm(request.POST)
+        if form.is_valid():
+            entered_code = form.cleaned_data['code']
+            if entered_code == sent_code:
+                # ✅ Create the user now — only after correct verification
+                user = User.objects.create_user(
+                    username=pending_data['username'],
+                    phone=pending_data['phone'],
+                    email=pending_data.get('email'),
+                    password=pending_data['password'],
+                )
+                user.first_name = pending_data.get('first_name', '')
+                user.last_name = pending_data.get('last_name', '')
+                user.show_phone = pending_data.get('show_phone', True)
+                user.phone_verified = True
+                user.is_active = True
+                user.save()
+
+                # Cleanup temporary data
+                del request.session['pending_user_data']
+                del request.session['verification_code']
+
+                # Log the user in
+                login(request, user)
+                messages.success(request, "✅ تم التحقق من رقم الهاتف وإنشاء الحساب بنجاح!")
+                return redirect('item_list')
+            else:
+                messages.error(request, "⚠️ الرمز غير صحيح.")
+    else:
+        form = PhoneVerificationForm()
+
+    return render(request, 'verify_phone.html', {'form': form})
+
+
+
+
+def forgot_password(request):
+    if request.method == 'POST':
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            phone = form.cleaned_data['phone'].strip()
+            try:
+                user = User.objects.get(phone=phone)
+            except User.DoesNotExist:
+                messages.error(request, "رقم الهاتف غير موجود.")
+                return redirect('forgot_password')
+
+            code = send_sms_code(phone, "reset")
+            PhoneVerificationCode.objects.create(user=user, code=code, purpose="reset")
+            request.session['reset_phone'] = phone
+            messages.info(request, "📱 تم إرسال رمز إعادة التعيين (افتح وحدة التحكم لتراه في الوضع التجريبي).")
+            return redirect('reset_password')
+    else:
+        form = ForgotPasswordForm()
+    return render(request, 'forgot_password.html', {'form': form})
+
+
+def reset_password(request):
+    phone = request.session.get('reset_phone')
+    if not phone:
+        return redirect('forgot_password')
+    if request.method == 'POST':
+        form = ResetPasswordForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            new_pwd = form.cleaned_data['new_password']
+            try:
+                user = User.objects.get(phone=phone)
+                record = PhoneVerificationCode.objects.filter(user=user, code=code, purpose="reset").last()
+                if record and record.is_valid():
+                    user.password = make_password(new_pwd)
+                    user.save()
+                    record.delete()
+                    del request.session['reset_phone']
+                    messages.success(request, "✅ تم تعيين كلمة مرور جديدة بنجاح. يمكنك تسجيل الدخول الآن.")
+                    return redirect('user_login')
+                messages.error(request, "⚠️ الرمز غير صالح أو منتهي الصلاحية.")
+            except User.DoesNotExist:
+                messages.error(request, "حدث خطأ.")
+    else:
+        form = ResetPasswordForm()
+    return render(request, 'reset_password.html', {'form': form})

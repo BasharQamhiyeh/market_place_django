@@ -199,3 +199,38 @@ class ItemForm(forms.ModelForm):
 
     def clean_images(self):
         return self.files.getlist('images')
+
+
+class PhoneVerificationForm(forms.Form):
+    code = forms.CharField(
+        max_length=6,
+        label="رمز التحقق",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'أدخل الرمز المرسل'})
+    )
+
+class ForgotPasswordForm(forms.Form):
+    phone = forms.CharField(
+        label="رقم الهاتف",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '07xxxxxxxx'})
+    )
+
+class ResetPasswordForm(forms.Form):
+    code = forms.CharField(
+        max_length=6,
+        label="رمز التحقق",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'أدخل الرمز'})
+    )
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'كلمة المرور الجديدة'}),
+        label="كلمة المرور الجديدة"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'تأكيد كلمة المرور'}),
+        label="تأكيد كلمة المرور"
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("new_password") != cleaned.get("confirm_password"):
+            raise forms.ValidationError("كلمتا المرور غير متطابقتين.")
+        return cleaned

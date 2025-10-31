@@ -229,3 +229,24 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} → {self.item.title}"
+
+
+from datetime import timedelta, datetime
+from django.utils import timezone
+
+class PhoneVerificationCode(models.Model):
+    PURPOSE_CHOICES = [
+        ('verify', 'Phone Verification'),
+        ('reset', 'Password Reset'),
+    ]
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='verification_codes')
+    code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=10, choices=PURPOSE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        """Code is valid for 10 minutes."""
+        return timezone.now() < self.created_at + timedelta(minutes=10)
+
+    def __str__(self):
+        return f"{self.user.phone} → {self.code} ({self.purpose})"

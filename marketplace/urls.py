@@ -31,7 +31,10 @@ urlpatterns = [
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('profile/change-password/', views.change_password, name='change_password'),
     path("search/suggestions/", views.search_suggestions, name="search_suggestions"),
-
+    path('send-verification/', views.send_verification_code, name='send_verification'),
+    path('verify-phone/', views.verify_phone, name='verify_phone'),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password/', views.reset_password, name='reset_password'),
 ]
 
 if settings.DEBUG:
