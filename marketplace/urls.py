@@ -30,6 +30,8 @@ urlpatterns = [
     path('favorites/toggle/<int:item_id>/', views.toggle_favorite, name='toggle_favorite'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('profile/change-password/', views.change_password, name='change_password'),
+    path("search/suggestions/", views.search_suggestions, name="search_suggestions"),
+
 ]
 
 if settings.DEBUG:

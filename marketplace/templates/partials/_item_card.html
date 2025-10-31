@@ -20,9 +20,22 @@
       </a>
     </h6>
 
+    <!-- ✅ Category + Subcategory + City -->
+    <p class="text-muted small mb-2">
+      {% if item.category.parent %}
+        {{ item.category.parent }} › {{ item.category }}
+      {% else %}
+        {{ item.category }}
+      {% endif %}
+      {% if item.city %}
+        • {{ item.city }}
+      {% endif %}
+    </p>
+
     <p class="mb-1 text-muted small">
       {% trans "Price" %}: <span class="fw-semibold text-dark">JOD {{ item.price }}</span>
     </p>
+
     <p class="mb-0 text-muted small">
       {% trans "Posted by" %}: {{ item.user.username }}
     </p>

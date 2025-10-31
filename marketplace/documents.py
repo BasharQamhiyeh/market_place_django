@@ -60,6 +60,16 @@ if not IS_RENDER:
             'name': fields.TextField(analyzer=edge_ngram_analyzer)
         })
 
+        # ✅ Localized parent category (if any)
+        category_parent = fields.ObjectField(properties={
+            'name': fields.TextField(analyzer=edge_ngram_analyzer)
+        })
+
+        # ✅ Localized city name
+        city = fields.ObjectField(properties={
+            'name': fields.TextField(analyzer=edge_ngram_analyzer)
+        })
+
         # ✅ Indexed attributes
         attributes = fields.ObjectField(properties={
             'name': fields.TextField(analyzer=edge_ngram_analyzer),
@@ -96,7 +106,7 @@ if not IS_RENDER:
             return (
                 super()
                 .get_queryset()
-                .select_related("category")
+                .select_related("category", "category__parent", "city")
                 .prefetch_related("attribute_values")
             )
 
@@ -108,6 +118,23 @@ if not IS_RENDER:
             return {
                 "name": instance.category.name_ar if lang == "ar" else instance.category.name_en
             }
+
+        def prepare_category_parent(self, instance):
+            if instance.category and instance.category.parent:
+                lang = translation.get_language()
+                parent = instance.category.parent
+                return {
+                    "name": parent.name_ar if lang == "ar" else parent.name_en
+                }
+            return None
+
+        def prepare_city(self, instance):
+            if instance.city:
+                lang = translation.get_language()
+                return {
+                    "name": instance.city.name_ar if lang == "ar" else instance.city.name_en
+                }
+            return None
 
         def prepare_attributes(self, instance):
             lang = translation.get_language()

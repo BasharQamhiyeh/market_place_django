@@ -14,12 +14,27 @@
     <form method="post" enctype="multipart/form-data" class="vstack gap-3">
       {% csrf_token %}
 
+      <!-- ✅ Category & Subcategory dropdown -->
       <div>
         <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
-        <select name="category" id="categorySelect" class="form-select searchable-select" data-placeholder="{% trans 'Select Category' %}">
+        <select name="category" id="categorySelect"
+                class="form-select searchable-select"
+                data-placeholder="{% trans 'Select Category' %}">
           <option value="">{% trans "Select Category" %}</option>
           {% for cat in categories %}
-            <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
+            <!-- main category -->
+            <option value="{{ cat.id }}"
+              {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>
+              {{ cat }}
+            </option>
+
+            <!-- subcategories -->
+            {% for sub in cat.subcategories.all %}
+              <option value="{{ sub.id }}"
+                {% if selected_category and selected_category.id == sub.id %}selected{% endif %}>
+                &nbsp;&nbsp;— {{ sub }}
+              </option>
+            {% endfor %}
           {% endfor %}
         </select>
       </div>
@@ -29,7 +44,20 @@
           {% if field.name != 'images' and "_other" not in field.name %}
             <div>
               <label class="form-label fw-semibold">{{ field.label }}</label>
-              {{ field }}
+
+              {# ✅ Make "title" a small input instead of textarea #}
+              {% if field.name == "title" %}
+                <input type="text"
+                       name="{{ field.name }}"
+                       id="id_{{ field.name }}"
+                       value="{{ field.value|default_if_none:'' }}"
+                       class="form-control"
+                       maxlength="255"
+                       required>
+              {% else %}
+                {{ field }}
+              {% endif %}
+
               {% if "attribute_" in field.name %}
                 <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
                   {% with other_name=field.name|add:"_other" %}
@@ -39,6 +67,7 @@
                   {% endwith %}
                 </div>
               {% endif %}
+
               {% if field.errors %}
                 <div class="text-danger small mt-1">{{ field.errors }}</div>
               {% endif %}
@@ -46,6 +75,7 @@
           {% endif %}
         {% endfor %}
 
+        <!-- ✅ Image upload -->
         <div>
           <label class="form-label fw-semibold">{{ form.images.label }}</label>
           {{ form.images }}

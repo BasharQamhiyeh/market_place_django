@@ -197,7 +197,7 @@ class ItemAdmin(admin.ModelAdmin):
         Import items from an Excel (.xlsx) file and photos from a ZIP file.
 
         Rules:
-        - Excel columns (case-insensitive): id, name, description, price, category, city
+        - Excel columns (case-insensitive): id, name, description, price, category, subcategory (optional), city
         - ZIP may contain nested folders.
         - Match photos by filename containing external_id.
         - If no photos found → item not approved.
@@ -252,6 +252,7 @@ class ItemAdmin(admin.ModelAdmin):
             desc_col = col("description")
             price_col = col("price")
             category_col = col("category")
+            subcategory_col = col("subcategory")
             city_col = col("city")
 
             required = [id_col, name_col, price_col, category_col]
@@ -272,29 +273,42 @@ class ItemAdmin(admin.ModelAdmin):
                     desc = str(row[desc_col]).strip() if desc_col is not None and row[desc_col] else ""
                     price = float(row[price_col]) if row[price_col] else None
                     category_name = str(row[category_col]).strip() if row[category_col] else None
+                    subcategory_name = (
+                        str(row[subcategory_col]).strip()
+                        if subcategory_col is not None and row[subcategory_col]
+                        else None
+                    )
                     city_name = str(row[city_col]).strip() if city_col is not None and row[city_col] else None
 
                     if not external_id or not title or not price or not category_name:
                         continue
 
-                    # --- Category
+                    # --- Category & optional Subcategory
                     category, _ = Category.objects.get_or_create(
                         name_ar=category_name,
                         defaults={'name_en': category_name}
                     )
 
+                    if subcategory_name:
+                        subcategory, _ = Category.objects.get_or_create(
+                            name_ar=subcategory_name,
+                            defaults={'name_en': subcategory_name, 'parent': category}
+                        )
+                        # Ensure correct parent linkage
+                        if subcategory.parent_id != category.id:
+                            subcategory.parent = category
+                            subcategory.save(update_fields=["parent"])
+                        assigned_category = subcategory
+                    else:
+                        assigned_category = category
+
                     # --- City (optional)
                     city = None
                     if city_name:
-                        # Clean up the value
                         city_name = city_name.strip()
-
-                        # Try to find by Arabic or English name, case-insensitive
                         city = City.objects.filter(
                             models.Q(name_ar__iexact=city_name) | models.Q(name_en__iexact=city_name)
                         ).first()
-
-                        # If not found → create new one with both Arabic and English names equal
                         if not city:
                             city = City.objects.create(
                                 name_ar=city_name,
@@ -316,12 +330,12 @@ class ItemAdmin(admin.ModelAdmin):
                         title=title,
                         description=desc,
                         price=price,
-                        category=category,
-                        city=city,  # ✅ new
+                        category=assigned_category,
+                        city=city,
                         user=request.user,
                         is_active=True,
                         is_approved=image_found,  # only approved if photo exists
-                        condition="new",  # ✅ always new
+                        condition="new",  # always new
                     )
 
                     # --- Attach ZIP photos
@@ -359,7 +373,6 @@ class ItemAdmin(admin.ModelAdmin):
 
         # --- GET → render upload form
         return render(request, "admin/import_excel.html", {"title": "Import Items from Excel & ZIP"})
-
 
 
 @admin.register(Notification)

@@ -10,6 +10,18 @@
       <div class="card-body">
         <h3 class="mb-3">{{ item.title }}</h3>
 
+        <!-- ✅ Category + Subcategory + City -->
+        <p class="text-muted small mb-3">
+          {% if item.category.parent %}
+            {{ item.category.parent }} › {{ item.category }}
+          {% else %}
+            {{ item.category }}
+          {% endif %}
+          {% if item.city %}
+            • {{ item.city }}
+          {% endif %}
+        </p>
+
         {% if item.photos.exists %}
           <div id="itemPhotoCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-interval="3000" data-bs-pause="hover">
             <div class="carousel-inner">

@@ -53,6 +53,13 @@ class Category(models.Model):
     name_en = models.CharField(max_length=255, unique=True)
     name_ar = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
+    parent = models.ForeignKey(  # ✅ This line must exist
+        "self",
+        on_delete=models.CASCADE,
+        related_name="subcategories",
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         from django.utils import translation

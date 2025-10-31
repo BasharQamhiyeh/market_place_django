@@ -20,6 +20,11 @@ from .models import Favorite  # ensure Favorite is imported
 from elasticsearch import Elasticsearch
 from django.conf import settings
 from elasticsearch.exceptions import ConnectionError
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.db.models import Q, Count
+from collections import deque
+
 
 # Registration
 def register(request):
@@ -80,12 +85,33 @@ def item_list(request):
     ).update(is_active=False)
 
     # ----------------------------------------------
-    # ✅ Search query
+    # ✅ Get search & category filters
     # ----------------------------------------------
     q = request.GET.get("q", "").strip()
+    category_id = request.GET.get("category")
 
     # ----------------------------------------------
-    # ✅ If searching (min 2 chars) → use ES
+    # ✅ Base queryset (active + approved)
+    # ----------------------------------------------
+    base_qs = Item.objects.filter(
+        is_approved=True,
+        is_active=True,
+    )
+
+    # ----------------------------------------------
+    # ✅ Handle category / subcategory filter
+    # ----------------------------------------------
+    selected_category = None
+    if category_id:
+        try:
+            selected_category = Category.objects.get(id=category_id)
+            ids = _category_descendant_ids(selected_category)  # parent + ALL descendants
+            base_qs = base_qs.filter(category_id__in=ids)
+        except Category.DoesNotExist:
+            selected_category = None
+
+    # ----------------------------------------------
+    # ✅ Search logic (Elasticsearch + fallback)
     # ----------------------------------------------
     if len(q) >= 2:
         try:
@@ -98,6 +124,8 @@ def item_list(request):
                         "title",
                         "description",
                         "category.name",
+                        "category.parent.name",
+                        "city.name",
                         "attributes.name",
                         "attributes.value",
                         "condition",
@@ -107,29 +135,25 @@ def item_list(request):
                 .sort("-created_at")
             )
 
-            hit_ids = [hit.meta.id for hit in search]
-            queryset = Item.objects.filter(
-                id__in=hit_ids,
-                is_approved=True,
-                is_active=True,
-            ).order_by("-created_at")
+            # Execute search
+            hits = search.execute().hits
+            hit_ids = [str(hit.meta.id) for hit in hits]
 
-        except Exception:
-            # 🚨 Elasticsearch offline fallback
-            queryset = Item.objects.filter(
-                is_approved=True,
-                is_active=True,
-                title__icontains=q,
-            ).order_by("-created_at")
+            # Get from DB to preserve full data (relations)
+            queryset = list(
+                base_qs.filter(id__in=hit_ids)
+                .select_related("category", "city", "user")
+                .prefetch_related("photos")
+            )
 
-    # ----------------------------------------------
-    # ✅ No search → show all approved & active
-    # ----------------------------------------------
+            # Preserve Elasticsearch order
+            queryset.sort(key=lambda i: hit_ids.index(str(i.id)))
+
+        except Exception as e:
+            print("[WARN] Elasticsearch unavailable:", e)
+            queryset = base_qs.filter(title__icontains=q).order_by("-created_at")
     else:
-        queryset = Item.objects.filter(
-            is_approved=True,
-            is_active=True,
-        ).order_by("-created_at")
+        queryset = base_qs.order_by("-created_at")
 
     # ----------------------------------------------
     # ✅ Pagination
@@ -139,21 +163,36 @@ def item_list(request):
     page_obj = paginator.get_page(page_number)
 
     # ----------------------------------------------
-    # ✅ Partial response for HTMX
+    # ✅ Partial response for HTMX (infinite scroll / search)
     # ----------------------------------------------
     if request.headers.get("HX-Request"):
         return render(request, "partials/item_results.html", {
             "page_obj": page_obj,
             "q": q,
+            "selected_category": selected_category,
         })
 
-    # ----------------------------------------------
-    # ✅ Normal page
-    # ----------------------------------------------
+    # Fetch only non-empty categories
+    categories = (
+        Category.objects
+        .filter(parent__isnull=True)
+        .annotate(
+            total_items=Count("items", filter=Q(items__is_active=True, items__is_approved=True)) +
+                        Count("subcategories__items",
+                              filter=Q(subcategories__items__is_active=True, subcategories__items__is_approved=True))
+        )
+        .filter(total_items__gt=0)  # show only categories that actually contain items
+        .prefetch_related("subcategories")
+        .distinct()
+    )
+
     return render(request, "item_list.html", {
         "page_obj": page_obj,
         "q": q,
+        "selected_category": selected_category,
+        "categories": categories,  # ✅ only categories that contain items
     })
+
 
 # Item details
 def item_detail(request, item_id):
@@ -212,7 +251,8 @@ def item_detail(request, item_id):
 # Only logged-in users can post
 @login_required
 def item_create(request):
-    categories = Category.objects.all()
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
+
 
     # POST takes priority so we don't lose the category on submit
     category_id = request.POST.get('category') or request.GET.get('category')
@@ -371,29 +411,41 @@ def item_edit(request, item_id):
 
 # Category form (simple)
 class CategoryForm(forms.ModelForm):
+    parent = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        label="Parent Category",
+        help_text="Optional — leave blank if this is a top-level category.",
+    )
+
     class Meta:
         model = Category
-        fields = ['name_en', 'name_ar', 'description']
+        fields = ['name_en', 'name_ar', 'description', 'parent']
 
-# Only staff (admin) can add categories
+
 @staff_member_required
 def create_category(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Category created successfully!')
+            category = form.save()
+            messages.success(request, f'Category "{category}" created successfully!')
             return redirect('category_list')
     else:
         form = CategoryForm()
+
     return render(request, 'category_create.html', {'form': form})
 
 
 # Optional: list categories (for admins)
 @staff_member_required
 def category_list(request):
-    categories = Category.objects.all()
-    return render(request, 'category_list.html', {'categories': categories})
+    # Fetch all top-level categories (parent=None)
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related('subcategories')
+
+    return render(request, 'category_list.html', {
+        'categories': categories,
+    })
 
 # Form to create a new attribute for a category
 class AttributeForm(forms.ModelForm):
@@ -521,7 +573,8 @@ def item_edit(request, item_id):
     if item.user != request.user:
         return HttpResponseForbidden("Not allowed")
 
-    categories = Category.objects.all()
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
+
     category_id = request.POST.get('category') or request.GET.get('category')
     selected_category = Category.objects.filter(id=category_id).first() if category_id else item.category
 
@@ -758,3 +811,69 @@ def change_password(request):
         form = UserPasswordChangeForm(user=request.user)
 
     return render(request, 'change_password.html', {'form': form})
+
+
+@require_GET
+def search_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    suggestions = []
+
+    if len(query) < 2:
+        return JsonResponse({"results": []})
+
+    try:
+        # 1️⃣ Match categories and subcategories
+        matched_categories = (
+            Category.objects.filter(
+                Q(name_ar__icontains=query) | Q(name_en__icontains=query)
+            )
+            .select_related("parent")
+            .order_by("name_ar")[:8]
+        )
+
+        for cat in matched_categories:
+            parent_label = cat.parent.name_ar if cat.parent else None
+            suggestions.append({
+                "type": "category",
+                "name": cat.name_ar,
+                "parent": parent_label,
+                "category_id": cat.id,
+            })
+
+        # 2️⃣ Match top items
+        matched_items = (
+            Item.objects.filter(
+                is_approved=True,
+                is_active=True,
+                title__icontains=query
+            )
+            .select_related("category")
+            .order_by("-created_at")[:5]
+        )
+
+        for item in matched_items:
+            parent_label = item.category.parent.name_ar if item.category.parent else None
+            suggestions.append({
+                "type": "item",
+                "name": item.title,
+                "category": item.category.name_ar,
+                "parent": parent_label,
+            })
+
+    except Exception as e:
+        print("[WARN] Suggestion fetch failed:", e)
+
+    return JsonResponse({"results": suggestions})
+
+
+def _category_descendant_ids(root):
+    """Return [root.id] + all descendant category IDs (BFS)."""
+    ids = []
+    dq = deque([root])
+    while dq:
+        node = dq.popleft()
+        ids.append(node.id)
+        # requires Category(parent=..., related_name="subcategories")
+        for child in node.subcategories.all():
+            dq.append(child)
+    return ids
