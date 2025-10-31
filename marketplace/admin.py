@@ -19,7 +19,7 @@ import tempfile, requests, openpyxl, os
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-import zipfile, rarfile
+import zipfile
 
 
 @admin.register(User)
