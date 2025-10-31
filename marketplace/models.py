@@ -143,7 +143,7 @@ class ItemAttributeValue(models.Model):
     value = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.attribute.name}: {self.value}"
+        return f"{self.attribute.name_en}/{self.attribute.name_ar}: {self.value}"
 
     # TODO: see why chatgpt changed it to this ?
     # def __str__(self):

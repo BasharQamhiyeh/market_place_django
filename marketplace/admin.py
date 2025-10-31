@@ -19,6 +19,7 @@ import tempfile, requests, openpyxl, os
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+import zipfile, rarfile
 
 
 @admin.register(User)
@@ -192,99 +193,151 @@ class ItemAdmin(admin.ModelAdmin):
 
     def import_excel_view(self, request):
         """
-        Admin-only import of items from an Excel (.xlsx) file.
-        Expected columns (0-based index in the active sheet):
-            row[1]  -> Name (Arabic)        -> Item.title
-            row[3]  -> Description (Arabic) -> Item.description (fallback to EN ok)
-            row[5]  -> Price                -> Item.price
-            row[12] -> Image URLs           -> one or multiple http links in the same cell
-            row[13] -> Category Name (AR)   -> Category by name_ar (create if missing)
+        Import items from Excel (.xlsx) and photos from ZIP or URLs.
+        Priority:
+          1️⃣ Photos from ZIP file (matched by external_id substring)
+          2️⃣ If none found, use URLs in 'image' column.
         """
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
-            if not excel_file:
-                self.message_user(request, "⚠️ Please upload an Excel file.", level=messages.WARNING)
+            zip_file = request.FILES.get("zip_file")
+
+            if not excel_file or not zip_file:
+                self.message_user(request, "⚠️ Please upload both Excel and ZIP files.", level=messages.WARNING)
                 return redirect("..")
 
-            # Save upload to a temp file
-            tmp_path = tempfile.mktemp(suffix=".xlsx")
-            with open(tmp_path, "wb+") as dest:
-                for chunk in excel_file.chunks():
-                    dest.write(chunk)
+            if not zip_file.name.lower().endswith(".zip"):
+                self.message_user(request, "❌ Only .zip files are supported.", level=messages.ERROR)
+                return redirect("..")
 
-            # Parse workbook
-            wb = openpyxl.load_workbook(tmp_path)
+            excel_path = tempfile.mktemp(suffix=".xlsx")
+            zip_path = tempfile.mktemp(suffix=".zip")
+            photos_dir = tempfile.mkdtemp()
+
+            with open(excel_path, "wb+") as f:
+                for chunk in excel_file.chunks():
+                    f.write(chunk)
+            with open(zip_path, "wb+") as f:
+                for chunk in zip_file.chunks():
+                    f.write(chunk)
+
+            try:
+                with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                    zip_ref.extractall(photos_dir)
+            except Exception as e:
+                self.message_user(request, f"❌ Failed to extract ZIP: {e}", level=messages.ERROR)
+                return redirect("..")
+
+            wb = openpyxl.load_workbook(excel_path)
             sheet = wb.active
-            created_count = 0
-            failed_count = 0
+            headers = [str(c.value).strip().lower() if c.value else "" for c in sheet[1]]
+
+            def col(name):
+                for i, h in enumerate(headers):
+                    if h == name.lower():
+                        return i
+                return None
+
+            id_col = col("id")
+            name_col = col("name")
+            desc_col = col("description")
+            price_col = col("price")
+            category_col = col("category")
+            image_col = col("image") or col("images")
+
+            required = [id_col, name_col, price_col, category_col]
+            if any(c is None for c in required):
+                missing = [n for n, c in zip(["id", "name", "price", "category"], required) if c is None]
+                self.message_user(request, f"❌ Missing required columns: {', '.join(missing)}", level=messages.ERROR)
+                return redirect("..")
+
+            created_count, failed_count = 0, 0
+            missing_images = []
 
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 try:
-                    name_ar = row[1]  # Arabic Name
-                    desc_ar = row[3]  # Arabic Description
-                    price = row[5]  # Price
-                    image_urls = row[11]  # One or multiple URLs
-                    category_name = row[12]  # Arabic category name
+                    external_id = str(int(row[id_col])).strip() if row[id_col] else None
+                    title = str(row[name_col]).strip() if row[name_col] else None
+                    desc = str(row[desc_col]).strip() if desc_col is not None and row[desc_col] else ""
+                    price = float(row[price_col]) if row[price_col] else None
+                    category_name = str(row[category_col]).strip() if row[category_col] else None
+                    image_urls = str(row[image_col]).strip() if image_col is not None and row[image_col] else ""
 
-                    if not name_ar or not price or not category_name:
+                    if not external_id or not title or not price or not category_name:
                         continue
 
-                    # Find or create category by Arabic name
                     category, _ = Category.objects.get_or_create(
                         name_ar=category_name,
-                        defaults={'name_en': category_name}
+                        defaults={"name_en": category_name}
                     )
 
-                    # Create the item
                     item = Item.objects.create(
-                        title=name_ar,
-                        description=desc_ar or "",
-                        price=float(price),
+                        title=title,
+                        description=desc,
+                        price=price,
                         category=category,
-                        user=request.user,  # the admin importing
-                        is_approved=True,  # imported items start as approved (tweak if needed)
+                        user=request.user,
+                        is_approved=True,
                         is_active=True,
                     )
 
-                    # Multiple image URLs in the same cell -> split by comma/space/newline
-                    if image_urls:
-                        if isinstance(image_urls, str):
-                            urls = [u.strip() for u in image_urls.replace("\n", ",").replace(" ", ",").split(",") if
-                                    u.strip()]
-                        else:
-                            urls = [str(image_urls)]
+                    # --- Try ZIP photos first
+                    image_found = False
+                    for root, _, files in os.walk(photos_dir):
+                        for filename in files:
+                            if external_id.lower() in filename.lower():  # relaxed matching
+                                file_path = os.path.join(root, filename)
+                                try:
+                                    with open(file_path, "rb") as img_file:
+                                        content = ContentFile(img_file.read())
+                                        photo = ItemPhoto(item=item)
+                                        photo.image.save(os.path.basename(filename), content, save=True)
+                                    image_found = True
+                                    print(f"[INFO] Added ZIP image for {external_id}: {filename}")
+                                except Exception as e:
+                                    print(f"[WARN] Could not save ZIP image {filename}: {e}")
 
+                    # --- Fallback to URLs
+                    if not image_found and image_urls:
+                        urls = [u.strip() for u in image_urls.replace("\n", ",").replace(" ", ",").split(",") if
+                                u.strip()]
                         for url in urls:
                             if not url.startswith("http"):
                                 continue
                             try:
                                 resp = requests.get(url, timeout=10)
                                 if resp.status_code == 200:
+                                    filename = os.path.basename(url.split("?")[0]) or f"{external_id}.jpg"
+                                    content = ContentFile(resp.content)
                                     photo = ItemPhoto(item=item)
-                                    img_name = os.path.basename(url.split("?")[0]) or f"photo_{item.id}.jpg"
-                                    # ✅ upload directly to Cloudinary or local default
-                                    photo.image.save(img_name, ContentFile(resp.content), save=True)
+                                    photo.image.save(filename, content, save=True)
+                                    image_found = True
+                                    print(f"[INFO] Downloaded image for {external_id} from {url}")
+                                else:
+                                    print(f"[WARN] Bad status {resp.status_code} for {url}")
                             except Exception as e:
-                                print(f"[WARN] Image fetch failed for '{name_ar}': {e}")
+                                print(f"[WARN] Failed to fetch image from {url}: {e}")
+
+                    if not image_found:
+                        missing_images.append(external_id)
 
                     created_count += 1
 
                 except Exception as e:
-                    print(f"[ERROR] Row import failed: {e}")
+                    print(f"[ERROR] Row import failed for {row}: {e}")
                     failed_count += 1
 
             wb.close()
-            os.remove(tmp_path)
+            os.remove(excel_path)
+            os.remove(zip_path)
 
-            self.message_user(
-                request,
-                f"✅ Import finished: {created_count} items created, {failed_count} failed.",
-                level=messages.SUCCESS
-            )
-            return redirect("../")  # back to Item list
+            summary = f"✅ Import finished: {created_count} items created, {failed_count} failed."
+            if missing_images:
+                summary += f" ⚠️ {len(missing_images)} items had no photos."
+            self.message_user(request, summary, level=messages.SUCCESS)
+            return redirect("../")
 
-        # GET -> render upload form
-        return render(request, "admin/import_excel.html", {"title": "Import Items from Excel"})
+        return render(request, "admin/import_excel.html", {"title": "Import Items from Excel & ZIP"})
 
 
 

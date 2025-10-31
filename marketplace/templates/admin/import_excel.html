@@ -1,14 +1,19 @@
 {% extends "admin/base_site.html" %}
 {% block content %}
-<h1>📦 Import Items from Excel</h1>
-
-<form method="post" enctype="multipart/form-data" style="margin-top:20px;">
+<h2>Import Items from Excel & ZIP</h2>
+<form method="post" enctype="multipart/form-data" class="vstack gap-3 mt-3">
   {% csrf_token %}
-  <p><input type="file" name="excel_file" accept=".xlsx" required></p>
-  <button type="submit" class="default">Import</button>
-</form>
 
-<p style="margin-top:20px;">
-  <a href="../">⬅ Back to items list</a>
-</p>
+  <div>
+    <label for="excel_file" class="form-label fw-semibold">Excel File (.xlsx)</label>
+    <input type="file" name="excel_file" id="excel_file" accept=".xlsx" class="form-control" required>
+  </div>
+
+  <div>
+    <label for="zip_file" class="form-label fw-semibold">ZIP File (Photos)</label>
+    <input type="file" name="zip_file" id="zip_file" accept=".zip" class="form-control" required>
+  </div>
+
+  <button type="submit" class="btn btn-primary mt-3">Import</button>
+</form>
 {% endblock %}
