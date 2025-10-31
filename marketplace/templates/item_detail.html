@@ -11,12 +11,35 @@
         <h3 class="mb-3">{{ item.title }}</h3>
 
         {% if item.photos.exists %}
-          <div class="mb-3">
-            <div class="d-flex gap-2 overflow-auto pb-2">
+          <div id="itemPhotoCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-interval="3000" data-bs-pause="hover">
+            <div class="carousel-inner">
               {% for photo in item.photos.all %}
-                <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="rounded" style="width:340px;height:340px;object-fit:cover;flex:0 0 auto;">
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                  <img src="{{ photo.image.url }}" class="d-block w-100 rounded" alt="{{ item.title }}" style="height:400px;object-fit:cover;">
+                </div>
               {% endfor %}
             </div>
+
+            {% if item.photos.count > 1 %}
+              <button class="carousel-control-prev" type="button" data-bs-target="#itemPhotoCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">{% trans "Previous" %}</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#itemPhotoCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">{% trans "Next" %}</span>
+              </button>
+
+              <div class="carousel-indicators">
+                {% for photo in item.photos.all %}
+                  <button type="button"
+                          data-bs-target="#itemPhotoCarousel"
+                          data-bs-slide-to="{{ forloop.counter0 }}"
+                          {% if forloop.first %}class="active" aria-current="true"{% endif %}
+                          aria-label="{% trans 'Slide' %} {{ forloop.counter }}"></button>
+                {% endfor %}
+              </div>
+            {% endif %}
           </div>
         {% else %}
           <div class="alert alert-light border">{% trans "No photos available." %}</div>
@@ -152,7 +175,7 @@
                   {% endwith %}
                   <div class="card-body">
                     <h6 class="card-title mb-1"><a class="text-decoration-none" href="{% url 'item_detail' s.id %}">{{ s.title }}</a></h6>
-                    <div class="text-muted">${{ s.price }}</div>
+                    <div class="text-muted">JOD {{ s.price }}</div>
                   </div>
                 </div>
               </div>
