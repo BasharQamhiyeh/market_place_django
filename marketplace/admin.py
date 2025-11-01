@@ -6,11 +6,12 @@ from django.utils.html import format_html
 from django.db import models
 from django.core.files.base import ContentFile
 import tempfile, os, zipfile, openpyxl
+from django.urls import reverse
 
 from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
-    City, Favorite, IssueReport
+    City, Favorite, IssueReport, Message
 )
 
 # ======================================================
@@ -375,6 +376,136 @@ class CityAdmin(admin.ModelAdmin):
     list_display = ("id", "name_en", "name_ar", "is_active")
     search_fields = ("name_en", "name_ar")
     list_filter = ("is_active",)
+
+
+from django.contrib import admin
+from .models import Message
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "conversation_info",
+        "sender_info",
+        "receiver_info",
+        "short_body",
+        "is_read",
+        "created_at",
+    )
+    readonly_fields = (
+        "conversation_display",
+        "sender_display",
+        "receiver_display",
+        "body",
+        "is_read",
+        "created_at",
+    )
+    list_filter = ("is_read", "created_at")
+    search_fields = (
+        "body",
+        "sender__username", "sender__first_name", "sender__last_name", "sender__phone",
+        "conversation__buyer__username", "conversation__buyer__first_name",
+        "conversation__buyer__last_name", "conversation__buyer__phone",
+        "conversation__seller__username", "conversation__seller__first_name",
+        "conversation__seller__last_name", "conversation__seller__phone",
+    )
+    ordering = ("-created_at",)
+    list_select_related = ("sender", "conversation")
+
+    # Hide add/edit/delete permissions
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        # allow viewing but disable form fields editing
+        if obj:
+            return True
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['show_save'] = False
+        extra_context['show_save_and_continue'] = False
+        extra_context['show_save_and_add_another'] = False
+        extra_context['show_delete'] = False
+        return super().changeform_view(request, object_id, form_url, extra_context)
+
+    # Show read-only details instead of form fields
+    def get_fields(self, request, obj=None):
+        return (
+            "conversation_display",
+            "sender_display",
+            "receiver_display",
+            "body",
+            "is_read",
+            "created_at",
+        )
+
+    # ========= List page helpers =========
+    def short_body(self, obj):
+        return (obj.body[:60] + "...") if len(obj.body) > 60 else obj.body
+    short_body.short_description = "Message"
+
+    def conversation_info(self, obj):
+        return str(obj.conversation)
+    conversation_info.short_description = "Conversation"
+
+    def sender_info(self, obj):
+        sender = obj.sender
+        return f"{sender.username} ({sender.first_name} {sender.last_name})"
+    sender_info.short_description = "Sender"
+
+    def receiver_info(self, obj):
+        conv = obj.conversation
+        if obj.sender == conv.buyer:
+            receiver = conv.seller
+        elif obj.sender == conv.seller:
+            receiver = conv.buyer
+        else:
+            return "-"
+        return f"{receiver.username} ({receiver.first_name} {receiver.last_name})"
+    receiver_info.short_description = "Receiver"
+
+    # ========= Read-only detail view =========
+    def conversation_display(self, obj):
+        return str(obj.conversation)
+    conversation_display.short_description = "Conversation"
+
+    def sender_display(self, obj):
+        sender = obj.sender
+        url = reverse("admin:marketplace_user_change", args=[sender.user_id])
+        return format_html(
+            '<a href="{}"><b>{}</b></a><br>{} {} — {}',
+            url,
+            sender.username,
+            sender.first_name,
+            sender.last_name,
+            sender.phone or "No phone",
+        )
+    sender_display.short_description = "Sender"
+
+    def receiver_display(self, obj):
+        conv = obj.conversation
+        if obj.sender == conv.buyer:
+            receiver = conv.seller
+        elif obj.sender == conv.seller:
+            receiver = conv.buyer
+        else:
+            return "-"
+        url = reverse("admin:marketplace_user_change", args=[receiver.user_id])
+        return format_html(
+            '<a href="{}"><b>{}</b></a><br>{} {} — {}',
+            url,
+            receiver.username,
+            receiver.first_name,
+            receiver.last_name,
+            receiver.phone or "No phone",
+        )
+    receiver_display.short_description = "Receiver"
 
 
 # @admin.register(Favorite)
