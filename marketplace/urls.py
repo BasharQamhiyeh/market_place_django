@@ -53,6 +53,7 @@ urlpatterns = [
     path('send-verification/', views.send_verification_code, name='send_verification'),
     path('verify-phone/', views.verify_phone, name='verify_phone'),
     path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('verify-reset-code/', views.verify_reset_code, name='verify_reset_code'),
     path('reset-password/', views.reset_password, name='reset_password'),
 
     # --- Newsletter ---

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}تحقق من الرمز{% endblock %}
+{% block content %}
+<div class="col-md-6 mx-auto">
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h4>تحقق من الرمز</h4>
+      <p>تم إرسال رمز مكون من 6 أرقام إلى رقم الهاتف {{ phone }}</p>
+      <form method="post">{% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-jordan w-100">تحقق</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

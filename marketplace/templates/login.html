@@ -28,6 +28,11 @@
             <a href="{% url 'register' %}" class="text-decoration-none">{% trans "Create account" %}</a>
             <button type="submit" class="btn btn-jordan">{% trans "Login" %}</button>
           </div>
+          <div class="text-center mt-2">
+            <a href="{% url 'forgot_password' %}" class="text-decoration-none small text-muted">
+              {% trans "Forgot your password?" %}
+            </a>
+          </div>
         </form>
       </div>
     </div>

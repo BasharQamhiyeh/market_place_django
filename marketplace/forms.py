@@ -256,12 +256,22 @@ class ForgotPasswordForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '07xxxxxxxx'})
     )
 
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone', '').strip().replace(' ', '')
+
+        # Convert 07xxxxxxxx → 9627xxxxxxxx
+        if phone.startswith('07') and len(phone) == 10:
+            phone = '962' + phone[1:]
+        elif not phone.startswith('9627') or len(phone) != 12:
+            raise forms.ValidationError("⚠️ يرجى إدخال رقم هاتف صالح.")
+        return phone
+
 class ResetPasswordForm(forms.Form):
-    code = forms.CharField(
-        max_length=6,
-        label="رمز التحقق",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'أدخل الرمز'})
-    )
+    # code = forms.CharField(
+    #     max_length=6,
+    #     label="رمز التحقق",
+    #     widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'أدخل الرمز'})
+    # )
     new_password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'كلمة المرور الجديدة'}),
         label="كلمة المرور الجديدة"
