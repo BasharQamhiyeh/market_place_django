@@ -12,37 +12,76 @@ from .widgets import MultipleFileInput  # your existing widget
 
 User = get_user_model()
 
+import re
+from django import forms
+from django.utils.translation import gettext_lazy as _
+from .models import User
+
+
+import re
+from django import forms
+from django.utils.translation import gettext_lazy as _
+from .models import User
+
+
 class UserRegistrationForm(forms.ModelForm):
+    COUNTRY_CHOICES = [
+        ('JO', 'Jordan (+962)'),
+    ]
+
+    country = forms.ChoiceField(
+        choices=COUNTRY_CHOICES,
+        label=_("Country"),
+        initial='JO',
+        disabled=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    phone = forms.CharField(
+        label=_("Phone number"),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '07xxxxxxxx'})
+    )
+
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={"id": "id_password"})
+        widget=forms.PasswordInput(attrs={"id": "id_password"}),
+        label=_("Password")
     )
     password2 = forms.CharField(
         widget=forms.PasswordInput(attrs={"id": "id_password2"}),
-        label="Confirm Password"
+        label=_("Confirm Password")
     )
 
     show_phone = forms.BooleanField(
         required=False,
-        label="عرض رقم الهاتف للمستخدمين الآخرين",
-        help_text="فعّل هذا الخيار إذا كنت تريد أن يظهر رقم هاتفك للمستخدمين الآخرين.",
+        label=_("Display phone number to other users"),
+        help_text=_("Enable this option if you want your phone number to be visible to other users."),
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )
 
     class Meta:
         model = User
-        fields = ['username', 'phone', 'first_name', 'last_name', 'email', 'show_phone']
+        fields = ['username', 'country', 'phone', 'first_name', 'last_name', 'email', 'show_phone']
+        labels = {
+            'username': _("Username"),
+            'first_name': _("First name"),
+            'last_name': _("Last name"),
+            'email': _("Email"),
+        }
 
+    # -----------------------------
+    # ✅ Validations (unchanged)
+    # -----------------------------
     def clean_username(self):
         username = self.cleaned_data.get('username', '').strip()
         if not re.match(r'^[A-Za-z]', username):
-            raise forms.ValidationError("اسم المستخدم يجب أن يبدأ بحرف.")
+            raise forms.ValidationError(_("The username must begin with a letter."))
         return username
 
     def clean_password(self):
         pwd = self.cleaned_data.get('password', '')
         if len(pwd) < 8:
             raise forms.ValidationError(
-                "كلمة المرور يجب أن تتكون من 8 أحرف/أرقام على الأقل وتحتوي على أحرف أو أرقام فقط."
+                _("Password must be 8 characters long.")
             )
         return pwd
 
@@ -50,18 +89,21 @@ class UserRegistrationForm(forms.ModelForm):
         pwd = self.cleaned_data.get('password')
         pwd2 = self.cleaned_data.get('password2')
         if pwd != pwd2:
-            raise forms.ValidationError("كلمتا المرور غير متطابقتين.")
+            raise forms.ValidationError(_("Two passwords must not match.."))
         return pwd2
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone', '').strip().replace(' ', '')
         if re.fullmatch(r'07\d{8}', phone):
-            phone = '962' + phone[1:]  # normalize 07xxxxxxxx to 9627xxxxxxxxx
+            # Normalize to full international format
+            phone = '962' + phone[1:]
         elif not re.fullmatch(r'9627\d{8}', phone):
             raise forms.ValidationError(
-                "رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام، وسيتم حفظه بصيغة 9627xxxxxxxx."
+                _("Phone number must begin with 07 and be 10 digits long. It will be saved in the format 9627xxxxxxxx.")
             )
         return phone
+
+
 
 
 class UserProfileEditForm(forms.ModelForm):

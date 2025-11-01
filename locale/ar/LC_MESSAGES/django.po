@@ -6,16 +6,77 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Marketplace 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-01 14:11+0100\n"
-"PO-Revision-Date: 2025-11-01 15:00+0100\n"
+"POT-Creation-Date: 2025-11-01 14:41+0100\n"
+"PO-Revision-Date: 2025-11-01 14:45+0100\n"
 "Last-Translator: ChatGPT <>\n"
 "Language-Team: Arabic\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && "
+"n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"X-Generator: Poedit 3.8\n"
+
+#: .\marketplace\forms.py:34
+msgid "Country"
+msgstr "البلد"
+
+#: .\marketplace\forms.py:41
+msgid "Phone number"
+msgstr "رقم التليفون"
+
+#: .\marketplace\forms.py:47 .\marketplace\templates\login.html:24
+msgid "Password"
+msgstr "كلمة المرور"
+
+#: .\marketplace\forms.py:51
+msgid "Confirm Password"
+msgstr "تأكيد كلمة المرور"
+
+#: .\marketplace\forms.py:56
+msgid "Display phone number to other users"
+msgstr "عرض رقم الهاتف للمستخدمين الآخرين"
+
+#: .\marketplace\forms.py:57
+msgid ""
+"Enable this option if you want your phone number to be visible to other users."
+msgstr "فعّل هذا الخيار إذا كنت تريد أن يظهر رقم هاتفك للمستخدمين الآخرين"
+
+#: .\marketplace\forms.py:65
+msgid "Username"
+msgstr "اسم المستخدم"
+
+#: .\marketplace\forms.py:66
+msgid "First name"
+msgstr "الاسم الأول"
+
+#: .\marketplace\forms.py:67
+msgid "Last name"
+msgstr "الاسم الاخير"
+
+#: .\marketplace\forms.py:68 .\marketplace\templates\user_profile.html:22
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+#: .\marketplace\forms.py:77
+msgid "The username must begin with a letter."
+msgstr "اسم المستخدم يجب أن يبدأ بحرف."
+
+#: .\marketplace\forms.py:84
+msgid "Password must be 8 characters long."
+msgstr "كلمة المرور يجب أن تتكون من 8 أحرف."
+
+#: .\marketplace\forms.py:92
+msgid "Two passwords must not match.."
+msgstr "كلمتا المرور غير متطابقتين"
+
+#: .\marketplace\forms.py:102
+msgid ""
+"Phone number must begin with 07 and be 10 digits long. It will be saved in the "
+"format 9627xxxxxxxx."
+msgstr ""
+"رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام، وسيتم حفظه بصيغة 9627xxxxxxxx"
 
 #: .\marketplace\templates\admin\marketplace\item\change_form.html:14
 msgid "Approve"
@@ -53,8 +114,7 @@ msgstr "ملفي الشخصي"
 msgid "Edit Profile"
 msgstr "تعديل الملف الشخصي"
 
-#: .\marketplace\templates\base.html:140
-#: .\marketplace\templates\my_items.html:4
+#: .\marketplace\templates\base.html:140 .\marketplace\templates\my_items.html:4
 #: .\marketplace\templates\my_items.html:9
 msgid "My Announcements"
 msgstr "إعلاناتي"
@@ -77,7 +137,7 @@ msgstr "تسجيل الدخول"
 
 #: .\marketplace\templates\base.html:148 .\marketplace\templates\home.html:20
 #: .\marketplace\templates\register.html:5
-#: .\marketplace\templates\register.html:74
+#: .\marketplace\templates\register.html:91
 msgid "Register"
 msgstr "إنشاء حساب"
 
@@ -198,8 +258,7 @@ msgid "Back to announcement"
 msgstr "العودة إلى الإعلان"
 
 #: .\marketplace\templates\contact.html:10
-msgid ""
-"We'd love to hear from you! Send us an email or message on social media."
+msgid "We'd love to hear from you! Send us an email or message on social media."
 msgstr "يسعدنا سماع رأيك! أرسل لنا بريداً إلكترونياً أو رسالة عبر وسائل التواصل."
 
 #: .\marketplace\templates\edit_profile.html:20
@@ -380,7 +439,7 @@ msgstr "تاريخ النشر"
 #: .\marketplace\templates\item_detail.html:146
 #: .\marketplace\templates\partials\_item_card.html:38
 msgid "ago"
-msgstr ""
+msgstr "منذ"
 
 #: .\marketplace\templates\item_detail.html:151
 msgid "Last updated"
@@ -503,12 +562,7 @@ msgstr "إعلان"
 msgid "Username/phone"
 msgstr "اسم المستخدم / الهاتف"
 
-#: .\marketplace\templates\login.html:24
-msgid "Password"
-msgstr "كلمة المرور"
-
-#: .\marketplace\templates\login.html:28
-#: .\marketplace\templates\register.html:12
+#: .\marketplace\templates\login.html:28 .\marketplace\templates\register.html:12
 msgid "Create account"
 msgstr "إنشاء حساب"
 
@@ -587,19 +641,10 @@ msgstr "عرض التفاصيل"
 msgid "No items found."
 msgstr "لم يتم العثور على إعلانات."
 
-#: .\marketplace\templates\register.html:28
-msgid "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx."
-msgstr "أدخل الرقم المحلي مثل 07xxxxxxxx. سيتم حفظه كـ 9627xxxxxxxx."
-
-#: .\marketplace\templates\register.html:63
+#: .\marketplace\templates\register.html:77
 msgid ""
 "Password must be at least 8 characters and contain only letters and numbers."
-msgstr ""
-"يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي فقط على أحرف وأرقام."
-
-#: .\marketplace\templates\user_profile.html:22
-msgid "Email"
-msgstr "البريد الإلكتروني"
+msgstr "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي فقط على أحرف وأرقام."
 
 #: .\marketplace\templates\user_profile.html:34
 msgid "Active Listings"
@@ -608,6 +653,9 @@ msgstr "الإعلانات النشطة"
 #: .\marketplace\templates\user_profile.html:58
 msgid "This seller has no active announcements at the moment."
 msgstr "هذا البائع ليس لديه إعلانات نشطة حالياً."
+
+#~ msgid "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx."
+#~ msgstr "أدخل الرقم المحلي مثل 07xxxxxxxx. سيتم حفظه كـ 9627xxxxxxxx."
 
 #~ msgid "Posted by"
 #~ msgstr "نُشر بواسطة"

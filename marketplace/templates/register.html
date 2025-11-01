@@ -16,25 +16,36 @@
           {% csrf_token %}
           {{ form.non_field_errors }}
 
+          <!-- Username -->
           <div>
             {{ form.username.label_tag }}
             {{ form.username|add_class:"form-control" }}
             <div class="text-danger small">{{ form.username.errors }}</div>
           </div>
 
+          <!-- Country prefix + Phone (flag + +962) -->
           <div>
+            {{ form.country.as_hidden }}  {# hidden real field for submission #}
             {{ form.phone.label_tag }}
-            {{ form.phone|add_class:"form-control" }}
-            <small class="text-muted d-block">{% trans "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx." %}</small>
+            <div class="input-group">
+              <span class="input-group-text" id="country-addon">
+                🇯🇴 +962
+              </span>
+              {{ form.phone|add_class:"form-control"|attr:"aria-describedby:country-addon"|attr:"placeholder:07xxxxxxxx" }}
+            </div>
             <div class="text-danger small">{{ form.phone.errors }}</div>
           </div>
 
+          <!-- Show phone -->
           <div class="form-check">
             {{ form.show_phone|add_class:"form-check-input" }}
-            <label class="form-check-label" for="{{ form.show_phone.id_for_label }}">{{ form.show_phone.label }}</label>
+            <label class="form-check-label" for="{{ form.show_phone.id_for_label }}">
+              {{ form.show_phone.label }}
+            </label>
             <small class="text-muted d-block">{{ form.show_phone.help_text }}</small>
           </div>
 
+          <!-- Name -->
           <div class="row g-3">
             <div class="col-12 col-md-6">
               {{ form.first_name.label_tag }}
@@ -48,28 +59,34 @@
             </div>
           </div>
 
+          <!-- Email -->
           <div>
             {{ form.email.label_tag }}
             {{ form.email|add_class:"form-control" }}
             <div class="text-danger small">{{ form.email.errors }}</div>
           </div>
 
+          <!-- Password -->
           <div>
             {{ form.password.label_tag }}
             <div class="input-group">
               {{ form.password|add_class:"form-control" }}
               <button type="button" class="btn btn-outline-secondary" id="togglePwd">👁</button>
             </div>
-            <small class="text-muted">{% trans "Password must be at least 8 characters and contain only letters and numbers." %}</small>
+            <small class="text-muted">
+              {% trans "Password must be at least 8 characters and contain only letters and numbers." %}
+            </small>
             <div class="text-danger small">{{ form.password.errors }}</div>
           </div>
 
+          <!-- Confirm Password -->
           <div>
             {{ form.password2.label_tag }}
             {{ form.password2|add_class:"form-control" }}
             <div class="text-danger small">{{ form.password2.errors }}</div>
           </div>
 
+          <!-- Submit -->
           <div class="d-flex justify-content-end">
             <button type="submit" class="btn btn-jordan">{% trans "Register" %}</button>
           </div>
@@ -82,11 +99,22 @@
 {% block scripts %}
 {{ block.super }}
 <script>
-document.getElementById('togglePwd').addEventListener('click', function(){
-  var p1 = document.getElementById('id_password');
-  var p2 = document.getElementById('id_password2');
-  [p1, p2].forEach(function(inp){ if (inp) inp.type = (inp.type === 'password') ? 'text' : 'password'; });
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleBtn = document.getElementById('togglePwd');
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener('click', function() {
+    // Find both password inputs explicitly by their Django field names
+    const p1 = document.querySelector('input[name="password"]');
+    const p2 = document.querySelector('input[name="password2"]');
+    [p1, p2].forEach(function(inp) {
+      if (inp) {
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+      }
+    });
+  });
 });
 </script>
 {% endblock %}
 {% endblock %}
+

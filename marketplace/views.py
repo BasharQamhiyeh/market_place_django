@@ -1073,3 +1073,5 @@ def report_issue(request, item_id):
         messages.success(request, "✅ Thank you for reporting this issue.")
         return redirect("item_detail", item_id=item.id)
     return redirect("item_detail", item_id=item.id)
+
+
