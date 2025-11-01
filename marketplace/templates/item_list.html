@@ -7,23 +7,25 @@
 <div class="row g-4">
   <!-- Sidebar -->
   <aside class="col-lg-3">
-    <div class="card border-0 shadow-sm p-3">
+    <form method="get" id="filtersForm" class="card border-0 shadow-sm p-3">
       <h6 class="fw-bold mb-3 text-success">{% trans "Categories" %}</h6>
       <ul class="list-unstyled small">
         {% for cat in categories %}
           <li class="mb-2">
-            <a href="?category={{ cat.id }}"
-               class="text-decoration-none {% if selected_category and selected_category.id == cat.id %}text-success fw-bold{% else %}text-dark{% endif %}">
-              {{ cat.name_ar }}
-            </a>
+            <label class="fw-semibold">
+              <input type="checkbox" name="categories" value="{{ cat.id }}"
+                {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}
+                onchange="this.form.submit()"> {{ cat.name_ar }}
+            </label>
             {% if cat.subcategories.exists %}
               <ul class="list-unstyled ms-3 mt-1">
                 {% for sub in cat.subcategories.all %}
                   <li>
-                    <a href="?category={{ sub.id }}"
-                       class="text-decoration-none {% if selected_category and selected_category.id == sub.id %}text-success fw-bold{% else %}text-muted{% endif %}">
-                      — {{ sub.name_ar }}
-                    </a>
+                    <label class="text-muted">
+                      <input type="checkbox" name="categories" value="{{ sub.id }}"
+                        {% if sub.id|stringformat:"s" in selected_categories %}checked{% endif %}
+                        onchange="this.form.submit()"> {{ sub.name_ar }}
+                    </label>
                   </li>
                 {% endfor %}
               </ul>
@@ -31,8 +33,32 @@
           </li>
         {% endfor %}
       </ul>
-    </div>
+
+      <hr>
+
+      <h6 class="fw-bold mb-3 text-success">{% trans "City" %}</h6>
+      <select name="city" class="form-select mb-3" onchange="this.form.submit()">
+        <option value="">{% trans "All Cities" %}</option>
+        {% for c in cities %}
+          <option value="{{ c.id }}" {% if request.GET.city == c.id|stringformat:"s" %}selected{% endif %}>
+            {{ c.name_ar }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <hr>
+
+      <h6 class="fw-bold mb-3 text-success">{% trans "Price Range" %}</h6>
+      <div class="d-flex align-items-center gap-2">
+        <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min" class="form-control" style="max-width:100px;">
+        <span>–</span>
+        <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max" class="form-control" style="max-width:100px;">
+      </div>
+      <button type="submit" class="btn btn-jordan btn-sm mt-3 w-100">{% trans "Apply Filters" %}</button>
+    </form>
   </aside>
+
+
 
   <!-- Main Content -->
   <section class="col-lg-9">

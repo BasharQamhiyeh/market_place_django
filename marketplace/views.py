@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from .models import Item, Category, ItemAttributeValue, Attribute, AttributeOption, ItemPhoto, User, IssueReport
+from .models import Item, Category, ItemAttributeValue, Attribute, AttributeOption, ItemPhoto, User, IssueReport, City
 from .forms import UserRegistrationForm, ItemForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django import forms
@@ -87,38 +87,55 @@ def user_logout(request):
     return redirect('item_list')
 
 # Anyone can view items
-def item_list(request):
-    """
-    Displays active + approved items with:
-    - Search (q)
-    - Category filter (?category=)
-    - Pagination
-    - Only categories that contain items
-    """
+from marketplace.models import City  # adjust path if needed
 
-    # ✅ Auto-expire items older than 7 days
+def item_list(request):
+    # ✅ Auto-expire old items
     Item.objects.filter(
         created_at__lt=timezone.now() - timedelta(days=7),
         is_active=True
     ).update(is_active=False)
 
     q = request.GET.get("q", "").strip()
-    category_id = request.GET.get("category")
 
-    base_qs = Item.objects.filter(
-        is_approved=True,
-        is_active=True,
-    )
+    # --- Filters ---
+    category_id_single = request.GET.get("category")        # existing param
+    category_ids_multi = request.GET.getlist("categories")  # NEW
+    city_id = request.GET.get("city")                       # NEW
+    min_price = request.GET.get("min_price")                # NEW
+    max_price = request.GET.get("max_price")                # NEW
 
-    # ✅ Category filter
+    base_qs = Item.objects.filter(is_approved=True, is_active=True)
+
+    # ✅ Category filter (multi first, single fallback)
     selected_category = None
-    if category_id:
+    if category_ids_multi:
+        all_ids = []
+        for cid in category_ids_multi:
+            try:
+                cat = Category.objects.get(id=cid)
+                all_ids += _category_descendant_ids(cat)
+            except Category.DoesNotExist:
+                continue
+        if all_ids:
+            base_qs = base_qs.filter(category_id__in=all_ids)
+    elif category_id_single:
         try:
-            selected_category = Category.objects.get(id=category_id)
+            selected_category = Category.objects.get(id=category_id_single)
             ids = _category_descendant_ids(selected_category)
             base_qs = base_qs.filter(category_id__in=ids)
         except Category.DoesNotExist:
             selected_category = None
+
+    # ✅ City filter
+    if city_id:
+        base_qs = base_qs.filter(city_id=city_id)
+
+    # ✅ Price range
+    if min_price:
+        base_qs = base_qs.filter(price__gte=min_price)
+    if max_price:
+        base_qs = base_qs.filter(price__lte=max_price)
 
     # ✅ Search (Elasticsearch + fallback)
     if len(q) >= 2:
@@ -150,7 +167,6 @@ def item_list(request):
                 .select_related("category", "city", "user")
                 .prefetch_related("photos")
             )
-            # ✅ Preserve Elasticsearch order
             queryset.sort(key=lambda i: hit_ids.index(str(i.id)))
         except Exception as e:
             print("[WARN] Elasticsearch unavailable:", e)
@@ -158,20 +174,16 @@ def item_list(request):
     else:
         queryset = base_qs.order_by("-created_at")
 
-    # ✅ Ensure queryset is QuerySet (not Python list)
     if isinstance(queryset, list):
         ids = [obj.id for obj in queryset]
         queryset = Item.objects.filter(id__in=ids).order_by("-created_at")
 
-    # ✅ Optimize related data (avoid N+1 queries)
-    queryset = queryset.select_related("category", "user").prefetch_related("photos")
+    queryset = queryset.select_related("category", "user", "city").prefetch_related("photos")
 
-    # ✅ Pagination
     paginator = Paginator(queryset, 12)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # ✅ Get only parent categories with active items
     categories = (
         Category.objects.filter(parent__isnull=True)
         .annotate(
@@ -189,11 +201,17 @@ def item_list(request):
         .distinct()
     )
 
+    cities = City.objects.all().order_by("name_ar")
+
+    selected_categories = request.GET.getlist("categories")  # ✅ new fix
+
     context = {
         "page_obj": page_obj,
         "q": q,
         "selected_category": selected_category,
         "categories": categories,
+        "cities": cities,
+        "selected_categories": selected_categories,  # ✅ added for template
     }
 
     return render(request, "item_list.html", context)
