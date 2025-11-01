@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Marketplace 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-01 13:14+0100\n"
+"POT-Creation-Date: 2025-11-01 14:11+0100\n"
 "PO-Revision-Date: 2025-11-01 15:00+0100\n"
 "Last-Translator: ChatGPT <>\n"
 "Language-Team: Arabic\n"
@@ -14,7 +14,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 #: .\marketplace\templates\admin\marketplace\item\change_form.html:14
 msgid "Approve"
@@ -133,12 +134,12 @@ msgstr "تأكيد الإلغاء"
 #: .\marketplace\templates\category_list.html:4
 #: .\marketplace\templates\item_list.html:11
 msgid "Categories"
-msgstr "الفئات"
+msgstr "الأقسام"
 
 #: .\marketplace\templates\category_list.html:8
 #: .\marketplace\templates\item_list.html:79
 msgid "All Categories"
-msgstr "جميع الفئات"
+msgstr "الأقسام الرئيسية"
 
 #: .\marketplace\templates\category_list.html:9
 msgid "Add New Category"
@@ -256,17 +257,17 @@ msgid "Publish Your Announcement"
 msgstr "انشر إعلانك"
 
 #: .\marketplace\templates\item_create.html:19
-#: .\marketplace\templates\item_detail.html:88
+#: .\marketplace\templates\item_detail.html:91
 #: .\marketplace\templates\item_edit.html:18
 #: .\marketplace\templates\item_list.html:174
 msgid "Category"
-msgstr "الفئة"
+msgstr "القسم"
 
 #: .\marketplace\templates\item_create.html:20
 #: .\marketplace\templates\item_create.html:21
 #: .\marketplace\templates\item_edit.html:20
 msgid "Select Category"
-msgstr "اختر فئة"
+msgstr "اختر القسم"
 
 #: .\marketplace\templates\item_create.html:34
 #: .\marketplace\templates\item_edit.html:36
@@ -274,25 +275,25 @@ msgid "Title"
 msgstr "العنوان"
 
 #: .\marketplace\templates\item_create.html:42
-#: .\marketplace\templates\item_detail.html:93
+#: .\marketplace\templates\item_detail.html:96
 #: .\marketplace\templates\item_edit.html:44
 msgid "Condition"
-msgstr "الحالة"
+msgstr "حالة المنتج"
 
 #: .\marketplace\templates\item_create.html:47
-#: .\marketplace\templates\item_detail.html:94
+#: .\marketplace\templates\item_detail.html:97
 #: .\marketplace\templates\item_edit.html:49
 msgid "New"
 msgstr "جديد"
 
 #: .\marketplace\templates\item_create.html:52
-#: .\marketplace\templates\item_detail.html:94
+#: .\marketplace\templates\item_detail.html:97
 #: .\marketplace\templates\item_edit.html:54
 msgid "Used"
 msgstr "مستعمل"
 
 #: .\marketplace\templates\item_create.html:59
-#: .\marketplace\templates\item_detail.html:98
+#: .\marketplace\templates\item_detail.html:101
 #: .\marketplace\templates\item_edit.html:61
 #: .\marketplace\templates\my_favorites.html:28
 #: .\marketplace\templates\my_items.html:26
@@ -300,14 +301,14 @@ msgid "Price"
 msgstr "السعر"
 
 #: .\marketplace\templates\item_create.html:65
-#: .\marketplace\templates\item_detail.html:69
+#: .\marketplace\templates\item_detail.html:72
 #: .\marketplace\templates\item_edit.html:67
 #: .\marketplace\templates\item_list.html:39
 msgid "City"
 msgstr "المدينة"
 
 #: .\marketplace\templates\item_create.html:90
-#: .\marketplace\templates\item_detail.html:115
+#: .\marketplace\templates\item_detail.html:118
 #: .\marketplace\templates\item_edit.html:91
 msgid "Description"
 msgstr "الوصف"
@@ -316,95 +317,111 @@ msgstr "الوصف"
 msgid "Publish"
 msgstr "نشر"
 
-#: .\marketplace\templates\item_detail.html:38
+#: .\marketplace\templates\item_detail.html:41
 #: .\marketplace\templates\partials\item_results.html:19
 msgid "Previous"
 msgstr "السابق"
 
-#: .\marketplace\templates\item_detail.html:42
+#: .\marketplace\templates\item_detail.html:45
 #: .\marketplace\templates\my_favorites.html:51
 #: .\marketplace\templates\my_items.html:64
 #: .\marketplace\templates\partials\item_results.html:32
 msgid "Next"
 msgstr "التالي"
 
-#: .\marketplace\templates\item_detail.html:51
+#: .\marketplace\templates\item_detail.html:54
 msgid "Slide"
 msgstr "شريحة"
 
-#: .\marketplace\templates\item_detail.html:57
+#: .\marketplace\templates\item_detail.html:60
 msgid "No photos available."
 msgstr "لا توجد صور متاحة."
 
-#: .\marketplace\templates\item_detail.html:64
+#: .\marketplace\templates\item_detail.html:67
 msgid "Seller"
 msgstr "البائع"
 
-#: .\marketplace\templates\item_detail.html:70
+#: .\marketplace\templates\item_detail.html:73
 msgid "Not specified"
 msgstr "غير محدد"
 
-#: .\marketplace\templates\item_detail.html:74
+#: .\marketplace\templates\item_detail.html:77
 #: .\marketplace\templates\user_profile.html:17
 msgid "Phone"
 msgstr "رقم الهاتف"
 
-#: .\marketplace\templates\item_detail.html:80
+#: .\marketplace\templates\item_detail.html:83
 msgid "Click to show phone"
 msgstr "انقر لإظهار رقم الهاتف"
 
-#: .\marketplace\templates\item_detail.html:83
+#: .\marketplace\templates\item_detail.html:86
 msgid "Login to view phone number"
 msgstr "قم بتسجيل الدخول لعرض رقم الهاتف"
 
-#: .\marketplace\templates\item_detail.html:125
+#: .\marketplace\templates\item_detail.html:129
 msgid "This announcement is pending admin approval and not visible to others."
 msgstr "هذا الإعلان بانتظار موافقة الإدارة وغير مرئي للمستخدمين حالياً."
 
-#: .\marketplace\templates\item_detail.html:130
+#: .\marketplace\templates\item_detail.html:134
 msgid "This announcement has expired and is no longer visible to others."
 msgstr "انتهت صلاحية هذا الإعلان ولم يعد مرئياً للآخرين."
 
-#: .\marketplace\templates\item_detail.html:135
+#: .\marketplace\templates\item_detail.html:142
+#: .\marketplace\templates\partials\_item_card.html:34
+msgid "Posted before"
+msgstr "نُشر قبل"
+
+#: .\marketplace\templates\item_detail.html:146
+#: .\marketplace\templates\my_favorites.html:28
+#: .\marketplace\templates\partials\_item_card.html:38
+msgid "Posted"
+msgstr "تاريخ النشر"
+
+#: .\marketplace\templates\item_detail.html:146
+#: .\marketplace\templates\partials\_item_card.html:38
+msgid "ago"
+msgstr ""
+
+#: .\marketplace\templates\item_detail.html:151
 msgid "Last updated"
 msgstr "آخر تحديث"
 
-#: .\marketplace\templates\item_detail.html:141
+#: .\marketplace\templates\item_detail.html:157
 #: .\marketplace\templates\my_items.html:42
 msgid "Edit"
 msgstr "تعديل"
 
-#: .\marketplace\templates\item_detail.html:142
+#: .\marketplace\templates\item_detail.html:158
 msgid "Delete"
 msgstr "حذف"
 
-#: .\marketplace\templates\item_detail.html:144
+#: .\marketplace\templates\item_detail.html:160
 #: .\marketplace\templates\my_items.html:49
 msgid "Reactivate"
 msgstr "إعادة تفعيل"
 
-#: .\marketplace\templates\item_detail.html:149
+#: .\marketplace\templates\item_detail.html:165
 msgid "Message Seller"
 msgstr "مراسلة البائع"
 
-#: .\marketplace\templates\item_detail.html:154
+#: .\marketplace\templates\item_detail.html:170
 #: .\marketplace\templates\my_favorites.html:36
 msgid "Remove from Favorites"
 msgstr "إزالة من المفضلة"
 
-#: .\marketplace\templates\item_detail.html:156
+#: .\marketplace\templates\item_detail.html:172
 msgid "Add to Favorites"
 msgstr "إضافة إلى المفضلة"
 
-#: .\marketplace\templates\item_detail.html:168
+#: .\marketplace\templates\item_detail.html:184
 msgid "Similar Items"
 msgstr "إعلانات مشابهة"
 
-#: .\marketplace\templates\item_detail.html:184
+#: .\marketplace\templates\item_detail.html:200
 msgid "Back to announcements"
 msgstr "العودة إلى الإعلانات"
 
-#: .\marketplace\templates\item_detail.html:202
+#: .\marketplace\templates\item_detail.html:218
 msgid "Seller prefers to be contacted via messages"
 msgstr "يفضل البائع التواصل عبر الرسائل"
 
@@ -447,8 +464,8 @@ msgid "Apply Filters"
 msgstr "تطبيق الفلاتر"
 
 #: .\marketplace\templates\item_list.html:67
-msgid "Explore"
-msgstr "استكشاف"
+msgid "Announcements"
+msgstr "الإعلانات"
 
 #: .\marketplace\templates\item_list.html:70
 msgid "Post new announcement"
@@ -494,10 +511,6 @@ msgstr "كلمة المرور"
 #: .\marketplace\templates\register.html:12
 msgid "Create account"
 msgstr "إنشاء حساب"
-
-#: .\marketplace\templates\my_favorites.html:28
-msgid "Posted"
-msgstr "تاريخ النشر"
 
 #: .\marketplace\templates\my_favorites.html:29
 #: .\marketplace\templates\my_items.html:28
@@ -562,11 +575,11 @@ msgstr "عرض الإعلان"
 msgid "No notifications."
 msgstr "لا توجد إشعارات."
 
-#: .\marketplace\templates\partials_item_card.html:11
+#: .\marketplace\templates\partials\_item_card.html:11
 msgid "No image"
 msgstr "لا توجد صورة"
 
-#: .\marketplace\templates\partials_item_card.html:32
+#: .\marketplace\templates\partials\_item_card.html:43
 msgid "View Details"
 msgstr "عرض التفاصيل"
 
@@ -581,7 +594,8 @@ msgstr "أدخل الرقم المحلي مثل 07xxxxxxxx. سيتم حفظه ك
 #: .\marketplace\templates\register.html:63
 msgid ""
 "Password must be at least 8 characters and contain only letters and numbers."
-msgstr "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي فقط على أحرف وأرقام."
+msgstr ""
+"يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي فقط على أحرف وأرقام."
 
 #: .\marketplace\templates\user_profile.html:22
 msgid "Email"
@@ -594,6 +608,9 @@ msgstr "الإعلانات النشطة"
 #: .\marketplace\templates\user_profile.html:58
 msgid "This seller has no active announcements at the moment."
 msgstr "هذا البائع ليس لديه إعلانات نشطة حالياً."
+
+#~ msgid "Posted by"
+#~ msgstr "نُشر بواسطة"
 
 #~ msgid "My Items"
 #~ msgstr "عناصري"
@@ -618,7 +635,3 @@ msgstr "هذا البائع ليس لديه إعلانات نشطة حالياً
 
 #~ msgid "Edit Item"
 #~ msgstr "تعديل الإعلان"
-
-#~ msgid "Posted by"
-#~ msgstr "نُشر بواسطة"
-

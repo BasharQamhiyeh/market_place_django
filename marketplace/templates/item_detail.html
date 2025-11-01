@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n humanize %}
 
 {% block title %}{{ item.title }}{% endblock %}
 
@@ -22,12 +22,15 @@
           {% endif %}
         </p>
 
+        <!-- ✅ Carousel / Photos -->
         {% if item.photos.exists %}
-          <div id="itemPhotoCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-interval="3000" data-bs-pause="hover">
+          <div id="itemPhotoCarousel" class="carousel slide mb-3" data-bs-ride="carousel" data-bs-interval="4000" data-bs-pause="hover">
             <div class="carousel-inner">
               {% for photo in item.photos.all %}
                 <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                  <img src="{{ photo.image.url }}" class="d-block w-100 rounded" alt="{{ item.title }}" style="height:400px;object-fit:cover;">
+                  <img src="{{ photo.image.url }}" class="d-block w-100 rounded"
+                       alt="{{ item.title }}"
+                       style="max-height:500px; width:100%; object-fit:contain; background:#f8f9fa;">
                 </div>
               {% endfor %}
             </div>
@@ -116,6 +119,7 @@
                 <div class="description-content">{{ item.description|safe }}</div>
               </div>
             </div>
+          </div>
         </div>
 
         <hr>
@@ -131,6 +135,18 @@
           </div>
         {% endif %}
 
+        <!-- ✅ Posted time and last update -->
+        <p class="text-muted small mb-1">
+          {% if LANGUAGE_CODE == 'ar' %}
+            <p class="text-muted small mb-1">
+              {% trans "Posted before" %} {{ item.created_at|timesince|cut:"," }}
+            </p>
+          {% else %}
+            <p class="text-muted small mb-1">
+              {% trans "Posted" %} {{ item.created_at|timesince }} {% trans "ago" %}
+            </p>
+          {% endif %}
+        </p>
         <p class="text-muted small mb-0">
           <strong>{% trans "Last updated" %}:</strong> {{ item.updated_at|date:"Y-m-d H:i" }}
         </p>
