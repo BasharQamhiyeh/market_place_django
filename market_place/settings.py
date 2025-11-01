@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import dj_database_url
+import nested_admin
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,6 +27,7 @@ USE_CLOUDINARY = IS_RENDER and all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, C
 INSTALLED_APPS = [
     'marketplace',
     'widget_tweaks',
+    'nested_admin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

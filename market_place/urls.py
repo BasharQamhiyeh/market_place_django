@@ -6,6 +6,7 @@ from django.conf.urls.i18n import i18n_patterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('_nested_admin/', include('nested_admin.urls')),  # ✅ add this line
     path('i18n/', include('django.conf.urls.i18n')),
 ]
 

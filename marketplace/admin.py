@@ -23,37 +23,47 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ("is_active", "is_staff", "is_superuser")
 
     def has_add_permission(self, request):
-        return False
+        return True
 
     def has_change_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return True
 
 
-# ======================================================
-# ✅ CATEGORY / ATTRIBUTE ADMINS
-# ======================================================
+import nested_admin
+from django.contrib import admin
+from .models import Category, Attribute, AttributeOption
+
+
+class AttributeOptionInline(nested_admin.NestedTabularInline):
+    model = AttributeOption
+    extra = 1
+    fields = ("value_en", "value_ar")
+    verbose_name = "Option"
+    verbose_name_plural = "Options"
+
+
+class AttributeInline(nested_admin.NestedStackedInline):
+    model = Attribute
+    extra = 1
+    fields = ("name_en", "name_ar", "input_type", "is_required")
+    inlines = [AttributeOptionInline]
+    verbose_name = "Attribute"
+    verbose_name_plural = "Attributes"
+
+    class Media:
+        js = ("admin/attribute_options_toggle.js",)  # ✅ your static file path
+
+
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name_en", "name_ar", "description")
+class CategoryAdmin(nested_admin.NestedModelAdmin):
+    list_display = ("id", "name_en", "name_ar", "parent")
     search_fields = ("name_en", "name_ar")
-    list_filter = ("name_en",)
+    list_filter = ("parent",)
+    inlines = [AttributeInline]
 
-
-@admin.register(Attribute)
-class AttributeAdmin(admin.ModelAdmin):
-    list_display = ("id", "name_en", "name_ar", "category", "input_type", "is_required")
-    search_fields = ("name_en", "name_ar")
-    list_filter = ("category", "is_required")
-
-
-@admin.register(AttributeOption)
-class AttributeOptionAdmin(admin.ModelAdmin):
-    list_display = ("id", "value_en", "value_ar", "attribute")
-    search_fields = ("value_en", "value_ar")
-    list_filter = ("attribute",)
 
 
 # ======================================================
@@ -336,28 +346,28 @@ class ItemAdmin(admin.ModelAdmin):
         return render(request, "admin/import_excel.html", {"title": "Import Items from Excel & ZIP"})
 
 
-# ======================================================
-# ✅ OTHER ADMINS
-# ======================================================
-@admin.register(ItemAttributeValue)
-class ItemAttributeValueAdmin(admin.ModelAdmin):
-    list_display = ("id", "item", "attribute", "value")
-    search_fields = ("value",)
-    list_filter = ("attribute",)
+# # ======================================================
+# # ✅ OTHER ADMINS
+# # ======================================================
+# @admin.register(ItemAttributeValue)
+# class ItemAttributeValueAdmin(admin.ModelAdmin):
+#     list_display = ("id", "item", "attribute", "value")
+#     search_fields = ("value",)
+#     list_filter = ("attribute",)
+
+#
+# @admin.register(ItemPhoto)
+# class ItemPhotoAdmin(admin.ModelAdmin):
+#     list_display = ("id", "item", "image", "created_at")
+#     list_filter = ("item",)
+#     search_fields = ("item__title",)
 
 
-@admin.register(ItemPhoto)
-class ItemPhotoAdmin(admin.ModelAdmin):
-    list_display = ("id", "item", "image", "created_at")
-    list_filter = ("item",)
-    search_fields = ("item__title",)
-
-
-@admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "title", "is_read", "created_at")
-    list_filter = ("is_read",)
-    search_fields = ("title", "body", "user__username")
+# @admin.register(Notification)
+# class NotificationAdmin(admin.ModelAdmin):
+#     list_display = ("id", "user", "title", "is_read", "created_at")
+#     list_filter = ("is_read",)
+#     search_fields = ("title", "body", "user__username")
 
 
 @admin.register(City)
@@ -367,11 +377,11 @@ class CityAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
 
 
-@admin.register(Favorite)
-class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ("user", "item", "created_at")
-    list_filter = ("created_at",)
-    search_fields = ("user__username", "item__title")
+# @admin.register(Favorite)
+# class FavoriteAdmin(admin.ModelAdmin):
+#     list_display = ("user", "item", "created_at")
+#     list_filter = ("created_at",)
+#     search_fields = ("user__username", "item__title")
 
 
 
@@ -381,6 +391,29 @@ class IssueReportAdmin(admin.ModelAdmin):
     list_filter = ("status",)
     search_fields = ("user__username", "item__title", "message")
 
+
+# Reorder models in the app list
+def custom_get_app_list(self, request):
+    """
+    Reorder the models in the 'marketplace' app section on the admin index.
+    """
+    # Get the default list from the AdminSite itself
+    app_list = admin.site._build_app_dict(request).values()
+
+    # Convert dict_values to list
+    app_list = sorted(app_list, key=lambda x: x["name"].lower())
+
+    for app in app_list:
+        if app["app_label"] == "marketplace":
+            desired_order = ["Item", "Category", "City", "User", "IssueReport"]
+            app["models"].sort(
+                key=lambda m: desired_order.index(m["object_name"])
+                if m["object_name"] in desired_order else 999
+            )
+    return app_list
+
+# ✅ Patch the method onto the current admin site instance
+admin.site.get_app_list = custom_get_app_list.__get__(admin.site, admin.AdminSite)
 
 # ======================================================
 # ✅ Admin Branding
