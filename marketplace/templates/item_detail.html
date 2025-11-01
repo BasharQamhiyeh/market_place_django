@@ -122,12 +122,12 @@
 
         {% if not item.is_approved %}
           <div class="alert alert-warning">
-            {% trans "This item is pending admin approval and not visible to others." %}
+            {% trans "This announcement is pending admin approval and not visible to others." %}
           </div>
         {% endif %}
         {% if not item.is_active %}
           <div class="alert alert-danger">
-            {% trans "This item has expired and is no longer visible to others." %}
+            {% trans "This announcement has expired and is no longer visible to others." %}
           </div>
         {% endif %}
 
@@ -141,7 +141,7 @@
           <a href="{% url 'item_edit' item.id %}" class="btn btn-secondary">{% trans "Edit" %}</a>
           <a href="{% url 'cancel_item' item.id %}" class="btn btn-danger">{% trans "Delete" %}</a>
           {% if not item.is_active %}
-            <a href="{% url 'reactivate_item' item.id %}" class="btn btn-success">{% trans "Reactivate Item" %}</a>
+            <a href="{% url 'reactivate_item' item.id %}" class="btn btn-success">{% trans "Reactivate" %}</a>
           {% endif %}
         {% endif %}
 
@@ -181,7 +181,7 @@
   {% endif %}
 
   <div class="col-12">
-    <a href="{% url 'item_list' %}" class="btn btn-jordan-outline">{% trans "Back to items" %}</a>
+    <a href="{% url 'item_list' %}" class="btn btn-jordan-outline">{% trans "Back to announcements" %}</a>
   </div>
 </div>
 

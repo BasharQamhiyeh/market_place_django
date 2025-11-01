@@ -2,12 +2,12 @@
 {% load i18n %}
 {% load form_extras %}
 
-{% block title %}{% trans "Create Item" %}{% endblock %}
+{% block title %}{% trans "New Announcement" %}{% endblock %}
 
 {% block content %}
 <div class="card shadow-sm border-0">
   <div class="card-header bg-success text-white">
-    <h4 class="mb-0">{% trans "Post Your Item" %}</h4>
+    <h4 class="mb-0">{% trans "Publish Your Announcement" %}</h4>
   </div>
 
   <div class="card-body bg-white">
@@ -102,7 +102,7 @@
 
         <!-- Submit -->
         <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-success px-4">{% trans "Post Item" %}</button>
+          <button type="submit" class="btn btn-success px-4">{% trans "Publish" %}</button>
         </div>
       {% endif %}
     </form>

@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{% trans "My Items" %}{% endblock %}
+{% block title %}{% trans "My Announcements" %}{% endblock %}
 
 {% block content %}
 <div class="card shadow-sm border-0">
   <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">{% trans "My Items" %}</h5>
-    <a href="{% url 'create_item' %}" class="btn btn-sm btn-jordan">{% trans "Post new item" %}</a>
+    <h5 class="mb-0">{% trans "My Announcements" %}</h5>
+    <a href="{% url 'create_item' %}" class="btn btn-sm btn-jordan">{% trans "New Announcement" %}</a>
   </div>
   <div class="card-body">
     {% if page_obj.object_list %}
@@ -41,7 +41,7 @@
                 <a href="{% url 'item_detail' item.id %}" class="btn btn-sm btn-outline-secondary">{% trans "View" %}</a>
                 <a href="{% url 'item_edit' item.id %}" class="btn btn-sm btn-secondary">{% trans "Edit" %}</a>
                 {% if item.is_active %}
-                  <a href="{% url 'cancel_item' item.id %}" class="btn btn-sm btn-danger">{% trans "Cancel Ad" %}</a>
+                  <a href="{% url 'cancel_item' item.id %}" class="btn btn-sm btn-danger">{% trans "Cancel" %}</a>
                 {% endif %}
                 {% if not item.is_active %}
                   <form action="{% url 'reactivate_item' item.id %}" method="post" class="d-inline">
@@ -65,7 +65,7 @@
         {% endif %}
       </nav>
     {% else %}
-      <div class="alert alert-info mb-0">{% trans "You haven't posted any items yet." %}</div>
+      <div class="alert alert-info mb-0">{% trans "You haven't posted any announcement yet." %}</div>
     {% endif %}
   </div>
 </div>

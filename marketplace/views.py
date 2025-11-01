@@ -24,6 +24,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.db.models import Q, Count
 from collections import deque
+from django.http import HttpResponse
 
 
 # Registration
@@ -89,6 +90,9 @@ def user_logout(request):
 # Anyone can view items
 from marketplace.models import City  # adjust path if needed
 
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
 def item_list(request):
     # ✅ Auto-expire old items
     Item.objects.filter(
@@ -99,15 +103,15 @@ def item_list(request):
     q = request.GET.get("q", "").strip()
 
     # --- Filters ---
-    category_id_single = request.GET.get("category")        # existing param
-    category_ids_multi = request.GET.getlist("categories")  # NEW
-    city_id = request.GET.get("city")                       # NEW
-    min_price = request.GET.get("min_price")                # NEW
-    max_price = request.GET.get("max_price")                # NEW
+    category_id_single = request.GET.get("category")
+    category_ids_multi = request.GET.getlist("categories")
+    city_id = request.GET.get("city")
+    min_price = request.GET.get("min_price")
+    max_price = request.GET.get("max_price")
 
     base_qs = Item.objects.filter(is_approved=True, is_active=True)
 
-    # ✅ Category filter (multi first, single fallback)
+    # ✅ Category filter
     selected_category = None
     if category_ids_multi:
         all_ids = []
@@ -137,7 +141,7 @@ def item_list(request):
     if max_price:
         base_qs = base_qs.filter(price__lte=max_price)
 
-    # ✅ Search (Elasticsearch + fallback)
+    # ✅ Search
     if len(q) >= 2:
         try:
             search = (
@@ -202,8 +206,7 @@ def item_list(request):
     )
 
     cities = City.objects.all().order_by("name_ar")
-
-    selected_categories = request.GET.getlist("categories")  # ✅ new fix
+    selected_categories = request.GET.getlist("categories")
 
     context = {
         "page_obj": page_obj,
@@ -211,10 +214,17 @@ def item_list(request):
         "selected_category": selected_category,
         "categories": categories,
         "cities": cities,
-        "selected_categories": selected_categories,  # ✅ added for template
+        "selected_categories": selected_categories,
     }
 
+    # ✅ NEW FIX: detect HTMX / AJAX requests
+    if request.headers.get("HX-Request") == "true" or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        html = render_to_string("partials/item_results.html", context, request=request)
+        return HttpResponse(html)
+
+    # ✅ Normal full-page render
     return render(request, "item_list.html", context)
+
 
 
 
