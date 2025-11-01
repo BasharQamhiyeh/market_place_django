@@ -5,31 +5,25 @@
 
 {% block content %}
 <div class="card shadow-sm border-0">
-  <div class="card-header bg-dark text-white">
+  <div class="card-header bg-warning text-dark">
     <h4 class="mb-0">{% trans "Edit Item" %}</h4>
   </div>
 
   <div class="card-body bg-white">
-    <form method="post" enctype="multipart/form-data" class="vstack gap-3">
+    <form method="post" enctype="multipart/form-data" class="vstack gap-4">
       {% csrf_token %}
 
-      <!-- ✅ Category & Subcategory dropdown -->
+      <!-- ✅ 1. Category -->
       <div>
-        <label class="form-label fw-semibold" for="categorySelect">{% trans "Category" %}</label>
-        <select name="category" id="categorySelect"
-                class="form-select searchable-select"
-                placeholder="{% trans 'Select Category' %}">
+        <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
+        <select name="category" id="categorySelect" class="form-select">
+          <option value="">{% trans "Select Category" %}</option>
           {% for cat in categories %}
-            <!-- top-level category -->
-            <option value="{{ cat.id }}"
-              {% if selected_category.id == cat.id %}selected{% endif %}>
+            <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>
               {{ cat }}
             </option>
-
-            <!-- subcategories -->
             {% for sub in cat.subcategories.all %}
-              <option value="{{ sub.id }}"
-                {% if selected_category.id == sub.id %}selected{% endif %}>
+              <option value="{{ sub.id }}" {% if selected_category.id == sub.id %}selected{% endif %}>
                 &nbsp;&nbsp;— {{ sub }}
               </option>
             {% endfor %}
@@ -37,44 +31,77 @@
         </select>
       </div>
 
+      <!-- ✅ 2. Title -->
+      <div>
+        <label for="id_title" class="form-label fw-semibold">{% trans "Title" %}</label>
+        <input type="text" name="title" id="id_title"
+               value="{{ form.title.value|default_if_none:'' }}"
+               class="form-control" maxlength="255" required>
+      </div>
+
+      <!-- ✅ 3. Condition -->
+      <div>
+        <label class="form-label fw-semibold d-block">{% trans "Condition" %}</label>
+        <div class="d-flex gap-4">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="condition" id="condition_new"
+                   value="new" {% if form.condition.value == 'new' %}checked{% endif %}>
+            <label class="form-check-label" for="condition_new">{% trans "New" %}</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="condition" id="condition_used"
+                   value="used" {% if form.condition.value == 'used' %}checked{% endif %}>
+            <label class="form-check-label" for="condition_used">{% trans "Used" %}</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ 4. Price -->
+      <div>
+        <label for="id_price" class="form-label fw-semibold">{% trans "Price" %}</label>
+        {{ form.price }}
+      </div>
+
+      <!-- ✅ 5. City -->
+      <div>
+        <label class="form-label fw-semibold" for="id_city">{% trans "City" %}</label>
+        {{ form.city }}
+      </div>
+
+      <!-- ✅ 6. Attributes (exclude *_other fields) -->
       {% for field in form.visible_fields %}
-        {% if field.name != "images" and field.name != "category" and "_other" not in field.name %}
+        {% if field.name|slice:"0:10" == "attribute_" and not "_other" in field.name %}
           <div>
-            <label class="form-label fw-semibold">{{ field.label }}</label>
+            <label class="form-label fw-semibold" for="id_{{ field.name }}">{{ field.label }}</label>
+            {{ field }}
 
-            {# ✅ Use small input for title field instead of large textarea #}
-            {% if field.name == "title" %}
-              <input type="text"
-                     name="{{ field.name }}"
-                     id="id_{{ field.name }}"
-                     value="{{ field.value|default_if_none:'' }}"
-                     class="form-control"
-                     maxlength="255"
-                     required>
-            {% else %}
-              {{ field }}
-            {% endif %}
-
-            {% if field.name|slice:"0:10" == "attribute_" %}
+            <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
               {% with other_name=field.name|add:"_other" %}
-                <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
+                {% if other_name in form.fields %}
                   {{ form|get_bound_field:other_name }}
-                </div>
+                {% endif %}
               {% endwith %}
-            {% endif %}
+            </div>
           </div>
         {% endif %}
       {% endfor %}
 
-      <!-- ✅ Existing photos -->
+      <!-- ✅ 7. Description -->
+      <div>
+        <label class="form-label fw-semibold" for="id_description">{% trans "Description" %}</label>
+        <textarea name="description" id="id_description" class="form-control" rows="6">{{ form.description.value|default_if_none:'' }}</textarea>
+      </div>
+
+      <!-- ✅ Existing Photos -->
       <div>
         <h6 class="fw-semibold mb-2">{% trans "Existing Photos" %}</h6>
         <div class="d-flex flex-wrap gap-2">
           {% for photo in item.photos.all %}
-            <div class="position-relative">
-              <img src="{{ photo.image.url }}" class="rounded" style="width:120px;height:120px;object-fit:cover;">
+            <div class="position-relative" style="width:120px;">
+              <img src="{{ photo.image.url }}" class="rounded border" style="width:120px;height:120px;object-fit:cover;">
               <a href="{% url 'delete_item_photo' photo.id %}"
-                 class="btn btn-sm btn-danger position-absolute top-0 end-0 translate-middle badge rounded-pill">×</a>
+                 class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                 style="transform:translate(25%,-25%)">×</a>
             </div>
           {% empty %}
             <p class="text-muted mb-0">{% trans "No photos uploaded." %}</p>
@@ -82,15 +109,19 @@
         </div>
       </div>
 
-      <!-- ✅ Upload new photos -->
+      <!-- ✅ Add More Photos -->
       <div>
         <label class="form-label fw-semibold">{% trans "Add More Photos" %}</label>
         {{ form.images }}
+        {% if form.images.errors %}
+          <div class="text-danger small mt-1">{{ form.images.errors }}</div>
+        {% endif %}
       </div>
 
+      <!-- ✅ Buttons -->
       <div class="d-flex justify-content-end gap-2">
-        <a href="{% url 'item_detail' item.id %}" class="btn btn-jordan-outline">{% trans "Cancel" %}</a>
-        <button type="submit" class="btn btn-jordan">{% trans "Save Changes" %}</button>
+        <a href="{% url 'item_detail' item.id %}" class="btn btn-outline-secondary">{% trans "Cancel" %}</a>
+        <button type="submit" class="btn btn-warning text-white">{% trans "Save Changes" %}</button>
       </div>
     </form>
   </div>
@@ -99,23 +130,82 @@
 
 {% block scripts %}
 {{ block.super }}
-<script>
-document.getElementById('categorySelect').addEventListener('change', function() {
-  const url = new URL(window.location.href);
-  url.searchParams.set('category', this.value);
-  window.location.href = url.toString();
-});
 
-function updateOthers() {
-  document.querySelectorAll("select[name^='attribute_']").forEach(function(sel) {
-    const box = document.getElementById(sel.name + "_other_box");
-    if (!box) return;
-    box.style.display = sel.value === "__other__" ? "block" : "none";
+<!-- ✅ Trumbowyg: Free, Offline, Lightweight Text Editor -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/trumbowyg.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
+
+<style>
+  .form-label {
+    display: block;
+    margin-bottom: .4rem;
+    font-weight: 600;
+  }
+  form.vstack > div {
+    margin-bottom: 1rem;
+  }
+  .trumbowyg-button-pane {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .trumbowyg-button-pane button {
+    margin-right: 6px;
+  }
+  [id$="_other_box"] {
+    display: none;
+  }
+</style>
+
+<script>
+(function() {
+  function redirectWithCategory(val) {
+    const url = new URL(window.location.href);
+    if (val) url.searchParams.set('category', val);
+    else url.searchParams.delete('category');
+    window.location.href = url.toString();
+  }
+
+  // ✅ Hide/show Other boxes correctly
+  function updateOtherInputs() {
+    document.querySelectorAll("select[name^='attribute_']").forEach(select => {
+      if (select.name.endsWith("_other")) return; // ignore helper inputs
+      const box = document.getElementById(select.name + "_other_box");
+      if (box) box.style.display = (select.value === "__other__") ? "block" : "none";
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('categorySelect');
+    if (categorySelect) {
+      categorySelect.addEventListener('change', function() {
+        redirectWithCategory(this.value);
+      });
+    }
+
+    // ✅ Initialize once DOM fully ready
+    setTimeout(updateOtherInputs, 0);
+
+    // ✅ Live updates on change
+    document.addEventListener('change', e => {
+      if (e.target && e.target.matches("select[name^='attribute_']")) {
+        updateOtherInputs();
+      }
+    });
+
+    // ✅ Initialize Trumbowyg
+    $('#id_description').trumbowyg({
+      btns: [
+        ['strong', 'em', 'underline'],
+        ['unorderedList', 'orderedList'],
+        ['link'],
+        ['removeformat']
+      ],
+      autogrow: true,
+      svgPath: 'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
+    });
   });
-}
-updateOthers();
-document.addEventListener("change", function(e){
-  if (e.target.matches("select[name^='attribute_']")) updateOthers();
-});
+})();
 </script>
 {% endblock %}

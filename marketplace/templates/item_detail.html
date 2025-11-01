@@ -99,7 +99,7 @@
                 <span class="badge text-bg-warning fs-6">JOD {{ item.price }}</span>
               </li>
 
-              <!-- ✅ Dynamic Attributes merged here -->
+              <!-- ✅ Dynamic Attributes -->
               {% for attr in attributes %}
                 <li class="list-group-item d-flex justify-content-between">
                   <span class="fw-semibold">{{ attr.attribute }}</span>
@@ -113,10 +113,9 @@
             <div class="card h-100 border-0 bg-light-subtle">
               <div class="card-body">
                 <h6 class="fw-semibold">{% trans "Description" %}</h6>
-                <p class="mb-0">{{ item.description }}</p>
+                <div class="description-content">{{ item.description|safe }}</div>
               </div>
             </div>
-          </div>
         </div>
 
         <hr>
@@ -210,15 +209,9 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <style>
-/* ✅ Make carousel arrows visible on light backgrounds */
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
   filter: invert(1) grayscale(100%);
-}
-
-/* Slightly bigger for visibility */
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
   width: 3rem;
   height: 3rem;
 }

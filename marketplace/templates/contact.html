@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Contact Us" %}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mx-auto" style="max-width:600px;">
+  <div class="card-body">
+    <h4 class="fw-bold text-success mb-3">{% trans "Contact Us" %}</h4>
+    <p class="text-muted">{% trans "We'd love to hear from you! Send us an email or message on social media." %}</p>
+    <ul class="list-unstyled mt-3">
+      <li><i class="bi bi-envelope-fill text-success me-2"></i> info@souqjordan.com</li>
+      <li><i class="bi bi-telephone-fill text-success me-2"></i> +962 7X XXX XXXX</li>
+      <li><i class="bi bi-geo-alt-fill text-success me-2"></i> Amman, Jordan</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

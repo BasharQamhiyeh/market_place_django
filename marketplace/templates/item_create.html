@@ -6,76 +6,92 @@
 
 {% block content %}
 <div class="card shadow-sm border-0">
-  <div class="card-header bg-dark text-white">
-    <h4 class="mb-0">{% trans "Create Item" %}</h4>
+  <div class="card-header bg-success text-white">
+    <h4 class="mb-0">{% trans "Post Your Item" %}</h4>
   </div>
 
   <div class="card-body bg-white">
-    <form method="post" enctype="multipart/form-data" class="vstack gap-3">
+    <form method="post" enctype="multipart/form-data" class="vstack gap-4">
       {% csrf_token %}
 
-      <!-- ✅ Category & Subcategory dropdown -->
+      <!-- 1) Category -->
       <div>
         <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
-        <select name="category" id="categorySelect"
-                class="form-select searchable-select"
-                data-placeholder="{% trans 'Select Category' %}">
+        <select name="category" id="categorySelect" class="form-select" data-placeholder="{% trans 'Select Category' %}">
           <option value="">{% trans "Select Category" %}</option>
           {% for cat in categories %}
-            <!-- main category -->
-            <option value="{{ cat.id }}"
-              {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>
-              {{ cat }}
-            </option>
-
-            <!-- subcategories -->
+            <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
             {% for sub in cat.subcategories.all %}
-              <option value="{{ sub.id }}"
-                {% if selected_category and selected_category.id == sub.id %}selected{% endif %}>
-                &nbsp;&nbsp;— {{ sub }}
-              </option>
+              <option value="{{ sub.id }}" {% if selected_category and selected_category.id == sub.id %}selected{% endif %}>&nbsp;&nbsp;— {{ sub }}</option>
             {% endfor %}
           {% endfor %}
         </select>
       </div>
 
       {% if selected_category %}
+        <!-- 2) Title -->
+        <div>
+          <label for="id_title" class="form-label fw-semibold">{% trans "Title" %}</label>
+          <input type="text" name="title" id="id_title"
+                 value="{{ form.title.value|default_if_none:'' }}"
+                 class="form-control" maxlength="255" required>
+        </div>
+
+        <!-- 3) Condition -->
+        <div>
+          <label class="form-label fw-semibold d-block">{% trans "Condition" %}</label>
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="condition" id="condition_new"
+                     value="new" {% if form.condition.value == 'new' %}checked{% endif %}>
+              <label class="form-check-label" for="condition_new">{% trans "New" %}</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="condition" id="condition_used"
+                     value="used" {% if form.condition.value == 'used' %}checked{% endif %}>
+              <label class="form-check-label" for="condition_used">{% trans "Used" %}</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4) Price -->
+        <div>
+          <label class="form-label fw-semibold" for="id_price">{% trans "Price" %}</label>
+          {{ form.price }}
+        </div>
+
+        <!-- 5) City -->
+        <div>
+          <label class="form-label fw-semibold" for="id_city">{% trans "City" %}</label>
+          {{ form.city }}
+        </div>
+
+        <!-- 6) Dynamic Attributes (exclude *_other here) -->
         {% for field in form %}
-          {% if field.name != 'images' and "_other" not in field.name %}
+          {% if field.name|slice:"0:10" == "attribute_" and not "_other" in field.name %}
             <div>
-              <label class="form-label fw-semibold">{{ field.label }}</label>
+              <label class="form-label fw-semibold" for="id_{{ field.name }}">{{ field.label }}</label>
+              {{ field }}
 
-              {# ✅ Make "title" a small input instead of textarea #}
-              {% if field.name == "title" %}
-                <input type="text"
-                       name="{{ field.name }}"
-                       id="id_{{ field.name }}"
-                       value="{{ field.value|default_if_none:'' }}"
-                       class="form-control"
-                       maxlength="255"
-                       required>
-              {% else %}
-                {{ field }}
-              {% endif %}
-
-              {% if "attribute_" in field.name %}
-                <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
-                  {% with other_name=field.name|add:"_other" %}
-                    {% if other_name in form.fields %}
-                      {{ form|get_bound_field:other_name }}
-                    {% endif %}
-                  {% endwith %}
-                </div>
-              {% endif %}
-
-              {% if field.errors %}
-                <div class="text-danger small mt-1">{{ field.errors }}</div>
-              {% endif %}
+              {# Companion _other input lives in a hidden box; shown only when __other__ is selected #}
+              <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
+                {% with other_name=field.name|add:"_other" %}
+                  {% if other_name in form.fields %}
+                    {{ form|get_bound_field:other_name }}
+                  {% endif %}
+                {% endwith %}
+              </div>
             </div>
           {% endif %}
         {% endfor %}
 
-        <!-- ✅ Image upload -->
+        <!-- 7) Description (rich text) -->
+        <div>
+          <label class="form-label fw-semibold" for="id_description">{% trans "Description" %}</label>
+          <textarea name="description" id="id_description" class="form-control" rows="6">{{ form.description.value|default_if_none:'' }}</textarea>
+        </div>
+
+        <!-- 8) Images -->
         <div>
           <label class="form-label fw-semibold">{{ form.images.label }}</label>
           {{ form.images }}
@@ -83,11 +99,12 @@
             <div class="text-danger small mt-1">{{ form.images.errors }}</div>
           {% endif %}
         </div>
-      {% endif %}
 
-      <div class="d-flex justify-content-end">
-        <button type="submit" class="btn btn-jordan px-4">{% trans "Post Item" %}</button>
-      </div>
+        <!-- Submit -->
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-success px-4">{% trans "Post Item" %}</button>
+        </div>
+      {% endif %}
     </form>
   </div>
 </div>
@@ -95,51 +112,67 @@
 
 {% block scripts %}
 {{ block.super }}
+
+<!-- Trumbowyg (free, no API key) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/trumbowyg.min.css">
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
+
+<style>
+  .form-label{display:block;margin-bottom:.4rem;font-weight:600}
+  form.vstack>div{margin-bottom:1rem}
+  .trumbowyg-button-pane{display:flex;flex-wrap:wrap;align-items:center}
+  .trumbowyg-button-pane button{margin-right:6px}
+  /* Ensure hidden by default */
+  [id$="_other_box"]{display:none}
+</style>
+
 <script>
-(function() {
-  function redirectWithCategory(val) {
+(function(){
+  function redirectWithCategory(val){
     const url = new URL(window.location.href);
-    if (val) { url.searchParams.set('category', val); } else { url.searchParams.delete('category'); }
-    url.searchParams.delete('page');
+    if(val) url.searchParams.set('category', val);
+    else url.searchParams.delete('category');
     window.location.href = url.toString();
   }
 
-  function bindCategoryChange() {
-    const $select = $('#categorySelect');
-    if (!$select.length) return;
-    $select.off('change.souq select2:select.souq');
-    $select.on('change.souq select2:select.souq', function(){ redirectWithCategory(this.value); });
-  }
-
-  function updateOtherInputs() {
-    document.querySelectorAll("select[name^='attribute_']").forEach(function(select) {
-      const box = document.getElementById(select.name + "_other_box");
+  function updateOtherInputs(){
+    document.querySelectorAll('select[name^="attribute_"]').forEach(function(select){
+      // Ignore the _other select if any (shouldn’t exist, but safety)
+      if (select.name.endsWith('_other')) return;
+      const box = document.getElementById(select.name + '_other_box');
       if (!box) return;
-      box.style.display = (select.value === "__other__") ? "block" : "none";
+      box.style.display = (select.value === '__other__') ? 'block' : 'none';
     });
   }
 
-  function onAttrChange(e) {
-    if (e.target && e.target.matches("select[name^='attribute_']")) updateOtherInputs();
-  }
-
-  function bindOtherInputs() {
-    document.removeEventListener('change', onAttrChange, true);
-    document.addEventListener('change', onAttrChange, true);
-    $(document).off('select2:select.souqAttr', "select[name^='attribute_']")
-               .on('select2:select.souqAttr', "select[name^='attribute_']", updateOtherInputs);
-  }
-
   document.addEventListener('DOMContentLoaded', function(){
-    bindCategoryChange();
-    updateOtherInputs();
-    bindOtherInputs();
-  });
+    const catSel = document.getElementById('categorySelect');
+    if (catSel){
+      catSel.addEventListener('change', function(){ redirectWithCategory(this.value); });
+    }
 
-  document.body.addEventListener('htmx:afterSwap', function(){
-    bindCategoryChange();
-    updateOtherInputs();
-    bindOtherInputs();
+    // Initial state after everything is painted
+    setTimeout(updateOtherInputs, 0);
+
+    // Live toggle
+    document.addEventListener('change', function(e){
+      if (e.target && e.target.matches('select[name^="attribute_"]')){
+        updateOtherInputs();
+      }
+    });
+
+    // Rich text init
+    $('#id_description').trumbowyg({
+      btns: [
+        ['strong','em','underline'],
+        ['unorderedList','orderedList'],
+        ['link'],
+        ['removeformat']
+      ],
+      autogrow: true,
+      svgPath: 'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
+    });
   });
 })();
 </script>

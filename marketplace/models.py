@@ -126,6 +126,7 @@ class Item(models.Model):
     # moderation/state
     is_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    was_edited = models.BooleanField(default=False)
 
     # ✅ NEW
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
@@ -250,3 +251,20 @@ class PhoneVerificationCode(models.Model):
 
     def __str__(self):
         return f"{self.user.phone} → {self.code} ({self.purpose})"
+
+
+# models.py
+class Subscriber(models.Model):
+    email = models.EmailField(unique=True)
+    subscribed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
+
+
+class IssueReport(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, null=True, blank=True)
+    message = models.TextField()
+    status = models.CharField(max_length=20, choices=[("open", "Open"), ("resolved", "Resolved")], default="open")
+    created_at = models.DateTimeField(auto_now_add=True)

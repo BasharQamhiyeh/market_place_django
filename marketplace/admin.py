@@ -1,33 +1,40 @@
 from django.contrib import admin, messages
-from .models import (
-    User,
-    Category,
-    Attribute,
-    AttributeOption,
-    Item,
-    ItemAttributeValue,
-    ItemPhoto,
-    Notification,
-    City
-)
-from django.utils.html import format_html
 from django.urls import path
 from django.shortcuts import redirect, render
-from django.utils.html import format_html
 from django.contrib.admin.views.main import IS_POPUP_VAR
-import tempfile, requests, openpyxl, os
-from django.core.files import File
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-import zipfile
+from django.utils.html import format_html
 from django.db import models
+from django.core.files.base import ContentFile
+import tempfile, os, zipfile, openpyxl
 
+from .models import (
+    User, Category, Attribute, AttributeOption,
+    Item, ItemAttributeValue, ItemPhoto, Notification,
+    City, Favorite, IssueReport
+)
 
+# ======================================================
+# ✅ USER ADMIN — read-only view with search
+# ======================================================
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("user_id", "username", "phone", "email", "is_staff")
+    list_display = ("username", "first_name", "last_name", "phone", "email", "last_login", "is_active")
+    search_fields = ("first_name", "last_name", "username", "email", "phone")
+    list_filter = ("is_active", "is_staff", "is_superuser")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
+# ======================================================
+# ✅ CATEGORY / ATTRIBUTE ADMINS
+# ======================================================
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("id", "name_en", "name_ar", "description")
@@ -49,40 +56,67 @@ class AttributeOptionAdmin(admin.ModelAdmin):
     list_filter = ("attribute",)
 
 
-# marketplace/admin.py
-from django.contrib import admin
-from .models import (
-    User, Category, Attribute, AttributeOption,
-    Item, ItemAttributeValue, ItemPhoto, Notification
-)
-
+# ======================================================
+# ✅ ITEM ADMIN — cleaned, color-coded, review-based
+# ======================================================
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     change_form_template = "admin/marketplace/item/change_form.html"
-
-    list_display = ("id", "title", "category", "price", "user", "created_at",
-                    "condition", "is_active", "is_approved", "moderate_actions", "photo_gallery")
-    list_filter = ("category", "user", "is_active", "is_approved", "condition")
-    actions = ["approve_items", "reject_items", "deactivate_items"]
-
-    readonly_fields = ("photo_gallery",)
-
     change_list_template = "admin/items_changelist.html"
 
-    # Extra URLs
+    list_display = (
+        "id", "title", "category", "price",
+        "get_username", "get_first_name", "get_last_name",
+        "colored_status", "created_at", "condition", "is_active"
+    )
+    readonly_fields = ("colored_status", "photo_gallery")
+    list_filter = ("category", "user", "is_active", "is_approved", "condition")
+    search_fields = ("title", "user__username", "category__name_en", "category__name_ar", "user__first_name", "user__last_name", "user__email", "user__phone")
+    actions = None  # ✅ remove inline actions
+
+    def get_username(self, obj):
+        return obj.user.username
+
+    get_username.short_description = "Username"
+
+    def get_first_name(self, obj):
+        return obj.user.first_name
+
+    get_first_name.short_description = "First Name"
+
+    def get_last_name(self, obj):
+        return obj.user.last_name
+
+    get_last_name.short_description = "Last Name"
+
+    # -----------------------------
+    # Custom URLs (Approve / Reject / Import)
+    # -----------------------------
     def get_urls(self):
         urls = super().get_urls()
         custom = [
-            path("<int:item_id>/approve/", self.admin_site.admin_view(self.approve_view),
-                 name="item_approve"),
-            path("<int:item_id>/reject/", self.admin_site.admin_view(self.reject_view),
-                 name="item_reject"),
-            path("import-excel/", self.admin_site.admin_view(self.import_excel_view),
-                 name="marketplace_item_import_excel"),
+            path("<int:item_id>/approve/", self.admin_site.admin_view(self.approve_view), name="item_approve"),
+            path("<int:item_id>/reject/", self.admin_site.admin_view(self.reject_view), name="item_reject"),
+            path("import-excel/", self.admin_site.admin_view(self.import_excel_view), name="marketplace_item_import_excel"),
         ]
         return custom + urls
 
-    # Change page approve
+    # -----------------------------
+    # Color-coded status display
+    # -----------------------------
+    def colored_status(self, obj):
+        if obj.is_approved:
+            color, text = "green", "Approved"
+        elif not obj.is_active:
+            color, text = "red", "Rejected"
+        else:
+            color, text = "orange", "Pending"
+        return format_html(f'<b style="color:{color};">{text}</b>')
+    colored_status.short_description = "Status"
+
+    # -----------------------------
+    # Approve view
+    # -----------------------------
     def approve_view(self, request, item_id):
         item = Item.objects.get(id=item_id)
         item.is_approved = True
@@ -96,16 +130,16 @@ class ItemAdmin(admin.ModelAdmin):
             item=item,
         )
 
-        self.message_user(request, "Item approved & user notified.", messages.SUCCESS)
+        self.message_user(request, "✅ Item approved & user notified.", messages.SUCCESS)
         return redirect(f"../../{item_id}/change/")
 
-    # Change page reject
+    # -----------------------------
+    # Reject view (with reason)
+    # -----------------------------
     def reject_view(self, request, item_id):
         item = Item.objects.get(id=item_id)
-
         if request.method == "POST":
             reason = request.POST.get("reason") or "غير مذكور"
-
             item.is_approved = False
             item.is_active = False
             item.save()
@@ -117,10 +151,9 @@ class ItemAdmin(admin.ModelAdmin):
                 item=item,
             )
 
-            self.message_user(request, "Item rejected & user notified.", messages.ERROR)
+            self.message_user(request, "❌ Item rejected & user notified.", messages.ERROR)
             return redirect(f"../../{item_id}/change/")
 
-        # ✅ admin context fix
         opts = self.model._meta
         context = {
             "item": item,
@@ -130,79 +163,27 @@ class ItemAdmin(admin.ModelAdmin):
             IS_POPUP_VAR: False,
             "has_view_permission": True,
         }
-
         return render(request, "admin/marketplace/reject_reason.html", context)
-
-    # Approve/Reject inline column
-    def moderate_actions(self, obj):
-        return format_html(
-            f'<a class="button" href="{obj.id}/approve/" '
-            f'style="margin-right:8px;color:green;font-weight:600;">Approve</a>'
-            f'<a class="button" href="{obj.id}/reject/" '
-            f'style="color:red;font-weight:600;">Reject</a>'
-        )
-    moderate_actions.short_description = "Moderation"
-
-    # Bulk approve
-    @admin.action(description="Approve selected items")
-    def approve_items(self, request, queryset):
-        for item in queryset:
-            if not item.is_approved:
-                item.is_approved = True
-                item.is_active = True
-                item.save()
-                Notification.objects.create(
-                    user=item.user,
-                    title="✅ تمت الموافقة على إعلانك",
-                    body=f"إعلانك '{item.title}' أصبح فعالاً الآن.",
-                    item=item
-                )
-        self.message_user(request, f"Approved {queryset.count()} items and notified owners.")
-
-    # Bulk reject
-    @admin.action(description="Reject selected items")
-    def reject_items(self, request, queryset):
-        reason = request.POST.get('action_reason', '')
-        for item in queryset:
-            item.is_approved = False
-            item.is_active = False
-            item.save()
-            Notification.objects.create(
-                user=item.user,
-                title="❌ تم رفض إعلانك",
-                body=f"إعلانك '{item.title}' تم رفضه. الأسباب: {reason or 'غير مذكور'}",
-                item=item
-            )
-        self.message_user(request, f"Rejected {queryset.count()} items and notified owners.")
-
-    @admin.action(description="Deactivate selected items")
-    def deactivate_items(self, request, queryset):
-        queryset.update(is_active=False)
-        self.message_user(request, f"Deactivated {queryset.count()} items.")
 
     def photo_gallery(self, obj):
         photos = obj.photos.all()
         if not photos:
             return "No photos uploaded."
-
-        html = ""
-        for p in photos:
-            html += f'<img src="{p.image.url}" style="width:120px;border-radius:6px;margin:4px;">'
+        html = "".join([
+            f'<img src="{p.image.url}" style="width:160px;border-radius:8px;margin:4px;">'
+            for p in photos
+        ])
         return format_html(html)
 
     photo_gallery.short_description = "Item Photos"
 
+    # -----------------------------
+    # Import Items (Excel + ZIP)
+    # -----------------------------
     def import_excel_view(self, request):
         """
-        Import items from an Excel (.xlsx) file and photos from a ZIP file.
-
-        Rules:
-        - Excel columns (case-insensitive): id, name, description, price, category, subcategory (optional), city
-        - ZIP may contain nested folders.
-        - Match photos by filename containing external_id.
-        - If no photos found → item not approved.
-        - All imported items → condition='new'.
-        - If city doesn't exist → create it.
+        Import items from Excel (.xlsx) + photos ZIP.
+        Each row: id, name, description, price, category, subcategory?, city?
         """
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
@@ -216,7 +197,6 @@ class ItemAdmin(admin.ModelAdmin):
                 self.message_user(request, "❌ Only .zip files are supported.", level=messages.ERROR)
                 return redirect("..")
 
-            # --- Temporary files setup
             excel_path = tempfile.mktemp(suffix=".xlsx")
             zip_path = tempfile.mktemp(suffix=".zip")
             photos_dir = tempfile.mkdtemp()
@@ -236,7 +216,6 @@ class ItemAdmin(admin.ModelAdmin):
                 self.message_user(request, f"❌ Failed to extract ZIP: {e}", level=messages.ERROR)
                 return redirect("..")
 
-            # --- Parse Excel
             wb = openpyxl.load_workbook(excel_path)
             sheet = wb.active
             headers = [str(c.value).strip().lower() if c.value else "" for c in sheet[1]]
@@ -258,43 +237,36 @@ class ItemAdmin(admin.ModelAdmin):
             required = [id_col, name_col, price_col, category_col]
             if any(c is None for c in required):
                 missing = [n for n, c in zip(["id", "name", "price", "category"], required) if c is None]
-                self.message_user(request, f"❌ Missing required columns: {', '.join(missing)}", level=messages.ERROR)
+                self.message_user(request, f"❌ Missing columns: {', '.join(missing)}", level=messages.ERROR)
                 return redirect("..")
 
-            created_count = 0
-            failed_count = 0
-            no_photo_items = []
+            created, failed, no_photo = 0, 0, []
 
-            # --- Import rows
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 try:
                     external_id = str(int(row[id_col])).strip() if row[id_col] else None
                     title = str(row[name_col]).strip() if row[name_col] else None
-                    desc = str(row[desc_col]).strip() if desc_col is not None and row[desc_col] else ""
+                    desc = str(row[desc_col]).strip() if desc_col and row[desc_col] else ""
                     price = float(row[price_col]) if row[price_col] else None
                     category_name = str(row[category_col]).strip() if row[category_col] else None
                     subcategory_name = (
-                        str(row[subcategory_col]).strip()
-                        if subcategory_col is not None and row[subcategory_col]
-                        else None
+                        str(row[subcategory_col]).strip() if subcategory_col and row[subcategory_col] else None
                     )
-                    city_name = str(row[city_col]).strip() if city_col is not None and row[city_col] else None
+                    city_name = str(row[city_col]).strip() if city_col and row[city_col] else None
 
                     if not external_id or not title or not price or not category_name:
                         continue
 
-                    # --- Category & optional Subcategory
+                    # --- Category & subcategory
                     category, _ = Category.objects.get_or_create(
                         name_ar=category_name,
-                        defaults={'name_en': category_name}
+                        defaults={"name_en": category_name},
                     )
-
                     if subcategory_name:
                         subcategory, _ = Category.objects.get_or_create(
                             name_ar=subcategory_name,
-                            defaults={'name_en': subcategory_name, 'parent': category}
+                            defaults={"name_en": subcategory_name, "parent": category},
                         )
-                        # Ensure correct parent linkage
                         if subcategory.parent_id != category.id:
                             subcategory.parent = category
                             subcategory.save(update_fields=["parent"])
@@ -302,18 +274,12 @@ class ItemAdmin(admin.ModelAdmin):
                     else:
                         assigned_category = category
 
-                    # --- City (optional)
+                    # --- City
                     city = None
                     if city_name:
-                        city_name = city_name.strip()
                         city = City.objects.filter(
                             models.Q(name_ar__iexact=city_name) | models.Q(name_en__iexact=city_name)
-                        ).first()
-                        if not city:
-                            city = City.objects.create(
-                                name_ar=city_name,
-                                name_en=city_name,
-                            )
+                        ).first() or City.objects.create(name_ar=city_name, name_en=city_name)
 
                     # --- Find photos
                     image_found = False
@@ -325,7 +291,7 @@ class ItemAdmin(admin.ModelAdmin):
                         if image_found:
                             break
 
-                    # --- Create Item
+                    # --- Create item
                     item = Item.objects.create(
                         title=title,
                         description=desc,
@@ -334,57 +300,45 @@ class ItemAdmin(admin.ModelAdmin):
                         city=city,
                         user=request.user,
                         is_active=True,
-                        is_approved=image_found,  # only approved if photo exists
-                        condition="new",  # always new
+                        is_approved=image_found,
+                        condition="new",
                     )
 
-                    # --- Attach ZIP photos
+                    # --- Save images
                     for root, _, files in os.walk(photos_dir):
                         for filename in files:
                             if external_id.lower() in filename.lower():
-                                file_path = os.path.join(root, filename)
                                 try:
-                                    with open(file_path, "rb") as img_file:
+                                    with open(os.path.join(root, filename), "rb") as img_file:
                                         content = ContentFile(img_file.read())
-                                        photo = ItemPhoto(item=item)
-                                        photo.image.save(os.path.basename(filename), content, save=True)
+                                        ItemPhoto.objects.create(item=item, image=content)
                                 except Exception as e:
-                                    print(f"[WARN] Could not save image {filename}: {e}")
+                                    print(f"[WARN] Could not save {filename}: {e}")
 
                     if not image_found:
-                        no_photo_items.append(external_id)
-
-                    created_count += 1
+                        no_photo.append(external_id)
+                    created += 1
 
                 except Exception as e:
-                    print(f"[ERROR] Row import failed for {row}: {e}")
-                    failed_count += 1
+                    print(f"[ERROR] Failed row {row}: {e}")
+                    failed += 1
 
             wb.close()
             os.remove(excel_path)
             os.remove(zip_path)
 
-            summary = f"✅ Import finished: {created_count} items created, {failed_count} failed."
-            if no_photo_items:
-                summary += f" ⚠️ {len(no_photo_items)} items had no photos (not approved)."
-
-            self.message_user(request, summary, level=messages.SUCCESS)
+            msg = f"✅ Import finished: {created} items created, {failed} failed."
+            if no_photo:
+                msg += f" ⚠️ {len(no_photo)} without photos (not approved)."
+            self.message_user(request, msg, level=messages.SUCCESS)
             return redirect("../")
 
-        # --- GET → render upload form
         return render(request, "admin/import_excel.html", {"title": "Import Items from Excel & ZIP"})
 
 
-@admin.register(Notification)
-class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "title", "is_read", "created_at")
-    list_filter = ("is_read",)
-    search_fields = ("title", "body", "user__username")
-
-# keep your other @admin.register classes (User, Category, Attribute, AttributeOption, ItemAttributeValue, ItemPhoto) as-is
-
-
-
+# ======================================================
+# ✅ OTHER ADMINS
+# ======================================================
 @admin.register(ItemAttributeValue)
 class ItemAttributeValueAdmin(admin.ModelAdmin):
     list_display = ("id", "item", "attribute", "value")
@@ -399,6 +353,13 @@ class ItemPhotoAdmin(admin.ModelAdmin):
     search_fields = ("item__title",)
 
 
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "title", "is_read", "created_at")
+    list_filter = ("is_read",)
+    search_fields = ("title", "body", "user__username")
+
+
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
     list_display = ("id", "name_en", "name_ar", "is_active")
@@ -406,11 +367,24 @@ class CityAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
 
 
-from .models import Favorite  # add to the big import list if not present
-
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ("user", "item", "created_at")
     list_filter = ("created_at",)
     search_fields = ("user__username", "item__title")
 
+
+
+@admin.register(IssueReport)
+class IssueReportAdmin(admin.ModelAdmin):
+    list_display = ("user", "item", "status", "created_at")
+    list_filter = ("status",)
+    search_fields = ("user__username", "item__title", "message")
+
+
+# ======================================================
+# ✅ Admin Branding
+# ======================================================
+admin.site.site_header = "Souq Jordan Administration"
+admin.site.index_title = "Control Panel"
+admin.site.site_title = "Souq Jordan Admin"

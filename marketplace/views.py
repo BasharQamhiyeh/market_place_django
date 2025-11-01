@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from .models import Item, Category, ItemAttributeValue, Attribute, AttributeOption, ItemPhoto, User
+from .models import Item, Category, ItemAttributeValue, Attribute, AttributeOption, ItemPhoto, User, IssueReport
 from .forms import UserRegistrationForm, ItemForm
 from django.contrib.admin.views.decorators import staff_member_required
 from django import forms
@@ -88,43 +88,39 @@ def user_logout(request):
 
 # Anyone can view items
 def item_list(request):
-    # ----------------------------------------------
+    """
+    Displays active + approved items with:
+    - Search (q)
+    - Category filter (?category=)
+    - Pagination
+    - Only categories that contain items
+    """
+
     # ✅ Auto-expire items older than 7 days
-    # ----------------------------------------------
     Item.objects.filter(
         created_at__lt=timezone.now() - timedelta(days=7),
         is_active=True
     ).update(is_active=False)
 
-    # ----------------------------------------------
-    # ✅ Get search & category filters
-    # ----------------------------------------------
     q = request.GET.get("q", "").strip()
     category_id = request.GET.get("category")
 
-    # ----------------------------------------------
-    # ✅ Base queryset (active + approved)
-    # ----------------------------------------------
     base_qs = Item.objects.filter(
         is_approved=True,
         is_active=True,
     )
 
-    # ----------------------------------------------
-    # ✅ Handle category / subcategory filter
-    # ----------------------------------------------
+    # ✅ Category filter
     selected_category = None
     if category_id:
         try:
             selected_category = Category.objects.get(id=category_id)
-            ids = _category_descendant_ids(selected_category)  # parent + ALL descendants
+            ids = _category_descendant_ids(selected_category)
             base_qs = base_qs.filter(category_id__in=ids)
         except Category.DoesNotExist:
             selected_category = None
 
-    # ----------------------------------------------
-    # ✅ Search logic (Elasticsearch + fallback)
-    # ----------------------------------------------
+    # ✅ Search (Elasticsearch + fallback)
     if len(q) >= 2:
         try:
             search = (
@@ -146,64 +142,62 @@ def item_list(request):
                 )
                 .sort("-created_at")
             )
-
-            # Execute search
             hits = search.execute().hits
             hit_ids = [str(hit.meta.id) for hit in hits]
 
-            # Get from DB to preserve full data (relations)
             queryset = list(
                 base_qs.filter(id__in=hit_ids)
                 .select_related("category", "city", "user")
                 .prefetch_related("photos")
             )
-
-            # Preserve Elasticsearch order
+            # ✅ Preserve Elasticsearch order
             queryset.sort(key=lambda i: hit_ids.index(str(i.id)))
-
         except Exception as e:
             print("[WARN] Elasticsearch unavailable:", e)
             queryset = base_qs.filter(title__icontains=q).order_by("-created_at")
     else:
         queryset = base_qs.order_by("-created_at")
 
-    # ----------------------------------------------
+    # ✅ Ensure queryset is QuerySet (not Python list)
+    if isinstance(queryset, list):
+        ids = [obj.id for obj in queryset]
+        queryset = Item.objects.filter(id__in=ids).order_by("-created_at")
+
+    # ✅ Optimize related data (avoid N+1 queries)
+    queryset = queryset.select_related("category", "user").prefetch_related("photos")
+
     # ✅ Pagination
-    # ----------------------------------------------
     paginator = Paginator(queryset, 12)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # ----------------------------------------------
-    # ✅ Partial response for HTMX (infinite scroll / search)
-    # ----------------------------------------------
-    if request.headers.get("HX-Request"):
-        return render(request, "partials/item_results.html", {
-            "page_obj": page_obj,
-            "q": q,
-            "selected_category": selected_category,
-        })
-
-    # Fetch only non-empty categories
+    # ✅ Get only parent categories with active items
     categories = (
-        Category.objects
-        .filter(parent__isnull=True)
+        Category.objects.filter(parent__isnull=True)
         .annotate(
-            total_items=Count("items", filter=Q(items__is_active=True, items__is_approved=True)) +
-                        Count("subcategories__items",
-                              filter=Q(subcategories__items__is_active=True, subcategories__items__is_approved=True))
+            total_items=Count("items", filter=Q(items__is_active=True, items__is_approved=True))
+            + Count(
+                "subcategories__items",
+                filter=Q(
+                    subcategories__items__is_active=True,
+                    subcategories__items__is_approved=True,
+                ),
+            )
         )
-        .filter(total_items__gt=0)  # show only categories that actually contain items
+        .filter(total_items__gt=0)
         .prefetch_related("subcategories")
         .distinct()
     )
 
-    return render(request, "item_list.html", {
+    context = {
         "page_obj": page_obj,
         "q": q,
         "selected_category": selected_category,
-        "categories": categories,  # ✅ only categories that contain items
-    })
+        "categories": categories,
+    }
+
+    return render(request, "item_list.html", context)
+
 
 
 # Item details
@@ -407,6 +401,7 @@ def item_edit(request, item_id):
         # Save base item fields
         item = form.save(commit=False)
         item.is_approved = False  # requires review again
+        item.was_edited = True
         item.save()
 
         # Remove old attributes
@@ -712,8 +707,6 @@ def my_items(request):
 @login_required
 def reactivate_item(request, item_id):
     item = get_object_or_404(Item, id=item_id, user=request.user)
-    # Business rule: reactivation keeps is_approved as-is, flips is_active on.
-    # If you want re-approval after edit, don’t change is_approved here.
     if not item.is_active:
         item.is_active = True
         item.save()
@@ -721,6 +714,8 @@ def reactivate_item(request, item_id):
     else:
         messages.info(request, "ℹ️ Item is already active.")
     return redirect('my_items')
+
+
 
 
 @login_required
@@ -751,16 +746,17 @@ def cancel_item(request, item_id):
         sold = request.POST.get("sold_on_site")
         reason = request.POST.get("reason", "").strip()
 
+        # Only deactivate, don't change approval status
         item.is_active = False
-        item.is_approved = False
-        item.sold_on_site = (sold == "yes")
         item.cancel_reason = reason
-        item.save()
+        item.sold_on_site = (sold == "yes")
+        item.save(update_fields=["is_active", "cancel_reason", "sold_on_site"])
 
-        messages.success(request, "✅ Your ad has been canceled.")
+        messages.success(request, "✅ Your ad has been canceled (still approved for future reactivation).")
         return redirect("my_items")
 
     return render(request, "cancel_item.html", {"item": item})
+
 
 
 @login_required
@@ -1023,3 +1019,29 @@ def reset_password(request):
     else:
         form = ResetPasswordForm()
     return render(request, 'reset_password.html', {'form': form})
+
+from .models import Subscriber
+
+def subscribe(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        if email:
+            Subscriber.objects.get_or_create(email=email)
+            messages.success(request, "✅ Thank you for subscribing!")
+    return redirect('home')
+
+
+from django.shortcuts import render
+
+def contact(request):
+    return render(request, "contact.html")
+
+
+@login_required
+def report_issue(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+    if request.method == "POST":
+        IssueReport.objects.create(user=request.user, item=item, message=request.POST["message"])
+        messages.success(request, "✅ Thank you for reporting this issue.")
+        return redirect("item_detail", item_id=item.id)
+    return redirect("item_detail", item_id=item.id)
