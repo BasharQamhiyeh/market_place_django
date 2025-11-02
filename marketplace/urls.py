@@ -1,7 +1,9 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework.routers import DefaultRouter
+
 
 urlpatterns = [
     # --- Auth ---
@@ -63,7 +65,7 @@ urlpatterns = [
 
     path('item/<int:item_id>/report/', views.report_issue, name='report_issue'),
 
-
+    path('api/', include('marketplace.api_urls')),
 ]
 
 # ✅ Static & media for local dev

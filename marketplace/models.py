@@ -268,3 +268,31 @@ class IssueReport(models.Model):
     message = models.TextField()
     status = models.CharField(max_length=20, choices=[("open", "Open"), ("resolved", "Resolved")], default="open")
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PhoneVerification(models.Model):
+    phone = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        return self.created_at >= timezone.now() - timedelta(minutes=5)
+
+
+class MobileVerification(models.Model):
+    PURPOSE_CHOICES = [
+        ("verify", "Phone Verification"),
+        ("reset", "Password Reset"),
+    ]
+
+    phone = models.CharField(max_length=20)
+    code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=20, choices=PURPOSE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        """Code is valid for 5 minutes"""
+        return self.created_at >= timezone.now() - timedelta(minutes=5)
+
+    def __str__(self):
+        return f"{self.phone} ({self.purpose})"

@@ -9,6 +9,7 @@ django-elasticsearch-dsl==8.0
 django-nested-admin==4.1.6
 django-widget-tweaks==1.5.0
 djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
 elastic-transport==8.13.0
 elasticsearch==8.13.0
 elasticsearch-dsl==8.13.0
@@ -19,6 +20,7 @@ openpyxl==3.1.5
 packaging==25.0
 pillow==12.0.0
 psycopg2-binary==2.9.11
+PyJWT==2.10.1
 python-dateutil==2.9.0.post0
 python-monkey-business==1.1.0
 requests==2.32.5

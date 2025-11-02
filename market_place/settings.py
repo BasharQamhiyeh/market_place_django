@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 import dj_database_url
-import nested_admin
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,6 +25,11 @@ USE_CLOUDINARY = IS_RENDER and all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, C
 # Installed apps
 # ---------------------------------------------------
 INSTALLED_APPS = [
+    'channels',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'drf_spectacular',
+    'corsheaders',
     'marketplace',
     'widget_tweaks',
     'nested_admin',
@@ -41,10 +46,25 @@ INSTALLED_APPS = [
 if USE_CLOUDINARY:
     INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
 
+
+ASGI_APPLICATION = 'Market_Place.asgi.application'
+
+# Redis backend for WebSocket communication
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # change if your Redis runs elsewhere
+        },
+    },
+}
+
 # ---------------------------------------------------
 # Middleware
 # ---------------------------------------------------
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -55,6 +75,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:55400",
+#     "http://127.0.0.1:55400",
+# ]
+# Todo: only for dev
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 ROOT_URLCONF = 'market_place.urls'
 
@@ -175,3 +203,37 @@ if IS_RENDER:
     ELASTICSEARCH_DSL_AUTOSYNC = False
 else:
     ELASTICSEARCH_DSL = {'default': {'hosts': 'http://localhost:9200'}}
+
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 12,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Marketplace API',
+    'DESCRIPTION': 'API documentation for the Django Marketplace project.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    # 👇 This tells SimpleJWT to use user.user_id instead of user.id
+    'USER_ID_FIELD': 'user_id',
+    'USER_ID_CLAIM': 'user_id',
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
