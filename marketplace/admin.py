@@ -85,6 +85,25 @@ class ItemAdmin(admin.ModelAdmin):
     search_fields = ("title", "user__username", "category__name_en", "category__name_ar", "user__first_name", "user__last_name", "user__email", "user__phone")
     actions = None  # ✅ remove inline actions
 
+    fields = (
+        "title",
+        "category",
+        "price",
+        "condition",
+        "description",  # ✅ inserted here
+        "photo_gallery",
+        "user",
+        "colored_status",
+    )
+
+    # def rendered_description(self, obj):
+    #     """Show formatted description in admin."""
+    #     if obj.description:
+    #         return format_html(obj.description)
+    #     return "-"
+    #
+    # rendered_description.short_description = "Description (Rendered HTML)"
+
     def get_username(self, obj):
         return obj.user.username
 
