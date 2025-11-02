@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'channels',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework.authtoken',
     'drf_spectacular',
     'corsheaders',
     'marketplace',
@@ -219,10 +220,15 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Marketplace API',
-    'DESCRIPTION': 'API documentation for the Django Marketplace project.',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "Market Place API",
+    "DESCRIPTION": "Full API matching all marketplace web app features (auth, items, categories, chat, notifications, etc.)",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": "/api",
+    "LICENSE": {"name": "Proprietary"},
+    "CONTACT": {"email": "support@marketplace.com"},
 }
 
 SIMPLE_JWT = {

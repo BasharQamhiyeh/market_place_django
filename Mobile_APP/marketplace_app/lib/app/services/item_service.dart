@@ -1,76 +1,106 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import '../core/config.dart';
+import 'api_service.dart';
 
 class ItemService {
-  static Future<List<dynamic>> fetchItems(String? token) async {
-    final url = Uri.parse("${AppConfig.apiBaseUrl}/items/");
-    final headers = {
-      "Content-Type": "application/json",
-      if (token != null) "Authorization": "Bearer $token",
-    };
-    final res = await http.get(url, headers: headers);
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      return (data is List) ? data : (data['results'] ?? []);
-    }
-    throw Exception("Failed to load items");
+  final ApiService api;
+
+  ItemService(this.api);
+
+  Future<Map<String, dynamic>> listItems({
+    String? q,
+    int? categoryId,
+    int? cityId,
+  }) async {
+    final params = <String, dynamic>{};
+    if (q != null && q.isNotEmpty) params['q'] = q;
+    if (categoryId != null) params['category_id'] = categoryId;
+    if (cityId != null) params['city_id'] = cityId;
+
+    return await api.getJson('/items/', query: params);
   }
 
-  static Future<List<dynamic>> fetchCities() async {
-    final url = Uri.parse("${AppConfig.apiBaseUrl}/cities/");
-    final res = await http.get(url);
-    if (res.statusCode == 200) return jsonDecode(res.body);
-    throw Exception("Failed to load cities");
-  }
+  Future<Map<String, dynamic>> getItem(int id) async =>
+      await api.getJson('/items/$id/');
 
-  static Future<List<dynamic>> fetchCategories() async {
-    final url = Uri.parse("${AppConfig.apiBaseUrl}/categories/");
-    final res = await http.get(url);
-    if (res.statusCode == 200) return jsonDecode(res.body);
-    throw Exception("Failed to load categories");
-  }
-
-  static Future<List<dynamic>> fetchCategoryAttributes(int categoryId) async {
-    final url = Uri.parse("${AppConfig.apiBaseUrl}/categories/$categoryId/attributes/");
-    final res = await http.get(url);
-    if (res.statusCode == 200) return jsonDecode(res.body);
-    throw Exception("Failed to load attributes");
-  }
-
-  /// attributes payload example:
-  /// [{"id": 12, "value": "Toyota"}, {"id": 15, "value": "2021"}]
-  static Future<bool> createItem({
-    required String token,
+  Future<Map<String, dynamic>> createItem({
     required String title,
     required String condition,
     required String price,
-    String description = "",
-    int? categoryId,
-    int? cityId,
-    List<Map<String, dynamic>> attributes = const [],
-    List<XFile> images = const [],
+    required String description,
+    required int cityId,
+    required int categoryId,
+    required List<http.MultipartFile> images,
+    List<Map<String, dynamic>> attributeValues = const [],
   }) async {
-    final url = Uri.parse("${AppConfig.apiBaseUrl}/items/");
-    final req = http.MultipartRequest('POST', url)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['title'] = title
-      ..fields['condition'] = condition
-      ..fields['price'] = price
-      ..fields['description'] = description;
+    final req =
+        http.MultipartRequest('POST', Uri.parse('${_apiBase()}/items/'));
+    // Use public headers() so Authorization/Accept are included
+    req.headers.addAll(api.headers());
+    req.fields.addAll({
+      'title': title,
+      'condition': condition,
+      'price': price,
+      'description': description,
+      'city_id': '$cityId',
+      'category_id': '$categoryId',
+      'attribute_values': jsonEncode(attributeValues),
+    });
+    req.files.addAll(images);
 
-    if (categoryId != null) req.fields['category'] = categoryId.toString();
-    if (cityId != null) req.fields['city'] = cityId.toString();
-    if (attributes.isNotEmpty) {
-      req.fields['attributes'] = jsonEncode(attributes);
+    final res = await http.Response.fromStream(await req.send());
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
     }
-
-    for (final img in images) {
-      req.files.add(await http.MultipartFile.fromPath('photos', img.path));
-    }
-
-    final res = await req.send();
-    return res.statusCode == 201;
+    throw ApiError(res.statusCode, res.body);
   }
+
+  Future<Map<String, dynamic>> updateItem({
+    required int id,
+    String? title,
+    String? condition,
+    String? price,
+    String? description,
+    int? cityId,
+    int? categoryId,
+    List<http.MultipartFile> images = const [],
+    List<Map<String, dynamic>>? attributeValues,
+  }) async {
+    final req =
+        http.MultipartRequest('PUT', Uri.parse('${_apiBase()}/items/$id/'));
+    // Use public headers() so Authorization/Accept are included
+    req.headers.addAll(api.headers());
+
+    if (title != null) req.fields['title'] = title;
+    if (condition != null) req.fields['condition'] = condition;
+    if (price != null) req.fields['price'] = price;
+    if (description != null) req.fields['description'] = description;
+    if (cityId != null) req.fields['city_id'] = '$cityId';
+    if (categoryId != null) req.fields['category_id'] = '$categoryId';
+    if (attributeValues != null) {
+      req.fields['attribute_values'] = jsonEncode(attributeValues);
+    }
+
+    req.files.addAll(images);
+
+    final res = await http.Response.fromStream(await req.send());
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return jsonDecode(res.body) as Map<String, dynamic>;
+    }
+    throw ApiError(res.statusCode, res.body);
+  }
+
+  Future<void> deleteItem(int id) async => await api.delete('/items/$id/');
+
+  Future<void> reactivate(int id) async =>
+      await api.postJson('/items/$id/reactivate/', {});
+
+  Future<void> markSold(int id) async =>
+      await api.postJson('/items/$id/mark_sold/', {});
+
+  Future<void> cancel(int id, String reason) async =>
+      await api.postJson('/items/$id/cancel/', {'reason': reason});
+
+  String _apiBase() => AppConfig.apiBaseUrl;
 }

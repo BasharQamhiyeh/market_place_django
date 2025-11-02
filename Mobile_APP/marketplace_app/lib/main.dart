@@ -3,31 +3,31 @@ import 'package:provider/provider.dart';
 import 'app/core/theme.dart';
 import 'app/providers/user_provider.dart';
 import 'app/screens/auth/login_screen.dart';
-import 'app/screens/home/home_screen.dart';
-
-void main() {
-  runApp(const MarketplaceApp());
+import 'app/screens/shell.dart';
+void main() async {
+WidgetsFlutterBinding.ensureInitialized();
+final userProvider = UserProvider();
+await userProvider.restoreSession();
+runApp(MarketPlaceApp(userProvider: userProvider));
 }
-
-class MarketplaceApp extends StatelessWidget {
-  const MarketplaceApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => UserProvider()..loadToken(),
-      child: Consumer<UserProvider>(
-        builder: (context, user, _) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Marketplace',
-            theme: AppTheme.lightTheme,
-            home: user.isLoggedIn
-                ? const HomeScreen()
-                : LoginScreen(),
-          );
-        },
-      ),
-    );
-  }
+class MarketPlaceApp extends StatelessWidget {
+final UserProvider userProvider;
+const MarketPlaceApp({super.key, required this.userProvider});
+@override
+Widget build(BuildContext context) {
+return MultiProvider(
+providers: [
+ChangeNotifierProvider<UserProvider>.value(value: userProvider),
+],
+child: MaterialApp(
+title: 'Market Place',
+debugShowCheckedModeBanner: false,
+theme: buildTheme(),
+home: Consumer<UserProvider>(
+builder: (_, up, __) => up.isLoggedIn ? const AppShell() : const
+LoginScreen(),
+),
+),
+);
+}
 }

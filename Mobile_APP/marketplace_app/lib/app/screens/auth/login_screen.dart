@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
 import '../../providers/user_provider.dart';
-import '../home/home_screen.dart';
+import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
+import '../shell.dart';
+import 'register_screen.dart';
+import 'reset_password_screens.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,66 +15,108 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  String username = '';
-  String password = '';
-  bool isLoading = false;
-  String? errorMessage;
+  final _form = GlobalKey<FormState>();
+  String _username = '';
+  String _password = '';
+  bool _loading = false;
+  String? _error;
 
-  void _login() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => isLoading = true);
+  Future<void> _submit() async {
+    if (!_form.currentState!.validate()) return;
+    _form.currentState!.save();
 
-    final token = await AuthService.login(username, password);
-    setState(() => isLoading = false);
-
-    if (token != null) {
-      final userProvider = context.read<UserProvider>();
-      await userProvider.saveToken(token);
-
-      // Navigate to Home
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
-      setState(() => errorMessage = "Invalid username or password");
+    setState(() => _loading = true);
+    try {
+      final api = ApiService();
+      final auth = AuthService(api);
+      await auth.login(context, username: _username, password: _password);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AppShell()),
+        );
+      }
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final up = context.watch<UserProvider>();
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Username or Phone"),
-                onChanged: (v) => username = v,
-                validator: (v) => v!.isEmpty ? "Required" : null,
+      appBar: AppBar(title: const Text('Login')),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _form,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      decoration: const InputDecoration(labelText: 'Username'),
+                      onSaved: (v) => _username = v!.trim(),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      obscureText: true,
+                      decoration: const InputDecoration(labelText: 'Password'),
+                      onSaved: (v) => _password = v!.trim(),
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    if (_error != null)
+                      Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _loading ? null : _submit,
+                        child: _loading
+                            ? const CircularProgressIndicator()
+                            : const Text('Login'),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          ),
+                          child: const Text('Create account'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ForgotPasswordScreen(),
+                            ),
+                          ),
+                          child: const Text('Forgot password?'),
+                        ),
+                      ],
+                    ),
+                    if (up.isLoggedIn) const SizedBox(height: 12),
+                    if (up.isLoggedIn)
+                      const Text("You're already logged in."),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Password"),
-                obscureText: true,
-                onChanged: (v) => password = v,
-                validator: (v) => v!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 24),
-              if (errorMessage != null)
-                Text(errorMessage!, style: const TextStyle(color: Colors.red)),
-              ElevatedButton(
-                onPressed: isLoading ? null : _login,
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Login"),
-              ),
-            ],
+            ),
           ),
         ),
       ),

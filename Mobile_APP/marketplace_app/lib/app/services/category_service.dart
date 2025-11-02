@@ -1,16 +1,29 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../core/config.dart';
+import 'api_service.dart';
 
 class CategoryService {
-  static Future<List<dynamic>> fetchCategories() async {
-    final url = Uri.parse("${AppConfig.apiBaseUrl}/categories/");
-    final response = await http.get(url);
+  final ApiService api;
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+  CategoryService(this.api);
+
+  Future<Object> getCategoriesTree() async {
+    final data = await api.getJson('/categories/');
+    if (data is List) {
+      return data;
+    } else if (data is Map<String, dynamic> && data.containsKey('results')) {
+      return (data['results'] as List?) ?? [];
     } else {
-      throw Exception("Failed to load categories");
+      return [];
+    }
+  }
+
+  Future<Object> getCities() async {
+    final data = await api.getJson('/cities/');
+    if (data is List) {
+      return data;
+    } else if (data is Map<String, dynamic> && data.containsKey('results')) {
+      return (data['results'] as List?) ?? [];
+    } else {
+      return [];
     }
   }
 }

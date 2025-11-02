@@ -1,203 +1,388 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
-from rest_framework import serializers
 # marketplace/api_views.py
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from django.contrib.auth import get_user_model, authenticate
+from django.db.models import Q, Count
+from django.utils import translation, timezone
+from rest_framework import viewsets, mixins, generics, status
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema, OpenApiResponse
-from django.shortcuts import get_object_or_404
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Item, Category, City, Attribute
-from .serializers import (
-    ItemListSerializer, ItemCreateSerializer,
-    CategorySerializer, CitySerializer,
-    AttributeSerializer
+from .models import (
+    Category, Attribute, AttributeOption,
+    Item, ItemPhoto, ItemAttributeValue, City,
+    Conversation, Message, Notification, Favorite,
+    IssueReport, Subscriber, PhoneVerificationCode, User
 )
+from .documents import ItemDocument
+from .utils.sms import send_sms_code
+from .utils.verification import send_code, verify_session_code
 
+from .api_serializers import (
+    UserPublicSerializer, UserProfileSerializer, ChangePasswordSerializer, RegisterSerializer,
+    CategoryTreeSerializer, CategoryBriefSerializer, AttributeSerializer, AttributeOptionSerializer,
+    CitySerializer,
+    ItemListSerializer, ItemDetailSerializer, ItemCreateUpdateSerializer, ItemPhotoSerializer,
+    FavoriteSerializer,
+    ConversationSerializer, MessageSerializer, NotificationSerializer,
+    IssueReportSerializer, SubscriberSerializer
+)
+from .api_permissions import IsOwnerOrReadOnly, IsConversationParticipant, IsMessageParticipant
+from django.conf import settings
 
-User = get_user_model()
+# -------------------------
+# Utils
+# -------------------------
+def jwt_for_user(user):
+    refresh = RefreshToken.for_user(user)
+    return {"refresh": str(refresh), "access": str(refresh.access_token)}
 
-# -------------------------------
-# 📱 Serializer for profile data
-# -------------------------------
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            'user_id', 'username', 'first_name', 'last_name',
-            'email', 'phone', 'show_phone', 'phone_verified',
-        ]
-        read_only_fields = ['user_id', 'username', 'phone_verified']
+# -------------------------
+# Auth
+# -------------------------
+class RegisterAPI(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
 
+    def perform_create(self, serializer):
+        user = serializer.save()
+        # send phone verification
+        request = self.request
+        send_code(request, user.phone, key_prefix="verify", purpose="verify", send_func=send_sms_code)
 
-# -------------------------------
-# 📱 Serializer for password change
-# -------------------------------
-class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField()
-    new_password = serializers.CharField()
+class LoginAPI(generics.GenericAPIView):
+    permission_classes = [AllowAny]
 
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(request, username=username, password=password)
+        if not user:
+            return Response({"detail":"Invalid credentials."}, status=400)
+        return Response({"token": jwt_for_user(user), "user": UserProfileSerializer(user).data})
 
-# =====================================================
-# User ViewSet
-# =====================================================
-@extend_schema(tags=['Users'])
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    Manage user profiles for the mobile app.
-    """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class ProfileAPI(generics.RetrieveUpdateAPIView):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
 
-    # ✅ /api/users/me/  → view or edit own profile
-    @extend_schema(
-        request=UserSerializer,
-        responses={200: UserSerializer},
-        examples=[
-            OpenApiExample(
-                "Profile Update Example",
-                value={"first_name": "Ali", "last_name": "Hassan", "show_phone": True},
-            )
-        ],
-    )
-    @action(detail=False, methods=['get', 'patch'], url_path='me')
-    def me(self, request):
+    def get_object(self):
+        return self.request.user
+
+class ChangePasswordAPI(generics.UpdateAPIView):
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        ser = self.get_serializer(data=request.data)
+        ser.is_valid(raise_exception=True)
         user = request.user
-        if request.method == 'PATCH':
-            serializer = self.get_serializer(user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-        serializer = self.get_serializer(user)
-        return Response(serializer.data)
-
-    # ✅ /api/users/change-password/
-    @extend_schema(
-        request=ChangePasswordSerializer,
-        responses={
-            200: OpenApiResponse(description="Password changed successfully."),
-            400: OpenApiResponse(description="Invalid password or missing data."),
-        },
-        examples=[
-            OpenApiExample(
-                "Example",
-                value={"old_password": "old123", "new_password": "new456"},
-                request_only=True,
-            )
-        ],
-    )
-    @action(detail=False, methods=['post'], url_path='change-password')
-    def change_password(self, request):
-        serializer = ChangePasswordSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        old_password = serializer.validated_data['old_password']
-        new_password = serializer.validated_data['new_password']
-
-        user = request.user
-        if not user.check_password(old_password):
-            return Response({'detail': 'Old password incorrect.'}, status=400)
-
-        user.password = make_password(new_password)
+        if not user.check_password(ser.validated_data["old_password"]):
+            return Response({"detail":"Old password incorrect."}, status=400)
+        user.set_password(ser.validated_data["new_password"])
         user.save()
-        return Response({'message': 'Password changed successfully.'}, status=200)
+        return Response({"detail":"Password changed."})
 
+# Phone code flows
+class SendVerifyCodeAPI(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        send_code(request, request.user.phone, "verify", "verify", send_func=send_sms_code)
+        return Response({"detail":"Code sent."})
 
+class VerifyPhoneAPI(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        code = request.data.get("code", "")
+        ok = verify_session_code(request, "verify", code)
+        if not ok:
+            return Response({"detail":"Invalid/expired code."}, status=400)
+        return Response({"detail":"Phone verified."})
 
-# -------- Cities
-@extend_schema(tags=["Cities"])
-class CityViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = City.objects.filter(is_active=True).order_by("name_en")
-    serializer_class = CitySerializer
-    permission_classes = [permissions.AllowAny]
+class ForgotPasswordAPI(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        phone = (request.data.get("phone") or "").strip().replace(" ","")
+        # Normalize like forms.py
+        if phone.startswith("07") and len(phone)==10:
+            phone = "962"+phone[1:]
+        if not phone.startswith("9627") or len(phone)!=12:
+            return Response({"detail":"Invalid phone."}, status=400)
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            return Response({"detail":"No user with this phone."}, status=404)
+        send_code(request, phone, "reset", "reset", send_func=send_sms_code)
+        request.session["reset_phone"] = phone
+        return Response({"detail":"Code sent."})
 
-# -------- Categories (+ attributes endpoint)
-@extend_schema(tags=["Categories"])
+class VerifyResetCodeAPI(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        code = request.data.get("code","")
+        if not verify_session_code(request, "reset", code):
+            return Response({"detail":"Invalid/expired code."}, status=400)
+        request.session["reset_verified"] = True
+        return Response({"detail":"Verified."})
+
+class ResetPasswordAPI(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        if not request.session.get("reset_verified"):
+            return Response({"detail":"Not verified."}, status=400)
+        phone = request.session.get("reset_phone")
+        new_password = request.data.get("new_password")
+        if not phone or not new_password:
+            return Response({"detail":"Missing data."}, status=400)
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            return Response({"detail":"User not found."}, status=404)
+        user.set_password(new_password)
+        user.save()
+        # clear
+        for key in ["reset_phone","reset_verified","reset_code","reset_sent_at"]:
+            request.session.pop(key, None)
+        return Response({"detail":"Password reset."})
+
+# -------------------------
+# Taxonomy
+# -------------------------
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Category.objects.all().order_by("name_en")
-    serializer_class = CategorySerializer
-    permission_classes = [permissions.AllowAny]
+    queryset = Category.objects.all().select_related("parent").prefetch_related("subcategories","attributes")
+    serializer_class = CategoryTreeSerializer
+    permission_classes = [AllowAny]
 
-    @extend_schema(
-        responses={200: AttributeSerializer(many=True)},
-        description="List dynamic attributes (with options) for this category."
-    )
-    @action(detail=True, methods=["get"], url_path="attributes", permission_classes=[permissions.AllowAny])
+    @action(detail=True, methods=["get"])
     def attributes(self, request, pk=None):
-        category = self.get_object()
-        attrs = Attribute.objects.filter(category=category).prefetch_related("options")
-        return Response(AttributeSerializer(attrs, many=True).data)
+        cat = self.get_object()
+        data = Attribute.objects.filter(category=cat)
+        return Response(AttributeSerializer(data, many=True).data)
 
-# -------- Items
-@extend_schema(tags=["Items"])
+class AttributeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Attribute.objects.all().prefetch_related("options")
+    serializer_class = AttributeSerializer
+    permission_classes = [AllowAny]
+
+class CityViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = City.objects.all().order_by("name_en")
+    serializer_class = CitySerializer
+    permission_classes = [AllowAny]
+
+# -------------------------
+# Items
+# -------------------------
 class ItemViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def get_queryset(self):
-        # Public listing = approved + active
-        if self.action in ["list", "retrieve"]:
-            return (
-                Item.objects.filter(is_active=True, is_approved=True)
-                .select_related("category", "city")
-                .prefetch_related("photos")
-                .order_by("-created_at")
-            )
-        # Owner scoped elsewhere
-        return Item.objects.all()
+    queryset = (
+        Item.objects.filter(is_approved=True, is_active=True)
+        .select_related("category","user","city")
+        .prefetch_related("photos","attribute_values")
+        .order_by("-created_at")
+    )
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
-            return ItemCreateSerializer
+        if self.action in ["create","update","partial_update"]:
+            return ItemCreateUpdateSerializer
+        if self.action == "retrieve":
+            return ItemDetailSerializer
         return ItemListSerializer
 
-    @extend_schema(
-        request=ItemCreateSerializer,
-        responses={201: ItemListSerializer},
-        description="Create a new item. Multipart with photos. Optional JSON 'attributes'."
-    )
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        item = serializer.save()
-        read = ItemListSerializer(item, context={"request": request})
-        return Response(read.data, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        serializer.context.update({"request": self.request})
+        self.instance = serializer.save()
 
-    @extend_schema(
-        responses={200: ItemListSerializer(many=True)},
-        description="List items owned by the current user (any status)."
-    )
-    @action(detail=False, methods=["get"], url_path="me", permission_classes=[permissions.IsAuthenticated])
-    def my_items(self, request):
-        qs = (
-            Item.objects.filter(user=request.user)
-            .select_related("category", "city")
-            .prefetch_related("photos")
-            .order_by("-created_at")
-        )
-        return Response(ItemListSerializer(qs, many=True).data)
+    def perform_update(self, serializer):
+        serializer.context.update({"request": self.request})
+        self.instance = serializer.save()
 
-    @extend_schema(responses={200: OpenApiResponse(description="Item reactivated.")})
-    @action(detail=True, methods=["post"], url_path="reactivate", permission_classes=[permissions.IsAuthenticated])
+    def get_queryset(self):
+        qs = super().get_queryset()
+        # Filters: q, category_id, city_id, price range, condition
+        q = self.request.query_params.get("q", "")
+        category_id = self.request.query_params.get("category_id")
+        city_id = self.request.query_params.get("city_id")
+        min_price = self.request.query_params.get("min_price")
+        max_price = self.request.query_params.get("max_price")
+        condition = self.request.query_params.get("condition")
+
+        if category_id:
+            qs = qs.filter(category_id=category_id)
+        if city_id:
+            qs = qs.filter(city_id=city_id)
+        if min_price:
+            qs = qs.filter(price__gte=min_price)
+        if max_price:
+            qs = qs.filter(price__lte=max_price)
+        if condition:
+            qs = qs.filter(condition=condition)
+
+        if q and len(q) >= 2:
+            # Try ES first if enabled
+            try:
+                if not settings.IS_RENDER and hasattr(ItemDocument, "search"):
+                    s = ItemDocument.search().query("multi_match", query=q, fields=[
+                        "title", "description", "category.name", "category.parent.name",
+                        "city.name", "attributes.name", "attributes.value", "condition",
+                    ]).sort("-created_at")
+                    ids = [int(h.meta.id) for h in s[0:200]]  # cap
+                    return qs.filter(id__in=ids)
+            except Exception:
+                pass
+            # Fallback DB
+            qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
+        return qs
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
     def reactivate(self, request, pk=None):
-        item = get_object_or_404(Item, pk=pk, user=request.user)
-        item.is_active = True
-        item.save(update_fields=["is_active"])
-        return Response({"message": "Item reactivated successfully."})
-
-    @extend_schema(responses={200: OpenApiResponse(description="Item cancelled.")})
-    @action(detail=True, methods=["post"], url_path="cancel", permission_classes=[permissions.IsAuthenticated])
-    def cancel(self, request, pk=None):
-        item = get_object_or_404(Item, pk=pk, user=request.user)
-        item.is_active = False
-        item.save(update_fields=["is_active"])
-        return Response({"message": "Item cancelled successfully."})
-
-    def destroy(self, request, *args, **kwargs):
         item = self.get_object()
-        if item.user != request.user:
-            return Response({"detail": "You do not own this item."}, status=403)
-        item.delete()
-        return Response({"message": "Item deleted successfully."}, status=200)
+        if item.user_id != request.user.user_id:
+            return Response(status=403)
+        item.is_active = True
+        item.save()
+        return Response({"detail":"Item reactivated."})
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def mark_sold(self, request, pk=None):
+        item = self.get_object()
+        if item.user_id != request.user.user_id:
+            return Response(status=403)
+        # set flag used in your web flows
+        item.sold_on_site = True
+        item.is_active = False
+        item.save()
+        return Response({"detail":"Marked as sold."})
+
+    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    def cancel(self, request, pk=None):
+        item = self.get_object()
+        if item.user_id != request.user.user_id:
+            return Response(status=403)
+        item.cancel_reason = request.data.get("reason","")
+        item.is_active = False
+        item.save()
+        return Response({"detail":"Item canceled."})
+
+class MyItemsAPI(generics.ListAPIView):
+    serializer_class = ItemListSerializer
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return Item.objects.filter(user=self.request.user).select_related("category").prefetch_related("photos").order_by("-created_at")
+
+class ItemPhotoDeleteAPI(generics.DestroyAPIView):
+    serializer_class = ItemPhotoSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = ItemPhoto.objects.all()
+
+    def perform_destroy(self, instance):
+        if instance.item.user_id != self.request.user.user_id:
+            raise PermissionError("Not allowed")
+        instance.delete()
+
+# -------------------------
+# Favorites
+# -------------------------
+class FavoriteViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.DestroyModelMixin):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FavoriteSerializer
+
+    def get_queryset(self):
+        return Favorite.objects.filter(user=self.request.user).select_related("item","item__category").prefetch_related("item__photos").order_by("-created_at")
+
+    def create(self, request):
+        item_id = request.data.get("item_id")
+        if not item_id:
+            return Response({"detail":"item_id is required"}, status=400)
+        Favorite.objects.get_or_create(user=request.user, item_id=item_id)
+        return Response({"detail":"Added to favorites."}, status=201)
+
+    def destroy(self, request, pk=None):
+        try:
+            fav = Favorite.objects.get(id=pk, user=request.user)
+        except Favorite.DoesNotExist:
+            return Response(status=404)
+        fav.delete()
+        return Response(status=204)
+
+# -------------------------
+# Conversations & Messages
+# -------------------------
+class ConversationViewSet(viewsets.ModelViewSet):
+    serializer_class = ConversationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        u = self.request.user
+        return Conversation.objects.filter(Q(buyer=u) | Q(seller=u)).select_related("item","buyer","seller").order_by("-updated_at")
+
+    def create(self, request, *args, **kwargs):
+        item_id = request.data.get("item_id")
+        if not item_id:
+            return Response({"detail":"item_id is required."}, status=400)
+        item = Item.objects.filter(id=item_id, is_active=True).first()
+        if not item:
+            return Response({"detail":"Item not found/active."}, status=404)
+        u = request.user
+        if item.user_id == u.user_id:
+            return Response({"detail":"Cannot start conversation with yourself."}, status=400)
+        conv, created = Conversation.objects.get_or_create(item=item, buyer=u, seller=item.user)
+        return Response(ConversationSerializer(conv).data, status=201 if created else 200)
+
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        u = self.request.user
+        return Message.objects.filter(Q(conversation__buyer=u)|Q(conversation__seller=u)).select_related("sender","conversation").order_by("created_at")
+
+    def create(self, request, *args, **kwargs):
+        conv_id = request.data.get("conversation_id")
+        text = (request.data.get("text") or "").strip()
+        if not conv_id or not text:
+            return Response({"detail":"conversation_id and text are required."}, status=400)
+        try:
+            c = Conversation.objects.select_related("buyer","seller").get(id=conv_id)
+        except Conversation.DoesNotExist:
+            return Response({"detail":"Conversation not found."}, status=404)
+        u = request.user
+        if u.user_id not in (c.buyer_id, c.seller_id):
+            return Response(status=403)
+        msg = Message.objects.create(conversation=c, sender=u, text=text)
+        # update conversation updated_at
+        c.save(update_fields=["updated_at"])
+        # optional: create Notification for the other participant
+        other_id = c.seller_id if u.user_id == c.buyer_id else c.buyer_id
+        Notification.objects.create(user_id=other_id, message=f"New message on {c.item.title}")
+        return Response(MessageSerializer(msg).data, status=201)
+
+# -------------------------
+# Notifications
+# -------------------------
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by("-created_at")
+
+    @action(detail=True, methods=["post"])
+    def read(self, request, pk=None):
+        n = self.get_object()
+        n.is_read = True
+        n.save(update_fields=["is_read"])
+        return Response({"detail":"Marked read."})
+
+# -------------------------
+# Misc
+# -------------------------
+class IssueReportAPI(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = IssueReportSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = IssueReport.objects.all()
+
+class SubscribeAPI(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = SubscriberSerializer
+    permission_classes = [AllowAny]
+    queryset = Subscriber.objects.all()

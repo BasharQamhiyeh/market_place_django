@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/config.dart';
 import '../../providers/user_provider.dart';
+import '../../services/api_service.dart';
 import '../../services/item_service.dart';
-import '../auth/login_screen.dart';
 import '../items/create_item_screen.dart';
+import '../items/item_detail_screen.dart';
+import 'item_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,135 +15,103 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<dynamic> items = [];
-  bool loading = true;
-  String? error;
+  final _search = TextEditingController();
+  bool _loading = true;
+  String? _error;
+  List<dynamic> _items = [];
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final token = context.read<UserProvider>().token;
+      final api = ApiService(token: token);
+      final svc = ItemService(api);
+      final data = await svc.listItems(
+        q: _search.text.trim().isEmpty ? null : _search.text.trim(),
+      );
+      final results = data['results'] ?? data;
+      setState(() {
+        _items = (results as List).cast<dynamic>();
+        _error = null;
+      });
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadItems();
+    _load();
   }
-
-  Future<void> _loadItems() async {
-    try {
-      final token = context.read<UserProvider>().token;
-      final data = await ItemService.fetchItems(token);
-      setState(() {
-        items = data;
-        loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = e.toString();
-        loading = false;
-      });
-    }
-  }
-
-  void _logout() {
-    final u = context.read<UserProvider>();
-    u.logout();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => LoginScreen()),
-    );
-  }
-
-  String _fullUrl(String path) =>
-      path.startsWith('http') ? path : "${AppConfig.baseUrl}$path";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Marketplace"),
-        actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: _logout),
-        ],
+      appBar: AppBar(title: const Text('Market Place')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreateItemScreen()),
+        ).then((_) => _load()),
+        child: const Icon(Icons.add),
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : error != null
-              ? Center(child: Text(error!))
-              : RefreshIndicator(
-                  onRefresh: _loadItems,
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: items.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.8,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _search,
+                    decoration: const InputDecoration(
+                      hintText: 'Search items...',
                     ),
-                    itemBuilder: (context, i) {
-                      final item = items[i];
-                      final photos = item['photos'] ?? [];
-                      final img = photos.isNotEmpty
-                          ? _fullUrl(photos[0]['image'])
-                          : null;
-                      final title = item['title'] ?? '';
-                      final price = item['price']?.toString() ?? '';
-                      final cond = item['condition'] ?? '';
-
-                      return Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(
-                                    top: Radius.circular(8)),
-                                child: img != null
-                                    ? Image.network(img, fit: BoxFit.cover)
-                                    : Container(
-                                        color: Colors.grey.shade200,
-                                        child: const Icon(Icons.image,
-                                            size: 50, color: Colors.grey),
-                                      ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(title,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis),
-                                  const SizedBox(height: 4),
-                                  Text("$price JOD",
-                                      style: const TextStyle(
-                                          color: Colors.green,
-                                          fontWeight: FontWeight.w500)),
-                                  Text(
-                                    cond == 'new' ? "New" : "Used",
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    onSubmitted: (_) => _load(),
                   ),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateItemScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _load,
+                  child: const Icon(Icons.search),
+                ),
+              ],
+            ),
+          ),
+          if (_loading) const LinearProgressIndicator(),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                _error!,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _load,
+              child: ListView.builder(
+                itemCount: _items.length,
+                itemBuilder: (_, i) {
+                  final it = _items[i] as Map<String, dynamic>;
+                  return ItemCard(
+                    item: it,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            ItemDetailScreen(itemId: it['id'] as int),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
