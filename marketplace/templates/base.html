@@ -26,36 +26,36 @@
       color: var(--text-dark);
     }
 
+    /* ✅ Colored Navbar */
     .navbar {
-      background-color: #fff;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      background-color: var(--jordan-green);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     .navbar-brand {
       font-weight: 700;
-      color: var(--jordan-green) !important;
+      color: #fff !important;
       display: flex; align-items: center; gap: .5rem;
     }
     .navbar .nav-link {
-      color: #333 !important;
+      color: #fff !important;
       font-weight: 500;
       transition: color .2s;
     }
-    .navbar .nav-link:hover { color: var(--jordan-red) !important; }
+    .navbar .nav-link:hover { color: var(--jordan-gold) !important; }
 
-    .navbar-search {
-      border: 2px solid var(--jordan-green);
-      border-radius: 50px;
-      display: flex;
-      width: 320px;
-      max-width: 100%;
-      overflow: hidden;
+    .navbar-toggler {
+      background-color: var(--jordan-gold);
+      border: none;
     }
-    .navbar-search input {
-      border: none; outline: none; padding: .5rem 1rem; flex: 1;
+
+    /* ✅ Buttons match header color */
+    .btn-primary {
+      background-color: var(--jordan-green);
+      border-color: var(--jordan-green);
     }
-    .navbar-search button {
-      background: linear-gradient(90deg, var(--jordan-red), var(--jordan-green));
-      border: none; color: white; padding: 0 .9rem;
+    .btn-primary:hover {
+      background-color: var(--jordan-red);
+      border-color: var(--jordan-red);
     }
 
     .flag-divider {
@@ -75,6 +75,7 @@
 </head>
 <body>
 
+<!-- ✅ Navbar -->
 <nav class="navbar navbar-expand-lg py-3">
   <div class="container">
     <a class="navbar-brand" href="/">
@@ -87,8 +88,8 @@
       Souq Jordan
     </a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-      <span class="navbar-toggler-icon"></span>
+    <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <i class="bi bi-list"></i>
     </button>
 
     <div class="collapse navbar-collapse justify-content-end" id="navMenu">
@@ -103,7 +104,6 @@
         {% endif %}
 
         {% if request.user.is_authenticated %}
-          <!-- 🔔 Notifications -->
           <li class="nav-item position-relative">
             <a class="nav-link" href="{% url 'notifications' %}">
               <i class="bi bi-bell-fill"></i>
@@ -115,7 +115,6 @@
             </a>
           </li>
 
-          <!-- 💬 Messages -->
           <li class="nav-item position-relative">
             <a class="nav-link" href="{% url 'user_inbox' %}">
               <i class="bi bi-chat-dots-fill"></i>
@@ -127,11 +126,9 @@
             </a>
           </li>
 
-          <!-- 👤 User Dropdown -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <img src="{% static 'img/profile-icon.png' %}" alt="profile icon"
-                   class="rounded-circle me-2" width="30" height="30">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarUserDropdown" data-bs-toggle="dropdown">
+              <img src="{% static 'img/profile-icon.png' %}" alt="profile icon" class="rounded-circle me-2" width="30" height="30">
               {{ request.user.username }}
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="navbarUserDropdown">
@@ -148,11 +145,10 @@
           <li><a href="{% url 'register' %}" class="nav-link">{% trans "Register" %}</a></li>
         {% endif %}
 
-        <!-- 🌐 Language Selector -->
         <li class="nav-item">
           <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
             {% csrf_token %}
-            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm bg-white border-0">
+            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm bg-light border-0 text-dark">
               <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>EN</option>
               <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>AR</option>
             </select>
@@ -166,6 +162,7 @@
 
 <div class="flag-divider"></div>
 
+<!-- ✅ Main content (unchanged layout) -->
 <main class="container py-4">
   {% block content %}{% endblock %}
 </main>
@@ -192,13 +189,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    // Reinitialize Select2 (if used)
     $("select.searchable-select").select2({
       width: "100%",
       placeholder: "Select an option",

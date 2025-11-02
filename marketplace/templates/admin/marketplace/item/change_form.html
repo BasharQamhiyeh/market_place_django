@@ -1,43 +1,75 @@
 {% extends "admin/change_form.html" %}
 {% load i18n %}
 
+{# --- Add Trumbowyg CSS --- #}
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/trumbowyg.min.css">
+{% endblock %}
+
+{# --- Main Approve / Reject Buttons --- #}
 {% block submit_buttons_bottom %}
-    {{ block.super }}
+  {{ block.super }}
 
-    <div style="margin-top:12px;">
+  <div style="margin-top:12px;">
 
-        {# Pending item -> Approve & Reject #}
-        {% if not original.is_approved and original.is_active %}
-            <a href="{% url 'admin:item_approve' original.id %}"
-               class="button"
-               style="background:#28a745;color:white;margin-right:8px;">
-                ✅ {% trans "Approve" %}
-            </a>
+    {# Pending item -> Approve & Reject #}
+    {% if not original.is_approved and original.is_active %}
+      <a href="{% url 'admin:item_approve' original.id %}"
+         class="button"
+         style="background:#28a745;color:white;margin-right:8px;">
+        ✅ {% trans "Approve" %}
+      </a>
 
-            <a href="{% url 'admin:item_reject' original.id %}"
-               class="button"
-               style="background:#dc3545;color:white;margin-right:8px;">
-                ❌ {% trans "Reject" %}
-            </a>
-        {% endif %}
+      <a href="{% url 'admin:item_reject' original.id %}"
+         class="button"
+         style="background:#dc3545;color:white;margin-right:8px;">
+        ❌ {% trans "Reject" %}
+      </a>
+    {% endif %}
 
-        {# Approved -> Only Reject #}
-        {% if original.is_approved %}
-            <a href="{% url 'admin:item_reject' original.id %}"
-               class="button"
-               style="background:#dc3545;color:white;margin-right:8px;">
-                ❌ {% trans "Reject" %}
-            </a>
-        {% endif %}
+    {# Approved -> Only Reject #}
+    {% if original.is_approved %}
+      <a href="{% url 'admin:item_reject' original.id %}"
+         class="button"
+         style="background:#dc3545;color:white;margin-right:8px;">
+        ❌ {% trans "Reject" %}
+      </a>
+    {% endif %}
 
-        {# Rejected -> only Approve (reversal) #}
-        {% if not original.is_active and not original.is_approved %}
-            <a href="{% url 'admin:item_approve' original.id %}"
-               class="button"
-               style="background:#28a745;color:white;margin-right:8px;">
-                ✅ {% trans "Re-Approve" %}
-            </a>
-        {% endif %}
+    {# Rejected -> only Approve (reversal) #}
+    {% if not original.is_active and not original.is_approved %}
+      <a href="{% url 'admin:item_approve' original.id %}"
+         class="button"
+         style="background:#28a745;color:white;margin-right:8px;">
+        ✅ {% trans "Re-Approve" %}
+      </a>
+    {% endif %}
 
-    </div>
+  </div>
+{% endblock %}
+
+{# --- Add Trumbowyg JS at the footer (after admin scripts) --- #}
+{% block footer %}
+  {{ block.super }}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const desc = document.getElementById("id_description");
+      if (desc) {
+        $('#id_description').trumbowyg({
+          btns: [
+            ['strong', 'em', 'underline'],
+            ['unorderedList', 'orderedList'],
+            ['link'],
+            ['removeformat']
+          ],
+          autogrow: true,
+          svgPath: 'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
+        });
+      }
+    });
+  </script>
 {% endblock %}
