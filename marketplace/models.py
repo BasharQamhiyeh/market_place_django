@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 # -----------------------
 # Custom User
@@ -296,3 +298,13 @@ class MobileVerification(models.Model):
 
     def __str__(self):
         return f"{self.phone} ({self.purpose})"
+
+
+@receiver(post_delete, sender=ItemPhoto)
+def delete_itemphoto_file(sender, instance, **kwargs):
+    """
+    Delete image file from storage (local or Cloudinary) when ItemPhoto is deleted.
+    This runs automatically after an Item or ItemPhoto is deleted.
+    """
+    if instance.image:
+        instance.image.delete(save=False)

@@ -83,7 +83,7 @@ class ItemAdmin(admin.ModelAdmin):
     readonly_fields = ("colored_status", "photo_gallery")
     list_filter = ("category", "user", "is_active", "is_approved", "condition")
     search_fields = ("title", "user__username", "category__name_en", "category__name_ar", "user__first_name", "user__last_name", "user__email", "user__phone")
-    actions = None  # ✅ remove inline actions
+    actions = []
 
     fields = (
         "title",
@@ -341,6 +341,7 @@ class ItemAdmin(admin.ModelAdmin):
                                 try:
                                     with open(os.path.join(root, filename), "rb") as img_file:
                                         content = ContentFile(img_file.read())
+                                        content.name = filename
                                         ItemPhoto.objects.create(item=item, image=content)
                                 except Exception as e:
                                     print(f"[WARN] Could not save {filename}: {e}")

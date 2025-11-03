@@ -7,6 +7,9 @@ import '../../providers/user_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/category_service.dart';
 import '../../services/item_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class CreateItemScreen extends StatefulWidget {
   const CreateItemScreen({super.key});
@@ -23,7 +26,7 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
   String? error;
   List<dynamic> categories = [];
   List<dynamic> cities = [];
-  List<File> images = [];
+  List<dynamic> images = [];
   List<dynamic> attributes = [];
   final Map<int, dynamic> attrValues = {};
 
@@ -63,17 +66,32 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
     _init();
   }
 
+    
+
+  final ImagePicker _picker = ImagePicker();
+
   Future<void> _pickImages() async {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
       type: FileType.image,
+      withData: kIsWeb, // ✅ read bytes for web
     );
+
     if (result != null) {
       setState(() {
-        images = result.paths.whereType<String>().map((p) => File(p)).toList();
+        if (kIsWeb) {
+          images = result.files
+              .where((f) => f.bytes != null)
+              .map((f) => f.bytes!)
+              .toList(); // Uint8List
+        } else {
+          images = result.paths.whereType<String>().map((p) => File(p)).toList();
+        }
       });
     }
   }
+
+
 
   List<Map<String, dynamic>> _buildAttributePayload() {
     return attrValues.entries
@@ -93,8 +111,16 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
       final svc = ItemService(api);
 
       final files = <http.MultipartFile>[];
-      for (final f in images) {
-        files.add(await http.MultipartFile.fromPath('images', f.path));
+      for (final img in images) {
+        if (kIsWeb) {
+          files.add(http.MultipartFile.fromBytes(
+            'images',
+            img as Uint8List,
+            filename: 'upload_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ));
+        } else {
+          files.add(await http.MultipartFile.fromPath('images', (img as File).path));
+        }
       }
 
       await svc.createItem(
@@ -213,12 +239,9 @@ class _CreateItemScreenState extends State<CreateItemScreen> {
                         runSpacing: 8,
                         children: [
                           for (final img in images)
-                            Image.file(
-                              img,
-                              width: 90,
-                              height: 90,
-                              fit: BoxFit.cover,
-                            ),
+                            kIsWeb
+                              ? Image.memory(img as Uint8List, width: 90, height: 90, fit: BoxFit.cover)
+                              : Image.file(img as File, width: 90, height: 90, fit: BoxFit.cover),
                           OutlinedButton.icon(
                             onPressed: _pickImages,
                             icon: const Icon(Icons.add_a_photo),

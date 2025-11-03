@@ -24,6 +24,7 @@ class ItemService {
   Future<Map<String, dynamic>> getItem(int id) async =>
       await api.getJson('/items/$id/');
 
+  /// ✅ Fixed image upload and attribute formatting
   Future<Map<String, dynamic>> createItem({
     required String title,
     required String condition,
@@ -34,10 +35,12 @@ class ItemService {
     required List<http.MultipartFile> images,
     List<Map<String, dynamic>> attributeValues = const [],
   }) async {
-    final req =
-        http.MultipartRequest('POST', Uri.parse('${_apiBase()}/items/'));
-    // Use public headers() so Authorization/Accept are included
+    final req = http.MultipartRequest('POST', Uri.parse('${_apiBase()}/items/'));
+
+    // Headers
     req.headers.addAll(api.headers());
+
+    // Regular fields
     req.fields.addAll({
       'title': title,
       'condition': condition,
@@ -45,9 +48,26 @@ class ItemService {
       'description': description,
       'city_id': '$cityId',
       'category_id': '$categoryId',
-      'attribute_values': jsonEncode(attributeValues),
     });
-    req.files.addAll(images);
+
+    // Attributes
+    for (int i = 0; i < attributeValues.length; i++) {
+      final attr = attributeValues[i];
+      if (attr.containsKey('attribute_id') && attr.containsKey('value')) {
+        req.fields['attribute_values[$i][attribute_id]'] =
+            '${attr['attribute_id']}';
+        req.fields['attribute_values[$i][value]'] =
+            '${attr['value']}';
+      }
+    }
+
+    // ✅ Proper image attachment
+    for (final file in images) {
+      req.files.add(file);
+    }
+
+    // Debug print (optional, for local troubleshooting)
+    print('Sending ${req.files.length} image(s)...');
 
     final res = await http.Response.fromStream(await req.send());
     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -56,6 +76,7 @@ class ItemService {
     throw ApiError(res.statusCode, res.body);
   }
 
+  /// ✅ Same fix for updateItem
   Future<Map<String, dynamic>> updateItem({
     required int id,
     String? title,
@@ -69,7 +90,6 @@ class ItemService {
   }) async {
     final req =
         http.MultipartRequest('PUT', Uri.parse('${_apiBase()}/items/$id/'));
-    // Use public headers() so Authorization/Accept are included
     req.headers.addAll(api.headers());
 
     if (title != null) req.fields['title'] = title;
@@ -78,11 +98,26 @@ class ItemService {
     if (description != null) req.fields['description'] = description;
     if (cityId != null) req.fields['city_id'] = '$cityId';
     if (categoryId != null) req.fields['category_id'] = '$categoryId';
+
+    // Attributes
     if (attributeValues != null) {
-      req.fields['attribute_values'] = jsonEncode(attributeValues);
+      for (int i = 0; i < attributeValues.length; i++) {
+        final attr = attributeValues[i];
+        if (attr.containsKey('attribute_id')) {
+          req.fields['attribute_values[$i][attribute_id]'] =
+              attr['attribute_id'].toString();
+        }
+        if (attr.containsKey('value')) {
+          req.fields['attribute_values[$i][value]'] =
+              attr['value'].toString();
+        }
+      }
     }
 
-    req.files.addAll(images);
+    // ✅ Proper image attachment
+    for (final file in images) {
+      req.files.add(file);
+    }
 
     final res = await http.Response.fromStream(await req.send());
     if (res.statusCode >= 200 && res.statusCode < 300) {

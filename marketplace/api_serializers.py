@@ -138,37 +138,81 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
         help_text='[{"attribute_id":1, "value":"Red"}, ...]'
     )
 
+    # declare them so DRF keeps them in validated_data
+    city_id = serializers.IntegerField(write_only=True, required=False)
+    category_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = Item
-        fields = ["title", "condition", "price", "description", "city_id", "category_id", "images", "attribute_values"]
+        fields = [
+            "title", "condition", "price", "description",
+            "city_id", "category_id", "images", "attribute_values"
+        ]
 
     def create(self, validated):
         request = self.context["request"]
+
+        print("=== DEBUG: FILES RECEIVED ===")
+        print("FILES keys:", list(request.FILES.keys()))
+        for k, v in request.FILES.items():
+            print(f" - {k} → {v.name} ({v.size} bytes)")
+
+        print("=== DEBUG: DATA RECEIVED ===")
+        print("DATA keys:", list(request.data.keys()))
+        print("DATA:", request.data)
+
+
+
         validated["user"] = request.user
         validated["is_approved"] = False
         validated["is_active"] = True
-        item = Item.objects.create(**{k:v for k,v in validated.items() if k not in ("images", "attribute_values")})
 
-        for img in validated.get("images", []):
+        # ✅ map FK IDs to model fields
+        if "category_id" in validated:
+            validated["category"] = Category.objects.get(pk=validated.pop("category_id"))
+        if "city_id" in validated:
+            validated["city"] = City.objects.filter(pk=validated.pop("city_id")).first()
+
+        item = Item.objects.create(
+            **{k: v for k, v in validated.items() if k not in ("images", "attribute_values")}
+        )
+
+        # ✅ Handle images from either format
+        uploaded_files = validated.get("images", [])
+        if not uploaded_files:  # in case Flutter sends images[0], images[1], ...
+            uploaded_files = [
+                file for key, file in request.FILES.items() if key.startswith("images")
+            ]
+
+        for img in uploaded_files:
             ItemPhoto.objects.create(item=item, image=img)
 
+        # ✅ create attribute values
         for av in validated.get("attribute_values", []):
             aid = int(av.get("attribute_id"))
             val = (av.get("value") or "").strip()
             if val:
                 ItemAttributeValue.objects.create(item=item, attribute_id=aid, value=val)
+
         return item
 
     def update(self, instance, validated):
-        for f in ["title", "condition", "price", "description", "city_id"]:
+        # update simple fields
+        for f in ["title", "condition", "price", "description"]:
             if f in validated:
                 setattr(instance, f, validated[f])
+
+        # ✅ handle city/category changes too
+        if "city_id" in validated:
+            instance.city = City.objects.filter(pk=validated["city_id"]).first()
         if "category_id" in validated:
-            instance.category_id = validated["category_id"]
+            instance.category = Category.objects.get(pk=validated["category_id"])
+
         instance.is_approved = False
         instance.was_edited = True
         instance.save()
 
+        # ✅ replace attribute values
         if "attribute_values" in validated:
             ItemAttributeValue.objects.filter(item=instance).delete()
             for av in validated.get("attribute_values") or []:
@@ -177,9 +221,13 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
                 if val:
                     ItemAttributeValue.objects.create(item=instance, attribute_id=aid, value=val)
 
+        # ✅ add any new images
         for img in validated.get("images", []):
             ItemPhoto.objects.create(item=instance, image=img)
+
         return instance
+
+
 
 # -------------------------
 # Favorites
