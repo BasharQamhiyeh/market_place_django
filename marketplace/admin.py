@@ -213,7 +213,7 @@ class ItemAdmin(admin.ModelAdmin):
     def import_excel_view(self, request):
         """
         Import items from Excel (.xlsx) + photos ZIP.
-        Each row: id, name, description, price, category, subcategory?, city?
+        Each row: id, name, description, price, category, subcategory?, city?, image?
         """
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
@@ -263,6 +263,7 @@ class ItemAdmin(admin.ModelAdmin):
             category_col = col("category")
             subcategory_col = col("subcategory")
             city_col = col("city")
+            image_col = col("image")  # <- NEW COLUMN
 
             required = [id_col, name_col, price_col, category_col]
             if any(c is None for c in required):
@@ -271,6 +272,8 @@ class ItemAdmin(admin.ModelAdmin):
                 return redirect("..")
 
             created, failed, no_photo = 0, 0, []
+
+            import requests
 
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 try:
@@ -311,8 +314,9 @@ class ItemAdmin(admin.ModelAdmin):
                             models.Q(name_ar__iexact=city_name) | models.Q(name_en__iexact=city_name)
                         ).first() or City.objects.create(name_ar=city_name, name_en=city_name)
 
-                    # --- Find photos
                     image_found = False
+
+                    # --- Check photos in ZIP
                     for root, _, files in os.walk(photos_dir):
                         for filename in files:
                             if external_id.lower() in filename.lower():
@@ -330,11 +334,11 @@ class ItemAdmin(admin.ModelAdmin):
                         city=city,
                         user=request.user,
                         is_active=True,
-                        is_approved=image_found,
+                        is_approved=False,  # will update later if images exist
                         condition="new",
                     )
 
-                    # --- Save images
+                    # --- Save ZIP images
                     for root, _, files in os.walk(photos_dir):
                         for filename in files:
                             if external_id.lower() in filename.lower():
@@ -343,11 +347,32 @@ class ItemAdmin(admin.ModelAdmin):
                                         content = ContentFile(img_file.read())
                                         content.name = filename
                                         ItemPhoto.objects.create(item=item, image=content)
+                                        image_found = True
                                 except Exception as e:
                                     print(f"[WARN] Could not save {filename}: {e}")
 
-                    if not image_found:
+                    # --- Save images from URL column
+                    if image_col is not None and row[image_col]:
+                        urls = [u.strip() for u in str(row[image_col]).split(",") if u.strip()]
+                        for url in urls:
+                            try:
+                                response = requests.get(url, timeout=10)
+                                if response.status_code == 200:
+                                    filename = os.path.basename(url.split("?")[0])
+                                    content = ContentFile(response.content)
+                                    content.name = filename or f"{external_id}.jpg"
+                                    ItemPhoto.objects.create(item=item, image=content)
+                                    image_found = True
+                            except Exception as e:
+                                print(f"[WARN] Could not download image from {url}: {e}")
+
+                    # --- Finalize approval flag
+                    if image_found:
+                        item.is_approved = True
+                        item.save(update_fields=["is_approved"])
+                    else:
                         no_photo.append(external_id)
+
                     created += 1
 
                 except Exception as e:
@@ -569,6 +594,6 @@ admin.site.get_app_list = custom_get_app_list.__get__(admin.site, admin.AdminSit
 # ======================================================
 # ✅ Admin Branding
 # ======================================================
-admin.site.site_header = "Souq Jordan Administration"
+admin.site.site_header = "Rokon Administration"
 admin.site.index_title = "Control Panel"
-admin.site.site_title = "Souq Jordan Admin"
+admin.site.site_title = "Rokon Admin"

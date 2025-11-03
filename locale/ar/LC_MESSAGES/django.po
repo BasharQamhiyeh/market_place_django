@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Marketplace 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-01 14:41+0100\n"
+"POT-Creation-Date: 2025-11-03 22:16+0100\n"
 "PO-Revision-Date: 2025-11-01 14:45+0100\n"
 "Last-Translator: ChatGPT <>\n"
 "Language-Team: Arabic\n"
@@ -14,8 +14,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && "
-"n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 "X-Generator: Poedit 3.8\n"
 
 #: .\marketplace\forms.py:34
@@ -40,7 +40,8 @@ msgstr "عرض رقم الهاتف للمستخدمين الآخرين"
 
 #: .\marketplace\forms.py:57
 msgid ""
-"Enable this option if you want your phone number to be visible to other users."
+"Enable this option if you want your phone number to be visible to other "
+"users."
 msgstr "فعّل هذا الخيار إذا كنت تريد أن يظهر رقم هاتفك للمستخدمين الآخرين"
 
 #: .\marketplace\forms.py:65
@@ -73,22 +74,23 @@ msgstr "كلمتا المرور غير متطابقتين"
 
 #: .\marketplace\forms.py:102
 msgid ""
-"Phone number must begin with 07 and be 10 digits long. It will be saved in the "
-"format 9627xxxxxxxx."
+"Phone number must begin with 07 and be 10 digits long. It will be saved in "
+"the format 9627xxxxxxxx."
 msgstr ""
-"رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام، وسيتم حفظه بصيغة 9627xxxxxxxx"
+"رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام، وسيتم حفظه بصيغة "
+"9627xxxxxxxx"
 
-#: .\marketplace\templates\admin\marketplace\item\change_form.html:14
+#: .\marketplace\templates\admin\marketplace\item\change_form.html:22
 msgid "Approve"
 msgstr "الموافقة"
 
-#: .\marketplace\templates\admin\marketplace\item\change_form.html:20
-#: .\marketplace\templates\admin\marketplace\item\change_form.html:29
+#: .\marketplace\templates\admin\marketplace\item\change_form.html:28
+#: .\marketplace\templates\admin\marketplace\item\change_form.html:37
 #: .\marketplace\templates\admin\marketplace\reject_reason.html:13
 msgid "Reject"
 msgstr "رفض"
 
-#: .\marketplace\templates\admin\marketplace\item\change_form.html:38
+#: .\marketplace\templates\admin\marketplace\item\change_form.html:46
 msgid "Re-Approve"
 msgstr "إعادة الموافقة"
 
@@ -100,65 +102,70 @@ msgstr "رفض الإعلان"
 msgid "Reason for rejection"
 msgstr "سبب الرفض"
 
-#: .\marketplace\templates\base.html:100
+#: .\marketplace\templates\base.html:88
+msgid "Rokon"
+msgstr "ركن"
+
+#: .\marketplace\templates\base.html:101
 msgid "Admin Dashboard"
 msgstr "لوحة تحكم المشرف"
 
-#: .\marketplace\templates\base.html:138
+#: .\marketplace\templates\base.html:135
 msgid "My Profile"
 msgstr "ملفي الشخصي"
 
-#: .\marketplace\templates\base.html:139
+#: .\marketplace\templates\base.html:136
 #: .\marketplace\templates\edit_profile.html:4
 #: .\marketplace\templates\edit_profile.html:11
 msgid "Edit Profile"
 msgstr "تعديل الملف الشخصي"
 
-#: .\marketplace\templates\base.html:140 .\marketplace\templates\my_items.html:4
+#: .\marketplace\templates\base.html:137
+#: .\marketplace\templates\my_items.html:4
 #: .\marketplace\templates\my_items.html:9
 msgid "My Announcements"
 msgstr "إعلاناتي"
 
-#: .\marketplace\templates\base.html:141
+#: .\marketplace\templates\base.html:138
 #: .\marketplace\templates\my_favorites.html:4
 #: .\marketplace\templates\my_favorites.html:9
 msgid "My Favorites"
 msgstr "مفضلتي"
 
-#: .\marketplace\templates\base.html:143 .\marketplace\templates\home.html:17
+#: .\marketplace\templates\base.html:140 .\marketplace\templates\home.html:17
 msgid "Logout"
 msgstr "تسجيل الخروج"
 
-#: .\marketplace\templates\base.html:147 .\marketplace\templates\home.html:19
+#: .\marketplace\templates\base.html:144 .\marketplace\templates\home.html:19
 #: .\marketplace\templates\login.html:4 .\marketplace\templates\login.html:11
 #: .\marketplace\templates\login.html:29
 msgid "Login"
 msgstr "تسجيل الدخول"
 
-#: .\marketplace\templates\base.html:148 .\marketplace\templates\home.html:20
+#: .\marketplace\templates\base.html:145 .\marketplace\templates\home.html:20
 #: .\marketplace\templates\register.html:5
 #: .\marketplace\templates\register.html:91
 msgid "Register"
 msgstr "إنشاء حساب"
 
-#: .\marketplace\templates\base.html:181
+#: .\marketplace\templates\base.html:178
 msgid "Quick Links"
 msgstr "روابط سريعة"
 
-#: .\marketplace\templates\base.html:182
+#: .\marketplace\templates\base.html:179
 msgid "Browse"
 msgstr "تصفح"
 
-#: .\marketplace\templates\base.html:183
+#: .\marketplace\templates\base.html:180
 msgid "Post Ad"
 msgstr "نشر إعلان"
 
-#: .\marketplace\templates\base.html:184 .\marketplace\templates\contact.html:4
+#: .\marketplace\templates\base.html:181 .\marketplace\templates\contact.html:4
 #: .\marketplace\templates\contact.html:9
 msgid "Contact Us"
 msgstr "اتصل بنا"
 
-#: .\marketplace\templates\base.html:187
+#: .\marketplace\templates\base.html:184
 msgid "Made in Jordan"
 msgstr "صنع في الأردن"
 
@@ -197,7 +204,7 @@ msgid "Categories"
 msgstr "الأقسام"
 
 #: .\marketplace\templates\category_list.html:8
-#: .\marketplace\templates\item_list.html:79
+#: .\marketplace\templates\item_list.html:91
 msgid "All Categories"
 msgstr "الأقسام الرئيسية"
 
@@ -258,7 +265,8 @@ msgid "Back to announcement"
 msgstr "العودة إلى الإعلان"
 
 #: .\marketplace\templates\contact.html:10
-msgid "We'd love to hear from you! Send us an email or message on social media."
+msgid ""
+"We'd love to hear from you! Send us an email or message on social media."
 msgstr "يسعدنا سماع رأيك! أرسل لنا بريداً إلكترونياً أو رسالة عبر وسائل التواصل."
 
 #: .\marketplace\templates\edit_profile.html:20
@@ -266,7 +274,7 @@ msgid "Back to profile"
 msgstr "العودة إلى الملف الشخصي"
 
 #: .\marketplace\templates\edit_profile.html:22
-#: .\marketplace\templates\item_edit.html:124
+#: .\marketplace\templates\item_edit.html:125
 msgid "Save Changes"
 msgstr "حفظ التغييرات"
 
@@ -315,62 +323,69 @@ msgstr "إعلان جديد"
 msgid "Publish Your Announcement"
 msgstr "انشر إعلانك"
 
-#: .\marketplace\templates\item_create.html:19
-#: .\marketplace\templates\item_detail.html:91
-#: .\marketplace\templates\item_edit.html:18
-#: .\marketplace\templates\item_list.html:174
-msgid "Category"
-msgstr "القسم"
-
 #: .\marketplace\templates\item_create.html:20
-#: .\marketplace\templates\item_create.html:21
-#: .\marketplace\templates\item_edit.html:20
-msgid "Select Category"
-msgstr "اختر القسم"
+msgid "Product Photos"
+msgstr ""
 
-#: .\marketplace\templates\item_create.html:34
-#: .\marketplace\templates\item_edit.html:36
+#: .\marketplace\templates\item_create.html:30
+#: .\marketplace\templates\item_edit.html:18
 msgid "Title"
 msgstr "العنوان"
 
-#: .\marketplace\templates\item_create.html:42
+#: .\marketplace\templates\item_create.html:38
+#: .\marketplace\templates\item_create.html:111
+#: .\marketplace\templates\item_detail.html:91
+#: .\marketplace\templates\item_edit.html:26
+#: .\marketplace\templates\item_list.html:175
+msgid "Category"
+msgstr "القسم"
+
+#: .\marketplace\templates\item_create.html:39
+#: .\marketplace\templates\item_create.html:40
+#: .\marketplace\templates\item_create.html:112
+#: .\marketplace\templates\item_create.html:113
+#: .\marketplace\templates\item_edit.html:28
+msgid "Select Category"
+msgstr "اختر القسم"
+
+#: .\marketplace\templates\item_create.html:69
 #: .\marketplace\templates\item_detail.html:96
-#: .\marketplace\templates\item_edit.html:44
+#: .\marketplace\templates\item_edit.html:61
 msgid "Condition"
 msgstr "حالة المنتج"
 
-#: .\marketplace\templates\item_create.html:47
+#: .\marketplace\templates\item_create.html:74
 #: .\marketplace\templates\item_detail.html:97
-#: .\marketplace\templates\item_edit.html:49
+#: .\marketplace\templates\item_edit.html:66
 msgid "New"
 msgstr "جديد"
 
-#: .\marketplace\templates\item_create.html:52
+#: .\marketplace\templates\item_create.html:79
 #: .\marketplace\templates\item_detail.html:97
-#: .\marketplace\templates\item_edit.html:54
+#: .\marketplace\templates\item_edit.html:71
 msgid "Used"
 msgstr "مستعمل"
 
-#: .\marketplace\templates\item_create.html:59
+#: .\marketplace\templates\item_create.html:86
+#: .\marketplace\templates\item_detail.html:118
+#: .\marketplace\templates\item_edit.html:78
+msgid "Description"
+msgstr "الوصف"
+
+#: .\marketplace\templates\item_create.html:92
 #: .\marketplace\templates\item_detail.html:101
-#: .\marketplace\templates\item_edit.html:61
+#: .\marketplace\templates\item_edit.html:84
 #: .\marketplace\templates\my_favorites.html:28
 #: .\marketplace\templates\my_items.html:26
 msgid "Price"
 msgstr "السعر"
 
-#: .\marketplace\templates\item_create.html:65
+#: .\marketplace\templates\item_create.html:98
 #: .\marketplace\templates\item_detail.html:72
-#: .\marketplace\templates\item_edit.html:67
+#: .\marketplace\templates\item_edit.html:90
 #: .\marketplace\templates\item_list.html:39
 msgid "City"
 msgstr "المدينة"
-
-#: .\marketplace\templates\item_create.html:90
-#: .\marketplace\templates\item_detail.html:118
-#: .\marketplace\templates\item_edit.html:91
-msgid "Description"
-msgstr "الوصف"
 
 #: .\marketplace\templates\item_create.html:105
 msgid "Publish"
@@ -501,7 +516,7 @@ msgstr "لم يتم رفع صور."
 msgid "Add More Photos"
 msgstr "إضافة المزيد من الصور"
 
-#: .\marketplace\templates\item_edit.html:123
+#: .\marketplace\templates\item_edit.html:124
 #: .\marketplace\templates\my_items.html:44
 msgid "Cancel"
 msgstr "إلغاء"
@@ -526,35 +541,20 @@ msgstr "تطبيق الفلاتر"
 msgid "Announcements"
 msgstr "الإعلانات"
 
-#: .\marketplace\templates\item_list.html:70
-msgid "Post new announcement"
-msgstr "نشر إعلان جديد"
+#: .\marketplace\templates\item_list.html:75
+#: .\marketplace\templates\item_list.html:82
+msgid "Add"
+msgstr ""
 
-#: .\marketplace\templates\item_list.html:95
+#: .\marketplace\templates\item_list.html:107
 msgid "Search..."
 msgstr "بحث..."
 
-#: .\marketplace\templates\item_list.html:111
-msgid "Join Our Newsletter"
-msgstr "اشترك في نشرتنا الإخبارية"
-
-#: .\marketplace\templates\item_list.html:112
-msgid "Get updates, offers, and new deals directly in your inbox."
-msgstr "احصل على التحديثات والعروض والصفقات الجديدة مباشرة في بريدك."
-
-#: .\marketplace\templates\item_list.html:115
-msgid "Enter your email"
-msgstr "أدخل بريدك الإلكتروني"
-
-#: .\marketplace\templates\item_list.html:116
-msgid "Subscribe"
-msgstr "اشترك"
-
-#: .\marketplace\templates\item_list.html:161
+#: .\marketplace\templates\item_list.html:162
 msgid "See results for"
 msgstr "عرض النتائج لـ"
 
-#: .\marketplace\templates\item_list.html:174
+#: .\marketplace\templates\item_list.html:175
 msgid "Item"
 msgstr "إعلان"
 
@@ -562,9 +562,14 @@ msgstr "إعلان"
 msgid "Username/phone"
 msgstr "اسم المستخدم / الهاتف"
 
-#: .\marketplace\templates\login.html:28 .\marketplace\templates\register.html:12
+#: .\marketplace\templates\login.html:28
+#: .\marketplace\templates\register.html:12
 msgid "Create account"
 msgstr "إنشاء حساب"
+
+#: .\marketplace\templates\login.html:33
+msgid "Forgot your password?"
+msgstr ""
 
 #: .\marketplace\templates\my_favorites.html:29
 #: .\marketplace\templates\my_items.html:28
@@ -644,7 +649,8 @@ msgstr "لم يتم العثور على إعلانات."
 #: .\marketplace\templates\register.html:77
 msgid ""
 "Password must be at least 8 characters and contain only letters and numbers."
-msgstr "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي فقط على أحرف وأرقام."
+msgstr ""
+"يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتحتوي فقط على أحرف وأرقام."
 
 #: .\marketplace\templates\user_profile.html:34
 msgid "Active Listings"
@@ -653,6 +659,21 @@ msgstr "الإعلانات النشطة"
 #: .\marketplace\templates\user_profile.html:58
 msgid "This seller has no active announcements at the moment."
 msgstr "هذا البائع ليس لديه إعلانات نشطة حالياً."
+
+#~ msgid "Post new announcement"
+#~ msgstr "نشر إعلان جديد"
+
+#~ msgid "Join Our Newsletter"
+#~ msgstr "اشترك في نشرتنا الإخبارية"
+
+#~ msgid "Get updates, offers, and new deals directly in your inbox."
+#~ msgstr "احصل على التحديثات والعروض والصفقات الجديدة مباشرة في بريدك."
+
+#~ msgid "Enter your email"
+#~ msgstr "أدخل بريدك الإلكتروني"
+
+#~ msgid "Subscribe"
+#~ msgstr "اشترك"
 
 #~ msgid "Enter local number like 07xxxxxxxx. We will save it as 9627xxxxxxxx."
 #~ msgstr "أدخل الرقم المحلي مثل 07xxxxxxxx. سيتم حفظه كـ 9627xxxxxxxx."
