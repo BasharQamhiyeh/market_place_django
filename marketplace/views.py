@@ -402,7 +402,22 @@ def item_edit(request, item_id):
         for img in request.FILES.getlist("images"):
             ItemPhoto.objects.create(item=item, image=img)
 
-        messages.success(request, "✅ تم حفظ التعديلات وإرسال الإعلان للمراجعة.")
+        for admin in User.objects.filter(is_staff=True):
+            Notification.objects.create(
+                user=admin,
+                title="Edited item pending approval",
+                body=f"✏️ '{item.title}' was edited by {request.user.username} and needs re-approval.",
+                item=item,
+            )
+
+        Notification.objects.create(
+            user=request.user,
+            title="📋 إعلانك قيد المراجعة مجددًا",
+            body=f"تم تعديل إعلانك '{item.title}' وهو الآن بانتظار المراجعة من الإدارة.",
+            item=item,
+        )
+
+        # messages.success(request, "✅ تم حفظ التعديلات وإرسال الإعلان للمراجعة.")
         return redirect("item_detail", item_id=item.id)
 
     return render(request, "item_edit.html", {

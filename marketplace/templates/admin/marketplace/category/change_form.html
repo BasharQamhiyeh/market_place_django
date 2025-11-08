@@ -1,0 +1,122 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+/* ---- Layout adjustments ---- */
+#content-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* Left column (the form) */
+#category-form {
+  flex: 1;
+}
+
+/* Right panel (the category tree) */
+#category-panel {
+  width: 340px;
+  min-width: 280px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-left: 2px solid #eee;
+  padding-left: 16px;
+  background-color: #fafafa;
+  border-radius: 6px;
+  position: sticky;
+  top: 20px;
+}
+
+/* Styling inside the tree */
+#category-panel h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+#category-tree ul {
+  list-style: none;
+  padding-left: 18px;
+  margin: 0;
+}
+
+#category-tree li {
+  margin-bottom: 3px;
+  line-height: 1.5;
+}
+
+#category-tree .node {
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+}
+
+#category-tree .node:hover {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+#category-tree a {
+  font-size: 13px;
+  text-decoration: none;
+  margin-left: 6px;
+}
+</style>
+
+<div id="content-main">
+  <!-- LEFT: Form -->
+  <div id="category-form" style="flex:1;">
+    {{ block.super }}
+  </div>
+
+  <!-- RIGHT: Tree -->
+  <aside id="category-panel">
+    <h2>📂 Category Hierarchy</h2>
+    <div id="category-tree"></div>
+  </aside>
+</div>
+
+<script>
+const treeData = {{ categories_json|safe }};
+const addBaseUrl = "{% url 'admin:marketplace_category_add' %}";
+
+function renderTree(data, level = 0) {
+  let html = "<ul>";
+  data.forEach(cat => {
+    const hasChildren = cat.children && cat.children.length > 0;
+    html += `
+      <li>
+        <span class="node" data-id="${cat.id}">
+          ${hasChildren ? "📂" : "📄"} <b>${cat.name}</b>
+        </span>
+        <a href="${cat.edit_url}">✏️</a>
+        <a href="${addBaseUrl}?parent=${cat.id}" style="color:green;">➕</a>
+        ${hasChildren ? `<ul class="children">${renderTree(cat.children, level + 1)}</ul>` : ""}
+      </li>
+    `;
+  });
+  html += "</ul>";
+  return html;
+}
+
+document.getElementById("category-tree").innerHTML = renderTree(treeData);
+
+// Collapsible behavior
+document.querySelectorAll("#category-tree .node").forEach(node => {
+  node.addEventListener("click", e => {
+    e.stopPropagation();
+    const next = node.parentElement.querySelector(".children");
+    if (next) {
+      const isVisible = next.style.display !== "none";
+      next.style.display = isVisible ? "none" : "block";
+      node.textContent = node.textContent.replace(
+        isVisible ? "📂" : "📁",
+        isVisible ? "📁" : "📂"
+      );
+    }
+  });
+});
+</script>
+{% endblock %}

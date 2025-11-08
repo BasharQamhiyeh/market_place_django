@@ -1,19 +1,40 @@
 {% extends "admin/base_site.html" %}
 {% block content %}
-<h2>Import Items from Excel & ZIP</h2>
-<form method="post" enctype="multipart/form-data" class="vstack gap-3 mt-3">
+<h2>📦 Import Items (Excel and/or ZIP)</h2>
+
+<p class="text-muted">
+You can upload:
+<ul>
+  <li><strong>Excel (.xlsx)</strong> → Import or update items (no photos)</li>
+  <li><strong>ZIP (.zip)</strong> → Add photos to existing items (matched by <code>external_id</code>)</li>
+  <li>Or upload both together for a full import</li>
+</ul>
+</p>
+
+<form method="post" enctype="multipart/form-data" id="import-form" class="vstack gap-3 mt-3">
   {% csrf_token %}
 
   <div>
     <label for="excel_file" class="form-label fw-semibold">Excel File (.xlsx)</label>
-    <input type="file" name="excel_file" id="excel_file" accept=".xlsx" class="form-control" required>
+    <input type="file" name="excel_file" id="excel_file" accept=".xlsx" class="form-control">
   </div>
 
   <div>
     <label for="zip_file" class="form-label fw-semibold">ZIP File (Photos)</label>
-    <input type="file" name="zip_file" id="zip_file" accept=".zip" class="form-control" required>
+    <input type="file" name="zip_file" id="zip_file" accept=".zip" class="form-control">
   </div>
 
   <button type="submit" class="btn btn-primary mt-3">Import</button>
 </form>
+
+<script>
+  document.getElementById("import-form").addEventListener("submit", function (e) {
+    const excel = document.getElementById("excel_file").files.length;
+    const zip = document.getElementById("zip_file").files.length;
+    if (!excel && !zip) {
+      e.preventDefault();
+      alert("⚠️ Please upload at least one file (Excel or ZIP).");
+    }
+  });
+</script>
 {% endblock %}

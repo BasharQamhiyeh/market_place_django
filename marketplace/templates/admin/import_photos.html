@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h2>📷 Import Extra Photos (ZIP)</h2>
+<p>Each image filename must include the item's external_id (from Excel “id”), e.g. <code>12345_1.jpg</code></p>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div><input type="file" name="zip_file" accept=".zip" required></div>
+  <br>
+  <button type="submit" class="button default">Upload ZIP</button>
+</form>
+{% endblock %}

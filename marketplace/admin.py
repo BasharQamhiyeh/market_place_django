@@ -7,6 +7,13 @@ from django.db import models
 from django.core.files.base import ContentFile
 import tempfile, os, zipfile, openpyxl
 from django.urls import reverse
+from django.utils import timezone
+from django.shortcuts import get_object_or_404, redirect
+from django.core.exceptions import PermissionDenied
+from django.template.response import TemplateResponse
+import nested_admin, json
+from django.utils import translation
+
 
 from .models import (
     User, Category, Attribute, AttributeOption,
@@ -33,11 +40,6 @@ class UserAdmin(admin.ModelAdmin):
         return True
 
 
-import nested_admin
-from django.contrib import admin
-from .models import Category, Attribute, AttributeOption
-
-
 class AttributeOptionInline(nested_admin.NestedTabularInline):
     model = AttributeOption
     extra = 1
@@ -60,12 +62,76 @@ class AttributeInline(nested_admin.NestedStackedInline):
 
 @admin.register(Category)
 class CategoryAdmin(nested_admin.NestedModelAdmin):
-    list_display = ("id", "name_en", "name_ar", "parent")
+    change_list_template = "admin/categories_changelist.html"
+    change_form_template = "admin/marketplace/category/change_form.html"  # ✅ add this
+    list_display = ("name_en", "name_ar", "parent")
     search_fields = ("name_en", "name_ar")
     list_filter = ("parent",)
+    ordering = ("parent__id", "id")
     inlines = [AttributeInline]
 
+    def _build_tree(self, qs, opts, parent=None):
+        nodes = []
+        children = qs.filter(parent=parent)
+        for child in children:
+            nodes.append({
+                "id": child.id,
+                "name": f"{child.name_en} / {child.name_ar}",
+                "edit_url": reverse(f"admin:{opts.app_label}_{opts.model_name}_change", args=[child.id]),
+                "children": self._build_tree(qs, opts, child),
+            })
+        return nodes
 
+    def changelist_view(self, request, extra_context=None):
+        qs = self.get_queryset(request).select_related("parent")
+        opts = self.model._meta
+        tree = self._build_tree(qs, opts)
+        extra_context = extra_context or {}
+        extra_context["categories_json"] = json.dumps(tree, ensure_ascii=False)
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        """
+        Injects the same tree JSON into the add/edit form for visual context.
+        """
+        qs = self.get_queryset(request).select_related("parent")
+        opts = self.model._meta
+        tree = self._build_tree(qs, opts)
+        extra_context = extra_context or {}
+        extra_context["categories_json"] = json.dumps(tree, ensure_ascii=False)
+        return super().changeform_view(request, object_id, form_url, extra_context=extra_context)
+
+    def get_changeform_initial_data(self, request):
+        """Pre-fill parent when ?parent=<id> is passed in the URL."""
+        initial = super().get_changeform_initial_data(request)
+        parent_id = request.GET.get("parent")
+        if parent_id:
+            initial["parent"] = parent_id
+        return initial
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """Hierarchical dropdown for parent selection."""
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == "parent" and formfield is not None:
+            categories = Category.objects.all().select_related("parent")
+            lang = translation.get_language()
+
+            def build_path(cat):
+                name = cat.name_ar if lang == "ar" else cat.name_en
+                path = [name]
+                p = cat.parent
+                while p:
+                    pname = p.name_ar if lang == "ar" else p.name_en
+                    path.insert(0, pname)
+                    p = p.parent
+                return " › ".join(path)
+
+            choices = [(None, "---------")]
+            for c in categories:
+                choices.append((c.id, build_path(c)))
+
+            formfield.choices = choices
+        return formfield
 
 # ======================================================
 # ✅ ITEM ADMIN — cleaned, color-coded, review-based
@@ -75,14 +141,26 @@ class ItemAdmin(admin.ModelAdmin):
     change_form_template = "admin/marketplace/item/change_form.html"
     change_list_template = "admin/items_changelist.html"
 
+    # inlines = [ItemPhotoInline]
+
+    ordering = ("-updated_at",)
+
     list_display = (
         "id", "title", "category", "price",
         "get_username", "get_first_name", "get_last_name",
-        "colored_status", "created_at", "condition", "is_active"
+        "colored_status", "approved_by", "rejected_by",
+        "created_at", "condition", "is_active", "external_id"
     )
-    readonly_fields = ("colored_status", "photo_gallery")
+    readonly_fields = ("colored_status", "photo_gallery", "approved_by", "rejected_by", "approved_at", "rejected_at", "external_id")
     list_filter = ("category", "user", "is_active", "is_approved", "condition")
-    search_fields = ("title", "user__username", "category__name_en", "category__name_ar", "user__first_name", "user__last_name", "user__email", "user__phone")
+    search_fields = (
+        "title",
+        "user__username",
+        "category__name_en",
+        "category__name_ar",
+        "user__first_name", "user__last_name", "user__email", "user__phone",
+        "external_id",   # ✅ searchable
+    )
     actions = []
 
     fields = (
@@ -90,33 +168,25 @@ class ItemAdmin(admin.ModelAdmin):
         "category",
         "price",
         "condition",
-        "description",  # ✅ inserted here
+        "description",
         "photo_gallery",
         "user",
         "colored_status",
+        "external_id",      # ✅ visible (read-only) for reference
+        "approved_by", "approved_at",
+        "rejected_by", "rejected_at",
     )
-
-    # def rendered_description(self, obj):
-    #     """Show formatted description in admin."""
-    #     if obj.description:
-    #         return format_html(obj.description)
-    #     return "-"
-    #
-    # rendered_description.short_description = "Description (Rendered HTML)"
 
     def get_username(self, obj):
         return obj.user.username
-
     get_username.short_description = "Username"
 
     def get_first_name(self, obj):
         return obj.user.first_name
-
     get_first_name.short_description = "First Name"
 
     def get_last_name(self, obj):
         return obj.user.last_name
-
     get_last_name.short_description = "Last Name"
 
     # -----------------------------
@@ -128,6 +198,12 @@ class ItemAdmin(admin.ModelAdmin):
             path("<int:item_id>/approve/", self.admin_site.admin_view(self.approve_view), name="item_approve"),
             path("<int:item_id>/reject/", self.admin_site.admin_view(self.reject_view), name="item_reject"),
             path("import-excel/", self.admin_site.admin_view(self.import_excel_view), name="marketplace_item_import_excel"),
+            # path("import-photos/", self.admin_site.admin_view(self.import_photos_view), name="marketplace_item_import_photos"),  # ✅ new
+            path(
+                "photo/<int:photo_id>/delete/",
+                self.admin_site.admin_view(self.delete_photo_view),
+                name="marketplace_item_delete_photo",
+            ),
         ]
         return custom + urls
 
@@ -145,13 +221,19 @@ class ItemAdmin(admin.ModelAdmin):
     colored_status.short_description = "Status"
 
     # -----------------------------
-    # Approve view
+    # Approve view  ✅ records who + redirects to list
     # -----------------------------
     def approve_view(self, request, item_id):
         item = Item.objects.get(id=item_id)
         item.is_approved = True
         item.is_active = True
-        item.save()
+        item.approved_by = request.user
+        item.rejected_by = None
+        item.approved_at = timezone.now()
+        item.rejected_at = None
+        item.save(update_fields=[
+            "is_approved", "is_active", "approved_by", "rejected_by", "approved_at", "rejected_at"
+        ])
 
         Notification.objects.create(
             user=item.user,
@@ -161,10 +243,11 @@ class ItemAdmin(admin.ModelAdmin):
         )
 
         self.message_user(request, "✅ Item approved & user notified.", messages.SUCCESS)
-        return redirect(f"../../{item_id}/change/")
+        opts = self.model._meta
+        return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist"))
 
     # -----------------------------
-    # Reject view (with reason)
+    # Reject view  ✅ records who + redirects to list
     # -----------------------------
     def reject_view(self, request, item_id):
         item = Item.objects.get(id=item_id)
@@ -172,7 +255,13 @@ class ItemAdmin(admin.ModelAdmin):
             reason = request.POST.get("reason") or "غير مذكور"
             item.is_approved = False
             item.is_active = False
-            item.save()
+            item.rejected_by = request.user
+            item.approved_by = None
+            item.rejected_at = timezone.now()
+            item.approved_at = None
+            item.save(update_fields=[
+                "is_approved", "is_active", "rejected_by", "approved_by", "rejected_at", "approved_at"
+            ])
 
             Notification.objects.create(
                 user=item.user,
@@ -182,7 +271,8 @@ class ItemAdmin(admin.ModelAdmin):
             )
 
             self.message_user(request, "❌ Item rejected & user notified.", messages.ERROR)
-            return redirect(f"../../{item_id}/change/")
+            opts = self.model._meta
+            return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist"))
 
         opts = self.model._meta
         context = {
@@ -195,201 +285,310 @@ class ItemAdmin(admin.ModelAdmin):
         }
         return render(request, "admin/marketplace/reject_reason.html", context)
 
+    # -----------------------------
+    # Photo gallery (read-only)
+    # -----------------------------
     def photo_gallery(self, obj):
         photos = obj.photos.all()
         if not photos:
             return "No photos uploaded."
-        html = "".join([
-            f'<img src="{p.image.url}" style="width:160px;border-radius:8px;margin:4px;">'
-            for p in photos
-        ])
-        return format_html(html)
 
+        html_parts = []
+        for p in photos:
+            delete_url = reverse("admin:marketplace_item_delete_photo", args=[p.id])
+            html_parts.append(
+                f"""
+                <div style="display:inline-block;margin:6px;text-align:center;">
+                  <img src="{p.image.url}"
+                       style="width:160px;border-radius:8px;display:block;margin-bottom:4px;">
+                  <a href="{delete_url}"
+                     onclick="return confirm('Are you sure you want to delete this photo?');"
+                     style="
+                        display:inline-block;
+                        padding:4px 10px;
+                        background:#dc3545;
+                        color:white;
+                        border-radius:4px;
+                        text-decoration:none;
+                        font-size:12px;
+                     ">
+                    Delete
+                  </a>
+                </div>
+                """
+            )
+        return format_html("".join(html_parts))
     photo_gallery.short_description = "Item Photos"
 
+    def delete_photo_view(self, request, photo_id):
+        photo = get_object_or_404(ItemPhoto, id=photo_id)
+        item = photo.item
+
+        # Optional: permission check
+        if not self.has_change_permission(request, obj=item):
+            raise PermissionDenied
+
+        photo.delete()
+        self.message_user(request, "🗑️ Photo deleted successfully.", level=messages.SUCCESS)
+
+        opts = self.model._meta
+        change_url = reverse(f"admin:{opts.app_label}_{opts.model_name}_change", args=[item.pk])
+        return redirect(change_url)
+
     # -----------------------------
-    # Import Items (Excel + ZIP)
+    # Import Items (Excel + ZIP) — stores external_id ✅
     # -----------------------------
     def import_excel_view(self, request):
         """
-        Import items from Excel (.xlsx) + photos ZIP.
-        Each row: id, name, description, price, category, subcategory?, city?, image?
+        Import items from Excel (.xlsx) and/or photos from ZIP.
+        You can upload:
+          - Excel only  → create/update items (no photos)
+          - ZIP only    → add photos to existing items (matched by external_id)
+          - Both files  → full import (items + photos)
         """
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
             zip_file = request.FILES.get("zip_file")
 
-            if not excel_file or not zip_file:
-                self.message_user(request, "⚠️ Please upload both Excel and ZIP files.", level=messages.WARNING)
+            if not excel_file and not zip_file:
+                self.message_user(request, "⚠️ Please upload at least one file (Excel or ZIP).", level=messages.WARNING)
                 return redirect("..")
 
-            if not zip_file.name.lower().endswith(".zip"):
-                self.message_user(request, "❌ Only .zip files are supported.", level=messages.ERROR)
-                return redirect("..")
+            # helper to normalize external_id values from Excel / DB
+            def normalize_external_id(raw):
+                if raw is None:
+                    return None
+                # if it's already numeric (int/float), drop .0 etc.
+                if isinstance(raw, (int, float)):
+                    try:
+                        return str(int(raw))
+                    except Exception:
+                        return str(raw).strip()
+                s = str(raw).strip()
+                # try to convert strings like "123.0" -> "123"
+                try:
+                    f = float(s)
+                    if f.is_integer():
+                        return str(int(f))
+                except Exception:
+                    pass
+                return s or None
 
-            excel_path = tempfile.mktemp(suffix=".xlsx")
-            zip_path = tempfile.mktemp(suffix=".zip")
-            photos_dir = tempfile.mkdtemp()
+            # Temporary paths
+            excel_path, zip_path, photos_dir = None, None, None
 
-            with open(excel_path, "wb+") as f:
-                for chunk in excel_file.chunks():
-                    f.write(chunk)
-            with open(zip_path, "wb+") as f:
-                for chunk in zip_file.chunks():
-                    f.write(chunk)
+            # --- Handle Excel ---------------------------------
+            if excel_file:
+                excel_path = tempfile.mktemp(suffix=".xlsx")
+                with open(excel_path, "wb+") as f:
+                    for chunk in excel_file.chunks():
+                        f.write(chunk)
 
-            # --- Extract ZIP
-            try:
-                with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                    zip_ref.extractall(photos_dir)
-            except Exception as e:
-                self.message_user(request, f"❌ Failed to extract ZIP: {e}", level=messages.ERROR)
-                return redirect("..")
+            # --- Handle ZIP -----------------------------------
+            if zip_file:
+                if not zip_file.name.lower().endswith(".zip"):
+                    self.message_user(request, "❌ Only .zip files are supported.", level=messages.ERROR)
+                    return redirect("..")
+                zip_path = tempfile.mktemp(suffix=".zip")
+                photos_dir = tempfile.mkdtemp()
+                with open(zip_path, "wb+") as f:
+                    for chunk in zip_file.chunks():
+                        f.write(chunk)
 
-            wb = openpyxl.load_workbook(excel_path)
-            sheet = wb.active
-            headers = [str(c.value).strip().lower() if c.value else "" for c in sheet[1]]
+                try:
+                    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                        zip_ref.extractall(photos_dir)
+                except Exception as e:
+                    self.message_user(request, f"❌ Failed to extract ZIP: {e}", level=messages.ERROR)
+                    return redirect("..")
 
-            def col(name):
-                for i, h in enumerate(headers):
-                    if h == name.lower():
-                        return i
-                return None
-
-            id_col = col("id")
-            name_col = col("name")
-            desc_col = col("description")
-            price_col = col("price")
-            category_col = col("category")
-            subcategory_col = col("subcategory")
-            city_col = col("city")
-            image_col = col("image")  # <- NEW COLUMN
-
-            required = [id_col, name_col, price_col, category_col]
-            if any(c is None for c in required):
-                missing = [n for n, c in zip(["id", "name", "price", "category"], required) if c is None]
-                self.message_user(request, f"❌ Missing columns: {', '.join(missing)}", level=messages.ERROR)
-                return redirect("..")
-
-            created, failed, no_photo = 0, 0, []
+            created, failed, updated, no_photo, added_photos = 0, 0, 0, [], 0
 
             import requests
 
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                try:
-                    external_id = str(int(row[id_col])).strip() if row[id_col] else None
-                    title = str(row[name_col]).strip() if row[name_col] else None
-                    desc = str(row[desc_col]).strip() if desc_col and row[desc_col] else ""
-                    price = float(row[price_col]) if row[price_col] else None
-                    category_name = str(row[category_col]).strip() if row[category_col] else None
-                    subcategory_name = (
-                        str(row[subcategory_col]).strip() if subcategory_col and row[subcategory_col] else None
-                    )
-                    city_name = str(row[city_col]).strip() if city_col and row[city_col] else None
+            # --- 1️⃣ Excel import (create/update items) -----------
+            if excel_path:
+                wb = openpyxl.load_workbook(excel_path)
+                sheet = wb.active
+                headers = [str(c.value).strip().lower() if c.value else "" for c in sheet[1]]
 
-                    if not external_id or not title or not price or not category_name:
-                        continue
+                def col(name):
+                    for i, h in enumerate(headers):
+                        if h == name.lower():
+                            return i
+                    return None
 
-                    # --- Category & subcategory
-                    category, _ = Category.objects.get_or_create(
-                        name_ar=category_name,
-                        defaults={"name_en": category_name},
-                    )
-                    if subcategory_name:
-                        subcategory, _ = Category.objects.get_or_create(
-                            name_ar=subcategory_name,
-                            defaults={"name_en": subcategory_name, "parent": category},
+                id_col = col("id")
+                name_col = col("name")
+                desc_col = col("description")
+                price_col = col("price")
+                category_col = col("category")
+                subcategory_col = col("subcategory")
+                city_col = col("city")
+                image_col = col("image")
+
+                required = [id_col, name_col, price_col, category_col]
+                if any(c is None for c in required):
+                    missing = [n for n, c in zip(["id", "name", "price", "category"], required) if c is None]
+                    self.message_user(request, f"❌ Missing columns: {', '.join(missing)}", level=messages.ERROR)
+                    return redirect("..")
+
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    try:
+                        # ✅ normalize external_id from Excel
+                        external_id = normalize_external_id(row[id_col]) if row[id_col] is not None else None
+                        title = str(row[name_col]).strip() if row[name_col] else None
+                        desc = str(row[desc_col]).strip() if desc_col and row[desc_col] else ""
+                        price = float(row[price_col]) if row[price_col] is not None else None
+                        category_name = str(row[category_col]).strip() if row[category_col] else None
+                        subcategory_name = (
+                            str(row[subcategory_col]).strip() if subcategory_col and row[subcategory_col] else None
                         )
-                        if subcategory.parent_id != category.id:
-                            subcategory.parent = category
-                            subcategory.save(update_fields=["parent"])
-                        assigned_category = subcategory
-                    else:
-                        assigned_category = category
+                        city_name = str(row[city_col]).strip() if city_col and row[city_col] else None
 
-                    # --- City
-                    city = None
-                    if city_name:
-                        city = City.objects.filter(
-                            models.Q(name_ar__iexact=city_name) | models.Q(name_en__iexact=city_name)
-                        ).first() or City.objects.create(name_ar=city_name, name_en=city_name)
+                        if not external_id or not title or price is None or not category_name:
+                            continue
 
-                    image_found = False
+                        # --- Category/subcategory
+                        category, _ = Category.objects.get_or_create(
+                            name_ar=category_name,
+                            defaults={"name_en": category_name},
+                        )
+                        if subcategory_name:
+                            subcategory, _ = Category.objects.get_or_create(
+                                name_ar=subcategory_name,
+                                defaults={"name_en": subcategory_name, "parent": category},
+                            )
+                            if subcategory.parent_id != category.id:
+                                subcategory.parent = category
+                                subcategory.save(update_fields=["parent"])
+                            assigned_category = subcategory
+                        else:
+                            assigned_category = category
 
-                    # --- Check photos in ZIP
-                    for root, _, files in os.walk(photos_dir):
-                        for filename in files:
-                            if external_id.lower() in filename.lower():
-                                image_found = True
-                                break
+                        # --- City
+                        city = None
+                        if city_name:
+                            city = City.objects.filter(
+                                models.Q(name_ar__iexact=city_name) | models.Q(name_en__iexact=city_name)
+                            ).first() or City.objects.create(name_ar=city_name, name_en=city_name)
+
+                        image_found = False
+
+                        # --- Create or update item
+                        item, created_item = Item.objects.update_or_create(
+                            external_id=external_id,
+                            defaults={
+                                "title": title,
+                                "description": desc,
+                                "price": price,
+                                "category": assigned_category,
+                                "city": city,
+                                "user": request.user,
+                                "is_active": True,
+                                "condition": "new",
+                            },
+                        )
+                        if created_item:
+                            created += 1
+                        else:
+                            updated += 1
+
+                        # --- Attach images (ZIP or URL)
+                        if photos_dir:
+                            # we already know the normalized external_id, so reuse it
+                            for root, _, files in os.walk(photos_dir):
+                                for filename in files:
+                                    if external_id.lower() in filename.lower():
+                                        try:
+                                            with open(os.path.join(root, filename), "rb") as img_file:
+                                                content = ContentFile(img_file.read())
+                                                content.name = filename
+                                                ItemPhoto.objects.create(item=item, image=content)
+                                                image_found = True
+                                                added_photos += 1
+                                        except Exception as e:
+                                            print(f"[WARN] Could not save {filename}: {e}")
+
+                        if image_col is not None and row[image_col]:
+                            urls = [u.strip() for u in str(row[image_col]).split(",") if u.strip()]
+                            for url in urls:
+                                try:
+                                    r = requests.get(url, timeout=10)
+                                    if r.status_code == 200:
+                                        filename = os.path.basename(url.split("?")[0]) or f"{external_id}.jpg"
+                                        content = ContentFile(r.content)
+                                        content.name = filename
+                                        ItemPhoto.objects.create(item=item, image=content)
+                                        image_found = True
+                                except Exception:
+                                    pass
+
                         if image_found:
-                            break
+                            item.is_approved = True
+                            item.save(update_fields=["is_approved"])
+                        else:
+                            no_photo.append(external_id)
 
-                    # --- Create item
-                    item = Item.objects.create(
-                        title=title,
-                        description=desc,
-                        price=price,
-                        category=assigned_category,
-                        city=city,
-                        user=request.user,
-                        is_active=True,
-                        is_approved=False,  # will update later if images exist
-                        condition="new",
-                    )
+                    except Exception as e:
+                        print(f"[ERROR] Row {row}: {e}")
+                        failed += 1
 
-                    # --- Save ZIP images
-                    for root, _, files in os.walk(photos_dir):
-                        for filename in files:
-                            if external_id.lower() in filename.lower():
+                wb.close()
+
+            # --- 2️⃣ ZIP-only upload (add photos to existing items) ----
+            elif zip_file and not excel_file:
+                # ✅ normalize external_ids from DB as well
+                existing = {}
+                for i in Item.objects.exclude(external_id__isnull=True).exclude(external_id__exact=""):
+                    norm = normalize_external_id(i.external_id)
+                    if norm:
+                        existing[norm] = i
+
+                for root, _, files in os.walk(photos_dir):
+                    for filename in files:
+                        filename_lower = filename.lower()
+                        for external_id, item in existing.items():
+                            if external_id and external_id.lower() in filename_lower:
                                 try:
                                     with open(os.path.join(root, filename), "rb") as img_file:
                                         content = ContentFile(img_file.read())
                                         content.name = filename
                                         ItemPhoto.objects.create(item=item, image=content)
-                                        image_found = True
+                                        added_photos += 1
+                                        # optional: auto-approve once it has photos
+                                        if not item.is_approved:
+                                            item.is_approved = True
+                                            item.save(update_fields=["is_approved"])
+                                    break  # stop checking other external_ids for this file
                                 except Exception as e:
-                                    print(f"[WARN] Could not save {filename}: {e}")
+                                    print(f"[ERROR] Failed saving photo {filename}: {e}")
+                                    failed += 1
+                                    break
 
-                    # --- Save images from URL column
-                    if image_col is not None and row[image_col]:
-                        urls = [u.strip() for u in str(row[image_col]).split(",") if u.strip()]
-                        for url in urls:
-                            try:
-                                response = requests.get(url, timeout=10)
-                                if response.status_code == 200:
-                                    filename = os.path.basename(url.split("?")[0])
-                                    content = ContentFile(response.content)
-                                    content.name = filename or f"{external_id}.jpg"
-                                    ItemPhoto.objects.create(item=item, image=content)
-                                    image_found = True
-                            except Exception as e:
-                                print(f"[WARN] Could not download image from {url}: {e}")
+            # --- Cleanup
+            for p in [excel_path, zip_path]:
+                if p and os.path.exists(p):
+                    os.remove(p)
 
-                    # --- Finalize approval flag
-                    if image_found:
-                        item.is_approved = True
-                        item.save(update_fields=["is_approved"])
-                    else:
-                        no_photo.append(external_id)
-
-                    created += 1
-
-                except Exception as e:
-                    print(f"[ERROR] Failed row {row}: {e}")
-                    failed += 1
-
-            wb.close()
-            os.remove(excel_path)
-            os.remove(zip_path)
-
-            msg = f"✅ Import finished: {created} items created, {failed} failed."
+            msg = "✅ Import finished."
+            if excel_path:
+                msg += f" {created} created, {updated} updated, {failed} failed."
+            if zip_file:
+                msg += f" {added_photos} photos added."
             if no_photo:
-                msg += f" ⚠️ {len(no_photo)} without photos (not approved)."
+                msg += f" ⚠️ {len(no_photo)} items without photos."
             self.message_user(request, msg, level=messages.SUCCESS)
             return redirect("../")
 
-        return render(request, "admin/import_excel.html", {"title": "Import Items from Excel & ZIP"})
+        # Default GET
+        return render(
+            request,
+            "admin/import_excel.html",
+            {"title": "Import Items (Excel and/or ZIP)"},
+        )
+
+
 
 
 # # ======================================================

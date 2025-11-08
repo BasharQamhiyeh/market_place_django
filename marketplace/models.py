@@ -114,7 +114,7 @@ class Item(models.Model):
     ]
 
     title = models.TextField()
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='items')
+    category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='items')
     description = models.TextField(blank=True)
     price = models.FloatField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -122,7 +122,7 @@ class Item(models.Model):
     city = models.ForeignKey('City', on_delete=models.SET_NULL, null=True, blank=True, related_name='items')
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='items')
 
-    sold_on_site = models.BooleanField(null=True, blank=True)  # null = user didn’t answer yet
+    sold_on_site = models.BooleanField(null=True, blank=True)
     cancel_reason = models.CharField(max_length=255, blank=True, null=True)
 
     # moderation/state
@@ -132,6 +132,15 @@ class Item(models.Model):
 
     # ✅ NEW
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
+
+    # ✅ NEW: external id coming from Excel sheet (used to match photos in later ZIP uploads)
+    external_id = models.CharField(max_length=64, null=True, blank=True, unique=True, db_index=True)
+
+    # ✅ NEW: track who approved/rejected (+ optional timestamps)
+    approved_by = models.ForeignKey('User', null=True, blank=True, on_delete=models.SET_NULL, related_name='approved_items')
+    rejected_by = models.ForeignKey('User', null=True, blank=True, on_delete=models.SET_NULL, related_name='rejected_items')
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.title
