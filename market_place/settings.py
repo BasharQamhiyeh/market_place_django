@@ -318,3 +318,5 @@ LOGGING = {
         "marketplace": {"handlers": ["console", "file"], "level": "DEBUG"},
     },
 }
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

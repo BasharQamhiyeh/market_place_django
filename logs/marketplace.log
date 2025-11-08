@@ -886,3 +886,427 @@ INFO 2025-11-08 22:24:31,528 basehttp "POST /admin/marketplace/item/ HTTP/1.1" 2
 INFO 2025-11-08 22:24:36,142 basehttp "POST /admin/marketplace/item/ HTTP/1.1" 302 0
 INFO 2025-11-08 22:24:36,154 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 15126
 INFO 2025-11-08 22:24:36,169 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:24:27,171 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-11-08 23:24:28,178 autoreload Watching for file changes with StatReloader
+ERROR 2025-11-08 23:27:05,096 log Internal Server Error: /admin/marketplace/item/
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedColumn: column marketplace_item.auto_rejected does not exist
+LINE 1: ...."approved_at", "marketplace_item"."rejected_at", "marketpla...
+                                                             ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\admin\options.py", line 719, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\admin\sites.py", line 246, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\admin\options.py", line 2163, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\query.py", line 366, in __len__
+    self._fetch_all()
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\query.py", line 1949, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1623, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: column marketplace_item.auto_rejected does not exist
+LINE 1: ...."approved_at", "marketplace_item"."rejected_at", "marketpla...
+                                                             ^
+
+ERROR 2025-11-08 23:27:05,126 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 500 185276
+ERROR 2025-11-08 23:27:06,667 log Internal Server Error: /admin/marketplace/item/
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedColumn: column marketplace_item.auto_rejected does not exist
+LINE 1: ...."approved_at", "marketplace_item"."rejected_at", "marketpla...
+                                                             ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\admin\options.py", line 719, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\views\decorators\cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\admin\sites.py", line 246, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\utils\decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\admin\options.py", line 2163, in changelist_view
+    "selection_note": _("0 of %(cnt)s selected") % {"cnt": len(cl.result_list)},
+                                                           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\query.py", line 366, in __len__
+    self._fetch_all()
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\query.py", line 1949, in _fetch_all
+    self._result_cache = list(self._iterable_class(self))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\query.py", line 91, in __iter__
+    results = compiler.execute_sql(
+              ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\sql\compiler.py", line 1623, in execute_sql
+    cursor.execute(sql, params)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\backends\utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: column marketplace_item.auto_rejected does not exist
+LINE 1: ...."approved_at", "marketplace_item"."rejected_at", "marketpla...
+                                                             ^
+
+ERROR 2025-11-08 23:27:06,673 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 500 185413
+INFO 2025-11-08 23:27:15,673 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-11-08 23:27:16,870 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 23:27:17,410 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 14990
+INFO 2025-11-08 23:27:17,423 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:27:19,541 basehttp "GET /admin/marketplace/item/import-excel/ HTTP/1.1" 200 4209
+INFO 2025-11-08 23:28:09,888 basehttp "POST /admin/marketplace/item/import-excel/ HTTP/1.1" 302 0
+INFO 2025-11-08 23:28:10,007 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 52921
+INFO 2025-11-08 23:28:10,030 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:28:24,315 basehttp "GET /admin/marketplace/item/256/change/ HTTP/1.1" 200 26180
+INFO 2025-11-08 23:28:24,341 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:28:24,355 basehttp "GET /media/items/03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 358823
+INFO 2025-11-08 23:28:26,910 basehttp "GET /admin/marketplace/item/256/reject/ HTTP/1.1" 200 3127
+INFO 2025-11-08 23:28:28,793 basehttp "POST /admin/marketplace/item/256/reject/ HTTP/1.1" 302 0
+INFO 2025-11-08 23:28:28,902 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 52911
+INFO 2025-11-08 23:28:28,926 basehttp "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+INFO 2025-11-08 23:28:28,928 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:28:39,943 basehttp "GET /admin/marketplace/item/256/change/ HTTP/1.1" 200 26263
+INFO 2025-11-08 23:28:39,966 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:28:40,062 basehttp "GET /media/items/03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 23:28:43,550 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 52769
+INFO 2025-11-08 23:29:51,655 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-11-08 23:29:52,633 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 23:30:51,503 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-11-08 23:30:52,641 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 23:30:54,174 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-11-08 23:37:14,517 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 23:38:46,621 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-08 23:38:46,694 basehttp "GET /en/ HTTP/1.1" 200 26637
+INFO 2025-11-08 23:38:46,706 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-08 23:38:46,712 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-08 23:38:46,717 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-08 23:38:46,721 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-08 23:38:46,724 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-08 23:38:46,751 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-08 23:38:46,757 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-08 23:38:46,764 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-08 23:38:46,768 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-08 23:38:46,772 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-08 23:38:46,777 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-08 23:38:46,870 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-08 23:38:48,792 basehttp "GET /en/notifications/ HTTP/1.1" 200 7320
+INFO 2025-11-08 23:38:53,147 basehttp "GET /en/create/ HTTP/1.1" 200 11299
+INFO 2025-11-08 23:38:55,383 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14110
+INFO 2025-11-08 23:39:17,088 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-08 23:39:17,122 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+INFO 2025-11-08 23:39:17,147 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-08 23:39:17,148 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-08 23:39:17,157 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-08 23:39:17,161 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-08 23:39:17,166 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-08 23:39:17,170 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-08 23:39:17,176 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-08 23:39:17,177 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-08 23:39:17,234 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-08 23:39:17,279 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-08 23:39:17,311 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-08 23:39:17,344 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-08 23:39:18,773 basehttp "GET /en/notifications/ HTTP/1.1" 200 8548
+INFO 2025-11-08 23:39:20,110 basehttp "GET /admin/marketplace/item/257/change/ HTTP/1.1" 200 23965
+INFO 2025-11-08 23:39:20,135 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:39:26,126 basehttp "GET /en/notifications/ HTTP/1.1" 200 8548
+INFO 2025-11-08 23:39:27,409 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-08 23:39:27,455 basehttp "GET /en/ HTTP/1.1" 200 26467
+INFO 2025-11-08 23:39:27,483 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-08 23:39:27,484 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-08 23:39:27,486 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-08 23:39:27,487 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-08 23:39:27,487 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-08 23:39:27,488 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-08 23:39:27,499 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-08 23:39:27,501 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-08 23:39:27,502 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-08 23:39:27,503 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-08 23:39:27,504 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-08 23:39:27,505 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-08 23:39:28,539 basehttp "GET /en/create/ HTTP/1.1" 200 11299
+INFO 2025-11-08 23:39:44,726 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14110
+INFO 2025-11-08 23:39:55,453 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-08 23:39:55,487 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+INFO 2025-11-08 23:39:55,525 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-08 23:39:55,526 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-08 23:39:55,529 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-08 23:39:55,529 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-08 23:39:55,530 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-08 23:39:55,531 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-08 23:39:55,548 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-08 23:39:55,550 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-08 23:39:55,552 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-08 23:39:55,552 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-08 23:39:55,553 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-08 23:39:55,558 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-08 23:39:56,859 basehttp "GET /en/notifications/ HTTP/1.1" 200 9796
+INFO 2025-11-08 23:39:58,580 basehttp "GET /admin/marketplace/item/258/change/ HTTP/1.1" 200 24015
+INFO 2025-11-08 23:39:58,603 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:40:02,122 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 54595
+INFO 2025-11-08 23:40:02,139 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 23:41:01,948 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-08 23:41:01,998 basehttp "GET /en/ HTTP/1.1" 200 26467
+INFO 2025-11-08 23:41:02,024 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-08 23:41:02,025 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-08 23:41:02,026 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-08 23:41:02,027 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-08 23:41:02,027 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-08 23:41:02,028 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-08 23:41:02,039 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-08 23:41:02,043 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-08 23:41:02,044 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-08 23:41:02,046 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-08 23:41:02,046 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-08 23:41:02,047 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-08 23:41:03,452 basehttp "GET /en/create/ HTTP/1.1" 200 11299
+INFO 2025-11-08 23:41:04,896 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14110
+INFO 2025-11-08 23:41:11,957 basehttp "POST /en/create/?category=1 HTTP/1.1" 200 14165
+INFO 2025-11-08 23:41:19,566 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-08 23:41:19,600 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+INFO 2025-11-08 23:41:19,626 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-08 23:41:19,627 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-08 23:41:19,628 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-08 23:41:19,629 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-08 23:41:19,630 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-08 23:41:19,631 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-08 23:41:19,638 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-08 23:41:19,645 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-08 23:41:19,649 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-08 23:41:19,650 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-08 23:41:19,652 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-08 23:41:19,652 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-08 23:41:20,988 basehttp "GET /en/notifications/ HTTP/1.1" 200 11028
+INFO 2025-11-08 23:41:22,117 basehttp "GET /admin/marketplace/item/259/change/ HTTP/1.1" 200 23975
+INFO 2025-11-08 23:41:22,145 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-09 00:01:26,555 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\signals.py changed, reloading.
+INFO 2025-11-09 00:01:27,993 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:01:46,781 basehttp "GET /admin/marketplace/item/259/approve/ HTTP/1.1" 302 0
+INFO 2025-11-09 00:01:46,968 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 55655
+INFO 2025-11-09 00:01:46,992 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-09 00:01:49,096 basehttp "GET /admin/marketplace/item/259/change/ HTTP/1.1" 200 23730
+INFO 2025-11-09 00:01:49,118 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-09 00:01:50,914 basehttp "GET /admin/marketplace/item/259/reject/ HTTP/1.1" 200 3077
+INFO 2025-11-09 00:01:52,501 basehttp "POST /admin/marketplace/item/259/reject/ HTTP/1.1" 302 0
+INFO 2025-11-09 00:01:52,611 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 55651
+INFO 2025-11-09 00:01:52,637 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-09 00:01:57,521 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-09 00:01:57,648 basehttp "GET /en/ HTTP/1.1" 200 26637
+INFO 2025-11-09 00:01:57,678 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-09 00:01:57,695 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-09 00:01:57,707 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-09 00:01:57,728 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-09 00:01:57,741 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-09 00:01:57,761 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-09 00:01:57,783 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-09 00:01:57,787 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-09 00:01:57,809 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-09 00:01:57,818 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-09 00:01:57,820 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-09 00:01:57,825 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-09 00:01:59,408 basehttp "GET /en/create/ HTTP/1.1" 200 11469
+INFO 2025-11-09 00:02:03,224 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14280
+INFO 2025-11-09 00:02:19,152 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-09 00:02:19,258 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+INFO 2025-11-09 00:02:19,299 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-09 00:02:19,312 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-09 00:02:19,315 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-09 00:02:19,358 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-09 00:02:19,378 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-09 00:02:19,386 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-09 00:02:19,409 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-09 00:02:19,431 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-09 00:02:19,445 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-09 00:02:19,458 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-09 00:02:19,473 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-09 00:02:19,475 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-09 00:02:31,447 basehttp "GET /en/notifications/ HTTP/1.1" 200 13468
+INFO 2025-11-09 00:02:32,452 basehttp "GET /admin/marketplace/item/260/change/ HTTP/1.1" 200 23947
+INFO 2025-11-09 00:02:32,486 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-09 00:03:31,761 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\signals.py changed, reloading.
+INFO 2025-11-09 00:03:33,083 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:03:38,559 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-09 00:03:38,631 basehttp "GET /en/ HTTP/1.1" 200 26467
+INFO 2025-11-09 00:03:38,650 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-09 00:03:38,658 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-09 00:03:38,664 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-09 00:03:38,668 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-09 00:03:38,673 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-09 00:03:38,676 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-09 00:03:38,684 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-09 00:03:38,690 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-09 00:03:38,695 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-09 00:03:38,700 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-09 00:03:38,703 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-09 00:03:38,805 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-09 00:03:41,281 basehttp "GET /en/create/ HTTP/1.1" 200 11299
+INFO 2025-11-09 00:03:42,770 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14110
+INFO 2025-11-09 00:04:02,954 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-09 00:04:03,067 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+INFO 2025-11-09 00:04:03,108 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-09 00:04:03,122 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-09 00:04:03,132 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-09 00:04:03,163 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-09 00:04:03,164 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-09 00:04:03,204 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-09 00:04:03,213 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-09 00:04:03,217 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-09 00:04:03,221 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-09 00:04:03,273 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-09 00:04:03,303 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-09 00:04:03,311 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+WARNING 2025-11-09 00:05:31,331 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:05:31,335 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:05:32,586 basehttp "GET /en/create/ HTTP/1.1" 200 11469
+WARNING 2025-11-09 00:05:32,607 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:05:32,608 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:05:34,072 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14280
+WARNING 2025-11-09 00:05:34,092 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:05:34,094 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:05:48,753 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-09 00:05:48,854 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+WARNING 2025-11-09 00:05:48,902 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:05:48,909 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:05:48,920 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-09 00:05:48,921 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-11-09 00:05:48,926 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-09 00:05:48,934 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-09 00:05:48,955 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-09 00:05:48,967 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-09 00:05:48,976 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-09 00:05:48,981 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-09 00:05:48,982 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-09 00:05:48,989 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-09 00:05:48,990 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-09 00:05:48,992 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-09 00:12:35,769 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\moderation.py changed, reloading.
+INFO 2025-11-09 00:12:37,149 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:13:01,684 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\moderation.py changed, reloading.
+INFO 2025-11-09 00:13:02,998 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:13:10,809 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\moderation.py changed, reloading.
+INFO 2025-11-09 00:13:12,003 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:13:17,727 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\moderation.py changed, reloading.
+INFO 2025-11-09 00:13:19,060 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:13:24,612 basehttp "GET /en/create/ HTTP/1.1" 200 11469
+WARNING 2025-11-09 00:13:24,639 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:13:24,639 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:13:26,429 basehttp "GET /en/create/?category=1 HTTP/1.1" 200 14280
+WARNING 2025-11-09 00:13:26,451 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:13:26,452 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:13:38,329 basehttp "POST /en/create/?category=1 HTTP/1.1" 302 0
+INFO 2025-11-09 00:13:38,367 basehttp "GET /en/items/ HTTP/1.1" 200 26637
+INFO 2025-11-09 00:13:38,388 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+WARNING 2025-11-09 00:13:38,413 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-11-09 00:13:38,414 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3603
+INFO 2025-11-09 00:13:38,433 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-11-09 00:13:38,481 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-11-09 00:13:38,526 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-11-09 00:13:38,549 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-11-09 00:13:38,552 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-11-09 00:13:38,561 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-11-09 00:13:38,562 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-11-09 00:13:38,592 basehttp "GET /media/items/03-16-2021_0713pm4b9f85b838df17a1bde9.png HTTP/1.1" 200 388821
+INFO 2025-11-09 00:13:38,593 basehttp "GET /media/items/03-16-2021_0919pma900d881757fa1900199.jpg HTTP/1.1" 200 389546
+INFO 2025-11-09 00:13:38,593 basehttp "GET /media/items/03-16-2021_0832pm7b546effd7be5726de2d.jpg HTTP/1.1" 200 544270
+INFO 2025-11-09 00:13:38,598 basehttp "GET /media/items/05-14-2021_0937pmeb1e31ea07ee3df7bae7.jpg HTTP/1.1" 200 90301
+INFO 2025-11-09 00:17:35,586 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\market_place\settings.py changed, reloading.
+INFO 2025-11-09 00:17:36,937 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:17:48,881 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\market_place\settings.py changed, reloading.
+INFO 2025-11-09 00:17:50,246 autoreload Watching for file changes with StatReloader
+INFO 2025-11-09 00:18:03,261 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\market_place\settings.py changed, reloading.
+INFO 2025-11-09 00:18:04,576 autoreload Watching for file changes with StatReloader

@@ -142,6 +142,9 @@ class Item(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True)
     rejected_at = models.DateTimeField(null=True, blank=True)
 
+    auto_rejected = models.BooleanField(default=False)  # True if AI did the rejection
+    moderation_reason = models.TextField(blank=True, null=True)  # why AI rejected it
+
     @property
     def main_photo(self):
         """Return the preferred (is_main) photo, or first one."""
