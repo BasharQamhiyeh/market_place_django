@@ -781,3 +781,108 @@ INFO 2025-11-08 20:38:52,688 basehttp "GET /en/ HTTP/1.1" 200 26219
 INFO 2025-11-08 20:39:23,075 basehttp "GET /en/notifications/ HTTP/1.1" 200 21128
 INFO 2025-11-08 21:05:07,540 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 55489
 INFO 2025-11-08 21:05:07,556 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:21:05,198 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-08 21:21:05,240 basehttp "GET /en/ HTTP/1.1" 200 26074
+INFO 2025-11-08 21:21:05,257 basehttp "GET /media/items/download_PizdJHz.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,260 basehttp "GET /media/items/download_1.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,263 basehttp "GET /media/items/03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,264 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,266 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,268 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,270 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,271 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,273 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,274 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,275 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:05,345 basehttp "GET /media/items/images_Jlv8xOY.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 21:21:11,853 basehttp "GET /admin/ HTTP/1.1" 200 15978
+INFO 2025-11-08 21:21:15,088 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 13340
+INFO 2025-11-08 21:21:15,108 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:21:18,531 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 14756
+INFO 2025-11-08 21:21:18,550 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:21:24,734 basehttp "GET /admin/marketplace/category/add/?parent=1 HTTP/1.1" 200 44128
+INFO 2025-11-08 21:21:24,751 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:21:39,358 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 13340
+INFO 2025-11-08 21:21:39,379 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:24:35,172 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:24:36,242 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:24:40,082 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 13340
+INFO 2025-11-08 21:24:40,109 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:24:49,958 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:24:50,344 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 13340
+INFO 2025-11-08 21:24:50,360 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:24:51,519 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 13340
+INFO 2025-11-08 21:24:51,531 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:24:53,555 basehttp "GET /admin/marketplace/city/add/ HTTP/1.1" 200 14521
+INFO 2025-11-08 21:24:53,571 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:24:59,095 basehttp "POST /admin/marketplace/city/add/ HTTP/1.1" 302 0
+INFO 2025-11-08 21:24:59,139 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 15620
+INFO 2025-11-08 21:24:59,160 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:24:59,183 basehttp "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-11-08 21:25:03,972 basehttp "GET /admin/marketplace/city/add/ HTTP/1.1" 200 14580
+INFO 2025-11-08 21:25:03,991 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:26:16,047 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:26:17,067 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:26:18,714 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:26:19,810 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:26:42,754 basehttp "GET /admin/marketplace/city/add/ HTTP/1.1" 200 14270
+INFO 2025-11-08 21:26:42,774 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:26:44,113 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 15564
+INFO 2025-11-08 21:26:44,127 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:26:56,355 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:26:56,372 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:26:57,972 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:26:57,989 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:26:58,468 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:26:58,486 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:27:00,217 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:27:00,236 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:27:01,896 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:27:01,910 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:27:03,095 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:27:03,111 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:27:07,668 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:27:07,682 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:27:09,352 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 200 15592
+INFO 2025-11-08 21:27:09,366 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:29:15,273 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:29:16,561 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:29:19,931 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:29:21,051 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:29:23,655 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:29:24,653 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:30:15,596 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\forms.py changed, reloading.
+INFO 2025-11-08 21:30:16,568 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:30:37,590 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\forms.py changed, reloading.
+INFO 2025-11-08 21:30:38,559 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:30:40,083 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:30:41,093 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:30:42,683 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-11-08 21:30:44,183 autoreload Watching for file changes with StatReloader
+INFO 2025-11-08 21:30:47,375 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 302 0
+INFO 2025-11-08 21:30:47,415 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 15883
+INFO 2025-11-08 21:30:47,432 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 21:30:55,339 basehttp "POST /admin/marketplace/city/ HTTP/1.1" 302 0
+INFO 2025-11-08 21:30:55,377 basehttp "GET /admin/marketplace/city/ HTTP/1.1" 200 16264
+INFO 2025-11-08 21:30:55,396 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 22:24:23,197 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-11-08 22:24:23,244 basehttp "GET /en/ HTTP/1.1" 200 26307
+INFO 2025-11-08 22:24:23,265 basehttp "GET /media/items/download_PizdJHz.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,268 basehttp "GET /media/items/download_1.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,269 basehttp "GET /media/items/03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,272 basehttp "GET /media/items/03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,273 basehttp "GET /media/items/03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,275 basehttp "GET /media/items/03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,277 basehttp "GET /media/items/03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,279 basehttp "GET /media/items/03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,281 basehttp "GET /media/items/03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,283 basehttp "GET /media/items/03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,285 basehttp "GET /media/items/03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:23,350 basehttp "GET /media/items/images_Jlv8xOY.jpg HTTP/1.1" 304 0
+INFO 2025-11-08 22:24:26,455 basehttp "GET /admin/ HTTP/1.1" 200 15963
+INFO 2025-11-08 22:24:28,413 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 55489
+INFO 2025-11-08 22:24:28,434 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-11-08 22:24:31,528 basehttp "POST /admin/marketplace/item/ HTTP/1.1" 200 28750
+INFO 2025-11-08 22:24:36,142 basehttp "POST /admin/marketplace/item/ HTTP/1.1" 302 0
+INFO 2025-11-08 22:24:36,154 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 15126
+INFO 2025-11-08 22:24:36,169 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342

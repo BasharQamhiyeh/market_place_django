@@ -13,6 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.template.response import TemplateResponse
 import nested_admin, json
 from django.utils import translation
+from .forms import CityForm
 
 
 from .models import (
@@ -617,9 +618,23 @@ class ItemAdmin(admin.ModelAdmin):
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
-    list_display = ("id", "name_en", "name_ar", "is_active")
-    search_fields = ("name_en", "name_ar")
-    list_filter = ("is_active",)
+    list_display = ("name_ar", "name_en", "is_active")
+    ordering = ("name_ar",)
+    search_fields = ("name_ar", "name_en")
+    change_list_template = "admin/cities_list_and_form.html"
+
+    def changelist_view(self, request, extra_context=None):
+        """Show list and add form on same page."""
+        extra_context = extra_context or {}
+        form = CityForm(request.POST or None)
+        if request.method == "POST" and form.is_valid():
+            form.save()
+            return redirect(request.path)
+        extra_context["form"] = form
+        return super().changelist_view(request, extra_context=extra_context)
+
+
+
 
 
 from django.contrib import admin

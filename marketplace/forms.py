@@ -316,3 +316,9 @@ class ResetPasswordForm(forms.Form):
         if cleaned.get("new_password") != cleaned.get("confirm_password"):
             raise forms.ValidationError("كلمتا المرور غير متطابقتين.")
         return cleaned
+
+
+class CityForm(forms.ModelForm):
+    class Meta:
+        model = City
+        fields = ["name_ar", "name_en", "is_active"]
