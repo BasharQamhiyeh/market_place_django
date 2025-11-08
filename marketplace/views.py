@@ -33,6 +33,9 @@ from .utils.sms import send_sms_code
 from django.utils import timezone
 from datetime import timedelta
 from .utils.verification import send_code, verify_session_code
+from django.core.exceptions import ValidationError
+from .validators import validate_no_links_or_html
+
 
 # Anyone can view items
 from marketplace.models import City  # adjust path if needed
@@ -250,19 +253,17 @@ def item_detail(request, item_id):
     })
 
 
-
 # Only logged-in users can post
 @login_required
 def item_create(request):
     categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
 
-
-    # POST takes priority so we don't lose the category on submit
+    # Keep selected category across GET/POST
     category_id = request.POST.get('category') or request.GET.get('category')
     selected_category = Category.objects.filter(id=category_id).first() if category_id else None
 
     if request.method == 'POST':
-        # --- DEBUG: log inbound data ---
+        # --- DEBUG ---
         print("=== DEBUG: item_create POST ===")
         print("selected_category_id:", category_id, " resolved:", selected_category)
         print("POST keys:", list(request.POST.keys()))
@@ -272,7 +273,7 @@ def item_create(request):
 
         form = ItemForm(request.POST, request.FILES, category=selected_category)
 
-        # --- DEBUG: before validation, list dynamic fields present ---
+        # --- DEBUG: before validation ---
         print("Form fields:", list(form.fields.keys()))
 
         if form.is_valid() and selected_category:
@@ -281,17 +282,23 @@ def item_create(request):
             item.category = selected_category
             item.user = request.user
 
-            # ✅ mark item pending review
+            # Mark item pending review
             item.is_approved = False
             item.is_active = True
-
             item.save()
 
-            # Save images
-            for img in request.FILES.getlist('images'):
-                ItemPhoto.objects.create(item=item, image=img)
+            # ✅ Save uploaded images
+            images = request.FILES.getlist('images')
+            main_index = request.POST.get('main_photo_index')
+            main_index = int(main_index) if main_index and main_index.isdigit() else None
 
-            # Save dynamic attributes (including Other)
+            for idx, img in enumerate(images):
+                photo = ItemPhoto.objects.create(item=item, image=img)
+                if main_index is not None and idx == main_index:
+                    photo.is_main = True
+                    photo.save()
+
+            # ✅ Save dynamic attributes (including "Other")
             for key, value in request.POST.items():
                 if key.startswith("attribute_") and not key.endswith("_other"):
                     try:
@@ -307,7 +314,7 @@ def item_create(request):
                             value=value
                         )
 
-            # ✅ Notify all admins
+            # ✅ Notify admins about new item
             for admin in User.objects.filter(is_staff=True):
                 Notification.objects.create(
                     user=admin,
@@ -316,6 +323,7 @@ def item_create(request):
                     item=item
                 )
 
+            # ✅ Notify the posting user
             Notification.objects.create(
                 user=request.user,
                 title="✅ إعلانك قيد المراجعة",
@@ -326,14 +334,13 @@ def item_create(request):
             messages.success(request, "✅ Your ad was submitted (pending review).")
             return redirect('item_list')
 
-        # --- DEBUG: surface errors ---
+        # --- DEBUG: form invalid ---
         print("=== DEBUG: form is INVALID ===")
         print("form.errors:", form.errors.as_data())
         print("non_field_errors:", form.non_field_errors())
         print("cleaned_data (partial):", getattr(form, 'cleaned_data', {}))
         print("FILES images count:", len(request.FILES.getlist('images')))
 
-        # Render with an explicit debug panel
         return render(request, 'item_create.html', {
             'form': form,
             'categories': categories,
@@ -348,7 +355,7 @@ def item_create(request):
             }
         })
 
-    # GET
+    # --- GET request ---
     form = ItemForm(category=selected_category)
     return render(request, 'item_create.html', {
         'form': form,
@@ -357,50 +364,74 @@ def item_create(request):
     })
 
 
+
 @login_required
 def item_edit(request, item_id):
     item = get_object_or_404(Item, id=item_id, user=request.user)
-    category = item.category  # same category, cannot change it
+    category = item.category
 
-    # ---- Prefill initial dynamic attribute values ----
     initial = {
         f"attribute_{av.attribute.id}": av.value
         for av in item.attribute_values.all()
     }
 
-    form = ItemForm(request.POST or None, request.FILES or None,
-                    category=category, initial=initial, instance=item)
+    form = ItemForm(
+        request.POST or None,
+        request.FILES or None,
+        category=category,
+        initial=initial,
+        instance=item,
+    )
 
     if request.method == "POST" and form.is_valid():
-
-        # Save base item fields
         item = form.save(commit=False)
-        item.is_approved = False  # requires review again
+        item.is_approved = False
         item.was_edited = True
         item.save()
 
-        # Remove old attributes
-        ItemAttributeValue.objects.filter(item=item).delete()
+        # Delete removed photos
+        for key in request.POST:
+            if key.startswith("delete_photo_"):
+                pid = key.split("_")[-1]
+                ItemPhoto.objects.filter(id=pid, item=item).delete()
 
-        # Save new dynamic attributes
+        # Reset attributes
+        ItemAttributeValue.objects.filter(item=item).delete()
         for key, val in request.POST.items():
             if key.startswith("attribute_") and not key.endswith("_other"):
                 try:
                     attr_id = int(key.split("_")[1])
                 except:
                     continue
-
                 if val == "__other__":
                     val = request.POST.get(f"{key}_other", "").strip()
-
                 if val:
                     ItemAttributeValue.objects.create(
                         item=item, attribute_id=attr_id, value=val
                     )
 
-        # Append newly uploaded files
-        for img in request.FILES.getlist("images"):
-            ItemPhoto.objects.create(item=item, image=img)
+        # Add new photos
+        new_images = request.FILES.getlist("images")
+        created_photos = [ItemPhoto.objects.create(item=item, image=img) for img in new_images]
+
+        selected_main_id = request.POST.get("selected_main_photo")
+        main_index = request.POST.get("main_photo_index")
+        main_index = int(main_index) if main_index and main_index.isdigit() else None
+
+        # Reset all main flags first
+        ItemPhoto.objects.filter(item=item).update(is_main=False)
+
+        # Set main for new or existing
+        if selected_main_id:
+            ItemPhoto.objects.filter(id=selected_main_id, item=item).update(is_main=True)
+        elif main_index is not None and 0 <= main_index < len(created_photos):
+            created_photos[main_index].is_main = True
+            created_photos[main_index].save()
+        elif not item.photos.filter(is_main=True).exists():
+            first = item.photos.first()
+            if first:
+                first.is_main = True
+                first.save()
 
         for admin in User.objects.filter(is_staff=True):
             Notification.objects.create(
@@ -417,14 +448,13 @@ def item_edit(request, item_id):
             item=item,
         )
 
-        # messages.success(request, "✅ تم حفظ التعديلات وإرسال الإعلان للمراجعة.")
         return redirect("item_detail", item_id=item.id)
 
-    return render(request, "item_edit.html", {
-        "form": form,
-        "item": item,
-        "category": category,
-    })
+    return render(
+        request,
+        "item_edit.html",
+        {"form": form, "item": item, "category": category},
+    )
 
 
 
@@ -562,9 +592,14 @@ def chat_room(request, conversation_id):
     if request.method == 'POST':
         body = request.POST.get('body', '').strip()
         if body:
-            Message.objects.create(conversation=convo, sender=request.user, body=body)
-            # You could redirect to avoid resubmission
-            return redirect('chat_room', conversation_id=conversation_id)
+            try:
+                validate_no_links_or_html(body)
+            except ValidationError:
+                messages.error(request, "Links or HTML are not allowed in messages.")
+            else:
+                Message.objects.create(conversation=convo, sender=request.user, body=body)
+                # Redirect to avoid resubmission
+                return redirect('chat_room', conversation_id=conversation_id)
 
     # ✅ Load messages after marking read
     messages = convo.messages.order_by('created_at')
@@ -587,63 +622,93 @@ def user_inbox(request):
 
 @login_required
 def item_edit(request, item_id):
-    item = get_object_or_404(Item, id=item_id)
+    item = get_object_or_404(Item, id=item_id, user=request.user)
+    category = item.category
 
-    if item.user != request.user:
-        return HttpResponseForbidden("Not allowed")
+    initial = {
+        f"attribute_{av.attribute.id}": av.value
+        for av in item.attribute_values.all()
+    }
 
-    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
+    form = ItemForm(
+        request.POST or None,
+        request.FILES or None,
+        category=category,
+        initial=initial,
+        instance=item,
+    )
 
-    category_id = request.POST.get('category') or request.GET.get('category')
-    selected_category = Category.objects.filter(id=category_id).first() if category_id else item.category
+    if request.method == "POST" and form.is_valid():
+        item = form.save(commit=False)
+        item.is_approved = False
+        item.was_edited = True
+        item.save()
 
-    if request.method == "POST":
-        form = ItemForm(request.POST, request.FILES, category=selected_category, instance=item)
+        # --- delete requests ---
+        for key in request.POST:
+            if key.startswith("delete_photo_"):
+                pid = key.split("_")[-1]
+                ItemPhoto.objects.filter(id=pid, item=item).delete()
 
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.category = selected_category
-            item.is_approved = False  # requires re-approval
-            item.save()
+        # --- attributes ---
+        ItemAttributeValue.objects.filter(item=item).delete()
+        for key, val in request.POST.items():
+            if key.startswith("attribute_") and not key.endswith("_other"):
+                try:
+                    aid = int(key.split("_")[1])
+                except:
+                    continue
+                if val == "__other__":
+                    val = request.POST.get(f"{key}_other", "").strip()
+                if val:
+                    ItemAttributeValue.objects.create(
+                        item=item, attribute_id=aid, value=val
+                    )
 
-            # Remove old attributes
-            item.attribute_values.all().delete()
+        # --- new uploads ---
+        new_imgs = request.FILES.getlist("images")
+        new_objs = [ItemPhoto.objects.create(item=item, image=f) for f in new_imgs]
 
-            # Save attributes again
-            for key, value in request.POST.items():
-                if key.startswith("attribute_") and not key.endswith("_other"):
-                    try:
-                        attr_id = int(key.split('_')[1])
-                    except Exception:
-                        continue
+        # --- main photo logic ---
+        selected_id = request.POST.get("selected_main_photo")
+        new_index = request.POST.get("main_photo_index")
+        new_index = int(new_index) if new_index and new_index.isdigit() else None
 
-                    if value == "__other__":
-                        value = request.POST.get(f"{key}_other", "").strip()
+        ItemPhoto.objects.filter(item=item).update(is_main=False)
 
-                    if value:
-                        ItemAttributeValue.objects.create(item=item, attribute_id=attr_id, value=value)
+        if selected_id:
+            ItemPhoto.objects.filter(id=selected_id, item=item).update(is_main=True)
+        elif new_index is not None and 0 <= new_index < len(new_objs):
+            new_objs[new_index].is_main = True
+            new_objs[new_index].save()
+        else:
+            first = item.photos.first()
+            if first:
+                first.is_main = True
+                first.save()
 
-            # Save new photos
-            for img in request.FILES.getlist("images"):
-                ItemPhoto.objects.create(item=item, image=img)
+        # --- notifications ---
+        for admin in User.objects.filter(is_staff=True):
+            Notification.objects.create(
+                user=admin,
+                title="Edited item pending approval",
+                body=f"✏️ '{item.title}' was edited by {request.user.username} and needs re-approval.",
+                item=item,
+            )
+        Notification.objects.create(
+            user=request.user,
+            title="📋 إعلانك قيد المراجعة مجددًا",
+            body=f"تم تعديل إعلانك '{item.title}' وهو الآن بانتظار المراجعة من الإدارة.",
+            item=item,
+        )
+        return redirect("item_detail", item_id=item.id)
 
-            return redirect("my_items")
+    return render(
+        request,
+        "item_edit.html",
+        {"form": form, "item": item, "category": category},
+    )
 
-        return render(request, "item_edit.html", {
-            "form": form,
-            "categories": categories,
-            "selected_category": selected_category,
-            "item": item
-        })
-
-    form = ItemForm(category=selected_category, instance=item)
-
-    return render(request, "item_edit.html", {
-        "form": form,
-        "categories": categories,
-        "selected_category": selected_category,
-        "item": item
-    })
 
 
 @login_required
@@ -917,9 +982,21 @@ def contact(request):
 def report_issue(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     if request.method == "POST":
-        IssueReport.objects.create(user=request.user, item=item, message=request.POST["message"])
+        message_text = (request.POST.get("message") or "").strip()
+        if not message_text:
+            messages.error(request, "Please enter a message.")
+            return redirect("item_detail", item_id=item.id)
+
+        try:
+            validate_no_links_or_html(message_text)
+        except ValidationError:
+            messages.error(request, "Links or HTML are not allowed in the issue report.")
+            return redirect("item_detail", item_id=item.id)
+
+        IssueReport.objects.create(user=request.user, item=item, message=message_text)
         messages.success(request, "✅ Thank you for reporting this issue.")
         return redirect("item_detail", item_id=item.id)
+
     return redirect("item_detail", item_id=item.id)
 
 

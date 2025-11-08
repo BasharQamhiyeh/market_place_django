@@ -6,16 +6,11 @@ from django.utils import translation
 from .models import Item, City
 from django.forms import ClearableFileInput
 from django.contrib.auth.forms import PasswordChangeForm
+from .validators import validate_no_links_or_html
 
 
-from .widgets import MultipleFileInput  # your existing widget
 
 User = get_user_model()
-
-import re
-from django import forms
-from django.utils.translation import gettext_lazy as _
-from .models import User
 
 
 import re
@@ -187,7 +182,8 @@ class ItemForm(forms.ModelForm):
                     self.fields[field_name] = forms.CharField(
                         required=attribute.is_required,
                         label=label,
-                        initial=existing_attrs.get(attribute.id, "")
+                        initial=existing_attrs.get(attribute.id, ""),
+                        validators=[validate_no_links_or_html],
                     )
 
                 # NUMBER
@@ -231,13 +227,47 @@ class ItemForm(forms.ModelForm):
                     self.fields[f"{field_name}_other"] = forms.CharField(
                         required=False,
                         label=f"{label} (Other)",
-                        initial=current if selected_choice == '__other__' else ""
+                        initial=current if selected_choice == '__other__' else "",
+                        validators=[validate_no_links_or_html],
                     )
 
+    def clean_title(self):
+        title = self.cleaned_data.get("title", "")
+        return validate_no_links_or_html(title)
+
+    def clean_description(self):
+        desc = self.cleaned_data.get("description", "")
+        if desc is None:
+            return desc
+        return validate_no_links_or_html(desc)
+
     def clean(self):
-        cleaned = super().clean()
-        cleaned['images'] = self.files.getlist('images')
-        return cleaned
+        cleaned_data = super().clean()
+
+        # Validate uploaded images
+        files = self.files.getlist("images")
+
+        MAX_MB = 5
+        MAX_BYTES = MAX_MB * 1024 * 1024
+        ALLOWED_EXTS = {"jpg", "jpeg", "png", "webp"}
+
+        for f in files:
+            if f.size > MAX_BYTES:
+                self.add_error(
+                    "images",
+                    f"File {f.name} is too large (max {MAX_MB} MB).",
+                )
+
+            ext = f.name.rsplit(".", 1)[-1].lower() if "." in f.name else ""
+            if ext not in ALLOWED_EXTS:
+                self.add_error(
+                    "images",
+                    f"File {f.name} has an unsupported type. "
+                    f"Allowed: {', '.join(sorted(ALLOWED_EXTS))}.",
+                )
+
+        return cleaned_data
+
 
     def clean_images(self):
         return self.files.getlist('images')

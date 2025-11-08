@@ -1,5 +1,7 @@
 # marketplace/api_permissions.py
 from rest_framework.permissions import BasePermission, SAFE_METHODS
+from rest_framework.throttling import SimpleRateThrottle
+
 
 class IsOwnerOrReadOnly(BasePermission):
     """
@@ -27,3 +29,14 @@ class IsMessageParticipant(BasePermission):
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
+
+class LoginRateThrottle(SimpleRateThrottle):
+    """
+    Limit login attempts by client IP.
+    Scope 'login' uses REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['login'].
+    """
+    scope = "login"
+
+    def get_cache_key(self, request, view):
+        # Use IP address for both authenticated and anonymous attempts
+        return self.get_ident(request)

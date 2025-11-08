@@ -11,6 +11,9 @@ from .api_views import (
     NotificationViewSet,
     IssueReportAPI, SubscribeAPI
 )
+from rest_framework_simplejwt.views import TokenRefreshView
+from .api_views import LoginAPI, LogoutAPI  # make sure LogoutAPI is imported
+
 
 router = DefaultRouter()
 router.register(r"categories", CategoryViewSet, basename="categories")
@@ -28,6 +31,8 @@ urlpatterns = [
     # Auth
     path("auth/register/", RegisterAPI.as_view(), name="api_register"),
     path("auth/login/", LoginAPI.as_view(), name="api_login"),
+    path("auth/logout/", LogoutAPI.as_view(), name="api_logout"),
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/profile/", ProfileAPI.as_view(), name="api_profile"),
     path("auth/change-password/", ChangePasswordAPI.as_view(), name="api_change_password"),
 

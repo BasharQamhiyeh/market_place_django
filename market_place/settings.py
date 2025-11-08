@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'channels',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'rest_framework.authtoken',
     'drf_spectacular',
     'corsheaders',
@@ -64,9 +65,9 @@ CHANNEL_LAYERS = {
 # Middleware
 # ---------------------------------------------------
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -83,6 +84,19 @@ MIDDLEWARE = [
 # ]
 # Todo: only for dev
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Todo: Relpace for this in PROD
+# _raw_cors = os.getenv('CORS_ALLOWED_ORIGINS', '')
+# if _raw_cors:
+#     CORS_ALLOWED_ORIGINS = [o.strip() for o in _raw_cors.split(',') if o.strip()]
+# else:
+#     # Local dev default
+#     CORS_ALLOWED_ORIGINS = [
+#         "http://localhost:8000",
+#         "http://127.0.0.1:8000",
+#     ]
+#
+# CORS_ALLOW_ALL_ORIGINS = False
 
 
 ROOT_URLCONF = 'market_place.urls'
@@ -217,7 +231,20 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 12,
+
+    # 🔐 Throttling
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+        # used by custom LoginRateThrottle (below)
+        'login': '5/minute',
+    },
 }
+
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Market Place API",
@@ -232,14 +259,62 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),      # short-lived access token
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),         # refresh is valid for 7 days
+    "ROTATE_REFRESH_TOKENS": True,                      # new refresh every refresh
+    "BLACKLIST_AFTER_ROTATION": True,                   # old refresh tokens become invalid
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "UPDATE_LAST_LOGIN": True,
+}
 
-    # 👇 This tells SimpleJWT to use user.user_id instead of user.id
-    'USER_ID_FIELD': 'user_id',
-    'USER_ID_CLAIM': 'user_id',
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+else:
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
 
-    'AUTH_HEADER_TYPES': ('Bearer',),
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 day in seconds
+
+# Extra CSRF protection
+CSRF_USE_SESSIONS = True
+
+
+LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs/marketplace.log",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {"handlers": ["console", "file"], "level": LOG_LEVEL},
+        "marketplace": {"handlers": ["console", "file"], "level": "DEBUG"},
+    },
 }

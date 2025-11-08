@@ -7,6 +7,7 @@ from .models import (
     Conversation, Message, Notification, Favorite,
     IssueReport, Subscriber, PhoneVerificationCode
 )
+from .validators import validate_no_links_or_html
 
 User = get_user_model()
 
@@ -149,6 +150,46 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
             "city_id", "category_id", "images", "attribute_values"
         ]
 
+    def validate_images(self, images):
+        """
+        Extra validation on uploaded images for API.
+        """
+        MAX_MB = 5
+        MAX_BYTES = MAX_MB * 1024 * 1024
+        ALLOWED_EXTS = {"jpg", "jpeg", "png", "webp"}
+
+        for img in images:
+            if img.size > MAX_BYTES:
+                raise serializers.ValidationError(
+                    f"File {img.name} is too large (max {MAX_MB} MB)."
+                )
+            name = getattr(img, "name", "") or ""
+            ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+            if ext not in ALLOWED_EXTS:
+                raise serializers.ValidationError(
+                    f"File {name} has an unsupported type. "
+                    f"Allowed: {', '.join(sorted(ALLOWED_EXTS))}."
+                )
+        return images
+
+    def validate_title(self, value):
+        return validate_no_links_or_html(value)
+
+    def validate_description(self, value):
+        if value is None:
+            return value
+        return validate_no_links_or_html(value)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        attr_values = attrs.get("attribute_values", [])
+
+        for av in attr_values:
+            if isinstance(av, dict) and "value" in av and isinstance(av["value"], str):
+                av["value"] = validate_no_links_or_html(av["value"])
+
+        return attrs
+
     def create(self, validated):
         request = self.context["request"]
 
@@ -254,6 +295,9 @@ class ConversationSerializer(serializers.ModelSerializer):
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserPublicSerializer(read_only=True)
 
+    def validate_body(self, value):
+        return validate_no_links_or_html(value)
+
     class Meta:
         model = Message
         fields = ["id", "conversation_id", "sender", "body", "created_at"]
@@ -267,6 +311,10 @@ class NotificationSerializer(serializers.ModelSerializer):
 # Misc
 # -------------------------
 class IssueReportSerializer(serializers.ModelSerializer):
+
+    def validate_message(self, value):
+        return validate_no_links_or_html(value)
+
     class Meta:
         model = IssueReport
         fields = ["id", "item_id", "message", "status", "created_at"]

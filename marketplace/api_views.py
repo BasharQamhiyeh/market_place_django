@@ -30,6 +30,9 @@ from .api_serializers import (
 )
 from .api_permissions import IsOwnerOrReadOnly, IsConversationParticipant, IsMessageParticipant
 from django.conf import settings
+from .api_permissions import LoginRateThrottle  # add at the top with other imports
+from rest_framework_simplejwt.exceptions import TokenError
+
 
 # -------------------------
 # Utils
@@ -53,6 +56,7 @@ class RegisterAPI(generics.CreateAPIView):
 
 class LoginAPI(generics.GenericAPIView):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request):
         username = request.data.get("username")
@@ -60,7 +64,41 @@ class LoginAPI(generics.GenericAPIView):
         user = authenticate(request, username=username, password=password)
         if not user:
             return Response({"detail":"Invalid credentials."}, status=400)
-        return Response({"token": jwt_for_user(user), "user": UserProfileSerializer(user).data})
+
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
+
+        data = {
+            # keep old key name so existing frontends still work
+            "token": str(access_token),
+            # new: explicit refresh token
+            "refresh": str(refresh),
+            "user": UserProfileSerializer(user).data,
+        }
+        return Response(data)
+
+
+class LogoutAPI(generics.GenericAPIView):
+    """
+    Logout by blacklisting the provided refresh token.
+    Expecting JSON body: {"refresh": "<refresh_token>"}.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required."}, status=400)
+
+        try:
+            token = RefreshToken(refresh_token)
+            # blacklists the refresh token (requires token_blacklist app)
+            token.blacklist()
+        except TokenError:
+            return Response({"detail": "Invalid or expired refresh token."}, status=400)
+
+        return Response({"detail": "Logged out successfully."})
+
 
 class ProfileAPI(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer

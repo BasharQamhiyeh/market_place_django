@@ -13,6 +13,10 @@
     <form method="post" enctype="multipart/form-data" class="vstack gap-4">
       {% csrf_token %}
 
+      <!-- Hidden inputs for main photo selection -->
+      <input type="hidden" name="selected_main_photo" id="selected_main_photo" value="">
+      <input type="hidden" name="main_photo_index" id="main_photo_index" value="">
+
       <!-- ✅ 1. Product Name -->
       <div>
         <label for="id_title" class="form-label fw-semibold">{% trans "Title" %}</label>
@@ -24,22 +28,12 @@
       <!-- ✅ 2. Category -->
       <div>
         <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
-        <select name="category" id="categorySelect" class="form-select">
-          <option value="">{% trans "Select Category" %}</option>
-          {% for cat in categories %}
-            <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>
-              {{ cat }}
-            </option>
-            {% for sub in cat.subcategories.all %}
-              <option value="{{ sub.id }}" {% if selected_category.id == sub.id %}selected{% endif %}>
-                &nbsp;&nbsp;— {{ sub }}
-              </option>
-            {% endfor %}
-          {% endfor %}
+        <select name="category" id="categorySelect" class="form-select" disabled>
+          <option value="{{ category.id }}" selected>{{ category }}</option>
         </select>
       </div>
 
-      <!-- ✅ 7. Dynamic Attributes -->
+      <!-- ✅ 3. Dynamic Attributes -->
       {% for field in form.visible_fields %}
         {% if field.name|slice:"0:10" == "attribute_" and not "_other" in field.name %}
           <div>
@@ -56,7 +50,7 @@
         {% endif %}
       {% endfor %}
 
-      <!-- ✅ 3. Condition -->
+      <!-- ✅ 4. Condition -->
       <div>
         <label class="form-label fw-semibold d-block">{% trans "Condition" %}</label>
         <div class="d-flex gap-4">
@@ -73,35 +67,37 @@
         </div>
       </div>
 
-      <!-- ✅ 4. Description -->
+      <!-- ✅ 5. Description -->
       <div>
         <label class="form-label fw-semibold" for="id_description">{% trans "Description" %}</label>
         <textarea name="description" id="id_description" class="form-control" rows="6">{{ form.description.value|default_if_none:'' }}</textarea>
       </div>
 
-      <!-- ✅ 5. Price -->
+      <!-- ✅ 6. Price -->
       <div>
         <label for="id_price" class="form-label fw-semibold">{% trans "Price" %}</label>
         {{ form.price }}
       </div>
 
-      <!-- ✅ 6. City -->
+      <!-- ✅ 7. City -->
       <div>
         <label class="form-label fw-semibold" for="id_city">{% trans "City" %}</label>
         {{ form.city }}
       </div>
 
-
       <!-- ✅ 8. Existing Photos -->
       <div>
         <h6 class="fw-semibold mb-2">{% trans "Existing Photos" %}</h6>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2" id="existingPhotos">
           {% for photo in item.photos.all %}
-            <div class="position-relative" style="width:120px;">
-              <img src="{{ photo.image.url }}" class="rounded border" style="width:120px;height:120px;object-fit:cover;">
-              <a href="{% url 'delete_item_photo' photo.id %}"
-                 class="btn btn-sm btn-danger position-absolute top-0 end-0"
-                 style="transform:translate(25%,-25%)">×</a>
+            <div class="position-relative">
+              <img src="{{ photo.image.url }}"
+                   data-photo-id="{{ photo.id }}"
+                   class="rounded existing-photo {% if photo.is_main %}selected-main{% endif %}"
+                   style="width:120px;height:120px;object-fit:cover;border:3px solid {% if photo.is_main %}var(--jordan-green){% else %}#ccc{% endif %};border-radius:.5rem;cursor:pointer;transition:all .2s ease;">
+              <button type="submit" name="delete_photo_{{ photo.id }}"
+                      class="btn btn-sm btn-danger position-absolute top-0 end-0"
+                      style="transform:translate(25%,-25%);border-radius:50%;padding:2px 6px;">×</button>
             </div>
           {% empty %}
             <p class="text-muted mb-0">{% trans "No photos uploaded." %}</p>
@@ -132,59 +128,62 @@
 {% block scripts %}
 {{ block.super }}
 
-<!-- ✅ Trumbowyg Editor -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/trumbowyg.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
 
 <style>
-  .form-label {
-    display: block;
-    margin-bottom: .4rem;
-    font-weight: 600;
+  .form-label {display:block;margin-bottom:.4rem;font-weight:600}
+  form.vstack>div{margin-bottom:1rem}
+  .trumbowyg-button-pane{display:flex;flex-wrap:wrap;align-items:center}
+  .trumbowyg-button-pane button{margin-right:6px}
+  [id$="_other_box"]{display:none}
+
+  /* ✅ Highlight main photo */
+  .existing-photo.selected-main,
+  #preview img.preview-img.selected-main {
+    border:4px solid var(--jordan-green)!important;
+    box-shadow:0 0 12px 4px rgba(0,128,0,0.4);
+    transform:scale(1.05);
+    transition:all .2s ease-in-out;
   }
-  form.vstack > div {
-    margin-bottom: 1rem;
+  .existing-photo:hover,
+  #preview img.preview-img:hover {
+    border-color:#999;
+    transform:scale(1.03);
   }
-  .trumbowyg-button-pane {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .trumbowyg-button-pane button {
-    margin-right: 6px;
-  }
-  [id$="_other_box"] { display: none; }
-  #preview img { width:100px;height:100px;object-fit:cover;border-radius:.5rem;border:1px solid #ddd; }
 </style>
 
 <script>
-(function() {
-  function redirectWithCategory(val) {
-    const url = new URL(window.location.href);
-    if (val) url.searchParams.set('category', val);
-    else url.searchParams.delete('category');
-    window.location.href = url.toString();
-  }
-
-  function updateOtherInputs() {
-    document.querySelectorAll("select[name^='attribute_']").forEach(select => {
-      if (select.name.endsWith("_other")) return;
-      const box = document.getElementById(select.name + "_other_box");
-      if (box) box.style.display = (select.value === "__other__") ? "block" : "none";
+(function(){
+  function updateOtherInputs(){
+    document.querySelectorAll("select[name^='attribute_']").forEach(select=>{
+      if(select.name.endsWith("_other"))return;
+      const box=document.getElementById(select.name+"_other_box");
+      if(box)box.style.display=(select.value==="__other__")?"block":"none";
     });
   }
 
-  // ✅ Image preview for new uploads
-  document.addEventListener('change', e => {
-    if (e.target && e.target.name === 'images') {
-      const preview = document.getElementById('preview');
-      preview.innerHTML = '';
-      Array.from(e.target.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = ev => {
-          const img = document.createElement('img');
-          img.src = ev.target.result;
+  // ✅ Preview new uploads
+  document.addEventListener('change',e=>{
+    if(e.target && e.target.name==='images'){
+      const preview=document.getElementById('preview');
+      preview.innerHTML='';
+      document.getElementById('main_photo_index').value='';
+      Array.from(e.target.files).forEach((file,index)=>{
+        const reader=new FileReader();
+        reader.onload=ev=>{
+          const img=document.createElement('img');
+          img.src=ev.target.result;
+          img.classList.add('preview-img');
+          img.dataset.index=index;
+          img.style.cssText='width:100px;height:100px;object-fit:cover;border:2px solid #ddd;border-radius:.5rem;cursor:pointer;transition:all .2s';
+          img.addEventListener('click',()=>{
+            document.querySelectorAll('#preview img').forEach(i=>i.classList.remove('selected-main'));
+            img.classList.add('selected-main');
+            document.getElementById('main_photo_index').value=index;
+            document.getElementById('selected_main_photo').value='';
+          });
           preview.appendChild(img);
         };
         reader.readAsDataURL(file);
@@ -192,25 +191,25 @@
     }
   });
 
-  document.addEventListener('DOMContentLoaded', function() {
-    const categorySelect = document.getElementById('categorySelect');
-    if (categorySelect) {
-      categorySelect.addEventListener('change', function() {
-        redirectWithCategory(this.value);
-      });
+  // ✅ Click existing photo to set as main
+  document.addEventListener('click',e=>{
+    if(e.target && e.target.classList.contains('existing-photo')){
+      document.querySelectorAll('.existing-photo').forEach(i=>i.classList.remove('selected-main'));
+      e.target.classList.add('selected-main');
+      document.getElementById('selected_main_photo').value=e.target.dataset.photoId;
+      document.getElementById('main_photo_index').value='';
     }
+  });
 
-    setTimeout(updateOtherInputs, 0);
-    document.addEventListener('change', e => {
-      if (e.target && e.target.matches("select[name^='attribute_']")) {
-        updateOtherInputs();
-      }
+  document.addEventListener('DOMContentLoaded',function(){
+    setTimeout(updateOtherInputs,0);
+    document.addEventListener('change',e=>{
+      if(e.target && e.target.matches("select[name^='attribute_']"))updateOtherInputs();
     });
-
     $('#id_description').trumbowyg({
-      btns: [['strong','em','underline'],['unorderedList','orderedList'],['link'],['removeformat']],
-      autogrow: true,
-      svgPath: 'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
+      btns:[['strong','em','underline'],['unorderedList','orderedList'],['link'],['removeformat']],
+      autogrow:true,
+      svgPath:'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
     });
   });
 })();

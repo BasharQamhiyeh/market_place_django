@@ -1,17 +1,15 @@
 {% load i18n humanize %}
 
 <div class="card h-100 border-0 shadow-sm position-relative hoverable">
-  {% with photo=item.photos.first %}
-    {% if photo %}
-      <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="card-img-top"
-           style="height:180px; object-fit:cover;">
-    {% else %}
-      <div class="bg-light text-center d-flex align-items-center justify-content-center"
-           style="height:180px;">
-        <span class="text-muted small">{% trans "No image" %}</span>
-      </div>
-    {% endif %}
-  {% endwith %}
+  {% if item.main_photo %}
+    <img src="{{ item.main_photo.image.url }}" alt="{{ item.title }}" class="card-img-top"
+         style="height:180px; object-fit:cover;">
+  {% else %}
+    <div class="bg-light text-center d-flex align-items-center justify-content-center"
+         style="height:180px;">
+      <span class="text-muted small">{% trans "No image" %}</span>
+    </div>
+  {% endif %}
 
   <div class="card-body">
     <h6 class="card-title mb-1 text-truncate">{{ item.title }}</h6>
@@ -28,17 +26,16 @@
     </p>
 
     <p class="mb-0 fw-semibold text-dark">JOD {{ item.price }}</p>
-    <p class="text-muted small mb-0">
-      {% if LANGUAGE_CODE == 'ar' %}
-        <p class="text-muted small mb-1">
-          {% trans "Posted before" %} {{ item.created_at|timesince|cut:"," }}
-        </p>
-      {% else %}
-        <p class="text-muted small mb-1">
-          {% trans "Posted" %} {{ item.created_at|timesince }} {% trans "ago" %}
-        </p>
-      {% endif %}
-    </p>
+
+    {% if LANGUAGE_CODE == 'ar' %}
+      <p class="text-muted small mb-1">
+        {% trans "Posted before" %} {{ item.created_at|timesince|cut:"," }}
+      </p>
+    {% else %}
+      <p class="text-muted small mb-1">
+        {% trans "Posted" %} {{ item.created_at|timesince }} {% trans "ago" %}
+      </p>
+    {% endif %}
 
     <a href="{% url 'item_detail' item.id %}" class="stretched-link" aria-label="{% trans 'View Details' %}"></a>
   </div>

@@ -142,6 +142,11 @@ class Item(models.Model):
     approved_at = models.DateTimeField(null=True, blank=True)
     rejected_at = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def main_photo(self):
+        """Return the preferred (is_main) photo, or first one."""
+        return self.photos.filter(is_main=True).first() or self.photos.first()
+
     def __str__(self):
         return self.title
 
@@ -151,6 +156,7 @@ class ItemPhoto(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='photos')
     image = models.ImageField(upload_to='items/')
     created_at = models.DateTimeField(auto_now_add=True)
+    is_main = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Photo for {self.item.title}"
