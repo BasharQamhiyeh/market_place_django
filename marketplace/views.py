@@ -173,6 +173,9 @@ def item_list(request):
         return HttpResponse(html)
 
     # ✅ Normal full-page render
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "partials/item_results.html", context)
+
     return render(request, "item_list.html", context)
 
 

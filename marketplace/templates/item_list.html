@@ -1,203 +1,258 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{% trans "Items" %}{% endblock %}
+{% block title %}ركن — {% trans "Latest items" %}{% endblock %}
 
 {% block content %}
-<div class="row g-4">
-  <!-- Sidebar -->
-  <aside class="col-lg-3">
-    <form method="get" id="filtersForm" class="card border-0 shadow-sm p-3">
-      <h6 class="fw-bold mb-3 text-success">{% trans "Categories" %}</h6>
-      <ul class="list-unstyled small">
+
+<!-- HERO -->
+<section class="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-orange-100/40">
+  <div class="absolute -top-20 -left-32 w-96 h-96 bg-orange-200/30 blur-3xl rounded-full"></div>
+  <div class="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-orange-100/40 blur-3xl rounded-full"></div>
+
+  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 space-y-10">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
+      <div class="lg:col-span-2 pt-5">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-relaxed pb-4 pr-2">
+          لكل منتج ركن خاص ✨
+        </h1>
+        <h2 class="text-2xl md:text-3xl font-semibold text-[var(--rukn-orange)] mt-1 pr-2 pb-2">
+          بيع، <span style="color:#00b871;">اشتري</span>، أو اطلب ما تحتاجه بسهولة
+        </h2>
+        <p class="text-base md:text-lg mt-2 text-[var(--muted)] pr-2 max-w-2xl">
+          نصنّف الإعلانات بذكاء لتصل لما تبحث عنه بسرعة، سواء للبيع أو الشراء.
+          تجربة سهلة وسريعة وآمنة للجميع.
+        </p>
+      </div>
+
+      <!-- Simple featured spot (static for now) -->
+      <a href="{% url 'item_list' %}"
+         class="block rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full card-hover">
+        <div class="relative">
+          <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80&auto=format&fit=crop"
+               class="w-full h-44 object-cover" alt="مساحة إعلانية">
+          <span class="absolute top-3 right-3 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow">
+            🚗 سيارات
+          </span>
+        </div>
+        <div class="p-4">
+          <div class="text-sm text-gray-500">مساحة إعلانية</div>
+          <div class="font-bold">أعلن عن سيارتك هنا</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- الأقسام -->
+<!-- الأقسام -->
+<section class="py-6 bg-gray-50 border-y">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl md:text-3xl font-extrabold leading-tight text-right text-gray-900">
+        {% trans "Categories" %}
+      </h2>
+    </div>
+
+    <div class="scroll-wrapper">
+      <button class="scroll-btn left" type="button" aria-label="تمرير يسار"
+              onclick="scrollCats(-1)">‹</button>
+      <button class="scroll-btn right" type="button" aria-label="تمرير يمين"
+              onclick="scrollCats(1)">›</button>
+
+      <div id="catsScroll" class="flex overflow-x-auto space-x-4 no-scrollbar">
         {% for cat in categories %}
-          <li class="mb-2">
-            <label class="fw-semibold">
-              <input type="checkbox" name="categories" value="{{ cat.id }}"
-                {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}
-                onchange="this.form.submit()"> {{ cat.name_ar }}
-            </label>
-            {% if cat.subcategories.exists %}
-              <ul class="list-unstyled ms-3 mt-1">
-                {% for sub in cat.subcategories.all %}
-                  <li>
-                    <label class="text-muted">
-                      <input type="checkbox" name="categories" value="{{ sub.id }}"
-                        {% if sub.id|stringformat:"s" in selected_categories %}checked{% endif %}
-                        onchange="this.form.submit()"> {{ sub.name_ar }}
-                    </label>
-                  </li>
-                {% endfor %}
-              </ul>
+          <a href="{% url 'item_list' %}?categories={{ cat.id }}"
+             class="group bg-white rounded-2xl p-4 shadow-card hover:shadow-lg transition
+                    hover:bg-[var(--rukn-orange)] hover:text-white flex-shrink-0 w-44
+                    flex flex-col justify-center text-center card-hover">
+
+            <div class="wiggle text-4xl mb-2">
+              {% if cat.icon %}
+                <span style="color: {{ cat.color|default:'var(--rukn-orange)' }}">
+                  {{ cat.icon }}
+                </span>
+              {% else %}
+                <span style="color: var(--rukn-orange);">🏬</span>
+              {% endif %}
+            </div>
+
+
+            <div class="font-bold mt-1 group-hover:text-white">
+              {{ cat }}
+            </div>
+
+            {% get_current_language as LANGUAGE_CODE %}
+            {% if LANGUAGE_CODE == "ar" %}
+              {% if cat.subtitle_ar %}
+                <div class="text-xs text-gray-500 group-hover:text-white">{{ cat.subtitle_ar }}</div>
+              {% endif %}
+            {% else %}
+              {% if cat.subtitle_en %}
+                <div class="text-xs text-gray-500 group-hover:text-white">{{ cat.subtitle_en }}</div>
+              {% endif %}
             {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-
-      <hr>
-
-      <h6 class="fw-bold mb-3 text-success">{% trans "City" %}</h6>
-      <select name="city" class="form-select mb-3" onchange="this.form.submit()">
-        <option value="">{% trans "All Cities" %}</option>
-        {% for c in cities %}
-          <option value="{{ c.id }}" {% if request.GET.city == c.id|stringformat:"s" %}selected{% endif %}>
-            {{ c.name_ar }}
-          </option>
-        {% endfor %}
-      </select>
-
-      <hr>
-
-      <h6 class="fw-bold mb-3 text-success">{% trans "Price Range" %}</h6>
-      <div class="d-flex align-items-center gap-2">
-        <input type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min" class="form-control" style="max-width:100px;">
-        <span>–</span>
-        <input type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max" class="form-control" style="max-width:100px;">
-      </div>
-      <button type="submit" class="btn btn-primary btn-sm mt-3 w-100">{% trans "Apply Filters" %}</button>
-    </form>
-  </aside>
-
-  <!-- Main Content -->
-  <section class="col-lg-9">
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap">
-        <h5 class="mb-0 fw-bold text-success d-flex align-items-center gap-2">
-          <i class="bi bi-megaphone-fill fs-5"></i>
-          {% trans "Announcements" %}
-        </h5>
-
-        {% if user.is_authenticated %}
-          <a href="{% url 'create_item' %}"
-             class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 shadow-sm"
-             style="border-radius: 50px; font-weight:600; transition:all .2s;">
-            <i class="bi bi-plus-lg fs-6"></i>
-            <span>{% trans "Add" %}</span>
           </a>
-        {% else %}
-          <a href="{% url 'login' %}"
-             class="btn btn-outline-success d-flex align-items-center gap-2 px-3 py-2"
-             style="border-radius: 50px;">
-            <i class="bi bi-plus-lg fs-6"></i>
-            <span>{% trans "Add" %}</span>
-          </a>
-        {% endif %}
-      </div>
-
-      <div class="card-body bg-light">
-        <!-- Search and Filter -->
-        <form method="get" class="mb-3 d-flex gap-2 flex-wrap align-items-center position-relative">
-          <select name="category" class="form-select w-auto" onchange="this.form.submit()">
-            <option value="">{% trans 'All Categories' %}</option>
-            {% for cat in categories %}
-              <option value="{{ cat.id }}" {% if selected_category and selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
-              {% for sub in cat.subcategories.all %}
-                <option value="{{ sub.id }}" {% if selected_category and selected_category.id == sub.id %}selected{% endif %}>
-                  &nbsp;&nbsp;— {{ sub }}
-                </option>
-              {% endfor %}
-            {% endfor %}
-          </select>
-
-          <div class="flex-grow-1 position-relative" style="max-width:500px;">
-            <input type="text"
-                   id="searchBox"
-                   name="q"
-                   class="form-control"
-                   placeholder="{% trans 'Search...' %}"
-                   value="{{ q }}"
-                   autocomplete="off">
-            <div id="suggestions" class="list-group position-absolute w-100 mt-1 shadow-sm" style="z-index:1000;"></div>
+        {% empty %}
+          <div class="text-sm text-gray-500">
+            {% trans "No categories yet." %}
           </div>
-        </form>
+        {% endfor %}
+      </div>
 
-        <!-- ✅ Item Results Grid -->
-        <div id="results">
-          {% include 'partials/item_results.html' %}
+    </div>
+  </div>
+</section>
+
+<!-- إعلانات البيع الحديثة -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 pt-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-2xl md:text-3xl font-extrabold leading-tight"
+        style="color:var(--rukn-orange)">
+      إعلانات البيع الحديثة
+    </h2>
+
+    <a href="{% url 'item_list' %}" class="text-sm" style="color:var(--rukn-orange)">
+      عرض كل الإعلانات
+    </a>
+  </div>
+
+  <div id="itemResults">
+    {% include "partials/item_results.html" %}
+  </div>
+</section>
+
+<!-- طلبات الشراء الحديثة (ثيم أخضر) - مبدئيًا ثابتة / تصميم فقط -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3 sm:gap-0">
+    <h2 class="text-2xl md:text-3xl font-extrabold leading-tight"
+        style="color:var(--rukn-green)">
+      طلبات الشراء الحديثة
+    </h2>
+
+    <a href="#" class="text-sm" style="color:var(--rukn-green)">
+      عرض كل الطلبات
+    </a>
+  </div>
+
+  <!-- TODO: ربط لاحقًا بنموذج "طلبات شراء" حقيقي في الـ backend -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    <article class="bg-white rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      <div class="p-4 pb-2">
+        <h3 class="font-semibold text-lg" style="color:var(--rukn-green)">
+          مطلوب لابتوب i7 للجامعة
+        </h3>
+        <div class="mt-1 text-sm text-[var(--muted)] flex items-center justify-between pb-3 mb-2 border-b border-gray-100/80">
+          <span>📍 عمّان</span>
+          <span>⏱️ منذ ساعة</span>
+        </div>
+      </div>
+      <div class="flex items-center justify-between p-4 pt-2">
+        <div class="bg-[var(--rukn-green)] text-white text-base font-bold px-3 py-1 rounded-md shadow">
+          حتى 300 د.أ
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs">خ</div>
+          <span class="text-sm font-medium text-gray-800">خالد عودة</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- يمكنك تكرار 2-3 بطاقات ثابتة أخرى للديزاين -->
+  </div>
+</section>
+
+<!-- HOW IT WORKS (بيع) -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+  <div class="bg-white rounded-2xl p-6 card-shadow">
+    <h2 class="text-xl font-bold mb-4">كيف تعمل ركن؟</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="flex gap-4 items-start">
+        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">1</div>
+        <div>
+          <h3 class="font-semibold">سجل حسابك</h3>
+          <p class="text-[var(--muted)] text-sm mt-1">ابدأ بإنشاء حساب مجاني للوصول إلى لوحة الإعلانات.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4 items-start">
+        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">2</div>
+        <div>
+          <h3 class="font-semibold">أضف إعلانك</h3>
+          <p class="text-[var(--muted)] text-sm mt-1">حمّل صور، أضف وصف وسعر واطلع على معاينة الإعلان قبل النشر.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4 items-start">
+        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">3</div>
+        <div>
+          <h3 class="font-semibold">تواصل واستكمل البيع</h3>
+          <p class="text-[var(--muted)] text-sm mt-1">استقبل رسائل المشتريين وأتمّ معاملتك بأمان.</p>
         </div>
       </div>
     </div>
-  </section>
-</div>
 
-<!-- ✅ Suggestion Script -->
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-  const input = document.getElementById("searchBox");
-  const suggestionsBox = document.getElementById("suggestions");
-  const resultsDiv = document.getElementById("results");
-  let typingTimer;
-  const delay = 350; // ms between keystrokes before searching
+    <div class="mt-6">
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'create_item' %}" class="inline-block bg-[var(--rukn-orange)] text-white px-5 py-3 rounded-lg font-medium btn-primary-rukn">
+          أضف إعلانك
+        </a>
+      {% else %}
+        <a href="{% url 'login' %}?next={% url 'create_item' %}"
+           class="inline-block bg-[var(--rukn-orange)] text-white px-5 py-3 rounded-lg font-medium btn-primary-rukn">
+          أضف إعلانك
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
 
-  async function updateResults(q) {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      if (q) params.set("q", q); else params.delete("q");
-      const res = await fetch(`/?${params.toString()}`, { headers: { "HX-Request": "true" } });
-      const html = await res.text();
-      resultsDiv.innerHTML = html;
-    } catch (err) {
-      console.error("Search update failed", err);
-    }
-  }
+<!-- HOW IT WORKS (طلبات شراء) -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+  <div class="rounded-2xl p-6 card-shadow"
+       style="background:linear-gradient(180deg,var(--rukn-green-50),#fff)">
+    <h2 class="text-xl font-bold mb-6" style="color:var(--rukn-green)">
+      كيف تضيف “طلب شراء”؟
+    </h2>
 
-  input.addEventListener("input", function(){
-    const q = this.value.trim();
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
+        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+             style="background:var(--rukn-green)">1</div>
+        <div>
+          <h3 class="font-semibold">اختر “أضف طلب شراء”</h3>
+          <p class="text-[var(--muted)] text-sm mt-1">من الصفحة الرئيسية أو من لوحة المستخدم (لاحقًا).</p>
+        </div>
+      </div>
 
-    // --- Instant search ---
-    clearTimeout(typingTimer);
-    typingTimer = setTimeout(() => updateResults(q), delay);
+      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
+        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+             style="background:var(--rukn-green)">2</div>
+        <div>
+          <h3 class="font-semibold">حدد المواصفات والميزانية</h3>
+          <p class="text-[var(--muted)] text-sm mt-1">اكتب عنوانًا واضحًا، المدينة، والحد الأعلى للسعر.</p>
+        </div>
+      </div>
 
-    // --- Suggestions ---
-    if (q.length < 2) { suggestionsBox.innerHTML = ""; return; }
+      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
+        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+             style="background:var(--rukn-green)">3</div>
+        <div>
+          <h3 class="font-semibold">انشر واستقبل العروض</h3>
+          <p class="text-[var(--muted)] text-sm mt-1">سيعرض البائعون اقتراحاتهم ويمكنك المقارنة والتواصل.</p>
+        </div>
+      </div>
+    </div>
 
-    fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`)
-      .then(r => r.json())
-      .then(data => {
-        suggestionsBox.innerHTML = "";
+    <div class="mt-6 flex flex-wrap gap-3">
+      <a href="#" class="inline-block px-5 py-3 rounded-lg btn-green">
+        أضف طلب شراء
+      </a>
+      <a href="#" class="inline-block px-5 py-3 rounded-lg pill-green">
+        نصائح لطلب شراء فعّال
+      </a>
+    </div>
+  </div>
+</section>
 
-        const seeAll = document.createElement("a");
-        seeAll.href = `/?q=${encodeURIComponent(q)}`;
-        seeAll.className = "list-group-item list-group-item-action fw-semibold";
-        seeAll.innerHTML = `{% trans "See results for" %} <span class="text-primary">"${q}"</span>`;
-        suggestionsBox.appendChild(seeAll);
-
-        data.results.forEach(s => {
-          const div = document.createElement("a");
-          div.className = "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
-          if (s.type === "category" && s.category_id) div.href = `/?category=${s.category_id}`;
-          else div.href = `/?q=${encodeURIComponent(s.name)}`;
-          div.innerHTML = `
-            <div>
-              <span class="fw-semibold">${s.name}</span>
-              ${s.parent ? `<small class="text-muted ms-2">${s.parent}</small>` : ""}
-            </div>
-            <small class="text-muted">${s.type === "item" ? "{% trans 'Item' %}" : "{% trans 'Category' %}"}</small>
-          `;
-          suggestionsBox.appendChild(div);
-        });
-      })
-      .catch(() => {});
-  });
-
-  // Hide suggestions on outside click
-  document.addEventListener("click", (e) => {
-    if (!input.contains(e.target) && !suggestionsBox.contains(e.target)) {
-      suggestionsBox.innerHTML = "";
-    }
-  });
-});
-</script>
-
-<style>
-.btn-primary {
-  background-color: var(--jordan-green);
-  border-color: var(--jordan-green);
-}
-.btn-primary:hover {
-  background-color: var(--jordan-red);
-  border-color: var(--jordan-red);
-  transform: translateY(-1px);
-}
-</style>
 {% endblock %}

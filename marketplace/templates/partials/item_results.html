@@ -1,40 +1,38 @@
 {% load i18n %}
 
 {% if page_obj and page_obj.object_list %}
-  <div class="row g-3">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
     {% for item in page_obj %}
-      <div class="col-12 col-md-6 col-lg-4 position-relative">
-        {% include "partials/_item_card.html" with item=item %}
-      </div>
+      {% include "partials/_item_card.html" with item=item %}
     {% endfor %}
   </div>
 
-  <!-- ✅ Pagination -->
-  <nav class="mt-4 d-flex justify-content-center align-items-center gap-3">
+  <!-- Pagination -->
+  <nav class="mt-8 flex items-center justify-center gap-3 text-sm">
     {% if page_obj.has_previous %}
-      <a class="btn btn-sm btn-outline-secondary"
+      <a class="px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100"
          hx-get="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}"
          hx-target="#results"
          hx-push-url="true">
-         &laquo; {% trans "Previous" %}
+        &laquo; {% trans "Previous" %}
       </a>
     {% endif %}
 
-    <span class="text-muted small">
+    <span class="px-4 py-1 rounded-full bg-gray-100 text-gray-700">
       {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
     </span>
 
     {% if page_obj.has_next %}
-      <a class="btn btn-sm btn-outline-secondary"
+      <a class="px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100"
          hx-get="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}"
          hx-target="#results"
          hx-push-url="true">
-         {% trans "Next" %} &raquo;
+        {% trans "Next" %} &raquo;
       </a>
     {% endif %}
   </nav>
 {% else %}
-  <div class="alert alert-info mb-0 mt-3">
+  <div class="mt-6 bg-blue-50 border border-blue-100 text-blue-800 text-sm rounded-xl px-4 py-3">
     {% trans "No items found." %}
   </div>
 {% endif %}

@@ -319,4 +319,7 @@ LOGGING = {
     },
 }
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_ORG_ID = os.getenv("OPENAI_ORG_ID", "")
+OPENAI_PROJECT_ID = os.getenv("OPENAI_PROJECT_ID", "")
+

@@ -54,8 +54,24 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Category(models.Model):
     name_en = models.CharField(max_length=255, unique=True)
     name_ar = models.CharField(max_length=255, unique=True)
+    subtitle_en = models.CharField(max_length=255, blank=True, null=True)
+    subtitle_ar = models.CharField(max_length=255, blank=True, null=True)
+    icon = models.CharField(
+        max_length=50,  # 👈 IMPORTANT: keep it 50 (NOT 10)
+        blank=True,
+        null=True,
+        help_text="Choose an emoji icon for this category"
+    )
+
+    # 🧩 Icon color (text field — admin can pick or type a color)
+    color = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text="Emoji color (optional)"
+    )
     description = models.TextField(blank=True, null=True)
-    parent = models.ForeignKey(  # ✅ This line must exist
+    parent = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
         related_name="subcategories",
@@ -70,6 +86,7 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+
 
 
 

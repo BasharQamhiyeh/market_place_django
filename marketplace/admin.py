@@ -14,6 +14,7 @@ from django.template.response import TemplateResponse
 import nested_admin, json
 from django.utils import translation
 from .forms import CityForm
+from django import forms
 
 
 from .models import (
@@ -64,8 +65,18 @@ class AttributeInline(nested_admin.NestedStackedInline):
 @admin.register(Category)
 class CategoryAdmin(nested_admin.NestedModelAdmin):
     change_list_template = "admin/categories_changelist.html"
-    change_form_template = "admin/marketplace/category/change_form.html"  # ✅ add this
-    list_display = ("name_en", "name_ar", "parent")
+    change_form_template = "admin/marketplace/category/change_form.html"
+    list_display = ("name_en", "name_ar", "parent", "icon_display", "color_box")
+    fields = (
+        "name_en",
+        "name_ar",
+        "subtitle_en",
+        "subtitle_ar",
+        "icon",
+        "color",
+        "description",
+        "parent",
+    )
     search_fields = ("name_en", "name_ar")
     list_filter = ("parent",)
     ordering = ("parent__id", "id")
@@ -133,6 +144,43 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
 
             formfield.choices = choices
         return formfield
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        """
+        Use a color picker for the 'color' field.
+        """
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "color" and formfield is not None:
+            formfield.widget = forms.TextInput(attrs={"type": "color"})
+        return formfield
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == "color" and formfield is not None:
+            formfield.widget = forms.TextInput(attrs={"type": "color"})
+        return formfield
+
+    def icon_display(self, obj):
+        if obj.icon:
+            color = obj.color or "#ff6600"
+            return format_html('<span style="font-size:22px; color:{};">{}</span>', color, obj.icon)
+        return "—"
+    icon_display.short_description = "Icon"
+
+    def color_box(self, obj):
+        if obj.color:
+            return format_html(
+                '<div style="width:25px; height:25px; background:{}; border-radius:4px; border:1px solid #ddd;"></div>',
+                obj.color
+            )
+        return "—"
+    color_box.short_description = "Color"
+
+    class Media:
+        js = (
+            "admin/js/emoji_picker.js",
+        )
+
 
 # ======================================================
 # ✅ ITEM ADMIN — cleaned, color-coded, review-based

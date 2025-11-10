@@ -1,208 +1,719 @@
 {% load static i18n %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{% block title %}Souq Jordan{% endblock %}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}ركن — منصة إعلانات{% endblock %}</title>
 
-  <!-- ✅ Bootstrap + Icons -->
+  <meta name="description" content="منصة ركن للإعلانات المبوبة - بيع، اشتري، أو اطلب ما تحتاجه بسهولة وأمان">
+
+  <!-- Fonts + Tailwind -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Bootstrap / Icons (still used by forms & existing pages) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
+  <link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      referrerpolicy="no-referrer" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+
+
   <style>
-    :root {
-      --jordan-red: #D72638;
-      --jordan-green: #005C4B;
-      --jordan-gold: #C8A951;
-      --jordan-sand: #F9F8F4;
-      --text-dark: #2B2B2B;
-      --light-gray: #f4f4f4;
+    :root{
+      --rukn-orange:#ff7a18;
+      --rukn-gray:#f3f4f6;
+      --muted:#6b7280;
+      --transition:.3s ease;
+      --rukn-green:#16a34a;
+      --rukn-green-700:#15803d;
+      --rukn-green-50:#ecfdf5;
+      --rukn-green-100:#d1fae5;
+      --rukn-green-200:#a7f3d0;
     }
 
-    body {
-      font-family: 'Cairo', 'Segoe UI', sans-serif;
-      background-color: var(--jordan-sand);
-      color: var(--text-dark);
+    body{
+      font-family:'Cairo',sans-serif;
+      background:#f8faf9;
+      color:#111827;
+      padding-top:40px;
+      line-height:1.6;
     }
 
-    /* ✅ Colored Navbar */
-    .navbar {
-      background-color: var(--jordan-green);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .navbar-brand {
-      font-weight: 700;
-      color: #fff !important;
-      display: flex; align-items: center; gap: .5rem;
-    }
-    .navbar .nav-link {
-      color: #fff !important;
-      font-weight: 500;
-      transition: color .2s;
-    }
-    .navbar .nav-link:hover { color: var(--jordan-gold) !important; }
-
-    .navbar-toggler {
-      background-color: var(--jordan-gold);
-      border: none;
+    .topbar{
+      position:fixed;
+      inset-inline:0;
+      top:0;
+      height:40px;
+      background:var(--rukn-gray);
+      z-index:70;
+      border-bottom:1px solid #e5e7eb;
+      backdrop-filter:blur(8px);
     }
 
-    /* ✅ Buttons match header color */
-    .btn-primary {
-      background-color: var(--jordan-green);
-      border-color: var(--jordan-green);
+    .card-shadow{box-shadow:0 6px 18px rgba(20,20,30,.06)}
+
+    .btn-primary-rukn{
+      background:var(--rukn-orange);
+      color:#fff;
+      transition:all var(--transition);
+      box-shadow:0 4px 6px rgba(255,122,24,.2);
     }
-    .btn-primary:hover {
-      background-color: var(--jordan-red);
-      border-color: var(--jordan-red);
+    .btn-primary-rukn:hover{
+      background:#e56a00;
+      transform:translateY(-2px);
+      box-shadow:0 6px 12px rgba(255,122,24,.3);
     }
 
-    .flag-divider {
-      height: 5px;
-      background: linear-gradient(90deg, var(--jordan-red), var(--jordan-gold), var(--jordan-green));
+    /* Topbar dropdowns (favorites / messages / notifications / user) */
+    .dropdown-panel{
+      position:absolute;
+      top:calc(100% + 8px);
+      right:0;
+      left:auto;
+      min-width:260px;
+      max-width:340px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:12px;
+      box-shadow:0 10px 25px rgba(15,23,42,.14);
+      padding:0.5rem 0;
+      display:none;
+      z-index:80;
+      opacity:0;
+      transform:translateY(8px);
+      transition:opacity var(--transition),transform var(--transition);
+    }
+    .dropdown-panel.show{
+      display:block;
+      opacity:1;
+      transform:translateY(0);
+    }
+    .dropdown-header{
+      padding:.75rem 1rem;
+      font-weight:700;
+      border-bottom:1px solid #f1f1f1;
+    }
+    .dropdown-list{max-height:320px;overflow:auto}
+    .dropdown-item-rukn{
+      display:flex;
+      gap:.75rem;
+      padding:.75rem 1rem;
+      align-items:flex-start;
+      transition:background var(--transition);
+      text-decoration:none;
+      color:#111827;
+      font-size:.9rem;
+    }
+    .dropdown-item-rukn:hover{background:#fafafa}
+    .badge-top{
+      position:absolute;
+      inset-inline-end:-.25rem;
+      inset-block-start:-.25rem;
+      background:var(--rukn-orange);
+      color:#fff;
+      border-radius:9999px;
+      font-size:0.7rem;
+      min-width:1.1rem;
+      height:1.1rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:bold;
     }
 
-    footer {
-      background-color: var(--light-gray);
-      padding: 3rem 0;
-      border-top: 4px solid var(--jordan-green);
+    /* Toast notifications (Django messages) */
+    @keyframes slideDownFade {
+      0% { opacity: 0; transform: translateY(-10px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
     }
-    footer h6 { font-weight: 700; margin-bottom: 1rem; color: var(--jordan-green); }
-    footer a { text-decoration: none; color: #555; font-size: 0.95rem; }
-    footer a:hover { color: var(--jordan-red); }
+    .animate-slideDownFade {
+      animation: slideDownFade 4s ease-in-out forwards;
+    }
+
+    i[class^="fa"], i[class*=" fa-"] {
+      font-family: "Font Awesome 6 Free" !important;
+      font-weight: 900 !important; /* ensures solid icons appear */
+      font-style: normal !important;
+    }
   </style>
 </head>
+
 <body>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <!-- Language switch -->
+      <div class="flex items-center gap-2 text-sm text-[var(--muted)]">
+        <span>🌐</span>
+        <form action="{% url 'set_language' %}" method="post">
+          {% csrf_token %}
+          <select name="language"
+                  class="bg-transparent border-none focus:outline-none cursor-pointer"
+                  onchange="this.form.submit()">
+            <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>العربية</option>
+            <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+          </select>
+        </form>
+      </div>
 
-<!-- ✅ Navbar -->
-<nav class="navbar navbar-expand-lg py-3">
-  <div class="container">
-    <a class="navbar-brand" href="/">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="16" viewBox="0 0 60 40">
-        <rect width="60" height="40" fill="#007A3D"/>
-        <rect width="60" height="26.6" y="0" fill="#fff"/>
-        <rect width="60" height="13.3" y="0" fill="#000"/>
-        <polygon points="0,0 26.6,20 0,40" fill="#CE1126"/>
-      </svg>
-      🛠 {% trans "Rokon" %}
-    </a>
-
-    <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-      <i class="bi bi-list"></i>
-    </button>
-
-    <div class="collapse navbar-collapse justify-content-end" id="navMenu">
-      <ul class="navbar-nav align-items-center gap-3">
-
-        {% if user.is_authenticated and user.is_staff %}
-        <li class="nav-item">
-          <a class="nav-link fw-semibold" href="{% url 'admin:index' %}">
-            🛠 {% trans "Admin Dashboard" %}
-          </a>
-        </li>
-        {% endif %}
-
+      <!-- Right side: favorites / messages / notifications / profile -->
+      <div class="flex items-center gap-4 text-[var(--muted)]">
         {% if request.user.is_authenticated %}
-          <li class="nav-item position-relative">
-            <a class="nav-link" href="{% url 'notifications' %}">
-              <i class="bi bi-bell-fill"></i>
-              {% if unread_notifications > 0 %}
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  {{ unread_notifications }}
-                </span>
-              {% endif %}
-            </a>
-          </li>
 
-          <li class="nav-item position-relative">
-            <a class="nav-link" href="{% url 'user_inbox' %}">
-              <i class="bi bi-chat-dots-fill"></i>
-              {% if unread_messages > 0 %}
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  {{ unread_messages }}
-                </span>
+          <!-- Favorites dropdown (recent favorites) -->
+          <div class="relative">
+            <button id="favBtn"
+                    type="button"
+                    class="relative hover:text-gray-900 transition-colors"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-label="{% trans 'Favorites' %}">
+              ❤️
+              {% if favorite_count|default:0 > 0 %}
+                <span class="badge-top">{{ favorite_count }}</span>
               {% endif %}
-            </a>
-          </li>
+            </button>
 
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarUserDropdown" data-bs-toggle="dropdown">
-              <img src="{% static 'img/profile-icon.png' %}" alt="profile icon" class="rounded-circle me-2" width="30" height="30">
-              {{ request.user.username }}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="navbarUserDropdown">
-              <li><a class="dropdown-item" href="{% url 'user_profile' request.user.user_id %}">{% trans "My Profile" %}</a></li>
-              <li><a class="dropdown-item" href="{% url 'edit_profile' %}">{% trans "Edit Profile" %}</a></li>
-              <li><a class="dropdown-item" href="{% url 'my_items' %}">{% trans "My Announcements" %}</a></li>
-              <li><a class="dropdown-item" href="{% url 'my_favorites' %}">{% trans "My Favorites" %}</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">{% trans "Logout" %}</a></li>
-            </ul>
-          </li>
+            <div id="favMenu" class="dropdown-panel" aria-labelledby="favBtn">
+              <div class="dropdown-header">{% trans "My Favorites" %}</div>
+              <div class="dropdown-list">
+                {% if recent_favorites %}
+                  {% for fav in recent_favorites %}
+                    {% with item=fav.item %}
+                      <a href="{% url 'item_detail' item.id %}" class="dropdown-item-rukn">
+                        <div class="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 border">
+                          {% with photo=item.photos.first %}
+                            {% if photo %}
+                              <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
+                            {% else %}
+                              <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🖼️</div>
+                            {% endif %}
+                          {% endwith %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="font-semibold text-sm truncate">{{ item.title }}</div>
+                          <div class="text-xs text-gray-500 truncate mt-0.5">
+                            {{ item.price }} JOD
+                          </div>
+                        </div>
+                      </a>
+                    {% endwith %}
+                  {% endfor %}
+                {% else %}
+                  <div class="px-4 py-2 text-sm text-gray-600">
+                    {% trans "You don't have any favorites yet." %}
+                  </div>
+                {% endif %}
+              </div>
+              <div class="p-3 border-t">
+                <a href="{% url 'my_favorites' %}"
+                   class="block text-center text-sm text-white rounded-lg py-2 btn-primary-rukn">
+                  {% trans "View all favorites" %}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Messages dropdown: show last 6 messages -->
+          <div class="relative">
+            <button id="msgBtn"
+                    type="button"
+                    class="relative hover:text-gray-900 transition-colors"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-label="{% trans 'Messages' %}">
+              ✉️
+              {% if unread_messages|default:0 > 0 %}
+                <span class="badge-top">{{ unread_messages }}</span>
+              {% endif %}
+            </button>
+            <div id="msgMenu" class="dropdown-panel" aria-labelledby="msgBtn">
+              <div class="dropdown-header">{% trans "Messages" %}</div>
+
+              <div class="dropdown-list">
+                {% if recent_messages %}
+                  {% for msg in recent_messages %}
+                    <a href="{% url 'chat_room' msg.conversation.id %}"
+                       class="dropdown-item-rukn {% if not msg.is_read %}bg-orange-50{% endif %}">
+                      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
+                        {{ msg.sender.username|first|upper }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="font-semibold text-sm truncate">
+                            {{ msg.sender.username }}
+                          </span>
+                          <span class="text-[0.7rem] text-gray-400 whitespace-nowrap">
+                            {{ msg.created_at|timesince }} {% trans "ago" %}
+                          </span>
+                        </div>
+                        <div class="text-xs text-gray-600 mt-1 truncate">
+                          {% if msg.conversation.item %}
+                            {{ msg.conversation.item.title }}
+                          {% else %}
+                            {% trans "Conversation" %}
+                          {% endif %}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                          {{ msg.body }}
+                        </div>
+                      </div>
+                    </a>
+                  {% endfor %}
+                {% else %}
+                  <div class="px-4 py-2 text-sm text-gray-600">
+                    {% trans "No conversations yet." %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="p-3 border-t flex items-center justify-between">
+                <span class="text-xs text-gray-500">
+                  {% if unread_messages|default:0 > 0 %}
+                    {% blocktrans count n=unread_messages %}
+                    {{ n }} unread
+                    {% plural %}
+                    {{ n }} unread
+                    {% endblocktrans %}
+                  {% endif %}
+                </span>
+                <a href="{% url 'user_inbox' %}"
+                   class="text-sm text-white rounded-lg py-2 px-3 btn-primary-rukn">
+                  {% trans "Open inbox" %}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications dropdown: show last 6 notifications -->
+          <div class="relative">
+            <button id="notiBtn"
+                    type="button"
+                    class="relative hover:text-gray-900 transition-colors"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-label="{% trans 'Notifications' %}">
+              🔔
+              {% if unread_notifications|default:0 > 0 %}
+                <span class="badge-top">{{ unread_notifications }}</span>
+              {% endif %}
+            </button>
+            <div id="notiMenu" class="dropdown-panel" aria-labelledby="notiBtn">
+              <div class="dropdown-header">{% trans "Notifications" %}</div>
+
+              <div class="dropdown-list">
+                {% if recent_notifications %}
+                  {% for n in recent_notifications %}
+                    {% if n.item_id %}
+                      <a href="{% url 'item_detail' n.item_id %}"
+                         class="dropdown-item-rukn {% if not n.is_read %}bg-orange-50{% endif %}">
+                    {% else %}
+                      <a href="{% url 'notifications' %}"
+                         class="dropdown-item-rukn {% if not n.is_read %}bg-orange-50{% endif %}">
+                    {% endif %}
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs">
+                          🔔
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="font-semibold text-sm truncate">
+                              {{ n.title }}
+                            </span>
+                            <span class="text-[0.7rem] text-gray-400 whitespace-nowrap">
+                              {{ n.created_at|timesince }} {% trans "ago" %}
+                            </span>
+                          </div>
+                          {% if n.body %}
+                            <div class="text-xs text-gray-600 mt-1 line-clamp-2">
+                              {{ n.body }}
+                            </div>
+                          {% endif %}
+                        </div>
+                      </a>
+                  {% endfor %}
+                {% else %}
+                  <div class="px-4 py-2 text-sm text-gray-600">
+                    {% trans "No notifications." %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="p-3 border-t flex items-center justify-between">
+                <span class="text-xs text-gray-500">
+                  {% if unread_notifications|default:0 > 0 %}
+                    {% blocktrans count n=unread_notifications %}
+                    {{ n }} unread
+                    {% plural %}
+                    {{ n }} unread
+                    {% endblocktrans %}
+                  {% endif %}
+                </span>
+                <a href="{% url 'notifications' %}"
+                   class="text-sm text-white rounded-lg py-2 px-3 btn-primary-rukn">
+                  {% trans "Open notifications" %}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- User profile dropdown (Personal profile / My ads / Logout) -->
+          <div class="relative">
+            <button id="userBtn"
+                    type="button"
+                    class="flex items-center gap-2 hover:text-gray-900 transition-colors"
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                    aria-label="{% trans 'User account' %}">
+              <img src="{% static 'img/profile-icon.png' %}" class="w-6 h-6 rounded-full" alt="user">
+              <span class="hidden sm:inline">مرحبًا، {{ request.user.username }}</span>
+            </button>
+
+            <div id="userMenu" class="dropdown-panel w-48" aria-labelledby="userBtn">
+              {% if request.user.is_staff %}
+                <a href="/admin/" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-sm">
+                  ⚙️ {% trans "Admin Panel" %}
+                </a>
+              {% endif %}
+              <a href="{% url 'user_profile' request.user.user_id %}"
+                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
+                {% trans "Personal profile" %}
+              </a>
+
+              <a href="{% url 'my_items' %}"
+                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
+                {% trans "My ads" %}
+              </a>
+
+              <a href="{% url 'logout' %}"
+                 class="block px-4 py-2 text-sm text-red-600 hover:bg-[var(--rukn-gray)] transition-colors">
+                {% trans "Logout" %}
+              </a>
+            </div>
+          </div>
+
+
         {% else %}
-          <li><a href="{% url 'login' %}" class="nav-link">{% trans "Login" %}</a></li>
-          <li><a href="{% url 'register' %}" class="nav-link">{% trans "Register" %}</a></li>
+          <a href="{% url 'login' %}" class="text-sm hover:text-gray-900">{% trans "Login" %}</a>
+          <a href="{% url 'register' %}" class="text-sm hover:text-gray-900">{% trans "Register" %}</a>
         {% endif %}
+      </div>
+    </div>
+  </div>
 
-        <li class="nav-item">
-          <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
-            {% csrf_token %}
-            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm bg-light border-0 text-dark">
-              <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>EN</option>
-              <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>AR</option>
-            </select>
+  <!-- HEADER: logo + search + add ad -->
+  <header class="bg-white shadow-sm z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 h-20 md:h-24">
+        <!-- Logo -->
+        <div class="flex justify-center items-center py-2">
+          <a href="{% url 'home' %}" class="flex items-center gap-2">
+            <img src="https://i.imgur.com/dgHTbr2.png" alt="شعار ركن" class="h-14 w-auto object-contain"/>
+          </a>
+        </div>
+
+        <!-- Search + CTA -->
+        <div class="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
+          <form id="siteSearch"
+                method="get"
+                action="{% url 'home' %}"
+                class="relative w-full"
+                role="search"
+                aria-label="{% trans 'Search in Rukn' %}">
+            <div class="relative">
+              <input id="searchInput"
+                 name="q"
+                 type="search"
+                 value="{{ q|default:'' }}"
+                 placeholder="{% trans 'ابحث عن إعلان أو كلمة مفتاحية...' %}"
+                 class="w-full text-base md:text-lg rounded-full border border-gray-200 bg-white/80 backdrop-blur-sm pr-32 pl-14 py-2.5 md:py-3 focus:outline-none focus:border-[var(--rukn-orange)] focus:ring-4 focus:ring-orange-100 transition-all duration-300" />
+              <div id="searchSuggestions"
+                   class="absolute z-50 bg-white w-full mt-1 rounded-lg shadow-lg text-sm hidden"></div>
+
+              <div id="intentBox"
+                   class="absolute right-2 top-1/2 -translate-y-1/2 flex rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white transition-all duration-300 z-10">
+                <button id="sellBtn" type="button"
+                        class="w-[64px] sm:w-[70px] h-9 sm:h-10 text-[14px] sm:text-[15px] font-semibold text-white bg-[var(--rukn-orange)] rounded-full focus:outline-none transition-all duration-300">
+                  بيع
+                </button>
+                <button id="buyBtn" type="button"
+                        class="w-[64px] sm:w-[70px] h-9 sm:h-10 text-[14px] sm:text-[15px] font-semibold text-gray-600 bg-white rounded-full focus:outline-none transition-all duration-300">
+                  شراء
+                </button>
+              </div>
+
+              <input type="hidden" name="intent" id="intentField" value="sell">
+
+              <button id="searchBtn" type="submit"
+                      class="absolute left-2 top-1/2 -translate-y-1/2 bg-[var(--rukn-orange)] text-white w-11 h-11 rounded-full flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="{% trans 'Search' %}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+                </svg>
+              </button>
+            </div>
           </form>
-        </li>
 
-      </ul>
-    </div>
-  </div>
-</nav>
-
-<div class="flag-divider"></div>
-
-<!-- ✅ Main content (unchanged layout) -->
-<main class="container py-4">
-  {% block content %}{% endblock %}
-</main>
-
-<footer>
-  <div class="container">
-    <div class="row gy-4">
-      <div class="col-md-4">
-        <h6>Souq Jordan</h6>
-        <p class="small text-muted">Your trusted local marketplace connecting Jordanians together — buy, sell, and grow locally.</p>
-      </div>
-      <div class="col-md-4">
-        <h6>{% trans "Quick Links" %}</h6>
-        <a href="{% url 'item_list' %}">{% trans "Browse" %}</a><br>
-        <a href="{% url 'create_item' %}">{% trans "Post Ad" %}</a><br>
-        <a href="mailto:support@souqjordan.com">{% trans "Contact Us" %}</a>
-      </div>
-      <div class="col-md-4">
-        <h6>{% trans "Made in Jordan" %}</h6>
-        <p class="text-muted small mb-0">© 2025 Souq Jordan — Amman, Jordan 🇯🇴</p>
+          {% if request.user.is_authenticated %}
+            <a id="addAdBtn"
+               href="{% url 'create_item' %}"
+               class="w-full sm:w-auto text-center text-sm font-semibold text-white bg-[var(--rukn-orange)] px-6 py-2.5 rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">
+              + أضف إعلانك
+            </a>
+          {% else %}
+            <a id="addAdBtn"
+               href="{% url 'login' %}?next={% url 'create_item' %}"
+               class="w-full sm:w-auto text-center text-sm font-semibold text-white bg-[var(--rukn-orange)] px-6 py-2.5 rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">
+              + أضف إعلانك
+            </a>
+          {% endif %}
+        </div>
       </div>
     </div>
-  </div>
-</footer>
+  </header>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <!-- MAIN -->
+  <main class="pt-6">
+    <!-- Global Django messages (toast style) -->
+    {% if messages %}
+      <div id="notifications"
+           class="fixed top-5 inset-x-0 flex flex-col items-center gap-3 z-[9999] px-3">
+        {% for message in messages %}
+          <div class="max-w-md w-full text-center px-4 py-3 rounded-xl shadow-lg text-white font-medium animate-slideDownFade
+            {% if message.tags == 'success' %} bg-green-600
+            {% elif message.tags == 'error' %} bg-red-600
+            {% elif message.tags == 'warning' %} bg-yellow-500
+            {% else %} bg-gray-800 {% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    $("select.searchable-select").select2({
-      width: "100%",
-      placeholder: "Select an option",
-      allowClear: true
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-gradient-to-t from-gray-100 via-[var(--rukn-gray)] to-white text-gray-800 pt-10 pb-6 border-t border-gray-200 mt-10">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-10">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <img src="https://i.imgur.com/dgHTbr2.png" alt="شعار ركن" class="h-12 w-auto object-contain rounded-md shadow-sm" />
+        </div>
+        <p class="text-sm text-gray-600 leading-7">
+          منصة بيع وشراء للجميع — بسهولة وأمان داخل مجتمعك المحلي.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="text-gray-900 font-semibold mb-3">{% trans "Quick Links" %}</h4>
+        <ul class="space-y-2 text-sm text-gray-700">
+          <li><a href="{% url 'item_list' %}" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "Browse items" %}</a></li>
+          <li><a href="{% url 'contact' %}" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "Contact Us" %}</a></li>
+          <li><a href="#" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "FAQ" %}</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-gray-900 font-semibold mb-3">{% trans "Categories" %}</h4>
+        <ul class="space-y-2 text-sm text-gray-700">
+          <li><a href="{% url 'category_list' %}" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "All categories" %}</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-gray-900 font-semibold mb-3">{% trans "Stay in touch" %}</h4>
+        <p class="text-sm text-gray-700 mb-3">📧 support@rukn.example</p>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-300 mt-10 pt-4 text-center text-sm text-gray-600">
+      © 2025 <span class="font-semibold text-gray-900">ركن</span> — جميع الحقوق محفوظة.
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const pairs = [
+        ["favBtn","favMenu"],
+        ["msgBtn","msgMenu"],
+        ["notiBtn","notiMenu"],
+        ["userBtn","userMenu"],
+      ];
+
+      function closeAll() {
+        document.querySelectorAll(".dropdown-panel").forEach(el => el.classList.remove("show"));
+      }
+
+      pairs.forEach(([btnId, menuId]) => {
+        const btn = document.getElementById(btnId);
+        const menu = document.getElementById(menuId);
+        if (!btn || !menu) return;
+
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isOpen = menu.classList.contains("show");
+          closeAll();
+          if (!isOpen) menu.classList.add("show");
+        });
+      });
+
+      document.addEventListener("click", () => closeAll());
+
+      // auto-remove toast notifications
+      setTimeout(() => {
+        const notifs = document.querySelectorAll("#notifications > div");
+        notifs.forEach(el => el.remove());
+      }, 4500);
+
+      // elements
+      const sellBtn = document.getElementById("sellBtn");
+      const buyBtn  = document.getElementById("buyBtn");
+      const intentField = document.getElementById("intentField");
+      const searchInput = document.getElementById("searchInput");
+      const searchBtn   = document.getElementById("searchBtn");
+
+      // ✅ padding fix depending on RTL / LTR
+      const isRTL =
+        (document.documentElement && document.documentElement.dir === "rtl") ||
+        (document.body && document.body.dir === "rtl");
+
+      if (searchInput) {
+        if (isRTL) {
+          // Arabic: more space on the RIGHT for بيع/شراء buttons, left for 🔍
+          searchInput.style.paddingRight = "9.5rem";   // space for buy/sell
+          searchInput.style.paddingLeft  = "3.8rem"; // space for search icon
+        } else {
+          // English: text starts left, but layout is same visually
+          searchInput.style.paddingLeft  = "3.5rem"; // search icon
+          searchInput.style.paddingRight = "9rem";   // buy/sell
+        }
+      }
+
+      // simple intent toggle styling
+      function updateUI() {
+        if (!sellBtn || !buyBtn || !intentField || !searchInput || !searchBtn) return;
+        const isBuy = intentField.value === "buy";
+        const color = isBuy ? "#16a34a" : "var(--rukn-orange)";
+
+        if (isBuy) {
+          buyBtn.style.backgroundColor = "#16a34a";
+          buyBtn.style.color = "white";
+          sellBtn.style.backgroundColor = "#ffffff";
+          sellBtn.style.color = "#6b7280";
+        } else {
+          sellBtn.style.backgroundColor = "var(--rukn-orange)";
+          sellBtn.style.color = "white";
+          buyBtn.style.backgroundColor = "#ffffff";
+          buyBtn.style.color = "#6b7280";
+        }
+
+        searchInput.style.borderColor = color;
+        searchBtn.disabled = searchInput.value.trim().length === 0;
+      }
+
+      if (sellBtn && buyBtn && intentField) {
+        sellBtn.addEventListener("click", () => { intentField.value = "sell"; updateUI(); });
+        buyBtn.addEventListener("click", () => { intentField.value = "buy"; updateUI(); });
+        searchInput && searchInput.addEventListener("input", updateUI);
+        updateUI();
+      }
+
+      // re-init select2 for existing forms
+      $("select.searchable-select").select2({
+        width: "100%",
+        placeholder: "Select an option",
+        allowClear: true
+      });
+
+      // ✅ Live search integration
+      const suggestions = document.getElementById("searchSuggestions");
+      const results = document.getElementById("itemResults");
+      if (searchInput && results) {
+        let timer;
+        const delay = 400;
+
+        async function updateResults(q) {
+          try {
+            const params = new URLSearchParams(window.location.search);
+            if (q) params.set("q", q); else params.delete("q");
+            const res = await fetch(`/?${params.toString()}`, { headers: { "HX-Request": "true" } });
+            const html = await res.text();
+            results.innerHTML = html;
+          } catch (err) {
+            console.error("Search update failed", err);
+          }
+        }
+
+        async function updateSuggestions(q) {
+          if (!suggestions) return;
+          if (q.length < 2) {
+            suggestions.classList.add("hidden");
+            suggestions.innerHTML = "";
+            return;
+          }
+          try {
+            const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            suggestions.innerHTML = "";
+            data.results.forEach(s => {
+              const a = document.createElement("a");
+              a.className = "block px-3 py-2 hover:bg-gray-100 cursor-pointer";
+              if (s.type === "category" && s.category_id) {
+                a.href = `/?category=${s.category_id}`;
+              } else {
+                a.href = `/?q=${encodeURIComponent(s.name)}`;
+              }
+              a.innerHTML = `
+                <div class="flex justify-between">
+                  <span class="font-semibold">${s.name}</span>
+                  <small class="text-gray-500">${s.type}</small>
+                </div>`;
+              suggestions.appendChild(a);
+            });
+            suggestions.classList.remove("hidden");
+          } catch (err) {
+            console.error("Suggestions failed", err);
+          }
+        }
+
+        searchInput.addEventListener("input", function(){
+          const q = this.value.trim();
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            updateResults(q);
+            updateSuggestions(q);
+          }, delay);
+        });
+
+        document.addEventListener("click", (e) => {
+          if (suggestions && !searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.classList.add("hidden");
+          }
+        });
+      }
     });
-  });
-</script>
+  </script>
 
-{% block scripts %}{% endblock %}
+
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>

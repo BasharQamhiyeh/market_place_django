@@ -1,47 +1,49 @@
 {% load i18n humanize %}
 
-<div class="card h-100 border-0 shadow-sm position-relative hoverable">
+<article class="relative bg-white rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
   {% if item.main_photo %}
-    <img src="{{ item.main_photo.image.url }}" alt="{{ item.title }}" class="card-img-top"
-         style="height:180px; object-fit:cover;">
+    <img src="{{ item.main_photo.image.url }}" alt="{{ item.title }}"
+         class="w-full h-44 object-cover hover:scale-105 transition-transform duration-300">
   {% else %}
-    <div class="bg-light text-center d-flex align-items-center justify-content-center"
-         style="height:180px;">
-      <span class="text-muted small">{% trans "No image" %}</span>
+    <div class="w-full h-44 bg-gray-100 flex items-center justify-center text-sm text-gray-400">
+      {% trans "No image" %}
     </div>
   {% endif %}
 
-  <div class="card-body">
-    <h6 class="card-title mb-1 text-truncate">{{ item.title }}</h6>
-
-    <p class="text-muted small mb-2">
-      {% if item.category.parent %}
-        {{ item.category.parent }} › {{ item.category }}
-      {% else %}
-        {{ item.category }}
-      {% endif %}
-      {% if item.city %}
-        • {{ item.city }}
-      {% endif %}
-    </p>
-
-    <p class="mb-0 fw-semibold text-dark">JOD {{ item.price }}</p>
-
-    {% if LANGUAGE_CODE == 'ar' %}
-      <p class="text-muted small mb-1">
-        {% trans "Posted before" %} {{ item.created_at|timesince|cut:"," }}
-      </p>
-    {% else %}
-      <p class="text-muted small mb-1">
-        {% trans "Posted" %} {{ item.created_at|timesince }} {% trans "ago" %}
-      </p>
-    {% endif %}
-
-    <a href="{% url 'item_detail' item.id %}" class="stretched-link" aria-label="{% trans 'View Details' %}"></a>
+  <div class="p-4">
+    <h3 class="font-semibold text-lg truncate" title="{{ item.title }}">{{ item.title }}</h3>
+    <div class="mt-2 flex items-center justify-between text-sm text-[var(--muted)]">
+      <span>
+        {% if item.city %}
+          {{ item.city }}
+        {% endif %}
+      </span>
+      <span>
+        {% if item.updated_at %}
+          {{ item.updated_at|timesince }} {% trans "ago" %}
+        {% else %}
+          {{ item.created_at|timesince }} {% trans "ago" %}
+        {% endif %}
+      </span>
+    </div>
   </div>
-</div>
 
-<style>
-.hoverable { transition: box-shadow .2s ease, transform .2s ease; }
-.hoverable:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; transform: translateY(-2px); }
-</style>
+  <div class="flex items-center justify-between p-4 border-t border-gray-100">
+    <div class="bg-[var(--rukn-orange)] text-white text-base font-bold px-3 py-1 rounded-md shadow">
+      {{ item.price|floatformat:0 }} د.أ
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs">
+        {{ item.user.username|first|upper }}
+      </div>
+      <span class="text-sm font-medium text-gray-800">
+        {{ item.user.username }}
+      </span>
+    </div>
+  </div>
+
+  <a href="{% url 'item_detail' item.id %}"
+     class="absolute inset-0"
+     aria-label="{% trans 'View Details' %}">
+  </a>
+</article>

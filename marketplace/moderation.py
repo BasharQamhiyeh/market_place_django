@@ -20,7 +20,11 @@ def moderate_item(item) -> Tuple[str, Optional[str]]:
     text = f"{title}\n{description}"
 
     # Connect to OpenAI client
-    client = OpenAI(api_key=settings.OPENAI_API_KEY)
+    client = OpenAI(
+        api_key=settings.OPENAI_API_KEY,
+        organization=settings.OPENAI_ORG_ID,
+        project=settings.OPENAI_PROJECT_ID,
+    )
 
     try:
         response = client.moderations.create(
