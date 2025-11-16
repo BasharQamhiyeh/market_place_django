@@ -1159,7 +1159,7 @@ def verify_phone(request):
 
                 login(request, user)
                 messages.success(request, "✅ تم التحقق من رقم الهاتف وإنشاء الحساب بنجاح!")
-                return redirect('item_list')
+                return redirect('home')
             else:
                 messages.error(request, "⚠️ الرمز غير صحيح أو منتهي الصلاحية.")
     else:
@@ -1306,7 +1306,7 @@ def user_login(request):
 
         if user:
             login(request, user)
-            return redirect('item_list')
+            return redirect('home')
 
         return render(request, 'login.html', {'error': "بيانات تسجيل الدخول غير صحيحة"})
 
@@ -1315,5 +1315,5 @@ def user_login(request):
 # Logout
 def user_logout(request):
     logout(request)
-    return redirect('item_list')
+    return redirect('home')
 
