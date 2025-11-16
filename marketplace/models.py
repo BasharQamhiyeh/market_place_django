@@ -23,6 +23,10 @@ class UserManager(BaseUserManager):
         return user
 
 
+import uuid
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+
 class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=100, unique=True)
@@ -36,6 +40,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         help_text="If true, your phone number will be visible to other users."
     )
 
+    # NEW FIELDS
+    referral_code = models.CharField(max_length=12, unique=True, blank=True, null=True)
+    referred_by = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="referrals"
+    )
+    points = models.IntegerField(default=0)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
@@ -44,8 +59,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            self.referral_code = uuid.uuid4().hex[:12]
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.username} ({self.first_name or ''} {self.last_name or ''})".strip()
+
 
 
 # -----------------------

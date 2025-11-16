@@ -1127,6 +1127,7 @@ def send_verification_code(request):
 
 
 # ✅ Step 2: Verify phone during registration
+# Step 2: Verify phone during registration
 def verify_phone(request):
     pending_data = request.session.get('pending_user_data')
 
@@ -1139,7 +1140,8 @@ def verify_phone(request):
         if form.is_valid():
             entered_code = form.cleaned_data['code']
             if verify_session_code(request, "verification", entered_code):
-                # ✅ Create user after correct verification
+
+                # Create user
                 user = User.objects.create_user(
                     username=pending_data['username'],
                     phone=pending_data['phone'],
@@ -1151,10 +1153,25 @@ def verify_phone(request):
                 user.show_phone = pending_data.get('show_phone', True)
                 user.phone_verified = True
                 user.is_active = True
+
+                # 🔥 assign referral BEFORE save()
+                ref_code = request.session.get('ref_code')
+                if ref_code:
+                    try:
+                        referrer = User.objects.get(referral_code=ref_code)
+                        user.referred_by = referrer
+                    except User.DoesNotExist:
+                        pass
+
                 user.save()
 
+                # 🔥 reward referrer AFTER save()
+                if user.referred_by:
+                    user.referred_by.points += 50  # ⭐ points reward
+                    user.referred_by.save()
+
                 # cleanup session
-                for key in ['pending_user_data', 'verification_code', 'verification_sent_at']:
+                for key in ['pending_user_data', 'verification_code', 'verification_sent_at', 'ref_code']:
                     request.session.pop(key, None)
 
                 login(request, user)
@@ -1166,6 +1183,8 @@ def verify_phone(request):
         form = PhoneVerificationForm()
 
     return render(request, 'verify_phone.html', {'form': form})
+
+
 
 
 # ✅ Step 3: Forgot password – request code
@@ -1265,6 +1284,12 @@ def register(request):
     Step 1: Collect registration data, send code (no user yet).
     Step 2: Verify code and create user only after success.
     """
+
+    # Capture referral code from URL
+    ref_code = request.GET.get("ref")
+    if ref_code:
+        request.session["ref_code"] = ref_code
+
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -1275,12 +1300,12 @@ def register(request):
             phone = form.cleaned_data['phone']
             send_code(request, phone, "verification", "verify", send_sms_code)
 
-
-            messages.info(request, "📱 تم إرسال رمز التحقق إلى رقم هاتفك (افتح وحدة التحكم لتراه في الوضع التجريبي).")
+            messages.info(request, "📱 تم إرسال رمز التحقق إلى رقم هاتفك.")
             return redirect('verify_phone')
     else:
         form = UserRegistrationForm()
     return render(request, 'register.html', {'form': form})
+
 
 
 # Login

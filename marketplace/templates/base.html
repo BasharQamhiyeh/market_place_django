@@ -423,6 +423,12 @@
           {% if request.user.is_authenticated %}
             <a href="{% url 'user_profile' request.user.user_id %}" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">ملفي الشخصي</a>
             <a href="{% url 'my_items' %}" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">إعلاناتي</a>
+            <a href="#"
+               id="inviteFriendsLink"
+               data-register-url="{% url 'register' %}"
+               class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
+              🎁 دعوة الأصدقاء
+            </a>
             {% if request.user.is_staff %}
               <a href="/admin/" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">لوحة التحكم</a>
             {% endif %}
@@ -924,6 +930,41 @@ function scrollCats(dir){
   setTimeout(updateScrollButtons, 300);
 }
 window.scrollCats = scrollCats;
+
+/* =========================================================
+   Referral link: copy on click from user dropdown
+========================================================== */
+{% if request.user.is_authenticated %}
+document.addEventListener("DOMContentLoaded", function() {
+  const inviteLinkEl = document.getElementById("inviteFriendsLink");
+  if (!inviteLinkEl) {
+    console.log("❌ inviteFriendsLink not found at DOM ready");
+    return;
+  }
+
+  const referralCode = "{{ request.user.referral_code|default:'' }}";
+  if (!referralCode) {
+    console.log("❌ No referral code available");
+    return;
+  }
+
+  inviteLinkEl.addEventListener("click", function(e) {
+    e.preventDefault();
+
+    const registerUrl = inviteLinkEl.dataset.registerUrl || "{% url 'register' %}";
+    const fullLink = window.location.origin + registerUrl + "?ref=" + referralCode;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(fullLink)
+        .then(() => alert("✔️ تم نسخ رابط الدعوة:\n" + fullLink))
+        .catch(() => alert("رابط الدعوة:\n" + fullLink));
+    } else {
+      alert("رابط الدعوة:\n" + fullLink);
+    }
+  });
+});
+{% endif %}
+
 </script>
 
 {% block scripts %}{% endblock %}
