@@ -1,719 +1,875 @@
 {% load static i18n %}
 <!doctype html>
-<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_CODE == 'ar' %}rtl{% else %}ltr{% endif %}">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}ركن — منصة إعلانات{% endblock %}</title>
 
   <meta name="description" content="منصة ركن للإعلانات المبوبة - بيع، اشتري، أو اطلب ما تحتاجه بسهولة وأمان">
-
-  <!-- Fonts + Tailwind -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Bootstrap / Icons (still used by forms & existing pages) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-  <link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-      referrerpolicy="no-referrer" />
-
-  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
-
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
   <style>
-    :root{
-      --rukn-orange:#ff7a18;
-      --rukn-gray:#f3f4f6;
-      --muted:#6b7280;
-      --transition:.3s ease;
-      --rukn-green:#16a34a;
-      --rukn-green-700:#15803d;
-      --rukn-green-50:#ecfdf5;
-      --rukn-green-100:#d1fae5;
-      --rukn-green-200:#a7f3d0;
-    }
+  /* ==== خلفيات بارزة وفصل الأقسام ==== */
 
-    body{
-      font-family:'Cairo',sans-serif;
-      background:#f8faf9;
-      color:#111827;
-      padding-top:40px;
-      line-height:1.6;
-    }
+  /* برتقالي ناعم للأقسام العامة */
+  .section-box {
+    background: linear-gradient(to bottom, #fff, #fff7f1);
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    padding: 3rem 1rem;
+    margin-top: 3rem;
+  }
 
-    .topbar{
-      position:fixed;
-      inset-inline:0;
-      top:0;
-      height:40px;
-      background:var(--rukn-gray);
-      z-index:70;
-      border-bottom:1px solid #e5e7eb;
-      backdrop-filter:blur(8px);
-    }
+  /* أخضر ناعم للأقسام ذات الثيم الأخضر */
+  .section-box-green {
+    background: linear-gradient(to bottom, #ecfdf5, #ffffff);
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    padding: 3rem 1rem;
+    margin-top: 3rem;
+  }
 
-    .card-shadow{box-shadow:0 6px 18px rgba(20,20,30,.06)}
+  /* فصل مرئي إضافي بين كل قسم */
+  section + section {
+    margin-top: 4rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 2rem;
+  }
 
-    .btn-primary-rukn{
-      background:var(--rukn-orange);
-      color:#fff;
-      transition:all var(--transition);
-      box-shadow:0 4px 6px rgba(255,122,24,.2);
-    }
-    .btn-primary-rukn:hover{
-      background:#e56a00;
-      transform:translateY(-2px);
-      box-shadow:0 6px 12px rgba(255,122,24,.3);
-    }
+  :root{
+    --rukn-orange:#ff7a18;
+    --rukn-gray:#f3f4f6;
+    --muted:#6b7280;
+    --transition:.3s ease;
 
-    /* Topbar dropdowns (favorites / messages / notifications / user) */
-    .dropdown-panel{
-      position:absolute;
-      top:calc(100% + 8px);
-      right:0;
-      left:auto;
-      min-width:260px;
-      max-width:340px;
-      background:#fff;
-      border:1px solid #e5e7eb;
-      border-radius:12px;
-      box-shadow:0 10px 25px rgba(15,23,42,.14);
-      padding:0.5rem 0;
-      display:none;
-      z-index:80;
-      opacity:0;
-      transform:translateY(8px);
-      transition:opacity var(--transition),transform var(--transition);
-    }
-    .dropdown-panel.show{
-      display:block;
-      opacity:1;
-      transform:translateY(0);
-    }
-    .dropdown-header{
-      padding:.75rem 1rem;
-      font-weight:700;
-      border-bottom:1px solid #f1f1f1;
-    }
-    .dropdown-list{max-height:320px;overflow:auto}
-    .dropdown-item-rukn{
-      display:flex;
-      gap:.75rem;
-      padding:.75rem 1rem;
-      align-items:flex-start;
-      transition:background var(--transition);
-      text-decoration:none;
-      color:#111827;
-      font-size:.9rem;
-    }
-    .dropdown-item-rukn:hover{background:#fafafa}
-    .badge-top{
-      position:absolute;
-      inset-inline-end:-.25rem;
-      inset-block-start:-.25rem;
-      background:var(--rukn-orange);
-      color:#fff;
-      border-radius:9999px;
-      font-size:0.7rem;
-      min-width:1.1rem;
-      height:1.1rem;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:bold;
-    }
+    /* ثيم أخضر للطلبات */
+    --rukn-green:#16a34a;
+    --rukn-green-700:#15803d;
+    --rukn-green-50:#ecfdf5;
+    --rukn-green-100:#d1fae5;
+    --rukn-green-200:#a7f3d0;
+  }
 
-    /* Toast notifications (Django messages) */
-    @keyframes slideDownFade {
-      0% { opacity: 0; transform: translateY(-10px); }
-      10% { opacity: 1; transform: translateY(0); }
-      90% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-10px); }
-    }
-    .animate-slideDownFade {
-      animation: slideDownFade 4s ease-in-out forwards;
-    }
+  body{
+    font-family:'Cairo',sans-serif;
+    background:#ffffff;
+    color:#111827;
+    padding-top:40px;
+    line-height:1.6;
+  }
 
-    i[class^="fa"], i[class*=" fa-"] {
-      font-family: "Font Awesome 6 Free" !important;
-      font-weight: 900 !important; /* ensures solid icons appear */
-      font-style: normal !important;
+  .card-shadow,.shadow-card{box-shadow:0 6px 18px rgba(20,20,30,.06)}
+
+  .topbar{
+    position:fixed;
+    inset-inline:0;
+    top:0;
+    height:40px;
+    background:#ffe8d1;
+    z-index:70;
+    border-bottom:1px solid #e5e7eb;
+    backdrop-filter:blur(8px);
+  }
+
+  .dropdown{
+    position:absolute;
+    top:calc(100% + 8px);
+    right:auto;
+    left:0;
+    width:280px;
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    display:none;
+    z-index:80;
+    opacity:0;
+    transform:translateY(-10px);
+    transition:opacity var(--transition),transform var(--transition)
+  }
+  .dropdown.show{display:block;opacity:1;transform:translateY(0)}
+  .dropdown-header{padding:.75rem 1rem;font-weight:700;border-bottom:1px solid #f1f1f1}
+  .dropdown-list{max-height:320px;overflow:auto}
+  .dropdown-item{display:flex;gap:.75rem;padding:.75rem 1rem;align-items:flex-start;transition:background var(--transition)}
+  .dropdown-item:hover{background:#fafafa}
+  .badge{
+    position:absolute;
+    inset-inline-end:-.25rem;
+    inset-block-start:-.25rem;
+    background:var(--rukn-orange);
+    color:#fff;
+    font-size:.7rem;
+    border-radius:999px;
+    width:1.1rem;
+    height:1.1rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold
+  }
+
+  .intent-pill span{
+    display:inline-block;
+    padding:.35rem .9rem;
+    border-radius:9999px;
+    font-weight:700;
+    font-size:.85rem;
+    color:#374151;
+    transition:all var(--transition);
+    cursor:pointer
+  }
+  .intent-pill input:focus-visible+span{outline:2px solid rgba(255,122,24,.5);outline-offset:2px}
+  .intent-pill input:checked+span{background:var(--rukn-orange);color:#fff;box-shadow:0 6px 18px rgba(255,122,24,.25)}
+  .intent-pill span:hover{background:#f3f4f6}
+
+  .wiggle{transition:transform .3s ease}.wiggle:hover{transform:scale(1.1)}
+  @media(max-width:380px){
+    .dropdown{width:calc(100vw - 16px);right:8px}
+  }
+
+  @keyframes fadeInUp{
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  .animate-fade-in{animation:fadeInUp .9s ease forwards}
+  .animate-fade-in-delayed{animation:fadeInUp 1.1s ease forwards}
+  .animate-fade-in-slow{animation:fadeInUp 1.3s ease forwards}
+
+  .hscroll{
+    display:flex;
+    gap:1rem;
+    overflow-x:auto;
+    overflow-y:hidden;
+    white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+    direction:rtl;
+    padding:.25rem 0
+  }
+  .hscroll>a{
+    flex:0 0 200px;
+    height:150px;
+    scroll-snap-align:start
+  }
+  .no-scrollbar::-webkit-scrollbar{display:none}
+  .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+  .scroll-wrapper{position:relative}
+  .scroll-btn{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    background:#fff;
+    color:var(--rukn-orange);
+    border-radius:9999px;
+    box-shadow:0 0 10px rgba(0,0,0,.1);
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    cursor:pointer;
+    z-index:10;
+    transition:all var(--transition);
+    border:none;
+    opacity:.9
+  }
+  .scroll-btn:hover{background:var(--rukn-orange);color:#fff;opacity:1}
+  .scroll-btn.left{left:-50px}
+  .scroll-btn.right{right:-50px}
+  @media(max-width:767px){
+    .scroll-btn{display:none}
+  }
+
+  .card-hover{transition:all var(--transition)}
+  .card-hover:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,.1)}
+
+  .btn-primary{
+    background:var(--rukn-orange);
+    color:#fff;
+    transition:all var(--transition);
+    box-shadow:0 4px 6px rgba(255,122,24,.2)
+  }
+  .btn-primary:hover{
+    background:#e56a00;
+    transform:translateY(-2px);
+    box-shadow:0 6px 12px rgba(255,122,24,.3)
+  }
+  .logo{transition:transform .5s ease}
+  .logo:hover{transform:rotate(-5deg) scale(1.05)}
+
+  .btn-green{
+    background:var(--rukn-green);
+    color:#fff;
+    transition:all var(--transition);
+    box-shadow:0 4px 6px rgba(22,163,74,.2)
+  }
+  .btn-green:hover{
+    background:var(--rukn-green-700);
+    transform:translateY(-2px);
+    box-shadow:0 6px 12px rgba(22,163,74,.28)
+  }
+  .pill-green{color:var(--rukn-green);background:var(--rukn-green-50)}
+  .ring-green{box-shadow:0 0 0 3px var(--rukn-green-100) inset}
+
+  footer {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .section-box,
+  .section-box-green {
+    max-width: 1280px;
+    margin: 3rem auto;
+    padding: 3rem 1rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+  }
+
+  @media (min-width: 768px) {
+    .section-box,
+    .section-box-green {
+      padding-inline: 2rem;
     }
+  }
+  @media (min-width: 1024px) {
+    .section-box,
+    .section-box-green {
+      padding-inline: 3rem;
+    }
+  }
+
+  /* Suggestions dropdown container */
+  #searchSuggestionsBox {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      left: 0;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 0 0 1rem 1rem;
+      padding: 0;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+      z-index: 9999;
+      max-height: 260px;
+      overflow-y: auto;
+  }
+
+  @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+  }
   </style>
 </head>
 
 <body>
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-      <!-- Language switch -->
-      <div class="flex items-center gap-2 text-sm text-[var(--muted)]">
-        <span>🌐</span>
-        <form action="{% url 'set_language' %}" method="post">
-          {% csrf_token %}
-          <select name="language"
-                  class="bg-transparent border-none focus:outline-none cursor-pointer"
-                  onchange="this.form.submit()">
-            <option value="ar" {% if LANGUAGE_CODE == 'ar' %}selected{% endif %}>العربية</option>
-            <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
-          </select>
-        </form>
-      </div>
 
-      <!-- Right side: favorites / messages / notifications / profile -->
-      <div class="flex items-center gap-4 text-[var(--muted)]">
-        {% if request.user.is_authenticated %}
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="max-w-7xl mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 
-          <!-- Favorites dropdown (recent favorites) -->
-          <div class="relative">
-            <button id="favBtn"
-                    type="button"
-                    class="relative hover:text-gray-900 transition-colors"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    aria-label="{% trans 'Favorites' %}">
-              ❤️
-              {% if favorite_count|default:0 > 0 %}
-                <span class="badge-top">{{ favorite_count }}</span>
-              {% endif %}
-            </button>
+    <!-- Logo -->
+    <a href="{% url 'home' %}" class="logo flex items-center gap-2">
+      <img src="https://i.imgur.com/uJrPPeX.png" alt="شعار ركن" class="h-8 w-auto object-contain" />
+    </a>
 
-            <div id="favMenu" class="dropdown-panel" aria-labelledby="favBtn">
-              <div class="dropdown-header">{% trans "My Favorites" %}</div>
-              <div class="dropdown-list">
-                {% if recent_favorites %}
-                  {% for fav in recent_favorites %}
-                    {% with item=fav.item %}
-                      <a href="{% url 'item_detail' item.id %}" class="dropdown-item-rukn">
-                        <div class="w-12 h-12 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 border">
-                          {% with photo=item.photos.first %}
-                            {% if photo %}
-                              <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
-                            {% else %}
-                              <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🖼️</div>
-                            {% endif %}
-                          {% endwith %}
-                        </div>
-                        <div class="flex-1 min-w-0">
-                          <div class="font-semibold text-sm truncate">{{ item.title }}</div>
-                          <div class="text-xs text-gray-500 truncate mt-0.5">
-                            {{ item.price }} JOD
-                          </div>
-                        </div>
-                      </a>
-                    {% endwith %}
-                  {% endfor %}
-                {% else %}
-                  <div class="px-4 py-2 text-sm text-gray-600">
-                    {% trans "You don't have any favorites yet." %}
-                  </div>
-                {% endif %}
-              </div>
-              <div class="p-3 border-t">
-                <a href="{% url 'my_favorites' %}"
-                   class="block text-center text-sm text-white rounded-lg py-2 btn-primary-rukn">
-                  {% trans "View all favorites" %}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Messages dropdown: show last 6 messages -->
-          <div class="relative">
-            <button id="msgBtn"
-                    type="button"
-                    class="relative hover:text-gray-900 transition-colors"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    aria-label="{% trans 'Messages' %}">
-              ✉️
-              {% if unread_messages|default:0 > 0 %}
-                <span class="badge-top">{{ unread_messages }}</span>
-              {% endif %}
-            </button>
-            <div id="msgMenu" class="dropdown-panel" aria-labelledby="msgBtn">
-              <div class="dropdown-header">{% trans "Messages" %}</div>
-
-              <div class="dropdown-list">
-                {% if recent_messages %}
-                  {% for msg in recent_messages %}
-                    <a href="{% url 'chat_room' msg.conversation.id %}"
-                       class="dropdown-item-rukn {% if not msg.is_read %}bg-orange-50{% endif %}">
-                      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
-                        {{ msg.sender.username|first|upper }}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="flex items-center justify-between gap-2">
-                          <span class="font-semibold text-sm truncate">
-                            {{ msg.sender.username }}
-                          </span>
-                          <span class="text-[0.7rem] text-gray-400 whitespace-nowrap">
-                            {{ msg.created_at|timesince }} {% trans "ago" %}
-                          </span>
-                        </div>
-                        <div class="text-xs text-gray-600 mt-1 truncate">
-                          {% if msg.conversation.item %}
-                            {{ msg.conversation.item.title }}
-                          {% else %}
-                            {% trans "Conversation" %}
-                          {% endif %}
-                        </div>
-                        <div class="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                          {{ msg.body }}
-                        </div>
-                      </div>
-                    </a>
-                  {% endfor %}
-                {% else %}
-                  <div class="px-4 py-2 text-sm text-gray-600">
-                    {% trans "No conversations yet." %}
-                  </div>
-                {% endif %}
-              </div>
-
-              <div class="p-3 border-t flex items-center justify-between">
-                <span class="text-xs text-gray-500">
-                  {% if unread_messages|default:0 > 0 %}
-                    {% blocktrans count n=unread_messages %}
-                    {{ n }} unread
-                    {% plural %}
-                    {{ n }} unread
-                    {% endblocktrans %}
-                  {% endif %}
-                </span>
-                <a href="{% url 'user_inbox' %}"
-                   class="text-sm text-white rounded-lg py-2 px-3 btn-primary-rukn">
-                  {% trans "Open inbox" %}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Notifications dropdown: show last 6 notifications -->
-          <div class="relative">
-            <button id="notiBtn"
-                    type="button"
-                    class="relative hover:text-gray-900 transition-colors"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    aria-label="{% trans 'Notifications' %}">
-              🔔
-              {% if unread_notifications|default:0 > 0 %}
-                <span class="badge-top">{{ unread_notifications }}</span>
-              {% endif %}
-            </button>
-            <div id="notiMenu" class="dropdown-panel" aria-labelledby="notiBtn">
-              <div class="dropdown-header">{% trans "Notifications" %}</div>
-
-              <div class="dropdown-list">
-                {% if recent_notifications %}
-                  {% for n in recent_notifications %}
-                    {% if n.item_id %}
-                      <a href="{% url 'item_detail' n.item_id %}"
-                         class="dropdown-item-rukn {% if not n.is_read %}bg-orange-50{% endif %}">
+    <!-- Favs / Messages / Notifications / User -->
+    <div class="flex items-center gap-4 text-[var(--muted)]">
+      <!-- Favorites -->
+      <div class="relative">
+        <button id="favBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="المفضلة">
+          ❤️
+          {% if favorite_count %}
+            <span class="badge">{{ favorite_count }}</span>
+          {% endif %}
+        </button>
+        <div id="favMenu" class="dropdown" aria-labelledby="favBtn">
+          <div class="dropdown-header">المفضلة</div>
+          <div class="dropdown-list">
+            {% for fav in recent_favorites %}
+              {% with item=fav.item %}
+              <a href="{% url 'item_detail' item.id %}" class="dropdown-item">
+                <div class="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border flex-shrink-0">
+                  {% with photo=item.photos.first %}
+                    {% if photo %}
+                      <img src="{{ photo.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover">
                     {% else %}
-                      <a href="{% url 'notifications' %}"
-                         class="dropdown-item-rukn {% if not n.is_read %}bg-orange-50{% endif %}">
+                      <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🖼️</div>
                     {% endif %}
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-xs">
-                          🔔
-                        </div>
-                        <div class="flex-1 min-w-0">
-                          <div class="flex items-center justify-between gap-2">
-                            <span class="font-semibold text-sm truncate">
-                              {{ n.title }}
-                            </span>
-                            <span class="text-[0.7rem] text-gray-400 whitespace-nowrap">
-                              {{ n.created_at|timesince }} {% trans "ago" %}
-                            </span>
-                          </div>
-                          {% if n.body %}
-                            <div class="text-xs text-gray-600 mt-1 line-clamp-2">
-                              {{ n.body }}
-                            </div>
-                          {% endif %}
-                        </div>
-                      </a>
-                  {% endfor %}
-                {% else %}
-                  <div class="px-4 py-2 text-sm text-gray-600">
-                    {% trans "No notifications." %}
-                  </div>
-                {% endif %}
-              </div>
-
-              <div class="p-3 border-t flex items-center justify-between">
-                <span class="text-xs text-gray-500">
-                  {% if unread_notifications|default:0 > 0 %}
-                    {% blocktrans count n=unread_notifications %}
-                    {{ n }} unread
-                    {% plural %}
-                    {{ n }} unread
-                    {% endblocktrans %}
-                  {% endif %}
-                </span>
-                <a href="{% url 'notifications' %}"
-                   class="text-sm text-white rounded-lg py-2 px-3 btn-primary-rukn">
-                  {% trans "Open notifications" %}
-                </a>
-              </div>
-            </div>
+                  {% endwith %}
+                </div>
+                <div>
+                  <div class="font-medium text-gray-900 truncate">{{ item.title }}</div>
+                  <div class="text-xs text-[var(--muted)]">{{ item.price }} د.أ</div>
+                </div>
+              </a>
+              {% endwith %}
+            {% empty %}
+              <div class="px-4 py-3 text-sm text-gray-500">لا يوجد عناصر في المفضلة.</div>
+            {% endfor %}
           </div>
-
-          <!-- User profile dropdown (Personal profile / My ads / Logout) -->
-          <div class="relative">
-            <button id="userBtn"
-                    type="button"
-                    class="flex items-center gap-2 hover:text-gray-900 transition-colors"
-                    aria-expanded="false"
-                    aria-haspopup="true"
-                    aria-label="{% trans 'User account' %}">
-              <img src="{% static 'img/profile-icon.png' %}" class="w-6 h-6 rounded-full" alt="user">
-              <span class="hidden sm:inline">مرحبًا، {{ request.user.username }}</span>
-            </button>
-
-            <div id="userMenu" class="dropdown-panel w-48" aria-labelledby="userBtn">
-              {% if request.user.is_staff %}
-                <a href="/admin/" class="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 text-sm">
-                  ⚙️ {% trans "Admin Panel" %}
-                </a>
-              {% endif %}
-              <a href="{% url 'user_profile' request.user.user_id %}"
-                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
-                {% trans "Personal profile" %}
-              </a>
-
-              <a href="{% url 'my_items' %}"
-                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
-                {% trans "My ads" %}
-              </a>
-
-              <a href="{% url 'logout' %}"
-                 class="block px-4 py-2 text-sm text-red-600 hover:bg-[var(--rukn-gray)] transition-colors">
-                {% trans "Logout" %}
-              </a>
-            </div>
+          <div class="p-3 border-t">
+            <a href="{% url 'my_favorites' %}" class="block text-center text-sm text-white bg-[var(--rukn-orange)] rounded-lg py-2 btn-primary">عرض كل المفضلة</a>
           </div>
-
-
-        {% else %}
-          <a href="{% url 'login' %}" class="text-sm hover:text-gray-900">{% trans "Login" %}</a>
-          <a href="{% url 'register' %}" class="text-sm hover:text-gray-900">{% trans "Register" %}</a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- HEADER: logo + search + add ad -->
-  <header class="bg-white shadow-sm z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4 h-20 md:h-24">
-        <!-- Logo -->
-        <div class="flex justify-center items-center py-2">
-          <a href="{% url 'home' %}" class="flex items-center gap-2">
-            <img src="https://i.imgur.com/dgHTbr2.png" alt="شعار ركن" class="h-14 w-auto object-contain"/>
-          </a>
         </div>
+      </div>
 
-        <!-- Search + CTA -->
-        <div class="flex flex-col md:flex-row items-center gap-3 flex-1 w-full">
-          <form id="siteSearch"
-                method="get"
-                action="{% url 'home' %}"
-                class="relative w-full"
-                role="search"
-                aria-label="{% trans 'Search in Rukn' %}">
-            <div class="relative">
-              <input id="searchInput"
-                 name="q"
-                 type="search"
-                 value="{{ q|default:'' }}"
-                 placeholder="{% trans 'ابحث عن إعلان أو كلمة مفتاحية...' %}"
-                 class="w-full text-base md:text-lg rounded-full border border-gray-200 bg-white/80 backdrop-blur-sm pr-32 pl-14 py-2.5 md:py-3 focus:outline-none focus:border-[var(--rukn-orange)] focus:ring-4 focus:ring-orange-100 transition-all duration-300" />
-              <div id="searchSuggestions"
-                   class="absolute z-50 bg-white w-full mt-1 rounded-lg shadow-lg text-sm hidden"></div>
+      <!-- Messages -->
+      <div class="relative">
+        <button id="msgBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="الرسائل">
+          ✉️
+          {% if unread_messages %}
+            <span class="badge">{{ unread_messages }}</span>
+          {% endif %}
+        </button>
+        <div id="msgMenu" class="dropdown" aria-labelledby="msgBtn">
+          <div class="dropdown-header">الرسائل</div>
+          <div class="dropdown-list">
+            {% for msg in recent_messages %}
+              <a href="{% url 'chat_room' msg.conversation.id %}" class="dropdown-item {% if not msg.is_read %}bg-orange-50{% endif %}">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-semibold">
+                  {{ msg.sender.username|first|upper }}
+                </div>
+                <div class="min-w-0">
+                  <div class="flex justify-between gap-2">
+                    <div class="font-medium text-gray-900 truncate">
+                      {{ msg.sender.username }}
+                    </div>
+                    <div class="text-xs text-[var(--muted)] whitespace-nowrap">
+                      {{ msg.created_at|timesince }} {% trans "ago" %}
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-600 truncate">
+                    {% if msg.conversation.item %}
+                      {{ msg.conversation.item.title }}
+                    {% else %}
+                      {% trans "Conversation" %}
+                    {% endif %}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                    {{ msg.body }}
+                  </div>
+                </div>
+              </a>
+            {% empty %}
+              <div class="px-4 py-3 text-sm text-gray-500">لا يوجد رسائل.</div>
+            {% endfor %}
+          </div>
+          <div class="p-3 border-t">
+            <a href="{% url 'user_inbox' %}" class="block text-center text-sm text-white bg-[var(--rukn-orange)] rounded-lg py-2 btn-primary">فتح صندوق الرسائل</a>
+          </div>
+        </div>
+      </div>
 
-              <div id="intentBox"
-                   class="absolute right-2 top-1/2 -translate-y-1/2 flex rounded-full overflow-hidden border border-gray-200 shadow-sm bg-white transition-all duration-300 z-10">
-                <button id="sellBtn" type="button"
-                        class="w-[64px] sm:w-[70px] h-9 sm:h-10 text-[14px] sm:text-[15px] font-semibold text-white bg-[var(--rukn-orange)] rounded-full focus:outline-none transition-all duration-300">
-                  بيع
-                </button>
-                <button id="buyBtn" type="button"
-                        class="w-[64px] sm:w-[70px] h-9 sm:h-10 text-[14px] sm:text-[15px] font-semibold text-gray-600 bg-white rounded-full focus:outline-none transition-all duration-300">
-                  شراء
-                </button>
+      <!-- Notifications -->
+      <div class="relative">
+        <button id="notiBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="الإشعارات">
+          🔔
+          {% if unread_notifications %}
+            <span class="badge">{{ unread_notifications }}</span>
+          {% endif %}
+        </button>
+        <div id="notiMenu" class="dropdown" aria-labelledby="notiBtn">
+          <div class="dropdown-header">الإشعارات</div>
+          <div class="dropdown-list">
+            {% for n in recent_notifications %}
+              <div class="dropdown-item">
+                <div class="flex-none w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-content-center">✔️</div>
+                <div>
+                  <div class="font-medium text-gray-900">{{ n.title }}</div>
+                  <div class="text-xs text-[var(--muted)]">{{ n.created_at|timesince }} {% trans "ago" %}</div>
+                </div>
               </div>
+            {% empty %}
+              <div class="px-4 py-3 text-sm text-gray-500">لا يوجد إشعارات.</div>
+            {% endfor %}
+          </div>
+          <div class="p-3 border-t">
+            <a href="{% url 'notifications' %}" class="block text-center text-sm text-white bg-[var(--rukn-orange)] rounded-lg py-2 btn-primary">كل الإشعارات</a>
+          </div>
+        </div>
+      </div>
 
-              <input type="hidden" name="intent" id="intentField" value="sell">
-
-              <button id="searchBtn" type="submit"
-                      class="absolute left-2 top-1/2 -translate-y-1/2 bg-[var(--rukn-orange)] text-white w-11 h-11 rounded-full flex items-center justify-center shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                      aria-label="{% trans 'Search' %}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
-                </svg>
-              </button>
-            </div>
-          </form>
-
+      <!-- User -->
+      <div class="relative">
+        <button id="userBtn" class="flex items-center gap-2 transition-colors hover:text-gray-900" aria-expanded="false" aria-haspopup="true" aria-label="حساب المستخدم">
+          <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
+            {% if request.user.is_authenticated %}
+              {{ request.user.username|first|upper }}
+            {% else %}
+              ?
+            {% endif %}
+          </div>
+          <span class="hidden sm:inline-block">
+            {% if request.user.is_authenticated %}
+              مرحبًا، {{ request.user.username }}
+            {% else %}
+              ضيف
+            {% endif %}
+          </span>
+        </button>
+        <div id="userMenu" class="dropdown w-44" aria-labelledby="userBtn">
           {% if request.user.is_authenticated %}
-            <a id="addAdBtn"
-               href="{% url 'create_item' %}"
-               class="w-full sm:w-auto text-center text-sm font-semibold text-white bg-[var(--rukn-orange)] px-6 py-2.5 rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">
-              + أضف إعلانك
-            </a>
+            <a href="{% url 'user_profile' request.user.user_id %}" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">ملفي الشخصي</a>
+            <a href="{% url 'my_items' %}" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">إعلاناتي</a>
+            {% if request.user.is_staff %}
+              <a href="/admin/" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">لوحة التحكم</a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-[var(--rukn-gray)] transition-colors">تسجيل الخروج</a>
           {% else %}
-            <a id="addAdBtn"
-               href="{% url 'login' %}?next={% url 'create_item' %}"
-               class="w-full sm:w-auto text-center text-sm font-semibold text-white bg-[var(--rukn-orange)] px-6 py-2.5 rounded-full shadow-md hover:scale-105 hover:shadow-lg transition-all duration-300">
-              + أضف إعلانك
-            </a>
+            <a href="{% url 'login' %}" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">تسجيل الدخول</a>
+            <a href="{% url 'register' %}" class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">إنشاء حساب</a>
           {% endif %}
         </div>
       </div>
     </div>
-  </header>
+  </div>
+</div>
 
-  <!-- MAIN -->
-  <main class="pt-6">
-    <!-- Global Django messages (toast style) -->
-    {% if messages %}
-      <div id="notifications"
-           class="fixed top-5 inset-x-0 flex flex-col items-center gap-3 z-[9999] px-3">
-        {% for message in messages %}
-          <div class="max-w-md w-full text-center px-4 py-3 rounded-xl shadow-lg text-white font-medium animate-slideDownFade
-            {% if message.tags == 'success' %} bg-green-600
-            {% elif message.tags == 'error' %} bg-red-600
-            {% elif message.tags == 'warning' %} bg-yellow-500
-            {% else %} bg-gray-800 {% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
 
-    {% block content %}{% endblock %}
-  </main>
+<!-- HEADER + SEARCH -->
+{% block searchbar %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
 
-  <!-- FOOTER -->
-  <footer class="bg-gradient-to-t from-gray-100 via-[var(--rukn-gray)] to-white text-gray-800 pt-10 pb-6 border-t border-gray-200 mt-10">
-    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-10">
-      <div>
-        <div class="flex items-center gap-3 mb-3">
-          <img src="https://i.imgur.com/dgHTbr2.png" alt="شعار ركن" class="h-12 w-auto object-contain rounded-md shadow-sm" />
-        </div>
-        <p class="text-sm text-gray-600 leading-7">
-          منصة بيع وشراء للجميع — بسهولة وأمان داخل مجتمعك المحلي.
-        </p>
-      </div>
+  <form id="siteSearch"
+        action="{% url 'item_list' %}"
+        method="get"
+        class="flex flex-col sm:flex-row items-stretch gap-3 w-full">
 
-      <div>
-        <h4 class="text-gray-900 font-semibold mb-3">{% trans "Quick Links" %}</h4>
-        <ul class="space-y-2 text-sm text-gray-700">
-          <li><a href="{% url 'item_list' %}" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "Browse items" %}</a></li>
-          <li><a href="{% url 'contact' %}" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "Contact Us" %}</a></li>
-          <li><a href="#" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "FAQ" %}</a></li>
-        </ul>
+    <!-- SEARCH INPUT -->
+    <div class="relative flex-1">
+
+      <input id="searchInput"
+             name="q"
+             type="search"
+             autocomplete="off"
+             placeholder="ابحث عن اعلان أو طلب"
+             class="w-full text-base md:text-lg rounded-3xl border-2 border-[var(--rukn-orange)]
+                    py-2.5 px-4 pr-36 focus:outline-none focus:ring-2 focus:ring-orange-200
+                    transition-all duration-300"
+             required />
+
+      <!-- BUY / SELL TOGGLE (UI ONLY) -->
+      <div id="intentBox"
+           class="absolute right-2 top-1/2 -translate-y-1/2 flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-2xl">
+
+        <button id="sellBtn" type="button"
+                class="w-[58px] h-8 text-sm font-extrabold text-white bg-[var(--rukn-orange)]">
+          بيع
+        </button>
+
+        <button id="buyBtn" type="button"
+                class="w-[58px] h-8 text-sm font-extrabold text-gray-600 bg-white">
+          شراء
+        </button>
+
       </div>
 
-      <div>
-        <h4 class="text-gray-900 font-semibold mb-3">{% trans "Categories" %}</h4>
-        <ul class="space-y-2 text-sm text-gray-700">
-          <li><a href="{% url 'category_list' %}" class="hover:text-[var(--rukn-orange)] transition-colors">{% trans "All categories" %}</a></li>
-        </ul>
+      <!-- SEARCH BUTTON -->
+      <button id="searchBtn"
+              type="submit"
+              disabled
+              class="absolute left-2 top-1/2 -translate-y-1/2 bg-[var(--rukn-orange)] text-white
+                     w-8 h-8 rounded-3xl flex items-center justify-center shadow-md hover:scale-105
+                     transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed">
+
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="w-4 h-4"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor"
+             stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+        </svg>
+      </button>
+
+      <!-- SUGGESTIONS DROPDOWN -->
+      <div id="searchSuggestionsBox"
+           class="absolute z-40 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg text-sm hidden">
       </div>
 
-      <div>
-        <h4 class="text-gray-900 font-semibold mb-3">{% trans "Stay in touch" %}</h4>
-        <p class="text-sm text-gray-700 mb-3">📧 support@rukn.example</p>
-      </div>
     </div>
 
-    <div class="border-t border-gray-300 mt-10 pt-4 text-center text-sm text-gray-600">
-      © 2025 <span class="font-semibold text-gray-900">ركن</span> — جميع الحقوق محفوظة.
+    <!-- ADD AD BUTTON -->
+    <a href="{% url 'create_item' %}"
+       class="text-center text-sm font-extrabold text-white bg-[var(--rukn-orange)]
+              px-6 py-4 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300
+              w-full sm:w-auto">
+      أضف إعلانك
+    </a>
+
+  </form>
+</div>
+{% endblock %}
+
+
+
+<!-- CONTENT -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+
+<!-- FOOTER -->
+<footer class="bg-gradient-to-t from-green-100 via-green-50 to-white text-[#065f46] pt-10 pb-6 border-t border-green-200 mt-10">
+  <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-10">
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <img src="https://i.imgur.com/uJrPPeX.png" alt="شعار ركن" class="h-12 w-auto object-contain rounded-md shadow-sm" />
+      </div>
+      <p class="text-sm leading-7 text-[#065f46]/80">
+        منصة بيع و شراء للجميع
+        ابحث عن المنتج المطلوب و تواصل مع البائع
+        لم تجد المنتج ... لا تقلق بإمكانك تقديم طلب
+        و سيقوم البائعين بالتواصل معك
+      </p>
     </div>
-  </footer>
 
-  <!-- JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@joeattardi/emoji-button@4.6.2/dist/index.min.js"></script>
+    <div>
+      <h4 class="font-semibold mb-3 text-[#065f46]">روابط سريعة</h4>
+      <ul class="space-y-2 text-sm">
+        <li><a href="{% url 'item_list' %}" class="hover:text-[var(--rukn-orange)] transition-colors">تصفح الإعلانات</a></li>
+        <li><a href="{% url 'contact' %}" class="hover:text-[var(--rukn-orange)] transition-colors">اتصل بنا</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h4 class="font-semibold mb-3 text-[#065f46]">الأقسام</h4>
+      <ul class="space-y-2 text-sm">
+        <li><a href="{% url 'category_list' %}" class="hover:text-[var(--rukn-orange)] transition-colors">كل الأقسام</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h4 class="font-semibold mb-3 text-[#065f46]">تواصل معنا</h4>
+      <p class="text-sm mb-3">📧 info@rokon.example</p>
+      <div class="flex gap-4 text-xl">
+        <a href="#" aria-label="Facebook" class="hover:text-[var(--rukn-orange)] transition-colors">📘</a>
+        <a href="#" aria-label="Twitter" class="hover:text-[var(--rukn-orange)] transition-colors">🐦</a>
+        <a href="#" aria-label="Instagram" class="hover:text-[var(--rukn-orange)] transition-colors">📸</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-green-200 mt-10 pt-4 text-center text-sm text-[#065f46]/80">
+     جميع الحقوق محفوظة<span class="font-semibold text-[#065f46]"> - ركن - </span> © 2025
+  </div>
+</footer>
 
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const pairs = [
-        ["favBtn","favMenu"],
-        ["msgBtn","msgMenu"],
-        ["notiBtn","notiMenu"],
-        ["userBtn","userMenu"],
-      ];
+<!-- JS: dropdowns + search -->
+<script>
+/* =========================================================
+   FEATURE FLAG: suggestions mode
+   true  => categories + items (modern)
+   false => categories only (fallback)
+========================================================= */
+const ENABLE_ITEM_SUGGESTIONS = true;
 
-      function closeAll() {
-        document.querySelectorAll(".dropdown-panel").forEach(el => el.classList.remove("show"));
+/* =========================================================
+   NAVBAR DROPDOWNS (unchanged)
+========================================================= */
+const menus = {
+  fav:  { btn: document.getElementById("favBtn"),  menu: document.getElementById("favMenu") },
+  msg:  { btn: document.getElementById("msgBtn"),  menu: document.getElementById("msgMenu") },
+  noti: { btn: document.getElementById("notiBtn"), menu: document.getElementById("notiMenu") },
+  user: { btn: document.getElementById("userBtn"), menu: document.getElementById("userMenu") }
+};
+
+function closeAll(except) {
+  Object.keys(menus).forEach(k => {
+    const o = menus[k];
+    if (!o.btn || !o.menu) return;
+    if (k !== except) {
+      o.menu.classList.remove("show");
+      o.btn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+Object.keys(menus).forEach(key => {
+  const o = menus[key];
+  if (!o.btn || !o.menu) return;
+  o.btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = o.menu.classList.contains("show");
+    closeAll(key);
+    if (!isOpen) {
+      o.menu.classList.add("show");
+      o.btn.setAttribute("aria-expanded", "true");
+    }
+  });
+});
+
+document.addEventListener("click", () => closeAll(null));
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeAll(null); });
+
+
+/* =========================================================
+   SEARCH + SUGGESTIONS LOGIC
+========================================================= */
+const input  = document.getElementById("searchInput");
+const button = document.getElementById("searchBtn");
+const form   = document.getElementById("siteSearch");
+const box    = document.getElementById("searchSuggestionsBox");
+const buyBtn = document.getElementById("buyBtn");
+const sellBtn = document.getElementById("sellBtn");
+
+if (input && button && form && box) {
+  let typingTimer = null;
+
+  /* BUY/SELL TOGGLE – UI only */
+  if (buyBtn && sellBtn) {
+    sellBtn.onclick = () => {
+      sellBtn.classList.add("bg-[var(--rukn-orange)]", "text-white");
+      buyBtn.classList.remove("bg-[var(--rukn-orange)]", "text-white");
+      buyBtn.classList.add("text-gray-600");
+    };
+
+    buyBtn.onclick = () => {
+      buyBtn.classList.add("bg-[var(--rukn-orange)]", "text-white");
+      sellBtn.classList.remove("bg-[var(--rukn-orange)]", "text-white");
+      sellBtn.classList.add("text-gray-600");
+    };
+  }
+
+  /* Enable/disable search button */
+  input.addEventListener("input", () => {
+    let q = input.value.trim();
+    button.disabled = q.length < 2;
+    button.style.opacity = q.length < 2 ? 0.5 : 1;
+  });
+
+  /* Highlight helper */
+  function highlight(text, q) {
+    let i = text.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return text;
+    return (
+      text.substring(0, i) +
+      '<span class="text-[var(--rukn-orange)] font-bold">' +
+      text.substring(i, i + q.length) +
+      "</span>" +
+      text.substring(i + q.length)
+    );
+  }
+
+  /* Render ONE suggestion */
+  function renderSuggestion(entry, query) {
+    let row = document.createElement("div");
+    row.className =
+      "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition border-b last:border-none";
+
+    /* ICON / THUMB */
+    let iconBox = document.createElement("div");
+    iconBox.className = "flex-shrink-0";
+
+    if (entry.type === "item") {
+      // Show thumbnail
+      let img = document.createElement("img");
+      img.src = entry.photo_url || "/static/img/no-image.png";
+      img.className = "w-10 h-10 rounded-md object-cover border";
+      iconBox.appendChild(img);
+
+    } else {
+      // Category emoji
+      let emoji = document.createElement("div");
+      emoji.className = "text-2xl opacity-80";
+      emoji.textContent = entry.emoji || "📂";
+      iconBox.appendChild(emoji);
+    }
+
+    /* TEXTS */
+    let wrapper = document.createElement("div");
+    wrapper.className = "flex flex-col";
+
+    let title = document.createElement("span");
+    title.className = "font-medium text-gray-800";
+    title.innerHTML = highlight(entry.name, query);
+    wrapper.appendChild(title);
+
+    let sub = document.createElement("span");
+    sub.className = "text-xs text-gray-500";
+
+    if (entry.type === "item") {
+      sub.textContent = entry.category || "إعلان";
+    } else {
+      sub.textContent = entry.parent || "";
+    }
+    wrapper.appendChild(sub);
+
+    row.appendChild(iconBox);
+    row.appendChild(wrapper);
+
+    /* CLICK BEHAVIOR */
+    row.onclick = () => {
+      if (entry.type === "category") {
+        window.location.href =
+          `/${document.documentElement.lang}/items/?categories=${entry.category_id}`;
+      } else {
+        window.location.href =
+          `/${document.documentElement.lang}/item/${entry.id}/`;
       }
+    };
 
-      pairs.forEach(([btnId, menuId]) => {
-        const btn = document.getElementById(btnId);
-        const menu = document.getElementById(menuId);
-        if (!btn || !menu) return;
+    return row;
+  }
 
-        btn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          const isOpen = menu.classList.contains("show");
-          closeAll();
-          if (!isOpen) menu.classList.add("show");
-        });
+
+  function fuzzyMatch(str, q) {
+      if (!str) return false;
+
+      str = str.toLowerCase();
+      q = q.toLowerCase();
+
+      if (str.includes(q)) return true;
+
+      let mismatches = 0;
+      let i = 0, j = 0;
+
+      while (i < str.length && j < q.length) {
+          if (str[i] !== q[j]) {
+              mismatches++;
+              if (mismatches > 2) return false;
+              j++;
+          } else {
+              i++;
+              j++;
+          }
+      }
+      return true;
+  }
+
+
+  /* Load suggestions from backend */
+  function loadSuggestions(q) {
+    if (q.length < 2) {
+      box.classList.add("hidden");
+      return;
+    }
+
+    fetch(`/${document.documentElement.lang}/search/suggestions/?q=${encodeURIComponent(q)}`)
+      .then(r => r.json())
+      .then(data => {
+        box.innerHTML = "";
+        const all = data.results || [];
+
+        let categories = all.filter(x => x.type === "category");
+        let items = ENABLE_ITEM_SUGGESTIONS ? all.filter(x => x.type === "item") : [];
+
+        if (!categories.length && !items.length) {
+          box.classList.add("hidden");
+          return;
+        }
+
+        // Categories group
+        if (categories.length) {
+          let label = document.createElement("div");
+          label.className =
+            "px-4 py-2 text-xs font-bold text-gray-500 bg-gray-100 border-b";
+          label.textContent = "الأقسام";
+          box.appendChild(label);
+
+          categories
+          .filter(e => fuzzyMatch(e.name, q))
+          .forEach(entry => box.appendChild(renderSuggestion(entry, q)));
+        }
+
+        // Items group
+        if (items.length) {
+          let label = document.createElement("div");
+          label.className =
+            "px-4 py-2 text-xs font-bold text-gray-500 bg-gray-100 border-b mt-1";
+          label.textContent = "الإعلانات";
+          box.appendChild(label);
+
+          items
+            .filter(e => fuzzyMatch(e.name, q))
+            .forEach(entry => box.appendChild(renderSuggestion(entry, q)));
+        }
+
+        box.classList.remove("hidden");
       });
+  }
 
-      document.addEventListener("click", () => closeAll());
+  /* Live search results (for item_list page) */
+  function performSearch() {
+    let q = input.value.trim();
+    if (!q) return;
 
-      // auto-remove toast notifications
-      setTimeout(() => {
-        const notifs = document.querySelectorAll("#notifications > div");
-        notifs.forEach(el => el.remove());
-      }, 4500);
-
-      // elements
-      const sellBtn = document.getElementById("sellBtn");
-      const buyBtn  = document.getElementById("buyBtn");
-      const intentField = document.getElementById("intentField");
-      const searchInput = document.getElementById("searchInput");
-      const searchBtn   = document.getElementById("searchBtn");
-
-      // ✅ padding fix depending on RTL / LTR
-      const isRTL =
-        (document.documentElement && document.documentElement.dir === "rtl") ||
-        (document.body && document.body.dir === "rtl");
-
-      if (searchInput) {
-        if (isRTL) {
-          // Arabic: more space on the RIGHT for بيع/شراء buttons, left for 🔍
-          searchInput.style.paddingRight = "9.5rem";   // space for buy/sell
-          searchInput.style.paddingLeft  = "3.8rem"; // space for search icon
-        } else {
-          // English: text starts left, but layout is same visually
-          searchInput.style.paddingLeft  = "3.5rem"; // search icon
-          searchInput.style.paddingRight = "9rem";   // buy/sell
-        }
-      }
-
-      // simple intent toggle styling
-      function updateUI() {
-        if (!sellBtn || !buyBtn || !intentField || !searchInput || !searchBtn) return;
-        const isBuy = intentField.value === "buy";
-        const color = isBuy ? "#16a34a" : "var(--rukn-orange)";
-
-        if (isBuy) {
-          buyBtn.style.backgroundColor = "#16a34a";
-          buyBtn.style.color = "white";
-          sellBtn.style.backgroundColor = "#ffffff";
-          sellBtn.style.color = "#6b7280";
-        } else {
-          sellBtn.style.backgroundColor = "var(--rukn-orange)";
-          sellBtn.style.color = "white";
-          buyBtn.style.backgroundColor = "#ffffff";
-          buyBtn.style.color = "#6b7280";
-        }
-
-        searchInput.style.borderColor = color;
-        searchBtn.disabled = searchInput.value.trim().length === 0;
-      }
-
-      if (sellBtn && buyBtn && intentField) {
-        sellBtn.addEventListener("click", () => { intentField.value = "sell"; updateUI(); });
-        buyBtn.addEventListener("click", () => { intentField.value = "buy"; updateUI(); });
-        searchInput && searchInput.addEventListener("input", updateUI);
-        updateUI();
-      }
-
-      // re-init select2 for existing forms
-      $("select.searchable-select").select2({
-        width: "100%",
-        placeholder: "Select an option",
-        allowClear: true
+    fetch(`/${document.documentElement.lang}/items/?q=${encodeURIComponent(q)}`, {
+      headers: { "HX-Request": "true" }
+    })
+      .then(r => r.text())
+      .then(html => {
+        const results = document.getElementById("results");
+        if (results) results.innerHTML = html;
       });
+  }
 
-      // ✅ Live search integration
-      const suggestions = document.getElementById("searchSuggestions");
-      const results = document.getElementById("itemResults");
-      if (searchInput && results) {
-        let timer;
-        const delay = 400;
+  /* Typing events */
+  input.addEventListener("input", () => {
+    clearTimeout(typingTimer);
+    let q = input.value.trim();
 
-        async function updateResults(q) {
-          try {
-            const params = new URLSearchParams(window.location.search);
-            if (q) params.set("q", q); else params.delete("q");
-            const res = await fetch(`/?${params.toString()}`, { headers: { "HX-Request": "true" } });
-            const html = await res.text();
-            results.innerHTML = html;
-          } catch (err) {
-            console.error("Search update failed", err);
-          }
-        }
+    if (!q) {
+      box.classList.add("hidden");
+      return;
+    }
 
-        async function updateSuggestions(q) {
-          if (!suggestions) return;
-          if (q.length < 2) {
-            suggestions.classList.add("hidden");
-            suggestions.innerHTML = "";
-            return;
-          }
-          try {
-            const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`);
-            const data = await res.json();
-            suggestions.innerHTML = "";
-            data.results.forEach(s => {
-              const a = document.createElement("a");
-              a.className = "block px-3 py-2 hover:bg-gray-100 cursor-pointer";
-              if (s.type === "category" && s.category_id) {
-                a.href = `/?category=${s.category_id}`;
-              } else {
-                a.href = `/?q=${encodeURIComponent(s.name)}`;
-              }
-              a.innerHTML = `
-                <div class="flex justify-between">
-                  <span class="font-semibold">${s.name}</span>
-                  <small class="text-gray-500">${s.type}</small>
-                </div>`;
-              suggestions.appendChild(a);
-            });
-            suggestions.classList.remove("hidden");
-          } catch (err) {
-            console.error("Suggestions failed", err);
-          }
-        }
+    typingTimer = setTimeout(() => {
+      loadSuggestions(q);
+      performSearch();
+    }, 350);
+  });
 
-        searchInput.addEventListener("input", function(){
-          const q = this.value.trim();
-          clearTimeout(timer);
-          timer = setTimeout(() => {
-            updateResults(q);
-            updateSuggestions(q);
-          }, delay);
-        });
+  /* Enter submits search immediately */
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      box.classList.add("hidden");
+      performSearch();
+    }
+  });
 
-        document.addEventListener("click", (e) => {
-          if (suggestions && !searchInput.contains(e.target) && !suggestions.contains(e.target)) {
-            suggestions.classList.add("hidden");
-          }
-        });
-      }
-    });
-  </script>
+  /* Button click */
+  button.addEventListener("click", e => {
+    if (button.disabled) return;
+    e.preventDefault();
+    box.classList.add("hidden");
+    performSearch();
+  });
+}
 
+/* Scroll buttons for categories strip */
+function updateScrollButtons(){
+  const container = document.getElementById('catsScroll');
+  const leftBtn = document.querySelector('.scroll-btn.left');
+  const rightBtn = document.querySelector('.scroll-btn.right');
+  if(!container || !leftBtn || !rightBtn) return;
+  leftBtn.style.opacity = container.scrollLeft>0 ? '1' : '0.5';
+  rightBtn.style.opacity = container.scrollLeft < (container.scrollWidth - container.clientWidth) ? '1' : '0.5';
+}
+document.getElementById('catsScroll')?.addEventListener('scroll',updateScrollButtons);
+window.addEventListener('load',updateScrollButtons);
+function scrollCats(dir){
+  const c=document.getElementById('catsScroll');
+  if(!c) return;
+  c.scrollBy({left: dir*220, behavior:'smooth'});
+  setTimeout(updateScrollButtons,300);
+}
+window.scrollCats = scrollCats;
+</script>
 
+{% block scripts %}{% endblock %}
 
-  {% block scripts %}{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

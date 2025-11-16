@@ -43,6 +43,39 @@ from marketplace.models import City  # adjust path if needed
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 
+IS_RENDER = getattr(settings, "IS_RENDER", False)
+
+
+# NEW HOMEPAGE VIEW (replaces item_list as homepage)
+def home(request):
+    limit = int(request.GET.get("limit", 12))
+
+    latest_items = (
+        Item.objects.filter(is_approved=True, is_active=True)
+        .select_related("category", "city", "user")
+        .prefetch_related("photos")
+        .order_by("-created_at")[:limit]
+    )
+
+    categories = Category.objects.filter(parent__isnull=True)\
+        .prefetch_related("subcategories")\
+        .order_by("name_ar")
+
+    context = {
+        "categories": categories,
+        "latest_items": latest_items,
+    }
+
+    # ✔ FIXED — correct HTMX detection
+    if request.headers.get("HX-Request"):
+        return render(request, "partials/latest_items_block.html", context)
+
+    return render(request, "home.html", context)
+
+
+
+
+
 def item_list(request):
     # ✅ Auto-expire old items
     Item.objects.filter(
@@ -904,54 +937,120 @@ def change_password(request):
 @require_GET
 def search_suggestions(request):
     query = request.GET.get("q", "").strip()
-    suggestions = []
-
     if len(query) < 2:
         return JsonResponse({"results": []})
 
-    try:
-        # 1️⃣ Match categories and subcategories
-        matched_categories = (
-            Category.objects.filter(
+    results = []
+
+    # ============================================================
+    # 🔵 BRANCH 1 — ELASTICSEARCH ENABLED (local only when IS_RENDER=False)
+    # ============================================================
+    if not IS_RENDER and hasattr(ItemDocument, "search"):
+        try:
+            from elasticsearch_dsl.query import Q as ES_Q
+
+            es_query = ES_Q(
+                "multi_match",
+                query=query,
+                fields=[
+                    "title^3",
+                    "title.edge_ngram",
+                    "title.ngram",
+                    "category.name",
+                    "attributes.name",
+                    "city.name",
+                    "description"
+                ],
+                fuzziness="AUTO"
+            )
+
+            es_results = ItemDocument.search().query(es_query)[:6].execute()
+
+            # Categories from DB
+            categories = Category.objects.filter(
                 Q(name_ar__icontains=query) | Q(name_en__icontains=query)
-            )
-            .select_related("parent")
-            .order_by("name_ar")[:8]
-        )
+            ).select_related("parent")[:8]
 
-        for cat in matched_categories:
-            parent_label = cat.parent.name_ar if cat.parent else None
-            suggestions.append({
-                "type": "category",
-                "name": cat.name_ar,
-                "parent": parent_label,
-                "category_id": cat.id,
-            })
+            for c in categories:
+                results.append({
+                    "type": "category",
+                    "name": c.name_ar,
+                    "parent": c.parent.name_ar if c.parent else "",
+                    "category_id": c.id,
+                    "emoji": "📂",
+                })
 
-        # 2️⃣ Match top items
-        matched_items = (
-            Item.objects.filter(
-                is_approved=True,
-                is_active=True,
-                title__icontains=query
-            )
-            .select_related("category")
-            .order_by("-created_at")[:5]
-        )
+            # Items from ES
+            for hit in es_results:
+                try:
+                    item = Item.objects.select_related("category").prefetch_related("photos").get(id=hit.meta.id)
+                except Item.DoesNotExist:
+                    continue
 
-        for item in matched_items:
-            parent_label = item.category.parent.name_ar if item.category.parent else None
-            suggestions.append({
-                "type": "item",
-                "name": item.title,
-                "category": item.category.name_ar,
-                "parent": parent_label,
-            })
+                photo = item.photos.first()
+                photo_url = photo.image.url if photo else ""
 
-    except Exception as e:
-        print("[WARN] Suggestion fetch failed:", e)
+                results.append({
+                    "type": "item",
+                    "id": item.id,
+                    "name": item.title,
+                    "category": item.category.name_ar if item.category else "",
+                    "photo_url": photo_url,
+                })
 
-    return JsonResponse({"results": suggestions})
+            return JsonResponse({"results": results})
+
+        except Exception:
+            pass  # If Elasticsearch fails → silently fall back to PostgreSQL
+
+
+    # ============================================================
+    # 🔵 BRANCH 2 — POSTGRES TRIGRAM (Render OR local fallback)
+    # ============================================================
+
+    # Categories fuzzy
+    categories = (
+        Category.objects
+        .annotate(similarity=TrigramSimilarity("name_ar", query))
+        .filter(similarity__gt=0.2)
+        .order_by("-similarity")[:8]
+    )
+
+    for c in categories:
+        results.append({
+            "type": "category",
+            "name": c.name_ar,
+            "parent": c.parent.name_ar if c.parent else "",
+            "category_id": c.id,
+            "emoji": "📂",
+        })
+
+    # Items fuzzy
+    items = (
+        Item.objects.filter(is_approved=True, is_active=True)
+        .annotate(similarity=TrigramSimilarity("title", query))
+        .filter(similarity__gt=0.2)
+        .select_related("category")
+        .prefetch_related("photos")
+        .order_by("-similarity")[:6]
+    )
+
+    for i in items:
+        photo = i.photos.first()
+        photo_url = photo.image.url if photo else ""
+
+        results.append({
+            "type": "item",
+            "id": i.id,
+            "name": i.title,
+            "category": i.category.name_ar if i.category else "",
+            "photo_url": photo_url,
+        })
+
+    return JsonResponse({"results": results})
+
+
+
 
 
 def _category_descendant_ids(root):

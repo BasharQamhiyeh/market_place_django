@@ -12,7 +12,7 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
 
     # --- Homepage / Items ---
-    path('', views.item_list, name='home'),   # ✅ homepage
+    path('', views.home, name='home'),
     path('items/', views.item_list, name='item_list'),
     path('item/<int:item_id>/', views.item_detail, name='item_detail'),
     path('create/', views.item_create, name='create_item'),

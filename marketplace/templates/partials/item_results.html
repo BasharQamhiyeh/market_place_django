@@ -1,21 +1,59 @@
 {% load i18n %}
 
 {% if page_obj and page_obj.object_list %}
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    {% for item in page_obj %}
-      {% include "partials/_item_card.html" with item=item %}
-    {% endfor %}
-  </div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
 
-  <!-- Pagination -->
-  <nav class="mt-8 flex items-center justify-center gap-3 text-sm">
+    {% for item in page_obj %}
+    <a href="{% url 'item_detail' item.id %}"
+       class="block rounded-xl overflow-hidden bg-white shadow hover:shadow-xl transition duration-200 border border-gray-100">
+
+        <!-- Image -->
+        <div class="relative w-full h-40 bg-gray-100 overflow-hidden">
+            {% with photo=item.photos.first %}
+                {% if photo %}
+                <img src="{{ photo.image.url }}"
+                     class="w-full h-full object-cover">
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-gray-400 text-sm">
+                    لا توجد صورة
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded">
+                {{ item.price }} د.أ
+            </span>
+        </div>
+
+        <!-- Info -->
+        <div class="p-3 space-y-1">
+            <div class="font-semibold text-gray-800 truncate">
+                {{ item.title }}
+            </div>
+
+            <div class="text-xs text-gray-500 flex items-center gap-1 truncate">
+                📍 {{ item.city.name_ar }}
+            </div>
+
+            <div class="text-xs text-gray-400">
+                {{ item.created_at|timesince }} {% trans "ago" %}
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+<div class="mt-8 flex items-center justify-center gap-3 text-sm">
+
     {% if page_obj.has_previous %}
-      <a class="px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100"
-         hx-get="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}"
-         hx-target="#results"
-         hx-push-url="true">
+    <button
+       hx-get="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}"
+       hx-target="#results"
+       hx-push-url="true"
+       class="px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100">
         &laquo; {% trans "Previous" %}
-      </a>
+    </button>
     {% endif %}
 
     <span class="px-4 py-1 rounded-full bg-gray-100 text-gray-700">
@@ -23,16 +61,31 @@
     </span>
 
     {% if page_obj.has_next %}
-      <a class="px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100"
-         hx-get="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}"
-         hx-target="#results"
-         hx-push-url="true">
+    <button
+        hx-get="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}"
+        hx-target="#results"
+        hx-push-url="true"
+        class="px-3 py-1 rounded-full border border-gray-300 hover:bg-gray-100">
         {% trans "Next" %} &raquo;
-      </a>
+    </button>
     {% endif %}
-  </nav>
+
+</div>
+
 {% else %}
-  <div class="mt-6 bg-blue-50 border border-blue-100 text-blue-800 text-sm rounded-xl px-4 py-3">
-    {% trans "No items found." %}
-  </div>
+
+<!-- Modern Empty State -->
+<div class="mt-10 flex flex-col items-center justify-center">
+    <img src="https://cdn-icons-png.flaticon.com/512/4076/4076501.png"
+         class="w-28 h-28 opacity-70" />
+
+    <p class="mt-4 text-gray-600 text-lg font-medium">
+        {% trans "No items found." %}
+    </p>
+
+    <p class="text-gray-400 text-sm mt-1">
+        {% trans "Try adjusting your search keywords." %}
+    </p>
+</div>
+
 {% endif %}

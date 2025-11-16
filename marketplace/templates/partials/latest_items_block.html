@@ -1,0 +1,31 @@
+<div id="latest-items-container">
+
+    <div id="latest-items-grid"
+         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for item in latest_items %}
+            {% include "partials/_item_card.html" with item=item %}
+        {% empty %}
+            <p class="col-span-full text-center text-gray-400 py-6">
+                لا يوجد إعلانات حالياً.
+            </p>
+        {% endfor %}
+    </div>
+
+    <div class="flex justify-center mt-6">
+        {% if latest_items|length < 36 %}
+            <button id="loadMoreBtn"
+                    hx-get="?limit={{ latest_items|length|add:'12' }}"
+                    hx-target="#latest-items-container"
+                    hx-swap="outerHTML"
+                    class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
+                تحميل المزيد
+            </button>
+        {% else %}
+            <a href="{% url 'item_list' %}"
+               class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
+                عرض كل الإعلانات
+            </a>
+        {% endif %}
+    </div>
+
+</div>

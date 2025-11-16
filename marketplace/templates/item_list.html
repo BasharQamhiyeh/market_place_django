@@ -1,258 +1,127 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}ركن — {% trans "Latest items" %}{% endblock %}
+{% block title %}{% trans "Browse items" %}{% endblock %}
 
 {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-10">
+  <div class="flex flex-col lg:flex-row gap-6">
 
-<!-- HERO -->
-<section class="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-orange-100/40">
-  <div class="absolute -top-20 -left-32 w-96 h-96 bg-orange-200/30 blur-3xl rounded-full"></div>
-  <div class="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-orange-100/40 blur-3xl rounded-full"></div>
-
-  <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 space-y-10">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-      <div class="lg:col-span-2 pt-5">
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-relaxed pb-4 pr-2">
-          لكل منتج ركن خاص ✨
-        </h1>
-        <h2 class="text-2xl md:text-3xl font-semibold text-[var(--rukn-orange)] mt-1 pr-2 pb-2">
-          بيع، <span style="color:#00b871;">اشتري</span>، أو اطلب ما تحتاجه بسهولة
-        </h2>
-        <p class="text-base md:text-lg mt-2 text-[var(--muted)] pr-2 max-w-2xl">
-          نصنّف الإعلانات بذكاء لتصل لما تبحث عنه بسرعة، سواء للبيع أو الشراء.
-          تجربة سهلة وسريعة وآمنة للجميع.
-        </p>
-      </div>
-
-      <!-- Simple featured spot (static for now) -->
-      <a href="{% url 'item_list' %}"
-         class="block rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full card-hover">
-        <div class="relative">
-          <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80&auto=format&fit=crop"
-               class="w-full h-44 object-cover" alt="مساحة إعلانية">
-          <span class="absolute top-3 right-3 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow">
-            🚗 سيارات
-          </span>
-        </div>
-        <div class="p-4">
-          <div class="text-sm text-gray-500">مساحة إعلانية</div>
-          <div class="font-bold">أعلن عن سيارتك هنا</div>
-        </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- الأقسام -->
-<!-- الأقسام -->
-<section class="py-6 bg-gray-50 border-y">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl md:text-3xl font-extrabold leading-tight text-right text-gray-900">
-        {% trans "Categories" %}
+    {# ================= FILTERS (LEFT) ================= #}
+    <aside class="w-full lg:w-72 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <h2 class="text-sm font-semibold mb-3">
+        {% trans "Filter" %}
       </h2>
-    </div>
 
-    <div class="scroll-wrapper">
-      <button class="scroll-btn left" type="button" aria-label="تمرير يسار"
-              onclick="scrollCats(-1)">‹</button>
-      <button class="scroll-btn right" type="button" aria-label="تمرير يمين"
-              onclick="scrollCats(1)">›</button>
+      <form method="get" action="{% url 'item_list' %}" class="space-y-4">
+        {# keep current search text in filters #}
+        <input type="hidden" name="q" value="{{ q }}">
 
-      <div id="catsScroll" class="flex overflow-x-auto space-x-4 no-scrollbar">
-        {% for cat in categories %}
-          <a href="{% url 'item_list' %}?categories={{ cat.id }}"
-             class="group bg-white rounded-2xl p-4 shadow-card hover:shadow-lg transition
-                    hover:bg-[var(--rukn-orange)] hover:text-white flex-shrink-0 w-44
-                    flex flex-col justify-center text-center card-hover">
+        {# CATEGORIES (multi-select) #}
+        <div>
+          <p class="text-xs font-medium text-gray-500 mb-1">
+            {% trans "Categories" %}
+          </p>
+          <div class="space-y-2 max-h-64 overflow-y-auto text-xs">
+            {% for cat in categories %}
+              <label class="flex items-center gap-2 text-gray-700">
+                <input
+                  type="checkbox"
+                  name="categories"
+                  value="{{ cat.id }}"
+                  class="rounded border-gray-300 text-[var(--rukn-orange)] focus:ring-[var(--rukn-orange)]"
+                  {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}
+                >
+                <span>{{ cat }}</span>
+              </label>
 
-            <div class="wiggle text-4xl mb-2">
-              {% if cat.icon %}
-                <span style="color: {{ cat.color|default:'var(--rukn-orange)' }}">
-                  {{ cat.icon }}
-                </span>
-              {% else %}
-                <span style="color: var(--rukn-orange);">🏬</span>
-              {% endif %}
-            </div>
-
-
-            <div class="font-bold mt-1 group-hover:text-white">
-              {{ cat }}
-            </div>
-
-            {% get_current_language as LANGUAGE_CODE %}
-            {% if LANGUAGE_CODE == "ar" %}
-              {% if cat.subtitle_ar %}
-                <div class="text-xs text-gray-500 group-hover:text-white">{{ cat.subtitle_ar }}</div>
-              {% endif %}
-            {% else %}
-              {% if cat.subtitle_en %}
-                <div class="text-xs text-gray-500 group-hover:text-white">{{ cat.subtitle_en }}</div>
-              {% endif %}
-            {% endif %}
-          </a>
-        {% empty %}
-          <div class="text-sm text-gray-500">
-            {% trans "No categories yet." %}
+              {# show subcategories indented if you want #}
+              {% for sub in cat.subcategories.all %}
+                <label class="flex items-center gap-2 text-gray-500 ms-4">
+                  <input
+                    type="checkbox"
+                    name="categories"
+                    value="{{ sub.id }}"
+                    class="rounded border-gray-300 text-[var(--rukn-orange)] focus:ring-[var(--rukn-orange)]"
+                    {% if sub.id|stringformat:"s" in selected_categories %}checked{% endif %}
+                  >
+                  <span class="text-[0.8rem]">– {{ sub }}</span>
+                </label>
+              {% endfor %}
+            {% endfor %}
           </div>
-        {% endfor %}
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- إعلانات البيع الحديثة -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 pt-6">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-2xl md:text-3xl font-extrabold leading-tight"
-        style="color:var(--rukn-orange)">
-      إعلانات البيع الحديثة
-    </h2>
-
-    <a href="{% url 'item_list' %}" class="text-sm" style="color:var(--rukn-orange)">
-      عرض كل الإعلانات
-    </a>
-  </div>
-
-  <div id="itemResults">
-    {% include "partials/item_results.html" %}
-  </div>
-</section>
-
-<!-- طلبات الشراء الحديثة (ثيم أخضر) - مبدئيًا ثابتة / تصميم فقط -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3 sm:gap-0">
-    <h2 class="text-2xl md:text-3xl font-extrabold leading-tight"
-        style="color:var(--rukn-green)">
-      طلبات الشراء الحديثة
-    </h2>
-
-    <a href="#" class="text-sm" style="color:var(--rukn-green)">
-      عرض كل الطلبات
-    </a>
-  </div>
-
-  <!-- TODO: ربط لاحقًا بنموذج "طلبات شراء" حقيقي في الـ backend -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    <article class="bg-white rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <div class="p-4 pb-2">
-        <h3 class="font-semibold text-lg" style="color:var(--rukn-green)">
-          مطلوب لابتوب i7 للجامعة
-        </h3>
-        <div class="mt-1 text-sm text-[var(--muted)] flex items-center justify-between pb-3 mb-2 border-b border-gray-100/80">
-          <span>📍 عمّان</span>
-          <span>⏱️ منذ ساعة</span>
         </div>
-      </div>
-      <div class="flex items-center justify-between p-4 pt-2">
-        <div class="bg-[var(--rukn-green)] text-white text-base font-bold px-3 py-1 rounded-md shadow">
-          حتى 300 د.أ
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs">خ</div>
-          <span class="text-sm font-medium text-gray-800">خالد عودة</span>
-        </div>
-      </div>
-    </article>
 
-    <!-- يمكنك تكرار 2-3 بطاقات ثابتة أخرى للديزاين -->
-  </div>
-</section>
-
-<!-- HOW IT WORKS (بيع) -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-  <div class="bg-white rounded-2xl p-6 card-shadow">
-    <h2 class="text-xl font-bold mb-4">كيف تعمل ركن؟</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="flex gap-4 items-start">
-        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">1</div>
+        {# CITY #}
         <div>
-          <h3 class="font-semibold">سجل حسابك</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">ابدأ بإنشاء حساب مجاني للوصول إلى لوحة الإعلانات.</p>
+          <p class="text-xs font-medium text-gray-500 mb-1">
+            {% trans "City" %}
+          </p>
+          <select
+            name="city"
+            class="w-full rounded-lg border border-gray-300 text-xs py-1.5 focus:ring-[var(--rukn-orange)] focus:border-[var(--rukn-orange)]"
+          >
+            <option value="">{% trans "All cities" %}</option>
+            {% for city in cities %}
+              <option value="{{ city.id }}"
+                      {% if city.id|stringformat:"s" == request.GET.city %}selected{% endif %}>
+                {{ city.name_ar }}
+              </option>
+            {% endfor %}
+          </select>
         </div>
-      </div>
 
-      <div class="flex gap-4 items-start">
-        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">2</div>
+        {# PRICE RANGE #}
         <div>
-          <h3 class="font-semibold">أضف إعلانك</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">حمّل صور، أضف وصف وسعر واطلع على معاينة الإعلان قبل النشر.</p>
+          <p class="text-xs font-medium text-gray-500 mb-1">
+            {% trans "Price (JOD)" %}
+          </p>
+          <div class="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              name="min_price"
+              value="{{ request.GET.min_price }}"
+              placeholder="{% trans 'Min' %}"
+              class="w-full rounded-lg border border-gray-300 text-xs py-1.5 px-2 focus:ring-[var(--rukn-orange)] focus:border-[var(--rukn-orange)]"
+            >
+            <input
+              type="number"
+              name="max_price"
+              value="{{ request.GET.max_price }}"
+              placeholder="{% trans 'Max' %}"
+              class="w-full rounded-lg border border-gray-300 text-xs py-1.5 px-2 focus:ring-[var(--rukn-orange)] focus:border-[var(--rukn-orange)]"
+            >
+          </div>
         </div>
+
+        <button
+          type="submit"
+          class="w-full mt-2 rounded-full bg-[var(--rukn-orange)] text-white text-xs font-semibold py-2 shadow-sm hover:brightness-110 transition"
+        >
+          {% trans "Apply filters" %}
+        </button>
+      </form>
+    </aside>
+
+    {# ================= RESULTS (RIGHT) ================= #}
+    <section class="flex-1">
+      <div class="flex items-center justify-between mb-3">
+        <h1 class="text-lg md:text-xl font-bold">
+          {% trans "Items" %}
+        </h1>
+        {% if q %}
+          <p class="text-xs text-gray-500">
+            {% blocktrans %}Results for "{{ q }}"{% endblocktrans %}
+          </p>
+        {% endif %}
       </div>
 
-      <div class="flex gap-4 items-start">
-        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">3</div>
-        <div>
-          <h3 class="font-semibold">تواصل واستكمل البيع</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">استقبل رسائل المشتريين وأتمّ معاملتك بأمان.</p>
-        </div>
+      <div id="results">
+        {# This uses page_obj from the view and the old working design #}
+        {% include "partials/item_results.html" %}
       </div>
-    </div>
+    </section>
 
-    <div class="mt-6">
-      {% if request.user.is_authenticated %}
-        <a href="{% url 'create_item' %}" class="inline-block bg-[var(--rukn-orange)] text-white px-5 py-3 rounded-lg font-medium btn-primary-rukn">
-          أضف إعلانك
-        </a>
-      {% else %}
-        <a href="{% url 'login' %}?next={% url 'create_item' %}"
-           class="inline-block bg-[var(--rukn-orange)] text-white px-5 py-3 rounded-lg font-medium btn-primary-rukn">
-          أضف إعلانك
-        </a>
-      {% endif %}
-    </div>
   </div>
-</section>
-
-<!-- HOW IT WORKS (طلبات شراء) -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="rounded-2xl p-6 card-shadow"
-       style="background:linear-gradient(180deg,var(--rukn-green-50),#fff)">
-    <h2 class="text-xl font-bold mb-6" style="color:var(--rukn-green)">
-      كيف تضيف “طلب شراء”؟
-    </h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
-        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-             style="background:var(--rukn-green)">1</div>
-        <div>
-          <h3 class="font-semibold">اختر “أضف طلب شراء”</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">من الصفحة الرئيسية أو من لوحة المستخدم (لاحقًا).</p>
-        </div>
-      </div>
-
-      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
-        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-             style="background:var(--rukn-green)">2</div>
-        <div>
-          <h3 class="font-semibold">حدد المواصفات والميزانية</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">اكتب عنوانًا واضحًا، المدينة، والحد الأعلى للسعر.</p>
-        </div>
-      </div>
-
-      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
-        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-             style="background:var(--rukn-green)">3</div>
-        <div>
-          <h3 class="font-semibold">انشر واستقبل العروض</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">سيعرض البائعون اقتراحاتهم ويمكنك المقارنة والتواصل.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-6 flex flex-wrap gap-3">
-      <a href="#" class="inline-block px-5 py-3 rounded-lg btn-green">
-        أضف طلب شراء
-      </a>
-      <a href="#" class="inline-block px-5 py-3 rounded-lg pill-green">
-        نصائح لطلب شراء فعّال
-      </a>
-    </div>
-  </div>
-</section>
-
+</div>
 {% endblock %}
