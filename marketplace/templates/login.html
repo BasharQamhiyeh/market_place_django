@@ -7,18 +7,20 @@
 <div class="flex justify-center px-4">
   <div class="w-full max-w-md">
     <div class="rounded-xl shadow bg-white border border-gray-200">
+
       <div class="bg-gray-900 text-white rounded-t-xl px-4 py-3">
         <h4 class="text-lg font-semibold">{% trans "Login" %}</h4>
       </div>
 
-      <div class="p-6 space-y-4">
+      <div class="p-6 space-y-6">
+
         {% if error %}
           <div class="bg-red-100 text-red-700 px-4 py-2 rounded">
             {{ error }}
           </div>
         {% endif %}
 
-        <form method="post" class="space-y-4">
+        <form method="post" class="space-y-5">
           {% csrf_token %}
 
           <div>
@@ -26,7 +28,7 @@
               {% trans "Username/phone" %}
             </label>
             <input type="text" id="username" name="username"
-              class="w-full border rounded px-3 py-2 focus:ring focus:ring-jordan"
+              class="w-full border rounded px-3 py-2 focus:ring focus:ring-green-600"
               required>
           </div>
 
@@ -35,29 +37,31 @@
               {% trans "Password" %}
             </label>
             <input type="password" id="password" name="password"
-              class="w-full border rounded px-3 py-2 focus:ring focus:ring-jordan"
+              class="w-full border rounded px-3 py-2 focus:ring focus:ring-green-600"
               required>
           </div>
 
-          <div class="flex justify-between items-center">
-            <a href="{% url 'register' %}" class="text-jordan underline">
+          <div class="flex justify-between items-center pt-2">
+            <a href="{% url 'register' %}" class="text-green-700 underline">
               {% trans "Create account" %}
             </a>
 
+            <!-- FIXED: VISIBLE BUTTON -->
             <button type="submit"
-              class="bg-jordan text-white px-4 py-2 rounded hover:opacity-90">
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
               {% trans "Login" %}
             </button>
           </div>
 
-          <div class="text-center">
+          <div class="text-center pt-2">
             <a href="{% url 'forgot_password' %}" class="text-gray-500 text-sm underline">
               {% trans "Forgot your password?" %}
             </a>
           </div>
-        </form>
-      </div>
 
+        </form>
+
+      </div>
     </div>
   </div>
 </div>
