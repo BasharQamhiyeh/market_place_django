@@ -4,33 +4,49 @@
 {% block title %}{% trans "Notifications" %}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm border-0">
-  <div class="card-header bg-dark text-white">
-    <h5 class="mb-0">{% trans "Notifications" %}</h5>
+<div class="bg-white border border-gray-200 rounded-xl shadow">
+
+  <div class="bg-gray-900 text-white px-5 py-3 rounded-t-xl">
+    <h5 class="text-lg font-semibold mb-0">{% trans "Notifications" %}</h5>
   </div>
-  <div class="card-body">
+
+  <div class="p-6">
     {% if notifications %}
-      <div class="list-group">
+      <div class="space-y-3">
         {% for n in notifications %}
-          <div class="list-group-item list-group-item-action {% if not n.is_read %}active bg-light text-dark{% endif %}">
-            <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">{{ n.title }}</h6>
-              <small class="text-muted">{{ n.created_at }}</small>
+          <div class="rounded-lg border p-4
+            {% if not n.is_read %}bg-gray-100{% else %}bg-white{% endif %}">
+
+            <div class="flex justify-between mb-1">
+              <h6 class="text-base font-semibold">{{ n.title }}</h6>
+              <small class="text-gray-500">{{ n.created_at }}</small>
             </div>
-            <p class="mb-2">{{ n.body }}</p>
+
+            <p class="text-gray-700 mb-3">{{ n.body }}</p>
+
             {% if n.item_id %}
               {% if request.user.is_staff %}
-                <a class="btn btn-sm btn-jordan-outline" href="{% url 'admin:marketplace_item_change' n.item_id %}">{% trans "Review Item" %}</a>
+                <a href="{% url 'admin:marketplace_item_change' n.item_id %}"
+                   class="px-3 py-1.5 text-sm border border-jordan text-jordan rounded hover:bg-jordan hover:text-white">
+                  {% trans "Review Item" %}
+                </a>
               {% else %}
-                <a class="btn btn-sm btn-jordan-outline" href="{% url 'item_detail' n.item_id %}">{% trans "View Item" %}</a>
+                <a href="{% url 'item_detail' n.item_id %}"
+                   class="px-3 py-1.5 text-sm border border-jordan text-jordan rounded hover:bg-jordan hover:text-white">
+                  {% trans "View Item" %}
+                </a>
               {% endif %}
             {% endif %}
           </div>
         {% endfor %}
       </div>
+
     {% else %}
-      <div class="alert alert-info mb-0">{% trans "No notifications." %}</div>
+      <div class="bg-blue-50 text-blue-800 px-4 py-3 rounded">
+        {% trans "No notifications." %}
+      </div>
     {% endif %}
   </div>
+
 </div>
 {% endblock %}

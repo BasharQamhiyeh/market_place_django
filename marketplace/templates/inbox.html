@@ -4,21 +4,25 @@
 {% block title %}{% trans "My Conversations" %}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm border-0">
-  <div class="card-header bg-dark text-white">
-    <h5 class="mb-0">{% trans "My Conversations" %}</h5>
+<div class="bg-white border border-gray-200 rounded-xl shadow">
+
+  <div class="px-5 py-3 bg-gray-900 text-white rounded-t-xl">
+    <h5 class="text-lg font-semibold mb-0">{% trans "My Conversations" %}</h5>
   </div>
-  <div class="card-body">
+
+  <div class="p-6">
+
     {% if convos %}
-      <div class="list-group">
+      <div class="divide-y border rounded-lg overflow-hidden">
         {% for convo in convos %}
-          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
-             href="{% url 'chat_room' convo.id %}">
-            <div class="me-3">
-              <div class="fw-semibold">
+          <a href="{% url 'chat_room' convo.id %}"
+             class="block px-4 py-3 hover:bg-gray-50 transition flex justify-between items-start">
+
+            <div class="pr-4">
+              <div class="font-semibold text-gray-900">
                 {% trans "Conversation about" %} “{{ convo.item.title }}”
               </div>
-              <small class="text-muted">
+              <small class="text-gray-500">
                 {% trans "With" %}:
                 {% if request.user == convo.buyer %}
                   {{ convo.seller.username }}
@@ -27,13 +31,22 @@
                 {% endif %}
               </small>
             </div>
-            <span class="badge bg-secondary align-self-center">{% trans "Open" %}</span>
+
+            <span class="px-3 py-1 text-sm bg-gray-300 text-gray-800 rounded-full self-center">
+              {% trans "Open" %}
+            </span>
+
           </a>
         {% endfor %}
       </div>
+
     {% else %}
-      <div class="alert alert-info mb-0">{% trans "No conversations yet." %}</div>
+      <div class="bg-blue-50 text-blue-800 px-4 py-3 rounded">
+        {% trans "No conversations yet." %}
+      </div>
     {% endif %}
+
   </div>
+
 </div>
 {% endblock %}

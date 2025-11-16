@@ -5,93 +5,119 @@
 {% block title %}{% trans "Register" %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-md-8 col-lg-6">
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-dark text-white">
-        <h4 class="mb-0">{% trans "Create account" %}</h4>
+<div class="flex justify-center px-4">
+  <div class="w-full max-w-2xl">
+    <div class="rounded-xl shadow border border-gray-200 bg-white">
+      <div class="bg-gray-900 text-white px-5 py-3 rounded-t-xl">
+        <h4 class="text-lg font-semibold">{% trans "Create account" %}</h4>
       </div>
-      <div class="card-body">
-        <form method="post" class="vstack gap-3">
+
+      <div class="p-6 space-y-5">
+
+        <form method="post" class="space-y-5">
           {% csrf_token %}
           {{ form.non_field_errors }}
 
           <!-- Username -->
           <div>
             {{ form.username.label_tag }}
-            {{ form.username|add_class:"form-control" }}
-            <div class="text-danger small">{{ form.username.errors }}</div>
+            {{ form.username|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
+            <div class="text-red-600 text-sm">{{ form.username.errors }}</div>
           </div>
 
-          <!-- Country prefix + Phone (flag + +962) -->
+          <!-- Phone (Country prefix + flag) -->
           <div>
-            {{ form.country.as_hidden }}  {# hidden real field for submission #}
+            {{ form.country.as_hidden }}
             {{ form.phone.label_tag }}
-            <div class="input-group">
-              <span class="input-group-text" id="country-addon">
+
+            <div class="flex items-center border rounded overflow-hidden">
+              <span class="px-3 bg-gray-100 border-r select-none">
                 🇯🇴 +962
               </span>
-              {{ form.phone|add_class:"form-control"|attr:"aria-describedby:country-addon"|attr:"placeholder:07xxxxxxxx" }}
+              {{ form.phone
+                 |add_class:"w-full px-3 py-2 focus:ring focus:ring-jordan"
+                 |attr:"placeholder:07xxxxxxxx"
+               }}
             </div>
-            <div class="text-danger small">{{ form.phone.errors }}</div>
+
+            <div class="text-red-600 text-sm">{{ form.phone.errors }}</div>
           </div>
 
           <!-- Show phone -->
-          <div class="form-check">
-            {{ form.show_phone|add_class:"form-check-input" }}
-            <label class="form-check-label" for="{{ form.show_phone.id_for_label }}">
-              {{ form.show_phone.label }}
+          <div class="flex flex-col">
+            <label class="flex items-center gap-2">
+              {{ form.show_phone|add_class:"h-4 w-4 border-gray-300 rounded" }}
+              <span>{{ form.show_phone.label }}</span>
             </label>
-            <small class="text-muted d-block">{{ form.show_phone.help_text }}</small>
+
+            <small class="text-gray-500 mt-1">
+              {{ form.show_phone.help_text }}
+            </small>
           </div>
 
-          <!-- Name -->
-          <div class="row g-3">
-            <div class="col-12 col-md-6">
+          <!-- First/Last Name -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
               {{ form.first_name.label_tag }}
-              {{ form.first_name|add_class:"form-control" }}
-              <div class="text-danger small">{{ form.first_name.errors }}</div>
+              {{ form.first_name|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
+              <div class="text-red-600 text-sm">{{ form.first_name.errors }}</div>
             </div>
-            <div class="col-12 col-md-6">
+
+            <div>
               {{ form.last_name.label_tag }}
-              {{ form.last_name|add_class:"form-control" }}
-              <div class="text-danger small">{{ form.last_name.errors }}</div>
+              {{ form.last_name|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
+              <div class="text-red-600 text-sm">{{ form.last_name.errors }}</div>
             </div>
           </div>
 
           <!-- Email -->
           <div>
             {{ form.email.label_tag }}
-            {{ form.email|add_class:"form-control" }}
-            <div class="text-danger small">{{ form.email.errors }}</div>
+            {{ form.email|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
+            <div class="text-red-600 text-sm">{{ form.email.errors }}</div>
           </div>
 
           <!-- Password -->
           <div>
             {{ form.password.label_tag }}
-            <div class="input-group">
-              {{ form.password|add_class:"form-control" }}
-              <button type="button" class="btn btn-outline-secondary" id="togglePwd">👁</button>
+
+            <div class="flex border rounded overflow-hidden">
+              {{ form.password|add_class:"w-full px-3 py-2 focus:ring focus:ring-jordan border-none" }}
+              <button
+                type="button"
+                class="px-3 bg-gray-100 border-l hover:bg-gray-200"
+                id="togglePwd"
+              >
+                👁
+              </button>
             </div>
-            <small class="text-muted">
+
+            <small class="text-gray-500 block mt-1">
               {% trans "Password must be at least 8 characters and contain only letters and numbers." %}
             </small>
-            <div class="text-danger small">{{ form.password.errors }}</div>
+
+            <div class="text-red-600 text-sm">{{ form.password.errors }}</div>
           </div>
 
           <!-- Confirm Password -->
           <div>
             {{ form.password2.label_tag }}
-            {{ form.password2|add_class:"form-control" }}
-            <div class="text-danger small">{{ form.password2.errors }}</div>
+            {{ form.password2|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
+            <div class="text-red-600 text-sm">{{ form.password2.errors }}</div>
           </div>
 
           <!-- Submit -->
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-jordan">{% trans "Register" %}</button>
+          <div class="flex justify-end">
+            <button
+              type="submit"
+              class="bg-jordan text-white px-5 py-2 rounded hover:opacity-90"
+            >
+              {% trans "Register" %}
+            </button>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
@@ -104,17 +130,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!toggleBtn) return;
 
   toggleBtn.addEventListener('click', function() {
-    // Find both password inputs explicitly by their Django field names
     const p1 = document.querySelector('input[name="password"]');
     const p2 = document.querySelector('input[name="password2"]');
     [p1, p2].forEach(function(inp) {
-      if (inp) {
-        inp.type = inp.type === 'password' ? 'text' : 'password';
-      }
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
     });
   });
 });
 </script>
 {% endblock %}
 {% endblock %}
-

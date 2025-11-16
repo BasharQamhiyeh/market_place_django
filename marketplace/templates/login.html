@@ -4,37 +4,60 @@
 {% block title %}{% trans "Login" %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-12 col-md-6 col-lg-5">
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-dark text-white">
-        <h4 class="mb-0">{% trans "Login" %}</h4>
+<div class="flex justify-center px-4">
+  <div class="w-full max-w-md">
+    <div class="rounded-xl shadow bg-white border border-gray-200">
+      <div class="bg-gray-900 text-white rounded-t-xl px-4 py-3">
+        <h4 class="text-lg font-semibold">{% trans "Login" %}</h4>
       </div>
-      <div class="card-body">
+
+      <div class="p-6 space-y-4">
         {% if error %}
-          <div class="alert alert-danger">{{ error }}</div>
+          <div class="bg-red-100 text-red-700 px-4 py-2 rounded">
+            {{ error }}
+          </div>
         {% endif %}
-        <form method="post" class="vstack gap-3">
+
+        <form method="post" class="space-y-4">
           {% csrf_token %}
+
           <div>
-            <label for="username" class="form-label">{% trans "Username/phone" %}</label>
-            <input type="text" id="username" name="username" class="form-control" required>
+            <label for="username" class="block text-sm font-medium mb-1">
+              {% trans "Username/phone" %}
+            </label>
+            <input type="text" id="username" name="username"
+              class="w-full border rounded px-3 py-2 focus:ring focus:ring-jordan"
+              required>
           </div>
+
           <div>
-            <label for="password" class="form-label">{% trans "Password" %}</label>
-            <input type="password" id="password" name="password" class="form-control" required>
+            <label for="password" class="block text-sm font-medium mb-1">
+              {% trans "Password" %}
+            </label>
+            <input type="password" id="password" name="password"
+              class="w-full border rounded px-3 py-2 focus:ring focus:ring-jordan"
+              required>
           </div>
-          <div class="d-flex justify-content-between align-items-center">
-            <a href="{% url 'register' %}" class="text-decoration-none">{% trans "Create account" %}</a>
-            <button type="submit" class="btn btn-jordan">{% trans "Login" %}</button>
+
+          <div class="flex justify-between items-center">
+            <a href="{% url 'register' %}" class="text-jordan underline">
+              {% trans "Create account" %}
+            </a>
+
+            <button type="submit"
+              class="bg-jordan text-white px-4 py-2 rounded hover:opacity-90">
+              {% trans "Login" %}
+            </button>
           </div>
-          <div class="text-center mt-2">
-            <a href="{% url 'forgot_password' %}" class="text-decoration-none small text-muted">
+
+          <div class="text-center">
+            <a href="{% url 'forgot_password' %}" class="text-gray-500 text-sm underline">
               {% trans "Forgot your password?" %}
             </a>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>

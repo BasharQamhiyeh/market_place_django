@@ -5,45 +5,44 @@
 {% block title %}{% trans "New Announcement" %}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm border-0">
-  <div class="card-header text-white" style="background-color: var(--jordan-green);">
+<div class="bg-white border border-gray-200 rounded-xl shadow">
+  <div class="px-5 py-3 text-white rounded-t-xl" style="background-color: var(--jordan-green);">
     <h4 class="mb-0">{% trans "Publish Your Announcement" %}</h4>
   </div>
 
-  <div class="card-body bg-white">
-    <form method="post" enctype="multipart/form-data" class="vstack gap-4">
+  <div class="p-6">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
       {% csrf_token %}
 
       {% if selected_category %}
-        <!-- ✅ 1. Images with preview + main photo selection -->
+
         <div>
-          <label class="form-label fw-semibold">
+          <label class="font-semibold block mb-1">
             {% trans "Product Photos" %}
-            <span class="text-muted small d-block">{% trans "Click on a photo to mark it as the main photo." %}</span>
+            <span class="text-gray-500 text-sm block">{% trans "Click on a photo to mark it as the main photo." %}</span>
           </label>
+
           {{ form.images }}
           {% if form.images.errors %}
-            <div class="text-danger small mt-1">{{ form.images.errors }}</div>
+            <div class="text-red-600 text-sm mt-1">{{ form.images.errors }}</div>
           {% endif %}
 
-          <!-- hidden field to store which uploaded file index is main -->
-          <input type="hidden" name="main_photo_index" id="main_photo_index" value="">
+          <input type="hidden" name="main_photo_index" id="main_photo_index">
 
-          <div id="preview" class="mt-3 d-flex flex-wrap gap-2"></div>
+          <div id="preview" class="mt-3 flex flex-wrap gap-3"></div>
         </div>
 
-        <!-- ✅ 2. Product Name -->
         <div>
-          <label for="id_title" class="form-label fw-semibold">{% trans "Title" %}</label>
+          <label for="id_title" class="font-semibold block mb-1">{% trans "Title" %}</label>
           <input type="text" name="title" id="id_title"
                  value="{{ form.title.value|default_if_none:'' }}"
-                 class="form-control" maxlength="255" required>
+                 class="w-full border rounded px-3 py-2" maxlength="255" required>
         </div>
 
-        <!-- ✅ 3. Category -->
         <div>
-          <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
-          <select name="category" id="categorySelect" class="form-select" data-placeholder="{% trans 'Select Category' %}">
+          <label class="font-semibold block mb-1">{% trans "Category" %}</label>
+          <select name="category" id="categorySelect"
+                  class="w-full border rounded px-3 py-2 bg-white">
             <option value="">{% trans "Select Category" %}</option>
             {% for cat in categories %}
               <option value="{{ cat.id }}" {% if selected_category.id == cat.id %}selected{% endif %}>{{ cat }}</option>
@@ -54,13 +53,12 @@
           </select>
         </div>
 
-        <!-- ✅ 8. Dynamic Attributes -->
         {% for field in form %}
           {% if field.name|slice:"0:10" == "attribute_" and not "_other" in field.name %}
             <div>
-              <label class="form-label fw-semibold" for="id_{{ field.name }}">{{ field.label }}</label>
+              <label class="font-semibold block mb-1" for="id_{{ field.name }}">{{ field.label }}</label>
               {{ field }}
-              <div id="{{ field.name }}_other_box" class="mt-2" style="display:none;">
+              <div id="{{ field.name }}_other_box" class="hidden mt-2">
                 {% with other_name=field.name|add:"_other" %}
                   {% if other_name in form.fields %}
                     {{ form|get_bound_field:other_name }}
@@ -71,51 +69,51 @@
           {% endif %}
         {% endfor %}
 
-        <!-- ✅ 4. Condition -->
         <div>
-          <label class="form-label fw-semibold d-block">{% trans "Condition" %}</label>
-          <div class="d-flex gap-4">
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="condition" id="condition_new"
-                     value="new" {% if form.condition.value == 'new' %}checked{% endif %}>
-              <label class="form-check-label" for="condition_new">{% trans "New" %}</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="condition" id="condition_used"
-                     value="used" {% if form.condition.value == 'used' %}checked{% endif %}>
-              <label class="form-check-label" for="condition_used">{% trans "Used" %}</label>
-            </div>
+          <label class="font-semibold block mb-1">{% trans "Condition" %}</label>
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2">
+              <input type="radio" name="condition" value="new" class="h-4 w-4"
+                     {% if form.condition.value == 'new' %}checked{% endif %}>
+              <span>{% trans "New" %}</span>
+            </label>
+
+            <label class="flex items-center gap-2">
+              <input type="radio" name="condition" value="used" class="h-4 w-4"
+                     {% if form.condition.value == 'used' %}checked{% endif %}>
+              <span>{% trans "Used" %}</span>
+            </label>
           </div>
         </div>
 
-        <!-- ✅ 5. Description -->
         <div>
-          <label class="form-label fw-semibold" for="id_description">{% trans "Description" %}</label>
-          <textarea name="description" id="id_description" class="form-control" rows="6">{{ form.description.value|default_if_none:'' }}</textarea>
+          <label class="font-semibold block mb-1">{% trans "Description" %}</label>
+          <textarea name="description" id="id_description"
+                    class="w-full border rounded px-3 py-2"
+                    rows="6">{{ form.description.value|default_if_none:'' }}</textarea>
         </div>
 
-        <!-- ✅ 6. Price -->
         <div>
-          <label class="form-label fw-semibold" for="id_price">{% trans "Price" %}</label>
+          <label class="font-semibold block mb-1">{% trans "Price" %}</label>
           {{ form.price }}
         </div>
 
-        <!-- ✅ 7. City -->
         <div>
-          <label class="form-label fw-semibold" for="id_city">{% trans "City" %}</label>
+          <label class="font-semibold block mb-1">{% trans "City" %}</label>
           {{ form.city }}
         </div>
 
-        <!-- ✅ Submit Button -->
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary px-4">{% trans "Publish" %}</button>
+        <div class="flex justify-end">
+          <button type="submit" class="px-5 py-2 bg-jordan text-white rounded hover:opacity-90">
+            {% trans "Publish" %}
+          </button>
         </div>
 
       {% else %}
-        <!-- Show only category selection first -->
         <div>
-          <label for="categorySelect" class="form-label fw-semibold">{% trans "Category" %}</label>
-          <select name="category" id="categorySelect" class="form-select" data-placeholder="{% trans 'Select Category' %}">
+          <label class="font-semibold block mb-1">{% trans "Category" %}</label>
+          <select name="category" id="categorySelect"
+                  class="w-full border rounded px-3 py-2 bg-white">
             <option value="">{% trans "Select Category" %}</option>
             {% for cat in categories %}
               <option value="{{ cat.id }}">{{ cat }}</option>
@@ -134,39 +132,36 @@
 {% block scripts %}
 {{ block.super }}
 
-<!-- ✅ Trumbowyg (Free text editor) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/trumbowyg.min.css">
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
 
 <style>
-  .form-label{display:block;margin-bottom:.4rem;font-weight:600}
-  form.vstack>div{margin-bottom:1rem}
-  .trumbowyg-button-pane{display:flex;flex-wrap:wrap;align-items:center}
-  .trumbowyg-button-pane button{margin-right:6px}
-  [id$="_other_box"]{display:none}
+  [id$="_other_box"] { display:none; }
 
-  /* ✅ preview images & selected main frame */
-  #preview img.preview-img{
+  #preview img.preview-img {
     width:100px;
     height:100px;
     object-fit:cover;
     border-radius:.5rem;
     border:2px solid #ddd;
     cursor:pointer;
-    transition:border-color .2s, box-shadow .2s;
+    transition:.2s;
   }
-  #preview img.preview-img:hover{
-    border-color:#888;
+
+  #preview img.preview-img:hover {
+    border-color:#777;
   }
-  #preview img.preview-img.selected-main{
-    border-color:var(--jordan-green);
-    box-shadow:0 0 6px var(--jordan-green);
+
+  #preview img.preview-img.selected-main {
+    border-color: var(--jordan-green);
+    box-shadow: 0 0 6px var(--jordan-green);
   }
 </style>
 
 <script>
 (function(){
+
   function redirectWithCategory(val){
     const url = new URL(window.location.href);
     if(val) url.searchParams.set('category', val);
@@ -183,7 +178,6 @@
     });
   }
 
-  // ✅ Preview images before upload + allow selecting main photo
   document.addEventListener('change', function(e){
     if(e.target && e.target.name === 'images'){
       const preview = document.getElementById('preview');
@@ -191,8 +185,7 @@
       preview.innerHTML = '';
       if (mainInput) mainInput.value = '';
 
-      const files = Array.from(e.target.files);
-      files.forEach((file, index) => {
+      Array.from(e.target.files).forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = ev => {
           const img = document.createElement('img');
@@ -201,15 +194,11 @@
           img.classList.add('preview-img');
 
           img.addEventListener('click', () => {
-            // Remove selection from all
-            document.querySelectorAll('#preview img.preview-img').forEach(i => {
-              i.classList.remove('selected-main');
-            });
-            // Add selection to clicked image
+            document.querySelectorAll('#preview img.preview-img')
+              .forEach(i => i.classList.remove('selected-main'));
+
             img.classList.add('selected-main');
-            if (mainInput){
-              mainInput.value = index;  // send this index to backend
-            }
+            if (mainInput) mainInput.value = index;
           });
 
           preview.appendChild(img);
@@ -222,21 +211,28 @@
   document.addEventListener('DOMContentLoaded', function(){
     const catSel = document.getElementById('categorySelect');
     if (catSel){
-      catSel.addEventListener('change', function(){ redirectWithCategory(this.value); });
+      catSel.addEventListener('change', function(){
+        redirectWithCategory(this.value);
+      });
     }
 
-    setTimeout(updateOtherInputs, 0);
-    document.addEventListener('change', e => {
-      if (e.target && e.target.matches('select[name^="attribute_"]')) updateOtherInputs();
+    updateOtherInputs();
+    document.addEventListener('change', function(e){
+      if (e.target && e.target.matches('select[name^="attribute_"]')){
+        updateOtherInputs();
+      }
     });
 
-    // ✅ Initialize text editor
     $('#id_description').trumbowyg({
-      btns: [['strong','em','underline'],['unorderedList','orderedList'],['link'],['removeformat']],
+      btns: [['strong','em','underline'],
+             ['unorderedList','orderedList'],
+             ['link'],
+             ['removeformat']],
       autogrow: true,
       svgPath: 'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
     });
   });
+
 })();
 </script>
 {% endblock %}

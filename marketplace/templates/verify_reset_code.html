@@ -1,16 +1,31 @@
 {% extends "base.html" %}
+
 {% block title %}تحقق من الرمز{% endblock %}
+
 {% block content %}
-<div class="col-md-6 mx-auto">
-  <div class="card shadow-sm border-0">
-    <div class="card-body">
-      <h4>تحقق من الرمز</h4>
-      <p>تم إرسال رمز مكون من 6 أرقام إلى رقم الهاتف {{ phone }}</p>
-      <form method="post">{% csrf_token %}
+<div class="max-w-md mx-auto px-4">
+  <div class="bg-white border border-gray-200 rounded-xl shadow p-6">
+
+    <h4 class="text-xl font-semibold mb-2">تحقق من الرمز</h4>
+
+    <p class="text-gray-600 mb-4">
+      تم إرسال رمز مكون من 6 أرقام إلى رقم الهاتف {{ phone }}
+    </p>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <!-- Django form paragraphs converted into better Tailwind styling -->
+      <div class="space-y-3">
         {{ form.as_p }}
-        <button type="submit" class="btn btn-jordan w-100">تحقق</button>
-      </form>
-    </div>
+      </div>
+
+      <button type="submit"
+        class="bg-jordan text-white w-full py-2 rounded hover:opacity-90">
+        تحقق
+      </button>
+    </form>
+
   </div>
 </div>
 {% endblock %}
