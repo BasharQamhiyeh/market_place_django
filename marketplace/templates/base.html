@@ -288,7 +288,7 @@
     <div class="flex items-center gap-4 text-[var(--muted)]">
       <!-- Favorites -->
       <div class="relative">
-        <button id="favBtn" class="relative hover:text-gray-900 transition-colors topbar-icon" aria-expanded="false" aria-haspopup="true" aria-label="المفضلة">
+        <button id="favBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="المفضلة">
           ❤️
           {% if favorite_count %}
             <span class="badge">{{ favorite_count }}</span>
@@ -327,7 +327,7 @@
 
       <!-- Messages -->
       <div class="relative">
-        <button id="msgBtn" class="relative hover:text-gray-900 transition-colors topbar-icon" aria-expanded="false" aria-haspopup="true" aria-label="الرسائل">
+        <button id="msgBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="الرسائل">
           ✉️
           {% if unread_messages %}
             <span class="badge">{{ unread_messages }}</span>
@@ -374,7 +374,7 @@
 
       <!-- Notifications -->
       <div class="relative">
-        <button id="notiBtn" class="relative hover:text-gray-900 transition-colors topbar-icon" aria-expanded="false" aria-haspopup="true" aria-label="الإشعارات">
+        <button id="notiBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="الإشعارات">
           🔔
           {% if unread_notifications %}
             <span class="badge">{{ unread_notifications }}</span>
