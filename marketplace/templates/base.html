@@ -265,6 +265,11 @@
       from { opacity: 0; transform: translateY(-4px); }
       to   { opacity: 1; transform: translateY(0); }
   }
+
+  .topbar-icon {
+    font-size: 1.35rem !important;   /* match index-30.html */
+    padding: 0 6px !important;       /* spacing match */
+  }
   </style>
 </head>
 
@@ -283,7 +288,7 @@
     <div class="flex items-center gap-4 text-[var(--muted)]">
       <!-- Favorites -->
       <div class="relative">
-        <button id="favBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="المفضلة">
+        <button id="favBtn" class="relative hover:text-gray-900 transition-colors topbar-icon" aria-expanded="false" aria-haspopup="true" aria-label="المفضلة">
           ❤️
           {% if favorite_count %}
             <span class="badge">{{ favorite_count }}</span>
@@ -322,7 +327,7 @@
 
       <!-- Messages -->
       <div class="relative">
-        <button id="msgBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="الرسائل">
+        <button id="msgBtn" class="relative hover:text-gray-900 transition-colors topbar-icon" aria-expanded="false" aria-haspopup="true" aria-label="الرسائل">
           ✉️
           {% if unread_messages %}
             <span class="badge">{{ unread_messages }}</span>
@@ -369,7 +374,7 @@
 
       <!-- Notifications -->
       <div class="relative">
-        <button id="notiBtn" class="relative hover:text-gray-900 transition-colors" aria-expanded="false" aria-haspopup="true" aria-label="الإشعارات">
+        <button id="notiBtn" class="relative hover:text-gray-900 transition-colors topbar-icon" aria-expanded="false" aria-haspopup="true" aria-label="الإشعارات">
           🔔
           {% if unread_notifications %}
             <span class="badge">{{ unread_notifications }}</span>
@@ -435,84 +440,95 @@
 
 <!-- HEADER + SEARCH -->
 {% block searchbar %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+<header class="bg-white shadow-sm z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-3 py-3">
 
-  <form id="siteSearch"
-        action="{% url 'item_list' %}"
-        method="get"
-        class="flex flex-col sm:flex-row items-stretch gap-3 w-full">
-
-    <!-- SEARCH INPUT -->
-    <div class="relative flex-1">
-
-      <input id="searchInput"
-             name="q"
-             type="search"
-             autocomplete="off"
-             placeholder="ابحث عن اعلان أو طلب"
-             class="w-full text-base md:text-lg rounded-3xl border-2 border-[var(--rukn-orange)]
-                    py-2.5 px-4 pr-36 focus:outline-none focus:ring-2 focus:ring-orange-200
-                    transition-all duration-300"
-             required />
-
-      <!-- BUY / SELL TOGGLE (UI ONLY) -->
-      <div id="intentBox"
-           class="absolute right-2 top-1/2 -translate-y-1/2 flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-2xl">
-
-        <button id="sellBtn" type="button"
-                class="w-[58px] h-8 text-sm font-extrabold text-white bg-[var(--rukn-orange)]">
-          بيع
-        </button>
-
-        <button id="buyBtn" type="button"
-                class="w-[58px] h-8 text-sm font-extrabold text-gray-600 bg-white">
-          شراء
-        </button>
-
+      <div class="flex justify-center items-center py-6">
       </div>
 
-      <!-- SEARCH BUTTON -->
-      <button id="searchBtn"
-              type="submit"
-              disabled
-              class="absolute left-2 top-1/2 -translate-y-1/2 bg-[var(--rukn-orange)] text-white
-                     w-8 h-8 rounded-3xl flex items-center justify-center shadow-md hover:scale-105
-                     transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed">
+      <div class="w-full px-3 mt-2 md:mt-0">
+        <form id="siteSearch"
+              action="{% url 'item_list' %}"
+              method="get"
+              class="flex flex-col sm:flex-row items-stretch gap-2 w-full">
 
-        <svg xmlns="http://www.w3.org/2000/svg"
-             class="w-4 h-4"
-             fill="none"
-             viewBox="0 0 24 24"
-             stroke="currentColor"
-             stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-                d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
-        </svg>
-      </button>
+          <!-- SEARCH INPUT -->
+          <div class="relative flex-1">
 
-      <!-- SUGGESTIONS DROPDOWN -->
-      <div id="searchSuggestionsBox"
-           class="absolute z-40 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg text-sm hidden">
+            <input id="searchInput"
+                  name="q"
+                  type="search"
+                  autocomplete="off"
+                  placeholder="ابحث عن اعلان أو طلب"
+                  class="w-full text-base md:text-lg rounded-3xl border-2 border-[var(--rukn-orange)]
+                        py-2.5 px-4 pr-36 focus:outline-none focus:ring-2 focus:ring-orange-200
+                        transition-all duration-300"
+                  required />
+
+            <!-- BUY / SELL TOGGLE -->
+            <div id="intentBox"
+                class="absolute right-2 top-1/2 -translate-y-1/2 flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-2xl">
+
+              <button id="sellBtn" type="button"
+                      class="w-[58px] h-8 text-sm font-extrabold text-white bg-[var(--rukn-orange)]">
+                بيع
+              </button>
+
+              <button id="buyBtn" type="button"
+                      class="w-[58px] h-8 text-sm font-extrabold text-gray-600 bg-white">
+                شراء
+              </button>
+
+            </div>
+
+            <!-- SEARCH BUTTON -->
+            <button id="searchBtn"
+                    type="submit"
+                    disabled
+                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-[var(--rukn-orange)] text-white
+                          w-8 h-8 rounded-3xl flex items-center justify-center shadow-md hover:scale-105
+                          transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed">
+
+              <svg xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+              </svg>
+            </button>
+
+            <!-- SUGGESTIONS DROPDOWN -->
+            <div id="searchSuggestionsBox"
+                  class="absolute z-40 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg text-sm hidden">
+            </div>
+
+          </div>
+
+          <!-- ADD AD BUTTON -->
+          <a id="addAdBtn" href="{% url 'create_item' %}"
+              class="text-center text-sm font-extrabold text-white bg-[var(--rukn-orange)]
+                    px-6 py-4 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300
+                    w-full sm:w-auto">
+            أضف إعلانك
+          </a>
+
+        </form>
       </div>
 
     </div>
-
-    <!-- ADD AD BUTTON -->
-    <a href="{% url 'create_item' %}"
-       class="text-center text-sm font-extrabold text-white bg-[var(--rukn-orange)]
-              px-6 py-4 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300
-              w-full sm:w-auto">
-      أضف إعلانك
-    </a>
-
-  </form>
-</div>
+  </div>
+</header>
 {% endblock %}
 
 
 
+
 <!-- CONTENT -->
-<main>
+<main class="mt-6 md:mt-8">
   {% block content %}{% endblock %}
 </main>
 
@@ -565,6 +581,7 @@
 
 
 <!-- JS: dropdowns + search -->
+<!-- JS: dropdowns + search -->
 <script>
 /* =========================================================
    FEATURE FLAG: suggestions mode
@@ -574,7 +591,7 @@
 const ENABLE_ITEM_SUGGESTIONS = true;
 
 /* =========================================================
-   NAVBAR DROPDOWNS (unchanged)
+   NAVBAR DROPDOWNS
 ========================================================= */
 const menus = {
   fav:  { btn: document.getElementById("favBtn"),  menu: document.getElementById("favMenu") },
@@ -611,43 +628,81 @@ Object.keys(menus).forEach(key => {
 document.addEventListener("click", () => closeAll(null));
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeAll(null); });
 
-
 /* =========================================================
-   SEARCH + SUGGESTIONS LOGIC
+   SEARCH + SUGGESTIONS + FULL BUY/SELL UI
 ========================================================= */
-const input  = document.getElementById("searchInput");
-const button = document.getElementById("searchBtn");
-const form   = document.getElementById("siteSearch");
-const box    = document.getElementById("searchSuggestionsBox");
-const buyBtn = document.getElementById("buyBtn");
-const sellBtn = document.getElementById("sellBtn");
+const input    = document.getElementById("searchInput");
+const button   = document.getElementById("searchBtn");
+const form     = document.getElementById("siteSearch");
+const box      = document.getElementById("searchSuggestionsBox");
+const buyBtn   = document.getElementById("buyBtn");
+const sellBtn  = document.getElementById("sellBtn");
+const addAdBtn = document.getElementById("addAdBtn");
+const intentBox = document.getElementById("intentBox");
 
 if (input && button && form && box) {
   let typingTimer = null;
+  let isBuy = false; // default: بيع (sell / orange)
 
-  /* BUY/SELL TOGGLE – UI only */
-  if (buyBtn && sellBtn) {
-    sellBtn.onclick = () => {
-      sellBtn.classList.add("bg-[var(--rukn-orange)]", "text-white");
-      buyBtn.classList.remove("bg-[var(--rukn-orange)]", "text-white");
-      buyBtn.classList.add("text-gray-600");
-    };
+  /* ---------- MAIN UI UPDATE (orange/green) ---------- */
+  function updateUI() {
+    const color   = isBuy ? "#16a34a" : "var(--rukn-orange)";
+    const btnText = isBuy ? "أضف طلبك" : "أضف إعلانك";
+    const hasText = input.value.trim().length > 0;
 
-    buyBtn.onclick = () => {
-      buyBtn.classList.add("bg-[var(--rukn-orange)]", "text-white");
-      sellBtn.classList.remove("bg-[var(--rukn-orange)]", "text-white");
-      sellBtn.classList.add("text-gray-600");
-    };
+    // Toggle small بيع/شراء buttons
+    if (buyBtn && sellBtn) {
+      if (isBuy) {
+        buyBtn.style.backgroundColor = "#16a34a";
+        buyBtn.style.color = "white";
+
+        sellBtn.style.backgroundColor = "#ffffff";
+        sellBtn.style.color = "#6b7280";
+      } else {
+        sellBtn.style.backgroundColor = "var(--rukn-orange)";
+        sellBtn.style.color = "white";
+
+        buyBtn.style.backgroundColor = "#ffffff";
+        buyBtn.style.color = "#6b7280";
+      }
+    }
+
+    // Border around the toggle
+    if (intentBox) {
+      intentBox.style.borderColor = isBuy ? "#16a34a" : "var(--rukn-orange)";
+    }
+
+    // Search input border
+    input.style.borderColor = color;
+
+    // Search button color
+    button.style.backgroundColor = color;
+
+    // Enable/disable search button depending on text
+    button.disabled = !hasText;
+    button.style.opacity = hasText ? "1" : "0.5";
+    button.style.cursor  = hasText ? "pointer" : "not-allowed";
+
+    // "Add Ad" button (color + text)
+    if (addAdBtn) {
+      addAdBtn.style.backgroundColor = color;
+      addAdBtn.textContent = btnText;
+    }
   }
 
-  /* Enable/disable search button */
-  input.addEventListener("input", () => {
-    let q = input.value.trim();
-    button.disabled = q.length < 2;
-    button.style.opacity = q.length < 2 ? 0.5 : 1;
-  });
+  // Click handlers for بيع / شراء
+  if (buyBtn && sellBtn) {
+    sellBtn.addEventListener("click", () => {
+      isBuy = false;
+      updateUI();
+    });
+    buyBtn.addEventListener("click", () => {
+      isBuy = true;
+      updateUI();
+    });
+  }
 
-  /* Highlight helper */
+  /* ---------- Highlight helper (for suggestions) ---------- */
   function highlight(text, q) {
     let i = text.toLowerCase().indexOf(q.toLowerCase());
     if (i < 0) return text;
@@ -660,32 +715,29 @@ if (input && button && form && box) {
     );
   }
 
-  /* Render ONE suggestion */
+  /* ---------- Render one suggestion row ---------- */
   function renderSuggestion(entry, query) {
     let row = document.createElement("div");
     row.className =
       "flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition border-b last:border-none";
 
-    /* ICON / THUMB */
+    // ICON / THUMB
     let iconBox = document.createElement("div");
     iconBox.className = "flex-shrink-0";
 
     if (entry.type === "item") {
-      // Show thumbnail
       let img = document.createElement("img");
       img.src = entry.photo_url || "/static/img/no-image.png";
       img.className = "w-10 h-10 rounded-md object-cover border";
       iconBox.appendChild(img);
-
     } else {
-      // Category emoji
       let emoji = document.createElement("div");
       emoji.className = "text-2xl opacity-80";
       emoji.textContent = entry.emoji || "📂";
       iconBox.appendChild(emoji);
     }
 
-    /* TEXTS */
+    // TEXTS
     let wrapper = document.createElement("div");
     wrapper.className = "flex flex-col";
 
@@ -696,7 +748,6 @@ if (input && button && form && box) {
 
     let sub = document.createElement("span");
     sub.className = "text-xs text-gray-500";
-
     if (entry.type === "item") {
       sub.textContent = entry.category || "إعلان";
     } else {
@@ -707,7 +758,7 @@ if (input && button && form && box) {
     row.appendChild(iconBox);
     row.appendChild(wrapper);
 
-    /* CLICK BEHAVIOR */
+    // CLICK BEHAVIOR
     row.onclick = () => {
       if (entry.type === "category") {
         window.location.href =
@@ -721,33 +772,32 @@ if (input && button && form && box) {
     return row;
   }
 
-
+  /* ---------- Fuzzy match ---------- */
   function fuzzyMatch(str, q) {
-      if (!str) return false;
+    if (!str) return false;
 
-      str = str.toLowerCase();
-      q = q.toLowerCase();
+    str = str.toLowerCase();
+    q = q.toLowerCase();
 
-      if (str.includes(q)) return true;
+    if (str.includes(q)) return true;
 
-      let mismatches = 0;
-      let i = 0, j = 0;
+    let mismatches = 0;
+    let i = 0, j = 0;
 
-      while (i < str.length && j < q.length) {
-          if (str[i] !== q[j]) {
-              mismatches++;
-              if (mismatches > 2) return false;
-              j++;
-          } else {
-              i++;
-              j++;
-          }
+    while (i < str.length && j < q.length) {
+      if (str[i] !== q[j]) {
+        mismatches++;
+        if (mismatches > 2) return false;
+        j++;
+      } else {
+        i++;
+        j++;
       }
-      return true;
+    }
+    return true;
   }
 
-
-  /* Load suggestions from backend */
+  /* ---------- Load suggestions from backend ---------- */
   function loadSuggestions(q) {
     if (q.length < 2) {
       box.classList.add("hidden");
@@ -761,7 +811,7 @@ if (input && button && form && box) {
         const all = data.results || [];
 
         let categories = all.filter(x => x.type === "category");
-        let items = ENABLE_ITEM_SUGGESTIONS ? all.filter(x => x.type === "item") : [];
+        let items      = ENABLE_ITEM_SUGGESTIONS ? all.filter(x => x.type === "item") : [];
 
         if (!categories.length && !items.length) {
           box.classList.add("hidden");
@@ -777,8 +827,8 @@ if (input && button && form && box) {
           box.appendChild(label);
 
           categories
-          .filter(e => fuzzyMatch(e.name, q))
-          .forEach(entry => box.appendChild(renderSuggestion(entry, q)));
+            .filter(e => fuzzyMatch(e.name, q))
+            .forEach(entry => box.appendChild(renderSuggestion(entry, q)));
         }
 
         // Items group
@@ -798,7 +848,7 @@ if (input && button && form && box) {
       });
   }
 
-  /* Live search results (for item_list page) */
+  /* ---------- Live search results (for item_list page) ---------- */
   function performSearch() {
     let q = input.value.trim();
     if (!q) return;
@@ -813,9 +863,11 @@ if (input && button && form && box) {
       });
   }
 
-  /* Typing events */
+  /* ---------- Typing events ---------- */
   input.addEventListener("input", () => {
     clearTimeout(typingTimer);
+    updateUI();  // update button colors + enable/disable
+
     let q = input.value.trim();
 
     if (!q) {
@@ -829,7 +881,7 @@ if (input && button && form && box) {
     }, 350);
   });
 
-  /* Enter submits search immediately */
+  /* ---------- Enter submits search immediately ---------- */
   input.addEventListener("keydown", e => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -838,38 +890,43 @@ if (input && button && form && box) {
     }
   });
 
-  /* Button click */
+  /* ---------- Search button click ---------- */
   button.addEventListener("click", e => {
     if (button.disabled) return;
     e.preventDefault();
     box.classList.add("hidden");
     performSearch();
   });
+
+  /* Initial state (orange theme, disabled search) */
+  updateUI();
 }
 
-/* Scroll buttons for categories strip */
+/* =========================================================
+   Scroll buttons for categories strip
+========================================================= */
 function updateScrollButtons(){
   const container = document.getElementById('catsScroll');
-  const leftBtn = document.querySelector('.scroll-btn.left');
-  const rightBtn = document.querySelector('.scroll-btn.right');
-  if(!container || !leftBtn || !rightBtn) return;
-  leftBtn.style.opacity = container.scrollLeft>0 ? '1' : '0.5';
-  rightBtn.style.opacity = container.scrollLeft < (container.scrollWidth - container.clientWidth) ? '1' : '0.5';
+  const leftBtn   = document.querySelector('.scroll-btn.left');
+  const rightBtn  = document.querySelector('.scroll-btn.right');
+  if (!container || !leftBtn || !rightBtn) return;
+  leftBtn.style.opacity  = container.scrollLeft > 0 ? "1" : "0.5";
+  rightBtn.style.opacity = container.scrollLeft < (container.scrollWidth - container.clientWidth) ? "1" : "0.5";
 }
-document.getElementById('catsScroll')?.addEventListener('scroll',updateScrollButtons);
-window.addEventListener('load',updateScrollButtons);
+
+document.getElementById('catsScroll')?.addEventListener('scroll', updateScrollButtons);
+window.addEventListener('load', updateScrollButtons);
+
 function scrollCats(dir){
-  const c=document.getElementById('catsScroll');
-  if(!c) return;
+  const c = document.getElementById('catsScroll');
+  if (!c) return;
   c.scrollBy({left: dir*220, behavior:'smooth'});
-  setTimeout(updateScrollButtons,300);
+  setTimeout(updateScrollButtons, 300);
 }
 window.scrollCats = scrollCats;
 </script>
 
 {% block scripts %}{% endblock %}
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
