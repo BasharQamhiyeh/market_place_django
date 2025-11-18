@@ -210,7 +210,7 @@ class ItemAdmin(admin.ModelAdmin):
         "user__first_name", "user__last_name", "user__email", "user__phone",
         "external_id",   # ✅ searchable
     )
-    actions = []
+    actions = ["make_active", "make_inactive"]
 
     fields = (
         "title",
@@ -383,6 +383,21 @@ class ItemAdmin(admin.ModelAdmin):
         opts = self.model._meta
         change_url = reverse(f"admin:{opts.app_label}_{opts.model_name}_change", args=[item.pk])
         return redirect(change_url)
+
+    # -----------------------------
+    # Admin actions
+    # -----------------------------
+    def make_active(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"✅ {updated} items activated.")
+
+    make_active.short_description = "Activate selected items"
+
+    def make_inactive(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f"🚫 {updated} items deactivated.")
+
+    make_inactive.short_description = "Deactivate selected items"
 
     # -----------------------------
     # Import Items (Excel + ZIP) — stores external_id ✅
