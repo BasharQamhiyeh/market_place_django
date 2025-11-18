@@ -35,7 +35,8 @@ from datetime import timedelta
 from .utils.verification import send_code, verify_session_code
 from django.core.exceptions import ValidationError
 from .validators import validate_no_links_or_html
-
+from marketplace.utils.category_tree import build_category_tree, get_selected_category_path
+import json
 
 # Anyone can view items
 from marketplace.models import City  # adjust path if needed
@@ -77,9 +78,8 @@ def home(request):
 
 
 def item_list(request):
-    # ✅ Auto-expire old items
     Item.objects.filter(
-        created_at__lt=timezone.now() - timedelta(days=7),
+        created_at__lt=timezone.now() - timedelta(days=1000),
         is_active=True
     ).update(is_active=False)
 
@@ -289,41 +289,68 @@ def item_detail(request, item_id):
     })
 
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.utils import translation
+from django.shortcuts import render, redirect, get_object_or_404
+
+from .models import Category, ItemPhoto, ItemAttributeValue, User, Notification
+from .forms import ItemForm
+
+
 # Only logged-in users can post
 @login_required
+@transaction.atomic
 def item_create(request):
-    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
+    # =============================
+    # 1. Top-level categories
+    # =============================
+    # Used by the new template as the first select in the category tree
+    lang = translation.get_language()
+    if lang == "ar":
+        order_field = "name_ar"
+    else:
+        order_field = "name_en"
+
+    top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
 
     # Keep selected category across GET/POST
+    # New template always keeps the final leaf category ID in hidden field "category"
     category_id = request.POST.get('category') or request.GET.get('category')
     selected_category = Category.objects.filter(id=category_id).first() if category_id else None
 
     if request.method == 'POST':
-        # --- DEBUG ---
+        # Instantiate form with selected category (leaf)
+        form = ItemForm(request.POST, request.FILES, category=selected_category)
+
+        # --- DEBUG (you can remove these prints in production) ---
         print("=== DEBUG: item_create POST ===")
         print("selected_category_id:", category_id, " resolved:", selected_category)
         print("POST keys:", list(request.POST.keys()))
         print("FILES keys:", list(request.FILES.keys()))
         print("FILES images count:", len(request.FILES.getlist('images')))
-        print("================================")
-
-        form = ItemForm(request.POST, request.FILES, category=selected_category)
-
-        # --- DEBUG: before validation ---
         print("Form fields:", list(form.fields.keys()))
+        print("================================")
 
         if form.is_valid() and selected_category:
             print("=== DEBUG: form is valid ===")
+
+            # -----------------------------
+            # 2. Create Item
+            # -----------------------------
             item = form.save(commit=False)
             item.category = selected_category
             item.user = request.user
 
-            # Mark item pending review
+            # Mark item pending review (keep your behaviour)
             item.is_approved = False
             item.is_active = True
             item.save()
 
-            # ✅ Save uploaded images
+            # -----------------------------
+            # 3. Save uploaded images
+            # -----------------------------
             images = request.FILES.getlist('images')
             main_index = request.POST.get('main_photo_index')
             main_index = int(main_index) if main_index and main_index.isdigit() else None
@@ -334,23 +361,68 @@ def item_create(request):
                     photo.is_main = True
                     photo.save()
 
-            # ✅ Save dynamic attributes (including "Other")
-            for key, value in request.POST.items():
-                if key.startswith("attribute_") and not key.endswith("_other"):
-                    try:
-                        attr_id = int(key.split('_')[1])
-                    except Exception:
-                        continue
-                    if value == '__other__':
-                        value = request.POST.get(f"{key}_other", "").strip()
-                    if value:
-                        ItemAttributeValue.objects.create(
-                            item=item,
-                            attribute_id=attr_id,
-                            value=value
-                        )
+            # If no main explicitly selected but images exist → first as main
+            if images and not item.photos.filter(is_main=True).exists():
+                first = item.photos.first()
+                if first:
+                    first.is_main = True
+                    first.save()
 
-            # ✅ Notify admins about new item
+            # -----------------------------
+            # 4. Save dynamic attributes
+            #    (text/number/select, including "Other" and multi-select)
+            # -----------------------------
+            for field_name, value in form.cleaned_data.items():
+                # Only dynamic attribute fields
+                if not field_name.startswith("attribute_"):
+                    continue
+                if field_name.endswith("_other"):
+                    continue  # handled together with main field
+
+                # Extract attribute id from field name "attribute_<id>"
+                try:
+                    attr_id = int(field_name.split('_')[1])
+                except Exception:
+                    continue
+
+                # We don't want to break if attribute is missing
+                attribute = selected_category.attributes.filter(id=attr_id).first() if selected_category else None
+                if not attribute:
+                    continue
+
+                final_value = None
+
+                # Multi-select (checkboxes / tags)
+                if isinstance(value, list):
+                    parts = []
+                    for v in value:
+                        if v == '__other__':
+                            other_text = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                            if other_text:
+                                parts.append(other_text)
+                        else:
+                            # keep same behaviour as before: store raw value (typically option id)
+                            parts.append(str(v))
+                    final_value = ", ".join(parts) if parts else ""
+
+                else:
+                    # Single value
+                    if value == '__other__':
+                        final_value = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                    else:
+                        # Old behaviour: store the raw selected value (id or text)
+                        final_value = str(value) if value is not None else ""
+
+                if final_value:
+                    ItemAttributeValue.objects.create(
+                        item=item,
+                        attribute_id=attr_id,
+                        value=final_value
+                    )
+
+            # -----------------------------
+            # 5. Notifications (same as before)
+            # -----------------------------
             for admin in User.objects.filter(is_staff=True):
                 Notification.objects.create(
                     user=admin,
@@ -359,7 +431,6 @@ def item_create(request):
                     item=item
                 )
 
-            # ✅ Notify the posting user
             Notification.objects.create(
                 user=request.user,
                 title="✅ إعلانك قيد المراجعة",
@@ -379,7 +450,8 @@ def item_create(request):
 
         return render(request, 'item_create.html', {
             'form': form,
-            'categories': categories,
+            'top_categories': top_categories,   # new template uses this
+            'categories': top_categories,       # keep for compatibility if needed
             'selected_category': selected_category,
             'debug_info': {
                 'post_keys': list(request.POST.keys()),
@@ -391,14 +463,31 @@ def item_create(request):
             }
         })
 
-    # --- GET request ---
+    # =============================
+    # GET request
+    # =============================
+    # GET request
     form = ItemForm(category=selected_category)
+
+    # Build full tree
+    category_tree = build_category_tree(top_categories, lang)
+    category_tree_json = json.dumps(category_tree, ensure_ascii=False)
+
+    # Build path to selected category (if any)
+    selected_path = get_selected_category_path(selected_category)
+    selected_path_json = json.dumps(selected_path)
+    # ===================================
+
     return render(request, 'item_create.html', {
         'form': form,
-        'categories': categories,
+        'top_categories': top_categories,
+        'categories': top_categories,
         'selected_category': selected_category,
-    })
 
+        # === SEND THEM TO TEMPLATE ===
+        'category_tree_json': category_tree_json,
+        'selected_category_path_json': selected_path_json,
+    })
 
 
 @login_required

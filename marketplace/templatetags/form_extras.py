@@ -12,3 +12,9 @@ def get_bound_field(form, name):
         return form[name]
     except Exception:
         return ""
+
+
+@register.filter
+def getitem(obj, key):
+    """Allow template access: form|getitem:'field_name' """
+    return obj.get(key)

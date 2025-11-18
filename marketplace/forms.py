@@ -137,17 +137,20 @@ class MultipleFileInput(ClearableFileInput):
 
 
 class ItemForm(forms.ModelForm):
+    # Multiple images
     images = forms.CharField(
         widget=MultipleFileInput(attrs={'multiple': True}),
         required=False
     )
 
+    # Condition (new / used)
     condition = forms.ChoiceField(
         choices=[('new', 'New'), ('used', 'Used')],
         widget=forms.RadioSelect,
         required=True
     )
 
+    # City
     city = forms.ModelChoiceField(
         queryset=City.objects.filter(is_active=True).order_by('name_en'),
         required=False,
@@ -159,77 +162,182 @@ class ItemForm(forms.ModelForm):
         fields = ['title', 'condition', 'price', 'description', 'city']
 
     def __init__(self, *args, **kwargs):
+        """
+        Full dynamic attribute system.
+        Category MUST be popped out before calling super().__init__.
+        """
         category = kwargs.pop('category', None)
         instance = kwargs.get('instance', None)
+
+        # The FIX that prevents the TypeError
         super().__init__(*args, **kwargs)
 
-        # ✅ make city dropdown searchable
+        # ============================================================
+        # Enhance city select
+        # ============================================================
         self.fields['city'].widget.attrs.update({'class': 'searchable-select'})
 
+        # ============================================================
+        # Load existing attribute values (edit mode)
+        # ============================================================
         existing_attrs = {}
         if instance:
             for av in instance.attribute_values.all():
                 existing_attrs[av.attribute.id] = av.value
 
-        if category:
-            for attribute in category.attributes.all():
-                field_name = f"attribute_{attribute.id}"
-                lang = translation.get_language()
-                label = attribute.name_ar if lang == 'ar' else attribute.name_en
+        # ============================================================
+        # If no category selected → do not build attribute fields
+        # ============================================================
+        if not category:
+            return
 
-                # TEXT
-                if attribute.input_type == 'text':
-                    self.fields[field_name] = forms.CharField(
-                        required=attribute.is_required,
-                        label=label,
-                        initial=existing_attrs.get(attribute.id, ""),
-                        validators=[validate_no_links_or_html],
-                    )
+        lang = translation.get_language()
 
-                # NUMBER
-                elif attribute.input_type == 'number':
-                    self.fields[field_name] = forms.FloatField(
-                        required=attribute.is_required,
-                        label=label,
-                        initial=existing_attrs.get(attribute.id, "")
-                    )
+        # ============================================================
+        # BUILD DYNAMIC FIELDS
+        # ============================================================
+        for attribute in category.attributes.all():
+            field_name = f"attribute_{attribute.id}"
+            label = attribute.name_ar if lang == 'ar' else attribute.name_en
+            current_value = existing_attrs.get(attribute.id, "")
 
-                # SELECT
-                elif attribute.input_type == 'select':
-                    choices = [
-                        (opt.id, opt.value_ar if lang == 'ar' else opt.value_en)
-                        for opt in attribute.options.all()
-                    ]
-                    choices.append(('__other__', 'Other'))
+            # ----------------------------------------------------------
+            # TEXT INPUT
+            # ----------------------------------------------------------
+            if attribute.input_type == 'text':
+                self.fields[field_name] = forms.CharField(
+                    required=attribute.is_required,
+                    label=label,
+                    initial=current_value,
+                    validators=[validate_no_links_or_html],
+                )
+                continue
 
-                    current = existing_attrs.get(attribute.id)
-                    selected_choice = None
+            # ----------------------------------------------------------
+            # NUMBER INPUT
+            # ----------------------------------------------------------
+            if attribute.input_type == 'number':
+                initial_number = None
+                if isinstance(current_value, (int, float)):
+                    initial_number = current_value
+                elif isinstance(current_value, str) and current_value.strip() != "":
+                    try:
+                        initial_number = float(current_value)
+                    except ValueError:
+                        initial_number = None
 
-                    # Select match
-                    for opt in attribute.options.all():
-                        if opt.value_en == current or opt.value_ar == current:
-                            selected_choice = opt.id
+                self.fields[field_name] = forms.FloatField(
+                    required=attribute.is_required,
+                    label=label,
+                    initial=initial_number,
+                )
+                continue
 
-                    if selected_choice is None and current:
+            # ----------------------------------------------------------
+            # SELECT INPUT (DROPDOWN, RADIO, CHECKBOXES, TAGS, etc.)
+            # ----------------------------------------------------------
+            if attribute.input_type == 'select':
+
+                options = list(attribute.options.all())
+                choices = [
+                    (str(opt.id), opt.value_ar if lang == 'ar' else opt.value_en)
+                    for opt in options
+                ]
+                choices.append(('__other__', 'Other'))
+
+                # Match existing choice for edit
+                selected_choice = None
+                if current_value:
+                    for opt in options:
+                        if current_value == opt.value_en or current_value == opt.value_ar:
+                            selected_choice = str(opt.id)
+                            break
+                    if selected_choice is None:
                         selected_choice = '__other__'
 
-                    self.fields[field_name] = forms.ChoiceField(
+                ui_type = getattr(attribute, 'ui_type', None) or 'dropdown'
+
+                # ------------------------------
+                # DROPDOWN
+                # ------------------------------
+                if ui_type in ('dropdown', 'select'):
+                    field = forms.ChoiceField(
                         choices=choices,
                         required=attribute.is_required,
                         label=label,
                         initial=selected_choice
                     )
+                    field.widget.attrs.update({'class': 'searchable-select'})
+                    self.fields[field_name] = field
 
-                    # ✅ make attribute select searchable
-                    self.fields[field_name].widget.attrs.update({'class': 'searchable-select'})
-
-                    # Field for other (text)
-                    self.fields[f"{field_name}_other"] = forms.CharField(
-                        required=False,
-                        label=f"{label} (Other)",
-                        initial=current if selected_choice == '__other__' else "",
-                        validators=[validate_no_links_or_html],
+                # ------------------------------
+                # RADIO
+                # ------------------------------
+                elif ui_type == 'radio':
+                    self.fields[field_name] = forms.ChoiceField(
+                        choices=choices,
+                        required=attribute.is_required,
+                        label=label,
+                        initial=selected_choice,
+                        widget=forms.RadioSelect,
                     )
+
+                # ------------------------------
+                # CHECKBOX (Multi choice)
+                # ------------------------------
+                elif ui_type in ('checkbox', 'checkboxes'):
+                    initial_list = []
+                    if isinstance(current_value, str) and current_value.strip():
+                        initial_list = [v.strip() for v in current_value.split(',')]
+
+                    self.fields[field_name] = forms.MultipleChoiceField(
+                        choices=choices,
+                        required=attribute.is_required,
+                        label=label,
+                        initial=initial_list,
+                        widget=forms.CheckboxSelectMultiple,
+                    )
+
+                # ------------------------------
+                # TAGS / MULTI-SELECT
+                # ------------------------------
+                elif ui_type in ('tags', 'multi_select'):
+                    initial_list = []
+                    if isinstance(current_value, str) and current_value.strip():
+                        initial_list = [v.strip() for v in current_value.split(',')]
+
+                    self.fields[field_name] = forms.MultipleChoiceField(
+                        choices=choices,
+                        required=attribute.is_required,
+                        label=label,
+                        initial=initial_list,
+                        widget=forms.SelectMultiple(attrs={'class': 'tag-select'}),
+                    )
+
+                # ------------------------------
+                # FALLBACK TO DROPDOWN
+                # ------------------------------
+                else:
+                    self.fields[field_name] = forms.ChoiceField(
+                        choices=choices,
+                        required=attribute.is_required,
+                        label=label,
+                        initial=selected_choice,
+                    )
+
+                # ------------------------------
+                # "OTHER" TEXT FIELD
+                # ------------------------------
+                self.fields[f"{field_name}_other"] = forms.CharField(
+                    required=False,
+                    label=f"{label} (Other)",
+                    initial=current_value if selected_choice == '__other__' else "",
+                    validators=[validate_no_links_or_html],
+                )
+
+    # ============================================================
+    # CLEANERS
+    # ============================================================
 
     def clean_title(self):
         title = self.cleaned_data.get("title", "")
@@ -267,7 +375,6 @@ class ItemForm(forms.ModelForm):
                 )
 
         return cleaned_data
-
 
     def clean_images(self):
         return self.files.getlist('images')
