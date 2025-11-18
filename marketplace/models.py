@@ -117,9 +117,19 @@ class Attribute(models.Model):
         ('number', 'Number'),
         ('select', 'Select'),
     ]
+
+    UI_TYPE_CHOICES = [
+        ('dropdown', 'Dropdown'),
+        ('radio', 'Radio Buttons'),
+        ('checkbox', 'Checkbox List'),
+        ('single_checkbox', 'Single Checkbox'),
+        ('tags', 'Tags / Multi-Select'),
+    ]
+
     name_en = models.CharField(max_length=255)
     name_ar = models.CharField(max_length=255)
     input_type = models.CharField(max_length=50, choices=INPUT_TYPE_CHOICES, default='text')
+    ui_type = models.CharField(max_length=50, choices=UI_TYPE_CHOICES, default='dropdown')  # NEW
     is_required = models.BooleanField(default=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="attributes")
 
