@@ -1,531 +1,212 @@
 {% extends "base.html" %}
-{% load i18n static form_extras %}
+{% load static i18n form_extras %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/add_ad.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<div class="max-w-5xl mx-auto py-8" dir="rtl">
+<div class="max-w-4xl mx-auto px-4 py-10">
 
     <!-- =============================== -->
     <!--            HEADER               -->
     <!-- =============================== -->
-    <header class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">
-            إضافة إعلان جديد
-        </h1>
-        <p class="text-gray-500 text-sm">
-            املأ البيانات التالية لنشر إعلانك بسهولة وسرعة.
-        </p>
-    </header>
+    <h1 class="add-ad-title">إضافة إعلان جديد</h1>
+    <p class="add-ad-subtitle">املأ التفاصيل أدناه لنشر إعلانك بسهولة وسرعة</p>
 
     <!-- =============================== -->
-    <!--           MAIN CARD             -->
+    <!--            MAIN CARD            -->
     <!-- =============================== -->
-    <main class="bg-white shadow-xl rounded-2xl p-6 border border-orange-200">
+    <div class="add-ad-card">
 
         {% if form.non_field_errors %}
-            <div class="mb-4 text-red-700 bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
-                {{ form.non_field_errors }}
-            </div>
+        <div class="mb-4 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
+            <span>⚠️</span> <span>{{ form.non_field_errors }}</span>
+        </div>
         {% endif %}
 
         <form method="POST" enctype="multipart/form-data" id="itemForm">
             {% csrf_token %}
 
-            <!-- =============================== -->
-            <!--       STEP 1: TITLE             -->
-            <!-- =============================== -->
-            <section class="mb-6">
-                <h2 class="font-semibold mb-2 text-gray-800">عنوان الإعلان</h2>
+            <!-- TITLE -->
+            <label class="block font-semibold mb-1 mt-3">عنوان الإعلان</label>
+            <input type="text" name="title" id="id_title"
+                   class="add-ad-input"
+                   value="{{ form.title.value|default_if_none:'' }}"
+                   placeholder="مثلاً: لابتوب HP جديد">
 
-                <input type="text"
-                       name="title"
-                       id="id_title"
-                       value="{{ form.title.value|default_if_none:'' }}"
-                       placeholder="مثلاً: لابتوب HP جديد"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-300 focus:border-orange-400 text-sm">
-
-                {% if form.title.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ form.title.errors }}</p>
-                {% endif %}
-
-                <p class="text-xs text-gray-500 mt-1">
-                    استخدم عنواناً واضحاً يصف المنتج بشكل مختصر.
-                </p>
-            </section>
-
-            <!-- =============================== -->
-            <!--       STEP 2: PHOTOS            -->
-            <!-- =============================== -->
-            <section class="mb-6">
-                <h2 class="font-semibold mb-2 text-gray-800">صور الإعلان</h2>
-
-                <div class="border-2 border-dashed border-orange-300 rounded-xl p-6 text-center bg-orange-50 cursor-pointer hover:bg-orange-100 transition"
-                     onclick="document.getElementById('id_images').click();">
-                    <p class="text-gray-700 font-medium">
-                        اضغط هنا لاختيار الصور من جهازك
-                    </p>
-                    <p class="text-xs text-gray-500 mt-1">
-                        يمكنك رفع عدة صور، وستتمكن من اختيار الصورة الرئيسية.
-                    </p>
-                </div>
-
-                <!-- Actual input (hidden visually) -->
-                <div class="hidden">
-                    {{ form.images }}
-                </div>
-
-                <!-- Preview thumbnails -->
-                <div id="preview" class="flex flex-wrap gap-3 mt-4"></div>
-
-                <!-- Hidden main photo index -->
-                <input type="hidden" name="main_photo_index" id="main_photo_index">
-
-                {% if form.errors.images %}
-                    <p class="text-red-600 text-sm mt-2">{{ form.errors.images }}</p>
-                {% endif %}
-            </section>
-
-            <!-- =============================== -->
-            <!--       STEP 3: CATEGORY TREE     -->
-            <!-- =============================== -->
-            <section class="mb-6">
-                <h2 class="font-semibold mb-2 text-gray-800">القسم</h2>
-                <p class="text-xs text-gray-500 mb-3">
-                    اختر القسم خطوة بخطوة بدءاً من القسم الرئيسي ثم الأقسام الفرعية.
-                </p>
-
-                <div id="category-levels" class="space-y-3">
-                    <!-- سيتم إنشاء قوائم الاختيار ديناميكياً بواسطة JavaScript -->
-                </div>
-
-                <!-- الحقل الفعلي الذي يستخدمه الـ view و الـ form -->
-                <input type="hidden"
-                       name="category"
-                       id="id_category_final"
-                       value="{% if selected_category %}{{ selected_category.id }}{% endif %}">
-
-                <p class="text-xs text-gray-500 mt-2">
-                    يمكنك اختيار أي مستوى من الأقسام (رئيسي أو فرعي) حسب ما يناسب إعلانك.
-                </p>
-            </section>
-
-            <!-- =============================== -->
-            <!--       STEP 4: ATTRIBUTES        -->
-            <!-- =============================== -->
-            {% if selected_category %}
-                <section class="mb-6">
-                    <h2 class="font-semibold mb-3 text-gray-800">
-                        خصائص إضافية — {{ selected_category.name_ar }}
-                    </h2>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% for field in form %}
-                            {% if field.name|slice:"0:10" == "attribute_" and field.name|slice:"-6:" != "_other" %}
-                                <div class="col-span-1">
-                                    <label class="block text-sm font-medium text-gray-800 mb-1">
-                                        {{ field.label }}
-                                        {% if field.field.required %}
-                                            <span class="text-red-500">*</span>
-                                        {% endif %}
-                                    </label>
-
-                                    {{ field }}
-
-                                    {% if field.errors %}
-                                        <p class="text-red-600 text-xs mt-1">
-                                            {{ field.errors }}
-                                        </p>
-                                    {% endif %}
-
-                                    {% with other_name=field.name|add:"_other" %}
-                                        {% if other_name in form.fields %}
-                                            {% with other_field=form|getitem:other_name %}
-                                                <div class="mt-2">
-                                                    {{ other_field.label_tag }}
-                                                    {{ other_field }}
-                                                </div>
-                                            {% endwith %}
-                                        {% endif %}
-                                    {% endwith %}
-
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-
-                    <p class="text-xs text-gray-500 mt-2">
-                        هذه الحقول تساعد على ظهور إعلانك في نتائج البحث المناسبة.
-                    </p>
-                </section>
+            {% if form.title.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ form.title.errors }}</p>
             {% endif %}
 
-            <!-- =============================== -->
-            <!--       STEP 5: DESCRIPTION       -->
-            <!-- =============================== -->
-            <section class="mb-6">
-                <h2 class="font-semibold mb-2 text-gray-800">وصف الإعلان</h2>
+            <!-- PHOTOS -->
+            <label class="block font-semibold mt-6 mb-2">صور الإعلان</label>
 
-                <textarea name="description"
-                          id="id_description"
-                          rows="5"
-                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-300 focus:border-orange-400 text-sm"
-                          placeholder="اكتب هنا تفاصيل المنتج، حالته، سبب البيع، وأي معلومات إضافية مهمة.">{{ form.description.value|default_if_none:'' }}</textarea>
+            <div class="add-photo-btn" onclick="document.getElementById('id_images').click();">
+                <span class="font-semibold">إضافة صور</span>
+            </div>
 
-                {% if form.description.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ form.description.errors }}</p>
-                {% endif %}
+            <!-- Hidden Input -->
+            <div style="display: none;">
+                {{ form.images }}
+            </div>
 
-                <p class="text-xs text-gray-500 mt-1">
-                    يمنع وضع روابط خارجية أو معلومات تواصل مخالفة لسياسة المنصة.
-                </p>
-            </section>
+            <!-- Preview -->
+            <div id="preview" class="flex flex-wrap gap-3 mt-4"></div>
+            <input type="hidden" name="main_photo_index" id="main_photo_index">
 
-            <!-- =============================== -->
-            <!--       STEP 6: CONDITION         -->
-            <!-- =============================== -->
-            <section class="mb-6">
-                <h2 class="font-semibold mb-2 text-gray-800">حالة المنتج</h2>
+            {% if form.errors.images %}
+            <p class="text-red-600 text-xs mt-2">{{ form.errors.images }}</p>
+            {% endif %}
 
-                <input type="hidden" name="condition" id="id_condition_hidden"
-                       value="{{ form.condition.value|default:'used' }}">
+            <!-- CATEGORY -->
+            <label class="block font-semibold mt-8 mb-2">القسم</label>
 
-                <div class="inline-flex border border-gray-200 rounded-xl overflow-hidden text-sm font-semibold">
-                    <button type="button"
-                            id="cond_new_btn"
-                            class="px-4 py-2 transition
-                                   {% if form.condition.value == 'new' %}bg-orange-500 text-white{% else %}bg-white text-gray-700{% endif %}">
-                        جديد
-                    </button>
+            <div id="category-levels" class="flex flex-col gap-3"></div>
 
-                    <button type="button"
-                            id="cond_used_btn"
-                            class="px-4 py-2 border-r border-gray-200 transition
-                                   {% if form.condition.value != 'new' %}bg-orange-500 text-white{% else %}bg-white text-gray-700{% endif %}">
-                        مستعمل
-                    </button>
+            <input type="hidden"
+                   name="category"
+                   id="id_category_final"
+                   value="{% if selected_category %}{{ selected_category.id }}{% endif %}">
+
+            <!-- DESCRIPTION -->
+            <label class="block font-semibold mt-8 mb-2">الوصف</label>
+
+            <textarea id="id_description"
+                      name="description"
+                      class="add-ad-textarea"
+                      placeholder="اكتب وصفاً موجزاً وواضحاً للمنتج">{{ form.description.value|default_if_none:'' }}</textarea>
+
+            {% if form.description.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ form.description.errors }}</p>
+            {% endif %}
+
+            <!-- CONDITION -->
+            <label class="block font-semibold mt-8 mb-2">حالة المنتج</label>
+
+            <input type="hidden"
+                   name="condition"
+                   id="id_condition_hidden"
+                   value="{{ form.condition.value|default:'used' }}">
+
+            <div class="condition-switch">
+                <div id="cond_new_btn"
+                     class="condition-btn {% if form.condition.value == 'new' %}active{% else %}inactive{% endif %}">
+                    جديد
                 </div>
+                <div id="cond_used_btn"
+                     class="condition-btn {% if form.condition.value != 'new' %}active{% else %}inactive{% endif %}">
+                    مستعمل
+                </div>
+            </div>
 
-                {% if form.condition.errors %}
-                    <p class="text-red-600 text-sm mt-1">{{ form.condition.errors }}</p>
-                {% endif %}
-            </section>
+            {% if form.condition.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ form.condition.errors }}</p>
+            {% endif %}
 
-            <!-- =============================== -->
-            <!--       STEP 7: PRICE & CITY      -->
-            <!-- =============================== -->
-            <section class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- PRICE + CITY -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-8">
 
-                <!-- Price -->
+                <!-- PRICE -->
                 <div>
-                    <h2 class="font-semibold mb-2 text-gray-800">السعر</h2>
-                    <div class="flex items-center gap-2">
-                        <input type="number"
-                               step="0.01"
-                               name="price"
-                               id="id_price"
-                               value="{{ form.price.value|default_if_none:'' }}"
-                               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-300 focus:border-orange-400 text-sm"
-                               placeholder="مثلاً: 150">
-                        <span class="text-gray-700 text-sm">دينار</span>
-                    </div>
+                    <label class="font-semibold mb-2 block">السعر (د.أ)</label>
+                    <input type="number" step="0.01"
+                           name="price"
+                           id="id_price"
+                           value="{{ form.price.value|default_if_none:'' }}"
+                           class="add-ad-input"
+                           placeholder="مثلاً: 150">
+
                     {% if form.price.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ form.price.errors }}</p>
+                    <p class="text-red-600 text-xs mt-1">{{ form.price.errors }}</p>
                     {% endif %}
                 </div>
 
-                <!-- City -->
+                <!-- CITY -->
                 <div>
-                    <h2 class="font-semibold mb-2 text-gray-800">المدينة</h2>
-                    {{ form.city }}
+                    <label class="font-semibold mb-2 block">المدينة</label>
+                    <select name="city" class="add-ad-select">
+                      {% for value, label in form.city.field.choices %}
+                          <option value="{{ value }}" {% if form.city.value == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                  </select>
+
                     {% if form.city.errors %}
-                        <p class="text-red-600 text-sm mt-1">{{ form.city.errors }}</p>
+                    <p class="text-red-600 text-xs mt-1">{{ form.city.errors }}</p>
                     {% endif %}
                 </div>
 
-            </section>
+            </div>
 
-            <!-- =============================== -->
-            <!--       CONTACT INFO TEXT         -->
-            <!-- =============================== -->
-            <section class="mb-6">
-                <h2 class="font-semibold mb-2 text-gray-800">معلومات التواصل</h2>
-                <p class="text-sm text-gray-600">
-                    رقم هاتفك المسجل في الحساب سيُستخدم للتواصل. يمكنك تعديل إعدادات إظهار رقم الهاتف من صفحة حسابك.
+            <!-- CONTACT INFO -->
+            <div class="mt-8">
+                <label class="font-semibold mb-2 block">معلومات التواصل</label>
+                <p class="text-sm text-gray-500">
+                    رقم هاتفك المسجل سيتم عرضه حسب إعدادات الخصوصية في حسابك.
                 </p>
-            </section>
+            </div>
 
-            <!-- =============================== -->
-            <!--       SUBMIT BUTTON             -->
-            <!-- =============================== -->
-            <div class="flex justify-end mt-8">
-                <button type="submit"
-                        class="px-8 py-2.5 rounded-xl bg-orange-500 text-white font-semibold text-sm shadow hover:bg-orange-600 transition">
+            <!-- SUBMIT -->
+            <div class="mt-10 text-center">
+                <button type="submit" class="submit-btn">
                     نشر الإعلان
                 </button>
             </div>
 
-            <!-- Embed category tree JSON + selected path for JS -->
-            <script id="category-tree-data" type="application/json">
-                {{ category_tree_json|default:"[]"|safe }}
-            </script>
-            <script id="selected-category-path" type="application/json">
-                {{ selected_category_path_json|default:"[]"|safe }}
-            </script>
-
         </form>
-    </main>
+
+        <!-- MOVED HERE — OUTSIDE FORM (IMPORTANT FIX) -->
+        <script id="category-tree-data" type="application/json">
+            {{ category_tree_json|default:"[]"|safe }}
+        </script>
+        <script id="selected-category-path" type="application/json">
+            {{ selected_category_path_json|default:"[]"|safe }}
+        </script>
+
+    </div>
+
+    <!-- =============================== -->
+    <!--        SUCCESS TIPS SECTION     -->
+    <!-- =============================== -->
+    <div class="tips-box">
+
+        <h2 class="tips-title">💡 نصائح لإعلان ناجح</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="tip-card">
+                <div class="tip-icon">📝</div>
+                <h3 class="font-semibold text-lg">وصف صادق</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    اشرح تفاصيل المنتج وحالته بوضوح وصدق.
+                </p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">✏️</div>
+                <h3 class="font-semibold text-lg">عنوان واضح</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    اختر عنواناً دقيقاً يصف منتجك باحترافية.
+                </p>
+            </div>
+
+            <div class="tip-card">
+                <div class="tip-icon">📸</div>
+                <h3 class="font-semibold text-lg">صور جذابة</h3>
+                <p class="text-gray-500 text-sm mt-1">
+                    التقط صورًا واضحة من زوايا متعددة لعرض المنتج بأفضل شكل.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 {% endblock %}
 
 {% block scripts %}
-{{ block.super }}
-
-<script>
-/* ============================================
-   صور الإعلان — معاينة + اختيار الرئيسية
-============================================ */
-document.addEventListener('change', function(e) {
-    const input = document.getElementById('id_images');
-    if (!input || e.target !== input) return;
-
-    const preview = document.getElementById('preview');
-    const mainInput = document.getElementById('main_photo_index');
-    preview.innerHTML = '';
-    mainInput.value = '';
-
-    const files = Array.from(input.files || []);
-    files.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            const wrapper = document.createElement('div');
-            wrapper.className = "relative";
-
-            const img = document.createElement('img');
-            img.src = ev.target.result;
-            img.className = "w-24 h-24 object-cover rounded-lg border-2 border-transparent cursor-pointer";
-            img.dataset.index = index;
-
-            const badge = document.createElement('div');
-            badge.className = "absolute bottom-0 inset-x-0 bg-orange-500/90 text-white text-[10px] text-center py-0.5 hidden";
-            badge.textContent = "الصورة الرئيسية";
-
-            img.addEventListener('click', function() {
-                document.querySelectorAll('#preview img').forEach(i => {
-                    i.classList.remove('border-orange-500');
-                });
-                document.querySelectorAll('#preview div div').forEach(b => {
-                    b.classList.add('hidden');
-                });
-
-                img.classList.add('border-orange-500');
-                badge.classList.remove('hidden');
-                mainInput.value = index;
-            });
-
-            wrapper.appendChild(img);
-            wrapper.appendChild(badge);
-            preview.appendChild(wrapper);
-        };
-        reader.readAsDataURL(file);
-    });
-});
-
-/* ============================================
-   حالة المنتج — جديد / مستعمل
-============================================ */
-document.addEventListener('DOMContentLoaded', function() {
-    const hiddenField = document.getElementById('id_condition_hidden');
-    const newBtn = document.getElementById('cond_new_btn');
-    const usedBtn = document.getElementById('cond_used_btn');
-
-    if (!hiddenField || !newBtn || !usedBtn) return;
-
-    function setCondition(value) {
-        hiddenField.value = value;
-
-        if (value === 'new') {
-            newBtn.classList.add('bg-orange-500', 'text-white');
-            newBtn.classList.remove('bg-white', 'text-gray-700');
-
-            usedBtn.classList.remove('bg-orange-500', 'text-white');
-            usedBtn.classList.add('bg-white', 'text-gray-700');
-        } else {
-            usedBtn.classList.add('bg-orange-500', 'text-white');
-            usedBtn.classList.remove('bg-white', 'text-gray-700');
-
-            newBtn.classList.remove('bg-orange-500', 'text-white');
-            newBtn.classList.add('bg-white', 'text-gray-700');
-        }
-    }
-
-    newBtn.addEventListener('click', function() { setCondition('new'); });
-    usedBtn.addEventListener('click', function() { setCondition('used'); });
-});
-
-/* ============================================
-   شجرة الأقسام — قوائم متعددة المستويات
-============================================ */
-function parseJSONScript(id) {
-    const el = document.getElementById(id);
-    if (!el) return [];
-    try {
-        return JSON.parse(el.textContent.trim() || '[]');
-    } catch (e) {
-        console.error('JSON parse error for', id, e);
-        return [];
-    }
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('category-levels');
-    if (!container) return;
-
-    const CATEGORY_TREE = parseJSONScript('category-tree-data');
-    const SELECTED_PATH = parseJSONScript('selected-category-path');
-    const hiddenField = document.getElementById('id_category_final');
-
-    function buildOptions(selectEl, nodes, placeholder, selectedId) {
-        selectEl.innerHTML = "";
-        const opt = document.createElement('option');
-        opt.value = "";
-        opt.textContent = placeholder;
-        selectEl.appendChild(opt);
-
-        (nodes || []).forEach(function(node) {
-            const o = document.createElement('option');
-            o.value = String(node.id);
-            o.textContent = node.name;
-            if (selectedId && Number(selectedId) === Number(node.id)) {
-                o.selected = true;
-            }
-            selectEl.appendChild(o);
-        });
-    }
-
-    function findChildrenForPath(pathIds) {
-        let nodes = CATEGORY_TREE;
-        let selectedNode = null;
-        pathIds.forEach(function(id) {
-            selectedNode = (nodes || []).find(function(n) { return Number(n.id) === Number(id); });
-            nodes = selectedNode && selectedNode.children ? selectedNode.children : [];
-        });
-        return nodes || [];
-    }
-
-    function updateHiddenFromSelects() {
-        const selects = container.querySelectorAll('select[data-category-level]');
-        let lastVal = "";
-        selects.forEach(function(s) {
-            if (s.value) {
-                lastVal = s.value;
-            }
-        });
-        hiddenField.value = lastVal;
-    }
-
-    function onSelectChange(e) {
-        const target = e.target;
-        if (!(target instanceof HTMLSelectElement)) return;
-        if (!target.dataset.categoryLevel) return;
-
-        const level = Number(target.dataset.categoryLevel);
-
-        // Remove deeper levels
-        container.querySelectorAll('select[data-category-level]').forEach(function(sel) {
-            if (Number(sel.dataset.categoryLevel) > level) {
-                const wrapper = sel.closest('.category-level-wrapper');
-                if (wrapper) wrapper.remove();
-            }
-        });
-
-        // Build path ids from current selects
-        const pathIds = [];
-        container.querySelectorAll('select[data-category-level]').forEach(function(sel) {
-            if (sel.value) {
-                pathIds.push(Number(sel.value));
-            }
-        });
-
-        updateHiddenFromSelects();
-
-        if (!target.value) return;
-
-        const children = findChildrenForPath(pathIds);
-        if (children.length) {
-            const wrapper = document.createElement('div');
-            wrapper.className = "category-level-wrapper flex flex-col gap-1";
-
-            const label = document.createElement('label');
-            label.className = "block text-sm text-gray-700";
-            label.textContent = "القسم الفرعي";
-
-            const select = document.createElement('select');
-            select.className = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 focus:border-orange-400";
-            select.dataset.categoryLevel = String(level + 1);
-
-            wrapper.appendChild(label);
-            wrapper.appendChild(select);
-            container.appendChild(wrapper);
-
-            buildOptions(select, children, "اختر القسم الفرعي", null);
-        }
-    }
-
-    // Build initial top-level select
-    const topWrapper = document.createElement('div');
-    topWrapper.className = "category-level-wrapper flex flex-col gap-1";
-
-    const topLabel = document.createElement('label');
-    topLabel.className = "block text-sm text-gray-700";
-    topLabel.textContent = "القسم الرئيسي";
-
-    const topSelect = document.createElement('select');
-    topSelect.className = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 focus:border-orange-400";
-    topSelect.dataset.categoryLevel = "0";
-
-    topWrapper.appendChild(topLabel);
-    topWrapper.appendChild(topSelect);
-    container.appendChild(topWrapper);
-
-    const firstSelected = Array.isArray(SELECTED_PATH) && SELECTED_PATH.length ? SELECTED_PATH[0] : null;
-    buildOptions(topSelect, CATEGORY_TREE, "اختر القسم الرئيسي", firstSelected);
-
-    // If we have a selected path, reconstruct deeper selects
-    if (Array.isArray(SELECTED_PATH) && SELECTED_PATH.length) {
-        let currentPath = [];
-        SELECTED_PATH.forEach(function(id, idx) {
-            const levelSelect = container.querySelector('select[data-category-level="' + idx + '"]');
-            if (!levelSelect) return;
-            levelSelect.value = String(id);
-            currentPath.push(Number(id));
-            const children = findChildrenForPath(currentPath);
-            if (children.length && idx < SELECTED_PATH.length - 1) {
-                // Create next level
-                const wrap = document.createElement('div');
-                wrap.className = "category-level-wrapper flex flex-col gap-1";
-
-                const lab = document.createElement('label');
-                lab.className = "block text-sm text-gray-700";
-                lab.textContent = "القسم الفرعي";
-
-                const sel = document.createElement('select');
-                sel.className = "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-300 focus:border-orange-400";
-                sel.dataset.categoryLevel = String(idx + 1);
-
-                wrap.appendChild(lab);
-                wrap.appendChild(sel);
-                container.appendChild(wrap);
-
-                const nextSelected = SELECTED_PATH[idx + 1] || null;
-                buildOptions(sel, children, "اختر القسم الفرعي", nextSelected);
-            }
-        });
-        updateHiddenFromSelects();
-    }
-
-    document.addEventListener('change', onSelectChange);
-});
-</script>
-
+<script src="{% static 'js/item_create_page.js' %}"></script>
 {% endblock %}

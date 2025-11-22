@@ -1,0 +1,286 @@
+:root {
+  --rukn-orange:#ff7a18;
+  --rukn-gray:#f3f4f6;
+  --muted:#6b7280;
+  --transition:.3s ease;
+
+  /* ثيم أخضر للطلبات */
+  --rukn-green:#16a34a;
+  --rukn-green-700:#15803d;
+  --rukn-green-50:#ecfdf5;
+  --rukn-green-100:#d1fae5;
+  --rukn-green-200:#a7f3d0;
+}
+
+body {
+  font-family:'Cairo',sans-serif;
+  background:#ffffff;
+  color:#111827;
+}
+
+/* ======================== الهيدر العلوي ======================== */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background: rgba(256,256,256,0.75);
+  border-bottom: 2px solid var(--border-subtle);
+  box-shadow: 0 8px 20px rgba(15,23,42,0.15);
+  backdrop-filter: blur(14px);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+}
+
+.topbar .container {
+  width: 100%;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.logo-box {
+  margin-inline-start:20px;
+}
+
+.auth-buttons {
+  display:flex;
+  gap:10px;
+  margin-inline-end:20px;
+}
+
+.logo {
+  height: 42px;
+  display:block;
+  transition:transform .2s;
+}
+
+.logo:hover {
+  transform:scale(1.04);
+}
+
+.btn-login{
+  background:var(--rukn-orange);
+  color:white;
+  padding:8px 16px;
+  border-radius:10px;
+  font-weight:bold;
+  border:none;
+}
+
+.btn-signup{
+  border:2px solid var(--rukn-orange);
+  color:var(--rukn-orange);
+  padding:8px 16px;
+  border-radius:10px;
+  font-weight:bold;
+  background:white;
+}
+
+.user-icons{
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.user-icons.hidden{
+  display:none !important;
+}
+
+.auth-buttons.hidden{
+  display:none !important;
+}
+
+.badge{
+  position:absolute;
+  inset-inline-end:-.25rem;
+  inset-block-start:-.25rem;
+  background:var(--rukn-orange);
+  color:#fff;
+  font-size:.7rem;
+  border-radius:999px;
+  width:1.1rem;
+  height:1.1rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+}
+
+/* ===================== Dropdowns عامة ===================== */
+.dropdown{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  width:260px;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  display:none;
+  z-index:6000;
+  opacity:0;
+  transform:translateY(-10px);
+  transition:opacity var(--transition),transform var(--transition)
+}
+.dropdown.show{
+  display:block;
+  opacity:1;
+  transform:translateY(0)
+}
+
+.dropdown-header{
+  padding:.75rem 1rem;
+  font-weight:700;
+  border-bottom:1px solid #f1f1f1
+}
+.dropdown-list{
+  max-height:320px;
+  overflow:auto
+}
+.dropdown-item{
+  display:flex;
+  gap:.75rem;
+  padding:.75rem 1rem;
+  align-items:flex-start;
+  transition:background var(--transition)
+}
+.dropdown-item:hover{
+  background:rgba(255, 122, 24, 0.15);	
+}
+
+/* ===== تخصيص قائمة الحساب فقط – بدون سكرول وكل شيء تحت بعض ===== */
+#userMenu {
+  width: 220px;
+  padding: 0;
+  border-radius: 14px;
+}
+#userMenu .dropdown-list {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 6px 0;
+}
+#userMenu .dropdown-item {
+  display: block;
+  padding: 10px 18px;
+  border-bottom: 1px solid #f3f3f3;
+  font-size: 15px;
+  font-weight: 600;
+}
+#userMenu .dropdown-item:last-child {
+  border-bottom: none;
+}
+
+/* ===================== MODAL (تصميم جديد) ===================== */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999999;
+}
+.modal.hidden{
+  display:none;
+}
+.modal-box{
+  background:white;
+  width:340px;
+  padding:28px 24px;
+  border-radius:22px;
+  box-shadow:0 12px 35px rgba(0,0,0,0.15);
+  position:relative;
+  animation:modalPop .35s ease;
+}
+@keyframes modalPop{
+  from{opacity:0; transform:scale(.85) translateY(20px);}
+  to{opacity:1; transform:scale(1) translateY(0);}
+}
+
+.modal-close-x {
+  position:absolute;
+  top:10px;
+  left:12px;
+  font-size:22px;
+  cursor:pointer;
+  color:#888;
+  transition:.2s;
+}
+.modal-close-x:hover{
+  transform:scale(1.2);
+  color:#444;
+}
+
+.login-icon{
+  font-size:40px;
+  text-align:center;
+  margin-bottom:8px;
+  color:var(--rukn-orange);
+}
+.modal-title{
+  text-align:center;
+  font-size:24px;
+  font-weight:800;
+  color:var(--rukn-orange);
+  margin-bottom:14px;
+}
+.modal-input{
+  width:100%;
+  padding:12px 14px;
+  border:2px solid #e5e7eb;
+  border-radius:14px;
+  margin:8px 0;
+  font-size:15px;
+  transition:.25s;
+}
+.modal-input:focus{
+  border-color:var(--rukn-orange);
+  box-shadow:0 0 0 3px rgba(255,122,24,.25);
+  outline:none;
+}
+.modal-submit{
+  width:100%;
+  background:var(--rukn-orange);
+  color:white;
+  padding:12px;
+  border-radius:14px;
+  font-weight:700;
+  font-size:16px;
+  border:none;
+  margin-top:10px;
+  box-shadow:0 5px 10px rgba(255,122,24,.25);
+  transition:.3s;
+}
+.modal-submit:hover{
+  background:#e56a00;
+  transform:translateY(-2px);
+}
+.modal-footer-link{
+  text-align:center;
+  margin-top:12px;
+  font-size:14px;
+  color:#555;
+}
+.modal-footer-link a{
+  color:var(--rukn-orange);
+  font-weight:700;
+}
+
+/* موبايل */
+@media (max-width:480px){
+  .topbar { height:64px; }
+  .topbar .container { height:64px; padding-inline:10px; }
+  .logo { height:34px; }
+  .auth-buttons button { padding:6px 12px; font-size:13px; }
+  .user-icons { gap:10px; }
+  .dropdown { max-width:90vw; }
+  #userMenu { width: 210px; }
+}

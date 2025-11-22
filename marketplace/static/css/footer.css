@@ -1,0 +1,71 @@
+:root {
+  --rukn-orange:#ff7a18;
+  --rukn-gray:#f3f4f6;
+  --muted:#6b7280;
+  --transition:.3s ease;
+
+  --rukn-green:#16a34a;
+  --rukn-green-700:#15803d;
+  --rukn-green-50:#ecfdf5;
+  --rukn-green-100:#d1fae5;
+  --rukn-green-200:#a7f3d0;
+
+  --footer-accent:#f97316;
+}
+
+body {
+  font-family:'Cairo',sans-serif;
+  background:#ffffff;
+  color:#111827;
+}
+
+/* خلفية الفوتر */
+.footer-bg-custom {
+  background:
+    linear-gradient(180deg, #2f3439 0%, #3a3f44 40%, #444a50 100%);
+  color:#e5e7eb;
+}
+
+.footer-bg-custom h4{
+  color:#f3f4f6;
+}
+
+.footer-bg-custom p,
+.footer-bg-custom li,
+.footer-bg-custom span{
+  color:#d1d5db;
+}
+
+.footer-bg-custom a{
+  color:#f3f4f6;
+  transition:color .2s ease, opacity .2s ease;
+}
+
+.footer-bg-custom a:hover{
+  color:var(--footer-accent);
+  opacity:0.9;
+}
+
+.footer-bg-custom .logo-wrapper{
+  padding:.5rem .9rem;
+  border-radius:999px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(209,213,219,0.55);
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+}
+
+.footer-bottom{
+  border-top:1px solid rgba(156,163,175,0.3);
+  margin-top:2.5rem;
+  padding-top:1rem;
+  text-align:center;
+  font-size:.85rem;
+  color:#cbd5e1;
+}
+
+.footer-bottom span{
+  color:var(--footer-accent);
+  font-weight:700;
+}

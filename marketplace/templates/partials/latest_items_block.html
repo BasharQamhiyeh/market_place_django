@@ -18,13 +18,8 @@
                     hx-target="#latest-items-container"
                     hx-swap="outerHTML"
                     class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
-                تحميل المزيد
+                تحميل المزيد من الإعلانات
             </button>
-        {% else %}
-            <a href="{% url 'item_list' %}"
-               class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
-                عرض كل الإعلانات
-            </a>
         {% endif %}
     </div>
 

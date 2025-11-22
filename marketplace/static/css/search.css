@@ -1,0 +1,65 @@
+/* Suggestions dropdown styling */
+#searchSuggestionsBox {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 6px 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  z-index: 9999;
+  max-height: 300px;
+  overflow-y: auto;
+  animation: fadeIn 0.12s ease-out;
+}
+
+/* Smooth fade */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Each suggestion */
+#searchSuggestionsBox > div {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s ease;
+  border-radius: 0.5rem;
+  margin: 2px 6px;
+}
+
+#searchSuggestionsBox > div:hover {
+  background: #f5f5f5;
+}
+
+/* Thumbnail inside suggestions */
+#searchSuggestionsBox img {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  background: #eee;
+}
+
+/* Category subtitle */
+#searchSuggestionsBox span {
+  font-size: 11px;
+  color: #999;
+}
+
+/* Topbar icons sizing */
+.topbar-icon {
+  font-size: 1.35rem;
+  padding: 0 6px;
+}
+
+
+#searchSuggestionsBox {
+  position: absolute !important;
+  z-index: 999999 !important;
+}

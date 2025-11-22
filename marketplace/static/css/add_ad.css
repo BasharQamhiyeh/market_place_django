@@ -1,0 +1,239 @@
+/* ------------------------------
+   GLOBAL BACKGROUND
+------------------------------ */
+body {
+  background: linear-gradient(to bottom, #fff7f1, #ffffff) !important;
+  font-family: "Cairo", sans-serif;
+  direction: rtl;
+}
+
+/* ------------------------------
+   PAGE WRAPPER CARD
+------------------------------ */
+.add-ad-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 2px solid #ffe2cc;
+  box-shadow: 0px 6px 18px rgba(255, 122, 24, 0.15);
+  padding: 32px 28px;
+}
+
+/* ------------------------------
+   INPUTS
+------------------------------ */
+.add-ad-input {
+  width: 100%;
+  border: 2px solid #ff7a18;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.25s ease;
+  background: #fff;
+}
+
+.add-ad-input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 122, 24, .25);
+  border-color: #ff9343;
+}
+
+/* Textarea */
+.add-ad-textarea {
+  width: 100%;
+  border: 2px solid #ff7a18;
+  border-radius: 14px;
+  padding: 12px 14px;
+  min-height: 140px;
+  resize: vertical;
+  font-size: 15px;
+  outline: none;
+}
+
+/* ------------------------------
+   SELECT STYLING (CATEGORY + CITY)
+------------------------------ */
+.add-ad-select {
+  width: 100%;
+  border: 2px solid #ff7a18;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: #fff;
+  outline: none;
+}
+
+/* ------------------------------
+   MAIN HEADER
+------------------------------ */
+.add-ad-title {
+  font-size: 38px;
+  font-weight: 800;
+  color: #ff7a18;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.add-ad-subtitle {
+  text-align: center;
+  color: #9b9b9b;
+  font-size: 14px;
+  margin-bottom: 40px;
+}
+
+/* ------------------------------
+   PHOTO UPLOAD BUTTON
+------------------------------ */
+.add-photo-btn {
+  border: 2px dashed #ff7a18;
+  background: #fff5eb;
+  padding: 26px;
+  border-radius: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.add-photo-btn:hover {
+  background: #ffefd8;
+}
+
+/* ------------------------------
+   THUMBNAIL + MAIN PHOTO
+------------------------------ */
+.upload-preview {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px dashed #ff7a18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.upload-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-preview.main {
+  border: 3px solid #ff7a18;
+  box-shadow: 0 0 10px rgba(255, 122, 24, 0.4);
+}
+
+.upload-preview.main::after {
+  content: "⭐ الصورة الرئيسية";
+  position: absolute;
+  bottom: 0;
+  inset-inline: 0;
+  background: rgba(255, 122, 24, 0.9);
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+  padding: 3px 0;
+}
+
+@media (min-width: 640px) {
+  .upload-preview {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/* ------------------------------
+   CONDITION SWITCHER
+------------------------------ */
+.condition-switch {
+  display: flex;
+  border: 2px solid #ff7a18;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.condition-btn {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.condition-btn.active {
+  background: #ff7a18;
+  color: #fff;
+}
+
+.condition-btn.inactive {
+  background: #ffffff;
+  color: #a8a8a8;
+}
+
+/* ------------------------------
+   SUBMIT BUTTON
+------------------------------ */
+.submit-btn {
+  background: #ff7a18;
+  color: #fff;
+  padding: 12px 42px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 15px;
+  transition: 0.2s ease;
+  border: none;
+}
+
+.submit-btn:hover {
+  transform: scale(1.04);
+}
+
+/* ------------------------------
+   SUCCESS TIPS SECTION
+------------------------------ */
+.tips-box {
+  background: #fff7ed;
+  border: 1px solid #ffddb9;
+  padding: 38px;
+  border-radius: 20px;
+  margin-top: 48px;
+}
+
+.tips-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ff7a18;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+/* Cards */
+.tip-card {
+  background: #ffffff;
+  border-top: 4px solid #ff7a18;
+  border-radius: 18px;
+  padding: 22px;
+  text-align: center;
+  transition: 0.25s ease;
+}
+
+.tip-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+}
+
+.tip-icon {
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+
+/* Disable base.html section spacing */
+main section + section {
+  margin-top: 10px !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+}

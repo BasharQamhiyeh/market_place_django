@@ -1,48 +1,84 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+# Django auth
+from django.contrib.auth import (
+    authenticate,
+    get_user_model,
+    login,
+    logout,
+    update_session_auth_hash,
+)
 from django.contrib.auth.decorators import login_required
-from .models import Item, Category, ItemAttributeValue, Attribute, AttributeOption, ItemPhoto, User, IssueReport, City
-from .forms import UserRegistrationForm, ItemForm
-from django.contrib.admin.views.decorators import staff_member_required
-from django import forms
-from django.forms import ModelForm
-from django.contrib import messages
-from django.core.paginator import Paginator
-from .documents import ItemDocument
-from .models import Conversation, Message, Notification
-from django.db.models import Q
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from datetime import timedelta
-from django.http import HttpResponseForbidden
-from django.views.decorators.http import require_POST
-from .models import Favorite  # ensure Favorite is imported
-from elasticsearch import Elasticsearch
-from django.conf import settings
-from elasticsearch.exceptions import ConnectionError
-from django.http import JsonResponse
-from django.views.decorators.http import require_GET
-from django.db.models import Q, Count
-from collections import deque
-from django.http import HttpResponse
-from django.shortcuts import render
 from django.contrib.auth.hashers import make_password
-from .models import User
-from .forms import ForgotPasswordForm, PhoneVerificationForm, ResetPasswordForm
-from .utils.sms import send_sms_code
-from django.utils import timezone
-from datetime import timedelta
-from .utils.verification import send_code, verify_session_code
+
+# Django admin
+from django.contrib.admin.views.decorators import staff_member_required
+
+# Django HTTP / views
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_GET, require_POST
+
+# Django core
+from django import forms
+from django.conf import settings
+from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Count, Q
+from django.template.loader import render_to_string
+from django.utils import timezone, translation
+from django.contrib.postgres.search import TrigramSimilarity
+
+from .models import (
+    City,
+    Category,
+    ItemPhoto,
+    ItemAttributeValue,
+    Notification,
+    Subscriber,
+    Conversation,
+    Message,
+    Item,
+    Attribute,
+    AttributeOption,
+    IssueReport,
+    Favorite,
+    User,
+)
+
+from .forms import (
+    ItemForm,
+    UserProfileEditForm,
+    UserPasswordChangeForm,
+    UserRegistrationForm,
+    PhoneVerificationForm,
+    ForgotPasswordForm,
+    ResetPasswordForm,
+)
+
+# Local imports
 from .validators import validate_no_links_or_html
-from marketplace.utils.category_tree import build_category_tree, get_selected_category_path
+from .documents import ItemDocument
+from .utils.category_tree import build_category_tree, get_selected_category_path
+from .utils.sms import send_sms_code
+from .utils.verification import send_code, verify_session_code
+
+# Elasticsearch
+from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import ConnectionError, NotFoundError, TransportError
+from elasticsearch_dsl.query import Q as ES_Q
+
+# Standard library
+from collections import deque
+from datetime import timedelta
 import json
 
-# Anyone can view items
-from marketplace.models import City  # adjust path if needed
+try:
+    from django.contrib.postgres.search import TrigramSimilarity
+    TRIGRAM_AVAILABLE = True
+except Exception:
+    TRIGRAM_AVAILABLE = False
 
-from django.http import JsonResponse
-from django.template.loader import render_to_string
 
 IS_RENDER = getattr(settings, "IS_RENDER", False)
 
@@ -74,10 +110,8 @@ def home(request):
     return render(request, "home.html", context)
 
 
-
-
-
 def item_list(request):
+    # Auto-deactivate very old active items
     Item.objects.filter(
         created_at__lt=timezone.now() - timedelta(days=1000),
         is_active=True
@@ -94,8 +128,9 @@ def item_list(request):
 
     base_qs = Item.objects.filter(is_approved=True, is_active=True)
 
-    # ✅ Category filter
+    # CATEGORY FILTERS
     selected_category = None
+
     if category_ids_multi:
         all_ids = []
         for cid in category_ids_multi:
@@ -106,6 +141,7 @@ def item_list(request):
                 continue
         if all_ids:
             base_qs = base_qs.filter(category_id__in=all_ids)
+
     elif category_id_single:
         try:
             selected_category = Category.objects.get(id=category_id_single)
@@ -114,53 +150,69 @@ def item_list(request):
         except Category.DoesNotExist:
             selected_category = None
 
-    # ✅ City filter
+    # CITY FILTER
     if city_id:
         base_qs = base_qs.filter(city_id=city_id)
 
-    # ✅ Price range
+    # PRICE FILTER
     if min_price:
         base_qs = base_qs.filter(price__gte=min_price)
     if max_price:
         base_qs = base_qs.filter(price__lte=max_price)
 
-    # ✅ Search
+    # =========================
+    # 🔥 SEARCH LOGIC (3 levels)
+    # =========================
+    queryset = base_qs.order_by("-created_at")
+
     if len(q) >= 2:
-        try:
-            search = (
-                ItemDocument.search()
-                .query(
+
+        # LEVEL 1 — TRY ELASTICSEARCH
+        if not IS_RENDER and hasattr(ItemDocument, "search"):
+            try:
+                from elasticsearch_dsl.query import Q as ES_Q
+
+                es_query = ES_Q(
                     "multi_match",
                     query=q,
                     fields=[
                         "title",
                         "description",
                         "category.name",
-                        "category.parent.name",
                         "city.name",
                         "attributes.name",
                         "attributes.value",
-                        "condition",
                     ],
                     fuzziness="AUTO",
                 )
-                .sort("-created_at")
-            )
-            hits = search.execute().hits
-            hit_ids = [str(hit.meta.id) for hit in hits]
 
-            queryset = list(
-                base_qs.filter(id__in=hit_ids)
-                .select_related("category", "city", "user")
-                .prefetch_related("photos")
-            )
-            queryset.sort(key=lambda i: hit_ids.index(str(i.id)))
-        except Exception as e:
-            print("[WARN] Elasticsearch unavailable:", e)
-            queryset = base_qs.filter(title__icontains=q).order_by("-created_at")
-    else:
-        queryset = base_qs.order_by("-created_at")
+                hits = ItemDocument.search().query(es_query)[:50].execute().hits
+                hit_ids = [str(hit.meta.id) for hit in hits]
 
+                if hit_ids:
+                    qs_list = list(
+                        base_qs.filter(id__in=hit_ids)
+                        .select_related("category", "city", "user")
+                        .prefetch_related("photos")
+                    )
+
+                    qs_list.sort(key=lambda i: hit_ids.index(str(i.id)))
+                    queryset = qs_list
+
+                else:
+                    queryset = base_qs.filter(title__icontains=q)
+
+            except Exception as e:
+                print("[WARN] ES DOWN:", e)
+                queryset = base_qs.filter(title__icontains=q)
+
+        else:
+            # LEVEL 2 — NO ES → PURE fallback
+            queryset = base_qs.filter(
+                Q(title__icontains=q) | Q(description__icontains=q)
+            ).order_by("-created_at")
+
+    # Normalize ES list result back to QuerySet
     if isinstance(queryset, list):
         ids = [obj.id for obj in queryset]
         queryset = Item.objects.filter(id__in=ids).order_by("-created_at")
@@ -173,17 +225,6 @@ def item_list(request):
 
     categories = (
         Category.objects.filter(parent__isnull=True)
-        .annotate(
-            total_items=Count("items", filter=Q(items__is_active=True, items__is_approved=True))
-            + Count(
-                "subcategories__items",
-                filter=Q(
-                    subcategories__items__is_active=True,
-                    subcategories__items__is_approved=True,
-                ),
-            )
-        )
-        .filter(total_items__gt=0)
         .prefetch_related("subcategories")
         .distinct()
     )
@@ -200,79 +241,30 @@ def item_list(request):
         "selected_categories": selected_categories,
     }
 
-    # ✅ NEW FIX: detect HTMX / AJAX requests
     if request.headers.get("HX-Request") == "true" or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         html = render_to_string("partials/item_results.html", context, request=request)
         return HttpResponse(html)
-
-    # ✅ Normal full-page render
-    if request.headers.get("HX-Request") == "true":
-        return render(request, "partials/item_results.html", context)
 
     return render(request, "item_list.html", context)
 
 
 
 
+
+
 # Item details
+# ============================
+#     ITEM DETAIL VIEW
+# ============================
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     attributes = item.attribute_values.all()
-    similar_items = []
 
-    # ✅ Try Elasticsearch-based "More Like This" search
-    if not settings.IS_RENDER:
-        try:
-            es = Elasticsearch(settings.ELASTICSEARCH_DSL['default']['hosts'])
-            query = {
-                "query": {
-                    "more_like_this": {
-                        "fields": ["title", "description"],
-                        "like": [{"_index": "items", "_id": item.id}],
-                        "min_term_freq": 1,
-                        "max_query_terms": 12
-                    }
-                },
-                "size": 6
-            }
-            response = es.search(index="items", body=query)
-            hits = response.get("hits", {}).get("hits", [])
-            ids = [hit["_id"] for hit in hits]
-
-            # ✅ Filter out inactive / unapproved items
-            similar_items = (
-                Item.objects.filter(id__in=ids, is_approved=True, is_active=True)
-                .exclude(id=item.id)
-                .order_by('-created_at')[:6]
-            )
-
-            # ✅ Fallback if ES returns no similar results
-            if not similar_items.exists():
-                similar_items = (
-                    Item.objects.filter(
-                        category=item.category,
-                        is_approved=True,
-                        is_active=True,
-                    )
-                    .exclude(id=item.id)
-                    .order_by('-created_at')[:6]
-                )
-
-        except ConnectionError as e:
-            print("[WARN] Elasticsearch unavailable:", e)
-            # ✅ Fallback if ES server down
-            similar_items = (
-                Item.objects.filter(
-                    category=item.category,
-                    is_approved=True,
-                    is_active=True,
-                )
-                .exclude(id=item.id)
-                .order_by('-created_at')[:6]
-            )
-    else:
-        # ✅ Render fallback when IS_RENDER=True (no ES on Render)
-        similar_items = (
+    # ----------------------------
+    # 1. Django fallback function
+    # ----------------------------
+    def fallback_similar():
+        return (
             Item.objects.filter(
                 category=item.category,
                 is_approved=True,
@@ -282,21 +274,61 @@ def item_detail(request, item_id):
             .order_by('-created_at')[:6]
         )
 
+    # Default → fallback queryset
+    similar_items = fallback_similar()
+
+    # Only try ES if NOT on Render
+    if not getattr(settings, "IS_RENDER", False):
+        try:
+            es = Elasticsearch(settings.ELASTICSEARCH_DSL['default']['hosts'])
+
+            query = {
+                "query": {
+                    "more_like_this": {
+                        "fields": ["title", "description"],
+                        "like": [{"_index": "items", "_id": item.id}],
+                        "min_term_freq": 1,
+                        "max_query_terms": 12,
+                    }
+                },
+                "size": 6,
+            }
+
+            # --- IMPORTANT ---
+            # This is the line that raises NotFoundError when index = "items" does not exist
+            response = es.search(index="items", body=query)
+
+            hits = response.get("hits", {}).get("hits", [])
+            ids = [hit["_id"] for hit in hits]
+
+            # If ES returned valid hits → get Django queryset
+            if ids:
+                es_items = (
+                    Item.objects.filter(
+                        id__in=ids, is_approved=True, is_active=True
+                    )
+                    .exclude(id=item.id)
+                    .order_by('-created_at')[:6]
+                )
+
+                if es_items.exists():
+                    similar_items = es_items
+
+        # ===============================
+        # FULL protection from all errors
+        # ===============================
+        except (ConnectionError, NotFoundError, Exception) as e:
+            print("[WARN] Elasticsearch error in item_detail:", e)
+            # Keep fallback_similar()
+
+    # ----------------------------
+    # Final render
+    # ----------------------------
     return render(request, 'item_detail.html', {
         'item': item,
         'attributes': attributes,
         'similar_items': similar_items,
     })
-
-
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.utils import translation
-from django.shortcuts import render, redirect, get_object_or_404
-
-from .models import Category, ItemPhoto, ItemAttributeValue, User, Notification
-from .forms import ItemForm
 
 
 # Only logged-in users can post
@@ -838,7 +870,6 @@ def item_edit(request, item_id):
 
 @login_required
 def user_profile(request, user_id):
-    from django.db.models import Q
     User = get_user_model()
 
     seller = get_object_or_404(User, user_id=user_id)
@@ -980,11 +1011,7 @@ def my_favorites(request):
         "page_obj": page_obj
     })
 
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from .forms import UserProfileEditForm, UserPasswordChangeForm
+
 
 
 @login_required
@@ -1032,7 +1059,7 @@ def search_suggestions(request):
     results = []
 
     # ============================================================
-    # 🔵 BRANCH 1 — ELASTICSEARCH ENABLED (local only when IS_RENDER=False)
+    # 1️⃣ TRY ELASTICSEARCH FIRST
     # ============================================================
     if not IS_RENDER and hasattr(ItemDocument, "search"):
         try:
@@ -1048,14 +1075,14 @@ def search_suggestions(request):
                     "category.name",
                     "attributes.name",
                     "city.name",
-                    "description"
+                    "description",
                 ],
-                fuzziness="AUTO"
+                fuzziness="AUTO",
             )
 
             es_results = ItemDocument.search().query(es_query)[:6].execute()
 
-            # Categories from DB
+            # categories via DB
             categories = Category.objects.filter(
                 Q(name_ar__icontains=query) | Q(name_en__icontains=query)
             ).select_related("parent")[:8]
@@ -1069,7 +1096,6 @@ def search_suggestions(request):
                     "emoji": "📂",
                 })
 
-            # Items from ES
             for hit in es_results:
                 try:
                     item = Item.objects.select_related("category").prefetch_related("photos").get(id=hit.meta.id)
@@ -1077,33 +1103,72 @@ def search_suggestions(request):
                     continue
 
                 photo = item.photos.first()
-                photo_url = photo.image.url if photo else ""
-
                 results.append({
                     "type": "item",
                     "id": item.id,
                     "name": item.title,
                     "category": item.category.name_ar if item.category else "",
-                    "photo_url": photo_url,
+                    "photo_url": photo.image.url if photo else "",
                 })
 
             return JsonResponse({"results": results})
 
         except Exception:
-            pass  # If Elasticsearch fails → silently fall back to PostgreSQL
-
+            pass  # ES DOWN → fall through
 
     # ============================================================
-    # 🔵 BRANCH 2 — POSTGRES TRIGRAM (Render OR local fallback)
+    # 2️⃣ FALLBACK: POSTGRES TRIGRAM IF AVAILABLE
     # ============================================================
+    if TRIGRAM_AVAILABLE:
+        try:
+            # categories
+            categories = (
+                Category.objects
+                .annotate(similarity=TrigramSimilarity("name_ar", query))
+                .filter(similarity__gt=0.2)
+                .order_by("-similarity")[:8]
+            )
 
-    # Categories fuzzy
-    categories = (
-        Category.objects
-        .annotate(similarity=TrigramSimilarity("name_ar", query))
-        .filter(similarity__gt=0.2)
-        .order_by("-similarity")[:8]
-    )
+            for c in categories:
+                results.append({
+                    "type": "category",
+                    "name": c.name_ar,
+                    "parent": c.parent.name_ar if c.parent else "",
+                    "category_id": c.id,
+                    "emoji": "📂",
+                })
+
+            # items
+            items = (
+                Item.objects.filter(is_approved=True, is_active=True)
+                .annotate(similarity=TrigramSimilarity("title", query))
+                .filter(similarity__gt=0.2)
+                .select_related("category")
+                .prefetch_related("photos")
+                .order_by("-similarity")[:6]
+            )
+
+            for i in items:
+                photo = i.photos.first()
+                results.append({
+                    "type": "item",
+                    "id": i.id,
+                    "name": i.title,
+                    "category": i.category.name_ar if i.category else "",
+                    "photo_url": photo.image.url if photo else "",
+                })
+
+            return JsonResponse({"results": results})
+
+        except Exception:
+            pass  # trigram failed → use last fallback
+
+    # ============================================================
+    # 3️⃣ FINAL FALLBACK: simple icontains (never crashes)
+    # ============================================================
+    categories = Category.objects.filter(
+        Q(name_ar__icontains=query) | Q(name_en__icontains=query)
+    )[:8]
 
     for c in categories:
         results.append({
@@ -1114,29 +1179,24 @@ def search_suggestions(request):
             "emoji": "📂",
         })
 
-    # Items fuzzy
-    items = (
-        Item.objects.filter(is_approved=True, is_active=True)
-        .annotate(similarity=TrigramSimilarity("title", query))
-        .filter(similarity__gt=0.2)
-        .select_related("category")
-        .prefetch_related("photos")
-        .order_by("-similarity")[:6]
-    )
+    items = Item.objects.filter(
+        Q(title__icontains=query),
+        is_approved=True,
+        is_active=True
+    ).select_related("category").prefetch_related("photos")[:6]
 
     for i in items:
         photo = i.photos.first()
-        photo_url = photo.image.url if photo else ""
-
         results.append({
             "type": "item",
             "id": i.id,
             "name": i.title,
             "category": i.category.name_ar if i.category else "",
-            "photo_url": photo_url,
+            "photo_url": photo.image.url if photo else "",
         })
 
     return JsonResponse({"results": results})
+
 
 
 
@@ -1154,7 +1214,6 @@ def _category_descendant_ids(root):
             dq.append(child)
     return ids
 
-from .models import Subscriber
 
 def subscribe(request):
     if request.method == 'POST':
@@ -1190,20 +1249,6 @@ def report_issue(request, item_id):
 
     return redirect("item_detail", item_id=item.id)
 
-
-from .models import PhoneVerificationCode
-
-from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.utils import timezone
-from datetime import timedelta
-from django.contrib.auth.hashers import make_password
-from django.shortcuts import redirect, render, get_object_or_404
-from .models import User
-from .forms import PhoneVerificationForm, ForgotPasswordForm, ResetPasswordForm
-from .utils.sms import send_sms_code
-from .utils.verification import send_code, verify_session_code
 
 
 # ✅ Step 1: Send verification code (for logged-in users)

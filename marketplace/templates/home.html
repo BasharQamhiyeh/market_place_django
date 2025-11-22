@@ -1,314 +1,430 @@
-{% extends 'base.html' %}
-{% load i18n %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block title %}ركن — الرئيسية{% endblock %}
 
 {% block content %}
 
-<!-- HERO -->
-<section class="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-orange-100/40">
-    <div class="absolute -top-20 -left-32 w-96 h-96 bg-orange-200/30 blur-3xl rounded-full"></div>
-    <div class="absolute bottom-0 right-0 w-[28rem] h-[28rem] bg-orange-100/40 blur-3xl rounded-full"></div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16 space-y-10">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-        <div class="lg:col-span-2 animate-fade-in-delayed pt-5">
-          <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 leading-relaxed pb-8 pr-6 pt-4">لكل منتج ركن خاص ✨</h1>
-          <h2 class="text-3xl md:text-4xl font-semibold text-[var(--rukn-orange)] mt-1 pr-6 pb-4">
-            بيع، <span style="color:#00b871;">اشتري</span>، أو اطلب ما تحتاجه بسهولة
-          </h2>
-          <p class="text-1xl md:text-1xl mt-3 text-[var(--muted)] pr-6">
-            نصنّف الإعلانات بذكاء لتصل لما تبحث عنه بسرعة، سواء للبيع أو الشراء.
-            تجربة سهلة وسريعة وآمنة للجميع.
-          </p>
+<!-- ================= HERO SECTION ================ -->
+<section class="relative bg-white py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Title -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-relaxed">
+        لكل منتج ركن خاص ✨
+      </h1>
+      <p class="text-lg md:text-xl mt-4 text-gray-600 max-w-3xl mx-auto">
+        نصنّف الإعلانات بذكاء لتصل لما تبحث عنه بسرعة، سواء للبيع أو الشراء.
+      </p>
+    </div>
+
+    <!-- Orange / Green Two Columns -->
+    <div class="grid grid-cols-1 md:grid-cols-2 mt-10">
+
+      <!-- orange -->
+      <div class="p-10 text-center md:text-right bg-[var(--rukn-orange-light)] border-l-4 border-[var(--rukn-orange)]">
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed">
+          ابحث عن المنتج المطلوب و تواصل مع البائع
+          <span class="text-[var(--rukn-orange)]">بيع ، اشتري</span>
+          ما تحتاجه بكل سهولة
+        </h2>
+      </div>
+
+      <!-- green -->
+      <div class="p-10 text-center md:text-left bg-[var(--rukn-green-50)] border-r-4 border-[var(--rukn-green)]">
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed">
+          لم تجد ما تبحث عنه ؟ لا تقلق،
+          <span class="text-[var(--rukn-green)]">بإمكانك تقديم طلب</span>
+          و سيقوم البائعين بالتواصل معك.
+        </h2>
+      </div>
+
+    </div>
+
+    <!-- Slider Banner (Mockup Swiper) -->
+    <div class="mt-20">
+      <div class="bg-white border border-orange-200 shadow-2xl rounded-3xl p-6 relative">
+
+        <div class="swiper myAdsSwiper rounded-2xl overflow-hidden relative">
+          <div class="swiper-wrapper">
+
+            <!-- Mockup slides (You can replace with dynamic banners later) -->
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80"
+                   class="w-full h-[380px] md:h-[450px] object-cover rounded-2xl" />
+            </div>
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=1600&q=80"
+                   class="w-full h-[380px] md:h-[450px] object-cover rounded-2xl" />
+            </div>
+            <div class="swiper-slide">
+              <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1600&q=80"
+                   class="w-full h-[380px] md:h-[450px] object-cover rounded-2xl" />
+            </div>
+
+          </div>
+
+          <div class="swiper-pagination mt-4"></div>
+          <div class="swiper-button-next custom-swiper-btn"></div>
+          <div class="swiper-button-prev custom-swiper-btn"></div>
         </div>
 
-        <a href="#" class="block rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full animate-fade-in card-hover">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80&auto=format&fit=crop" class="w-full h-44 object-cover" alt="سيارات">
-            <span class="absolute top-3 right-3 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow">🚗 سيارات</span>
-          </div>
-          <div class="p-4">
-            <div class="text-sm text-gray-500">مساحة إعلانية</div>
-            <div class="font-bold">أعلن عن سيارتك هنا</div>
-          </div>
-        </a>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
-
-        <a href="#" class="block rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full animate-fade-in card-hover">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80&auto=format&fit=crop" class="w-full h-44 object-cover" alt="عقارات">
-            <span class="absolute top-3 right-3 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow">🏠 عقارات</span>
-          </div>
-          <div class="p-4"><div class="text-sm text-gray-500">مساحة إعلانية</div><div class="font-bold">اعرض شقتك أو فيلتك</div></div>
-        </a>
-
-        <a href="#" class="block rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col h-full animate-fade-in-delayed card-hover">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1600&q=80&auto=format&fit=crop" class="w-full h-44 object-cover" alt="إلكترونيات">
-            <span class="absolute top-3 right-3 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow">💻 إلكترونيات</span>
-          </div>
-          <div class="p-4"><div class="text-sm text-gray-500">مساحة إعلانية</div><div class="font-bold">أفضل عروض الأجهزة</div></div>
-        </a>
-
-        <a href="#" class="block rounded-2xl overflow-hidden bg-white shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col ه-full animate-fade-in-slow card-hover">
-          <div class="relative">
-            <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1600&q=80&auto=format&fit=crop" class="w-full h-44 object-cover" alt="أثاث">
-            <span class="absolute top-3 right-3 bg-white/90 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow">🪑 أثاث</span>
-          </div>
-          <div class="p-4"><div class="text-sm text-gray-500">مساحة إعلانية</div><div class="font-bold">أثاث منزلي بأسعار مميزة</div></div>
-        </a>
+        <div class="absolute top-4 right-4 z-20 flex items-center gap-2 border border-orange-300 bg-white rounded-xl px-4 py-2 shadow-lg">
+          <span class="text-xl">📢</span>
+          <span class="text-lg font-bold text-gray-800">مساحة إعلانية</span>
+        </div>
 
       </div>
     </div>
+
+  </div>
 </section>
 
-<!-- الأقسام -->
-<section class="section-box">
+
+
+<!-- ================= CATEGORIES SECTION ================ -->
+<section class="mt-10 relative">
   <div class="max-w-7xl mx-auto px-4 lg:px-6">
 
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight text-right mb-4 text-gray-900">
-        الأقسام
-      </h2>
-    </div>
+    <div class="relative border-2 border-[var(--rukn-orange)] bg-white rounded-3xl
+                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-8 pb-6 px-3">
 
-    <div class="scroll-wrapper">
+      <div class="absolute -top-6 right-4 bg-white border-2 border-[var(--rukn-orange)] rounded-2xl shadow-md px-8 py-2 z-20">
+        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">الأقسام</h2>
+      </div>
 
-      <button class="scroll-btn left" type="button" aria-label="تمرير يسار" onclick="scrollCats(-1)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+      <div class="absolute -bottom-6 left-4 btn-orange border-2 border-orange-500 rounded-2xl shadow-md px-6 py-2 z-20">
+        <a href="{% url 'category_list' %}" class="text-sm md:text-base font-bold text-white">جميع الأقسام</a>
+      </div>
+
+      <div class="mt-6 pb-8 relative">
+
+      <!-- RIGHT -->
+      <button onclick="scrollCats(1)"
+              class="absolute right-2 top-1/2 -translate-y-1/2
+                     bg-white border border-orange-300 shadow-md
+                     w-10 h-10 rounded-full flex items-center justify-center
+                     text-orange-500 hover:bg-orange-50 transition z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
         </svg>
       </button>
 
-      <button class="scroll-btn right" type="button" aria-label="تمرير يمين" onclick="scrollCats(1)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+      <!-- LEFT -->
+      <button onclick="scrollCats(-1)"
+              class="absolute left-2 top-1/2 -translate-y-1/2
+                     bg-white border border-orange-300 shadow-md
+                     w-10 h-10 rounded-full flex items-center justify-center
+                     text-orange-500 hover:bg-orange-50 transition z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
         </svg>
       </button>
 
-      <div id="catsScroll" class="hscroll no-scrollbar">
+      <!-- LIST -->
+      <div id="catsScroll"
+           class="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth px-4">
 
         {% for cat in categories %}
-        <a href="{% url 'item_list' %}?categories={{ cat.id }}"
-           class="group bg-white rounded-2xl p-4 shadow-card hover:shadow-lg transition
-                  hover:bg-[var(--rukn-orange)] hover:text-white flex-shrink-0
-                  flex flex-col justify-center text-center card-hover">
-
-          <div class="wiggle text-[var(--rukn-orange)] text-4xl group-hover:text-white">
-            {% if cat.icon %}
-              {{ cat.icon }}
-            {% else %}
-              🏬
-            {% endif %}
-          </div>
-
-          <div class="font-bold mt-3 group-hover:text-white">
-            {{ cat }}
-          </div>
-
-          {% if LANGUAGE_CODE == "ar" %}
-            <div class="text-xs text-gray-500 group-hover:text-white">{{ cat.subtitle_ar }}</div>
-          {% else %}
-            <div class="text-xs text-gray-500 group-hover:text-white">{{ cat.subtitle_en }}</div>
-          {% endif %}
-
-        </a>
+          <a href="{% url 'item_list' %}?categories={{ cat.id }}"
+             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
+                    hover:border-orange-400 hover:shadow-lg transition flex-shrink-0 w-48 text-center">
+            <div class="text-[44px] text-[var(--rukn-orange)]">
+              {% if cat.icon %} {{ cat.icon }} {% else %} 🏷️ {% endif %}
+            </div>
+            <div class="font-bold mt-3 text-lg">{{ cat }}</div>
+            <div class="text-xs text-gray-500">{{ cat.subtitle_ar }}</div>
+          </a>
         {% endfor %}
 
       </div>
     </div>
 
+
+
+
+    </div>
   </div>
 </section>
 
-<!-- إعلانات البيع الحديثة -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14 pt-6">
 
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-2xl md:text-3xl font-extrabold leading-tight" style="color:var(--rukn-orange)">
-      إعلانات البيع الحديثة
-    </h2>
 
-    <a href="{% url 'item_list' %}" class="text-sm" style="color:var(--rukn-orange)">
-      عرض كل الإعلانات
-    </a>
-  </div>
+<!-- ================= STORES SECTION (static, from mockup) ================= -->
+<section class="mt-16 relative">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
 
-  <!-- ⭐ REPLACED BLOCK -->
-  <div id="latest-items-container">
+    <div class="relative border-2 border-[var(--rukn-green)] bg-white rounded-3xl
+                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-8 pb-6 px-3">
 
-    <!-- GRID -->
-    <div id="latest-items-grid"
-         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {% for item in latest_items %}
-        {% include "partials/_item_card.html" with item=item %}
-      {% empty %}
-        <p class="col-span-full text-center text-gray-400 py-6">
-          لا يوجد إعلانات حالياً.
-        </p>
-      {% endfor %}
-    </div>
+      <div class="absolute -top-6 right-4
+                  bg-white border-2 border-[var(--rukn-green)] rounded-2xl
+                  shadow-md px-8 py-2 z-20">
+        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">المتاجر</h2>
+      </div>
 
-    <!-- LOAD MORE / SHOW ALL -->
-    <div class="flex justify-center mt-6">
-      {% if latest_items|length < 36 %}
-        <button id="loadMoreBtn"
-                hx-get="?limit={{ latest_items|length|add:'12' }}"
-                hx-target="#latest-items-container"
-                hx-swap="outerHTML"
-                class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
-          تحميل المزيد
-        </button>
-      {% else %}
-        <a href="{% url 'item_list' %}"
-           class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
-          عرض كل الإعلانات
-        </a>
-      {% endif %}
-    </div>
 
-  </div>
+      <div class="mt-6 pb-8">
 
-  <!-- ⭐ END BLOCK -->
+        <div id="storesScroll"
+             class="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth px-4">
 
-</section>
+          <!-- STATIC Mockup Store Cards -->
+          <a href="#"
+             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
+                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
+            <img src="https://via.placeholder.com/80"
+                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
+            <div class="font-bold text-md mb-1">متجر التقنية الحديثة</div>
+            <div class="text-yellow-400 text-lg">★★★★☆</div>
+          </a>
 
-<!-- طلبات الشراء الحديثة -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3 sm:gap-0">
-    <h2 class="text-2xl md:text-3xl font-extrabold leading-tight" style="color:var(--rukn-green)">
-      طلبات الشراء الحديثة
-    </h2>
+          <a href="#"
+             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
+                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
+            <img src="https://via.placeholder.com/80"
+                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
+            <div class="font-bold text-md mb-1">متجر المنزل</div>
+            <div class="text-yellow-400 text-lg">★★★★★</div>
+          </a>
 
-    <a href="#" class="text-sm" style="color:var(--rukn-green)">
-      عرض كل الطلبات
-    </a>
-  </div>
+          <a href="#"
+             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
+                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
+            <img src="https://via.placeholder.com/80"
+                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
+            <div class="font-bold text-md mb-1">متجر الموضة</div>
+            <div class="text-yellow-400 text-lg">★★★★☆</div>
+          </a>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    <article class="bg-white rounded-xl overflow-hidden card-shadow hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <div class="p-4 pb-2">
-        <h3 class="font-semibold text-lg" style="color:var(--rukn-green)">
-          مطلوب لابتوب i7 للجامعة
-        </h3>
-        <div class="mt-1 text-sm text-[var(--muted)] flex items-center justify-between pb-3 mb-2 border-b border-gray-100/80">
-          <span>📍 عمّان</span>
-          <span>⏱️ منذ ساعة</span>
+          <a href="#"
+             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
+                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
+            <img src="https://via.placeholder.com/80"
+                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
+            <div class="font-bold text-md mb-1">متجر الجوالات</div>
+            <div class="text-yellow-400 text-lg">★★★☆☆</div>
+          </a>
+
         </div>
       </div>
-      <div class="flex items-center justify-between p-4 pt-2">
-        <div class="bg-[var(--rukn-green)] text-white text-base font-bold px-3 py-1 rounded-md shadow">
-          حتى 300 د.أ
-        </div>
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs">خ</div>
-          <span class="text-sm font-medium text-gray-800">خالد عودة</span>
-        </div>
-      </div>
-    </article>
+    </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS (بيع) -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-  <div class="bg-white rounded-2xl p-6 card-shadow">
-    <h2 class="text-xl font-bold mb-4">كيف تعمل ركن؟</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-      <div class="flex gap-4 items-start">
-        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">1</div>
-        <div>
-          <h3 class="font-semibold">سجل حسابك</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">ابدأ بإنشاء حساب مجاني للوصول إلى لوحة الإعلانات.</p>
-        </div>
+
+<!-- ================= LATEST ADS SECTION ================ -->
+<section class="mt-16 relative">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+
+    <div class="relative border-2 border-[var(--rukn-orange)] bg-white rounded-3xl
+                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-6 pb-6 px-4">
+
+      <div class="absolute -top-6 right-4
+                  bg-white border-2 border-[var(--rukn-orange)] rounded-2xl
+                  shadow-md px-8 py-2 z-20">
+        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">أحدث الإعلانات</h2>
       </div>
 
-      <div class="flex gap-4 items-start">
-        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">2</div>
-        <div>
-          <h3 class="font-semibold">أضف إعلانك</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">حمّل صور، أضف وصف وسعر واطلع على معاينة الإعلان قبل النشر.</p>
-        </div>
+      <div class="absolute -bottom-6 left-4
+                  border-2 btn-orange border-[var(--rukn-orange)] bg-[var(--rukn-orange)] rounded-2xl
+                  shadow-md px-6 py-2 z-20">
+        <a href="{% url 'item_list' %}" class="text-sm md:text-base font-bold text-white">جميع الإعلانات</a>
       </div>
 
-      <div class="flex gap-4 items-start">
-        <div class="flex-none w-12 h-12 rounded-full bg-[var(--rukn-orange)] text-white flex items-center justify-center font-bold">3</div>
-        <div>
-          <h3 class="font-semibold">تواصل واستكمل البيع</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">استقبل رسائل المشتريين وأتمّ معاملتك بأمان.</p>
+      <div class="mt-10">
+        <div id="adsSection">
+          {% include "partials/latest_items_block.html" %}
         </div>
+
+
       </div>
 
     </div>
-
-    <div class="mt-6">
-      {% if request.user.is_authenticated %}
-        <a href="{% url 'create_item' %}" class="inline-block bg-[var(--rukn-orange)] text-white px-5 py-3 rounded-lg font-medium">
-          أضف إعلانك
-        </a>
-      {% else %}
-        <a href="{% url 'login' %}?next={% url 'create_item' %}"
-           class="inline-block bg-[var(--rukn-orange)] text-white px-5 py-3 rounded-lg font-medium">
-          أضف إعلانك
-        </a>
-      {% endif %}
-    </div>
-
   </div>
 </section>
 
-<!-- HOW IT WORKS (طلبات شراء) -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-  <div class="rounded-2xl p-6 card-shadow"
-       style="background:linear-gradient(180deg,var(--rukn-green-50),#fff)">
-    <h2 class="text-xl font-bold mb-6" style="color:var(--rukn-green)">
-      كيف تضيف “طلب شراء”؟
-    </h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
-        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-             style="background:var(--rukn-green)">1</div>
-        <div>
-          <h3 class="font-semibold">اختر “أضف طلب شراء”</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">من الصفحة الرئيسية أو من لوحة المستخدم.</p>
-        </div>
+<!-- ================= LATEST REQUESTS SECTION ================= -->
+<section class="mt-16 relative">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+
+    <div class="relative border-2 border-[var(--rukn-green)] bg-white rounded-3xl
+                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-14 pb-8 px-4">
+
+      <div class="absolute -top-6 right-4
+                  bg-white border-2 border-[var(--rukn-green)] rounded-2xl
+                  shadow-md px-8 py-2 z-20">
+        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">أحدث الطلبات</h2>
       </div>
 
-      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
-        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-             style="background:var(--rukn-green)">2</div>
-        <div>
-          <h3 class="font-semibold">حدد المواصفات والميزانية</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">اكتب عنوانًا واضحًا، المدينة، والحد الأعلى للسعر.</p>
-        </div>
+      <div class="absolute -bottom-6 left-4
+                  bg-green-600 btn-green border-2 border-green-600 rounded-2xl
+                  shadow-md px-6 py-2 z-20">
+        <a href="#" class="text-sm md:text-base font-bold text-white">جميع الطلبات</a>
       </div>
 
-      <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-green">
-        <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-             style="background:var(--rukn-green)">3</div>
-        <div>
-          <h3 class="font-semibold">انشر واستقبل العروض</h3>
-          <p class="text-[var(--muted)] text-sm mt-1">سيعرض البائعون اقتراحاتهم ويمكنك المقارنة والتواصل.</p>
+      <div class="mt-10">
+        <div id="requestsGrid"
+             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+
+          {% if latest_requests %}
+            {% for req in latest_requests %}
+              <div class="bg-white p-4 border rounded-xl shadow-sm">
+                <div class="font-bold mb-2">{{ req.title }}</div>
+                <div class="text-gray-600 text-sm">{{ req.description|truncatewords:20 }}</div>
+                <div class="mt-2 text-sm text-green-600 font-semibold">الميزانية: {{ req.budget }} د.أ</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="col-span-full text-center text-gray-500 py-6">
+              لا توجد طلبات حالياً.
+            </p>
+          {% endif %}
+
         </div>
+
       </div>
 
-    </div>
-
-    <div class="mt-6 flex flex-wrap gap-3">
-      <a href="#" class="inline-block px-5 py-3 rounded-lg btn-green">
-        أضف طلب شراء
-      </a>
-      <a href="#" class="inline-block px-5 py-3 rounded-lg pill-green">
-        نصائح لطلب شراء فعّال
-      </a>
     </div>
 
   </div>
 </section>
+
+
+
+<!-- ================= How Rukn Works (STATIC from mockup) ================= -->
+<section class="mt-16 relative">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+
+    <div class="relative border-2 border-[var(--rukn-orange)] bg-white rounded-3xl
+                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-10 pb-10 px-6">
+
+      <div class="absolute -top-6 right-4
+                  bg-white border-2 border-[var(--rukn-orange)] rounded-2xl
+                  shadow-md px-8 py-2 z-20">
+        <h1 class="text-xl md:text-2xl font-extrabold text-gray-900">كيف يعمل ركن؟</h1>
+      </div>
+
+      <div class="absolute -bottom-6 left-4 btn-orange
+                  bg-[var(--rukn-orange)] border-2 border-[var(--rukn-orange)] rounded-2xl
+                  shadow-md px-6 py-2 z-20">
+        <a href="{% url 'create_item' %}" class="text-sm md:text-base font-bold text-white">أضف إعلانك</a>
+      </div>
+
+      <div class="mt-10 rounded-2xl p-6 card-shadow gradient-orange-box">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-[var(--rukn-orange)]">
+            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-[var(--rukn-orange)]">1</div>
+            <div>
+              <h3 class="font-semibold text-lg">سجل حسابك</h3>
+              <p class="text-[var(--muted)] text-sm mt-1">
+                ابدأ بإنشاء حساب مجاني للوصول إلى لوحة الإعلانات.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-[var(--rukn-orange)]">
+            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-[var(--rukn-orange)]">2</div>
+            <div>
+              <h3 class="font-semibold text-lg">أضف إعلانك</h3>
+              <p class="text-[var(--muted)] text-sm mt-1">
+                حمّل صور، أضف وصف وسعر واطلع على معاينة الإعلان قبل النشر.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-[var(--rukn-orange)]">
+            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-[var(--rukn-orange)]">3</div>
+            <div>
+              <h3 class="font-semibold text-lg">تواصل واستكمل البيع</h3>
+              <p class="text-[var(--muted)] text-sm mt-1">
+                استقبل رسائل المشتريين وأتمّ معاملتك بأمان.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ================= How to Add a Request (STATIC mockup) ================= -->
+<section class="mt-16 relative">
+  <div class="max-w-7xl mx-auto px-4 lg:px-6">
+
+    <div class="relative border-2 border-[var(--rukn-green)] bg-white rounded-3xl
+                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-10 pb-10 px-6">
+
+      <div class="absolute -top-6 right-4
+                  bg-white border-2 border-[var(--rukn-green)] rounded-2xl
+                  shadow-md px-6 py-2 z-20">
+        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">كيف تضيف طلب؟</h2>
+      </div>
+
+      <div class="absolute -bottom-6 left-4 btn-green
+                  bg-green-600 border-2 border-green-600 rounded-2xl
+                  shadow-md px-6 py-2 z-20">
+        <a href="#" class="text-sm md:text-base font-bold text-white">أضف طلبك</a>
+      </div>
+
+      <div class="mt-10 rounded-2xl p-6 card-shadow gradient-green-box">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-green-500">
+            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-green-600">1</div>
+            <div>
+              <h3 class="
+          font-semibold text-lg">اختر "أضف طلب"</h3>
+              <p class="text-[var(--muted)] text-sm mt-1">
+                من الصفحة الرئيسية أو من لوحة المستخدم.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-green-500">
+            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-green-600">2</div>
+            <div>
+              <h3 class="font-semibold text-lg">أدخل التفاصيل المطلوبة</h3>
+              <p class="text-[var(--muted)] text-sm mt-1">
+                اكتب عنوان واضح لطلبك، وأدخل الميزانية الأعلى.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-green-500">
+            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-green-600">3</div>
+            <div>
+              <h3 class="font-semibold text-lg">انشر وتابع التفاعل</h3>
+              <p class="text-[var(--muted)] text-sm mt-1">
+                راقب رسائل البائعين وعدّل طلبك عند الحاجة.
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
 
 {% endblock %}
