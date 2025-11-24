@@ -44,6 +44,9 @@ from .models import (
     IssueReport,
     Favorite,
     User,
+    Request,
+    Listing,
+    RequestAttributeValue
 )
 
 from .forms import (
@@ -54,11 +57,12 @@ from .forms import (
     PhoneVerificationForm,
     ForgotPasswordForm,
     ResetPasswordForm,
+    RequestForm
 )
 
 # Local imports
 from .validators import validate_no_links_or_html
-from .documents import ItemDocument
+from .documents import ListingDocument
 from .utils.category_tree import build_category_tree, get_selected_category_path
 from .utils.sms import send_sms_code
 from .utils.verification import send_code, verify_session_code
@@ -88,32 +92,55 @@ def home(request):
     limit = int(request.GET.get("limit", 12))
 
     latest_items = (
-        Item.objects.filter(is_approved=True, is_active=True)
-        .select_related("category", "city", "user")
+        Item.objects
+        .filter(
+            listing__type="item",
+            listing__is_active=True,
+            listing__is_approved=True,
+        )
+        .select_related("listing__category", "listing__city", "listing__user")
         .prefetch_related("photos")
-        .order_by("-created_at")[:limit]
+        .order_by("-listing__created_at")[:limit]
     )
 
-    categories = Category.objects.filter(parent__isnull=True)\
-        .prefetch_related("subcategories")\
+    latest_requests = (
+        Request.objects
+        .filter(
+            listing__type="request",
+            listing__is_active=True,
+            listing__is_approved=True,
+        )
+        .select_related("listing__category", "listing__city", "listing__user")
+        .order_by("-listing__created_at")[:limit]
+    )
+
+    categories = (
+        Category.objects
+        .filter(parent__isnull=True)
+        .prefetch_related("subcategories")
         .order_by("name_ar")
+    )
 
     context = {
         "categories": categories,
         "latest_items": latest_items,
+        "latest_requests": latest_requests,
     }
 
-    # ✔ FIXED — correct HTMX detection
+    # HTMX partial for "أحدث الإعلانات"
     if request.headers.get("HX-Request"):
         return render(request, "partials/latest_items_block.html", context)
 
     return render(request, "home.html", context)
 
 
+
+
 def item_list(request):
-    # Auto-deactivate very old active items
-    Item.objects.filter(
+    # Auto-deactivate very old active listings
+    Listing.objects.filter(
         created_at__lt=timezone.now() - timedelta(days=1000),
+        type="item",
         is_active=True
     ).update(is_active=False)
 
@@ -126,9 +153,16 @@ def item_list(request):
     min_price = request.GET.get("min_price")
     max_price = request.GET.get("max_price")
 
-    base_qs = Item.objects.filter(is_approved=True, is_active=True)
+    # ================================
+    # BASE QUERY → FILTER BY LISTING
+    # ================================
+    base_qs = Item.objects.filter(
+        listing__type="item",
+        listing__is_approved=True,
+        listing__is_active=True,
+    )
 
-    # CATEGORY FILTERS
+    # CATEGORY FILTER
     selected_category = None
 
     if category_ids_multi:
@@ -139,20 +173,21 @@ def item_list(request):
                 all_ids += _category_descendant_ids(cat)
             except Category.DoesNotExist:
                 continue
+
         if all_ids:
-            base_qs = base_qs.filter(category_id__in=all_ids)
+            base_qs = base_qs.filter(listing__category_id__in=all_ids)
 
     elif category_id_single:
         try:
             selected_category = Category.objects.get(id=category_id_single)
             ids = _category_descendant_ids(selected_category)
-            base_qs = base_qs.filter(category_id__in=ids)
+            base_qs = base_qs.filter(listing__category_id__in=ids)
         except Category.DoesNotExist:
             selected_category = None
 
     # CITY FILTER
     if city_id:
-        base_qs = base_qs.filter(city_id=city_id)
+        base_qs = base_qs.filter(listing__city_id=city_id)
 
     # PRICE FILTER
     if min_price:
@@ -160,64 +195,74 @@ def item_list(request):
     if max_price:
         base_qs = base_qs.filter(price__lte=max_price)
 
-    # =========================
-    # 🔥 SEARCH LOGIC (3 levels)
-    # =========================
-    queryset = base_qs.order_by("-created_at")
+    # =============================
+    # ORDER BY LISTING DATE
+    # =============================
+    queryset = base_qs.order_by("-listing__created_at")
 
+    # =============================
+    # SEARCH (q)
+    # =============================
     if len(q) >= 2:
-
-        # LEVEL 1 — TRY ELASTICSEARCH
-        if not IS_RENDER and hasattr(ItemDocument, "search"):
+        # LEVEL 1 — TRY ES
+        if not IS_RENDER and hasattr(ListingDocument, "search"):
             try:
                 from elasticsearch_dsl.query import Q as ES_Q
 
                 es_query = ES_Q(
                     "multi_match",
                     query=q,
-                    fields=[
-                        "title",
-                        "description",
-                        "category.name",
-                        "city.name",
-                        "attributes.name",
-                        "attributes.value",
-                    ],
+                    fields=["title", "description"],
                     fuzziness="AUTO",
                 )
 
-                hits = ItemDocument.search().query(es_query)[:50].execute().hits
-                hit_ids = [str(hit.meta.id) for hit in hits]
+                # Search Listings NOT Items
+                hits = (
+                    ListingDocument.search()
+                    .query(es_query)
+                    .filter("term", type="item")
+                    [:50]
+                    .execute()
+                    .hits
+                )
 
-                if hit_ids:
+                listing_ids = [hit.meta.id for hit in hits]
+
+                if listing_ids:
                     qs_list = list(
-                        base_qs.filter(id__in=hit_ids)
-                        .select_related("category", "city", "user")
+                        base_qs.filter(listing_id__in=listing_ids)
+                        .select_related("listing__category", "listing__city", "listing__user")
                         .prefetch_related("photos")
                     )
 
-                    qs_list.sort(key=lambda i: hit_ids.index(str(i.id)))
+                    qs_list.sort(key=lambda i: listing_ids.index(i.listing_id))
                     queryset = qs_list
-
                 else:
-                    queryset = base_qs.filter(title__icontains=q)
+                    queryset = base_qs.filter(listing__title__icontains=q)
 
             except Exception as e:
                 print("[WARN] ES DOWN:", e)
-                queryset = base_qs.filter(title__icontains=q)
+                queryset = base_qs.filter(listing__title__icontains=q)
 
         else:
-            # LEVEL 2 — NO ES → PURE fallback
+            # LEVEL 2 — FALLBACK
             queryset = base_qs.filter(
-                Q(title__icontains=q) | Q(description__icontains=q)
-            ).order_by("-created_at")
+                Q(listing__title__icontains=q) |
+                Q(listing__description__icontains=q)
+            ).order_by("-listing__created_at")
 
-    # Normalize ES list result back to QuerySet
+    # Normalize if ES returned list
     if isinstance(queryset, list):
         ids = [obj.id for obj in queryset]
-        queryset = Item.objects.filter(id__in=ids).order_by("-created_at")
+        queryset = Item.objects.filter(id__in=ids).order_by("-listing__created_at")
 
-    queryset = queryset.select_related("category", "user", "city").prefetch_related("photos")
+    # FINAL SELECT RELATED
+    queryset = queryset.select_related(
+        "listing",
+        "listing__category",
+        "listing__city",
+        "listing__user"
+    ).prefetch_related("photos")
 
     paginator = Paginator(queryset, 12)
     page_number = request.GET.get("page")
@@ -228,7 +273,6 @@ def item_list(request):
         .prefetch_related("subcategories")
         .distinct()
     )
-
     cities = City.objects.all().order_by("name_ar")
     selected_categories = request.GET.getlist("categories")
 
@@ -241,13 +285,62 @@ def item_list(request):
         "selected_categories": selected_categories,
     }
 
-    if request.headers.get("HX-Request") == "true" or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+    # HTMX partial
+    if request.headers.get("HX-Request") or request.headers.get("X-Requested-With") == "XMLHttpRequest":
         html = render_to_string("partials/item_results.html", context, request=request)
         return HttpResponse(html)
 
     return render(request, "item_list.html", context)
 
 
+
+def request_list(request):
+    q = request.GET.get("q", "").strip()
+    city_id = request.GET.get("city")
+    category_ids = request.GET.getlist("categories")
+
+    base_qs = Request.objects.filter(
+        listing__is_approved=True,
+        listing__is_active=True,
+    ).select_related(
+        "listing", "listing__user", "listing__category", "listing__city"
+    )
+
+    # CATEGORY FILTERS
+    if category_ids:
+        base_qs = base_qs.filter(listing__category_id__in=category_ids)
+
+    # CITY
+    if city_id:
+        base_qs = base_qs.filter(listing__city_id=city_id)
+
+    # SEARCH
+    if len(q) >= 2:
+        base_qs = base_qs.filter(
+            Q(listing__title__icontains=q) |
+            Q(listing__description__icontains=q)
+        )
+
+    base_qs = base_qs.order_by("-listing__created_at")
+
+    paginator = Paginator(base_qs, 12)
+    page = request.GET.get("page")
+    page_obj = paginator.get_page(page)
+
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
+    cities = City.objects.all()
+
+    return render(
+        request,
+        "request_list.html",
+        {
+            "page_obj": page_obj,
+            "categories": categories,
+            "cities": cities,
+            "selected_categories": category_ids,
+            "q": q,
+        },
+    )
 
 
 
@@ -266,12 +359,12 @@ def item_detail(request, item_id):
     def fallback_similar():
         return (
             Item.objects.filter(
-                category=item.category,
-                is_approved=True,
-                is_active=True,
+                listing__category=item.listing.category,
+                listing__is_approved=True,
+                listing__is_active=True,
             )
             .exclude(id=item.id)
-            .order_by('-created_at')[:6]
+            .order_by('-listing__created_at')[:6]
         )
 
     # Default → fallback queryset
@@ -331,6 +424,30 @@ def item_detail(request, item_id):
     })
 
 
+@login_required
+def request_detail(request, request_id):
+    # load request object
+    request_obj = get_object_or_404(Request, id=request_id)
+
+    # SECURITY: requester or approved + active OR staff
+    if not request_obj.listing.is_approved and request.user != request_obj.listing.user:
+        if not request.user.is_staff:
+            return redirect("home")
+
+    # attributes
+    attributes = request_obj.attribute_values.select_related("attribute").all()
+
+    return render(
+        request,
+        "request_detail.html",
+        {
+            "request_obj": request_obj,
+            "attributes": attributes,
+        },
+    )
+
+
+
 # Only logged-in users can post
 @login_required
 @transaction.atomic
@@ -338,25 +455,20 @@ def item_create(request):
     # =============================
     # 1. Top-level categories
     # =============================
-    # Used by the new template as the first select in the category tree
     lang = translation.get_language()
-    if lang == "ar":
-        order_field = "name_ar"
-    else:
-        order_field = "name_en"
+    order_field = "name_ar" if lang == "ar" else "name_en"
 
     top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
 
-    # Keep selected category across GET/POST
-    # New template always keeps the final leaf category ID in hidden field "category"
-    category_id = request.POST.get('category') or request.GET.get('category')
+    category_id = request.POST.get("category") or request.GET.get("category")
     selected_category = Category.objects.filter(id=category_id).first() if category_id else None
 
-    if request.method == 'POST':
-        # Instantiate form with selected category (leaf)
+    # =============================
+    # POST (Submit Ad)
+    # =============================
+    if request.method == "POST":
         form = ItemForm(request.POST, request.FILES, category=selected_category)
 
-        # --- DEBUG (you can remove these prints in production) ---
         print("=== DEBUG: item_create POST ===")
         print("selected_category_id:", category_id, " resolved:", selected_category)
         print("POST keys:", list(request.POST.keys()))
@@ -369,22 +481,31 @@ def item_create(request):
             print("=== DEBUG: form is valid ===")
 
             # -----------------------------
-            # 2. Create Item
+            # 2. Create LISTING
             # -----------------------------
-            item = form.save(commit=False)
-            item.category = selected_category
-            item.user = request.user
+            listing = form.save(commit=False)
+            listing.category = selected_category
+            listing.user = request.user
+            listing.type = "item"                      # IMPORTANT
+            listing.is_approved = False
+            listing.is_active = True
+            listing.save()
 
-            # Mark item pending review (keep your behaviour)
-            item.is_approved = False
-            item.is_active = True
-            item.save()
+            # -----------------------------
+            # 3. Create ITEM (1-to-1)
+            # -----------------------------
+            # These fields live in Item, not Listing
+            item = Item.objects.create(
+                listing=listing,
+                price=form.cleaned_data["price"],
+                condition=form.cleaned_data["condition"],
+            )
 
             # -----------------------------
-            # 3. Save uploaded images
+            # 4. Save uploaded images
             # -----------------------------
-            images = request.FILES.getlist('images')
-            main_index = request.POST.get('main_photo_index')
+            images = request.FILES.getlist("images")
+            main_index = request.POST.get("main_photo_index")
             main_index = int(main_index) if main_index and main_index.isdigit() else None
 
             for idx, img in enumerate(images):
@@ -393,7 +514,7 @@ def item_create(request):
                     photo.is_main = True
                     photo.save()
 
-            # If no main explicitly selected but images exist → first as main
+            # Default main photo
             if images and not item.photos.filter(is_main=True).exists():
                 first = item.photos.first()
                 if first:
@@ -401,125 +522,131 @@ def item_create(request):
                     first.save()
 
             # -----------------------------
-            # 4. Save dynamic attributes
-            #    (text/number/select, including "Other" and multi-select)
+            # 5. Save dynamic attributes
             # -----------------------------
             for field_name, value in form.cleaned_data.items():
-                # Only dynamic attribute fields
+
                 if not field_name.startswith("attribute_"):
                     continue
                 if field_name.endswith("_other"):
-                    continue  # handled together with main field
+                    continue
 
-                # Extract attribute id from field name "attribute_<id>"
                 try:
-                    attr_id = int(field_name.split('_')[1])
+                    attr_id = int(field_name.split("_")[1])
                 except Exception:
                     continue
 
-                # We don't want to break if attribute is missing
-                attribute = selected_category.attributes.filter(id=attr_id).first() if selected_category else None
+                attribute = selected_category.attributes.filter(id=attr_id).first()
                 if not attribute:
                     continue
 
-                final_value = None
-
-                # Multi-select (checkboxes / tags)
+                # Multi-select types
                 if isinstance(value, list):
                     parts = []
                     for v in value:
-                        if v == '__other__':
+                        if v == "__other__":
                             other_text = form.cleaned_data.get(f"{field_name}_other", "").strip()
                             if other_text:
                                 parts.append(other_text)
                         else:
-                            # keep same behaviour as before: store raw value (typically option id)
                             parts.append(str(v))
                     final_value = ", ".join(parts) if parts else ""
 
+                # Single-select types
                 else:
-                    # Single value
-                    if value == '__other__':
+                    if value == "__other__":
                         final_value = form.cleaned_data.get(f"{field_name}_other", "").strip()
                     else:
-                        # Old behaviour: store the raw selected value (id or text)
                         final_value = str(value) if value is not None else ""
 
                 if final_value:
                     ItemAttributeValue.objects.create(
                         item=item,
                         attribute_id=attr_id,
-                        value=final_value
+                        value=final_value,
                     )
 
             # -----------------------------
-            # 5. Notifications (same as before)
+            # 6. Notifications
             # -----------------------------
             for admin in User.objects.filter(is_staff=True):
                 Notification.objects.create(
                     user=admin,
                     title="New item pending approval",
-                    body=f"🕓 '{item.title}' was posted by {request.user.username} and is awaiting approval.",
-                    item=item
+                    body=f"🕓 '{listing.title}' was posted by {request.user.username} and is awaiting approval.",
+                    listing=listing,  # FIXED
                 )
 
             Notification.objects.create(
                 user=request.user,
                 title="✅ إعلانك قيد المراجعة",
-                body=f"تم استلام إعلانك '{item.title}' وهو الآن بانتظار موافقة الإدارة.",
-                item=item
+                body=f"تم استلام إعلانك '{listing.title}' وهو الآن بانتظار موافقة الإدارة.",
+                listing=listing,  # FIXED
             )
 
             messages.success(request, "✅ Your ad was submitted (pending review).")
-            return redirect('item_list')
+            return redirect("item_list")
 
-        # --- DEBUG: form invalid ---
+        # -----------------------------
+        # Form invalid
+        # -----------------------------
         print("=== DEBUG: form is INVALID ===")
         print("form.errors:", form.errors.as_data())
         print("non_field_errors:", form.non_field_errors())
-        print("cleaned_data (partial):", getattr(form, 'cleaned_data', {}))
-        print("FILES images count:", len(request.FILES.getlist('images')))
+        print("cleaned_data:", getattr(form, "cleaned_data", {}))
+        print("FILES images count:", len(request.FILES.getlist("images")))
 
-        return render(request, 'item_create.html', {
-            'form': form,
-            'top_categories': top_categories,   # new template uses this
-            'categories': top_categories,       # keep for compatibility if needed
-            'selected_category': selected_category,
-            'debug_info': {
-                'post_keys': list(request.POST.keys()),
-                'files_keys': list(request.FILES.keys()),
-                'images_count': len(request.FILES.getlist('images')),
-                'form_fields': list(form.fields.keys()),
-                'errors_html': form.errors.as_ul(),
-                'non_field_errors_html': form.non_field_errors(),
-            }
-        })
+        return render(
+            request,
+            "item_create.html",
+            {
+                "form": form,
+                "top_categories": top_categories,
+                "categories": top_categories,
+                "selected_category": selected_category,
+                "debug_info": {
+                    "post_keys": list(request.POST.keys()),
+                    "files_keys": list(request.FILES.keys()),
+                    "images_count": len(request.FILES.getlist("images")),
+                    "form_fields": list(form.fields.keys()),
+                    "errors_html": form.errors.as_ul(),
+                    "non_field_errors_html": form.non_field_errors(),
+                },
+            },
+        )
 
     # =============================
     # GET request
     # =============================
-    # GET request
     form = ItemForm(category=selected_category)
 
-    # Build full tree
     category_tree = build_category_tree(top_categories, lang)
     category_tree_json = json.dumps(category_tree, ensure_ascii=False)
 
-    # Build path to selected category (if any)
     selected_path = get_selected_category_path(selected_category)
     selected_path_json = json.dumps(selected_path)
-    # ===================================
 
-    return render(request, 'item_create.html', {
-        'form': form,
-        'top_categories': top_categories,
-        'categories': top_categories,
-        'selected_category': selected_category,
+    return render(
+        request,
+        "item_create.html",
+        {
+            "form": form,
+            "top_categories": top_categories,
+            "categories": top_categories,
+            "selected_category": selected_category,
+            "category_tree_json": category_tree_json,
+            "selected_category_path_json": selected_path_json,
+        },
+    )
 
-        # === SEND THEM TO TEMPLATE ===
-        'category_tree_json': category_tree_json,
-        'selected_category_path_json': selected_path_json,
-    })
+
+@login_required
+def item_attributes_partial(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    # Empty form just to build attribute fields for that category
+    form = ItemForm(category=category)
+    return render(request, "partials/item_attributes.html", {"form": form})
+
 
 
 @login_required
@@ -611,6 +738,152 @@ def item_edit(request, item_id):
         request,
         "item_edit.html",
         {"form": form, "item": item, "category": category},
+    )
+
+
+@login_required
+@transaction.atomic
+def request_create(request):
+    # =============================
+    # 1. Top-level categories
+    # =============================
+    lang = translation.get_language()
+    order_field = "name_ar" if lang == "ar" else "name_en"
+
+    top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
+
+    category_id = request.POST.get("category") or request.GET.get("category")
+    selected_category = Category.objects.filter(id=category_id).first() if category_id else None
+
+    # =============================
+    # POST (Submit Request)
+    # =============================
+    if request.method == "POST":
+        form = RequestForm(request.POST, category=selected_category)
+
+        if form.is_valid() and selected_category:
+
+            # -----------------------------
+            # 2. Create LISTING
+            # -----------------------------
+            listing = form.save(commit=False)
+            listing.category = selected_category
+            listing.user = request.user
+            listing.type = "request"
+            listing.is_approved = False
+            listing.is_active = True
+            listing.save()
+
+            # -----------------------------
+            # 3. Create REQUEST child
+            # -----------------------------
+            req = Request.objects.create(
+                listing=listing,
+                budget=form.cleaned_data.get("budget"),
+                condition_preference=form.cleaned_data.get("condition_preference"),
+                show_phone=form.cleaned_data.get("show_phone", True),
+            )
+
+            # -----------------------------
+            # 4. Save dynamic attributes
+            # -----------------------------
+            for field_name, value in form.cleaned_data.items():
+
+                if not field_name.startswith("attr_"):
+                    continue
+                if field_name.endswith("_other"):
+                    continue
+
+                try:
+                    attr_id = int(field_name.split("_")[1])
+                except Exception:
+                    continue
+
+                attribute = selected_category.attributes.filter(id=attr_id).first()
+                if not attribute:
+                    continue
+
+                # Multi-select types
+                if isinstance(value, list):
+                    parts = []
+                    for v in value:
+                        if v == "__other__":
+                            other_text = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                            if other_text:
+                                parts.append(other_text)
+                        else:
+                            parts.append(str(v))
+                    final_value = ", ".join(parts) if parts else ""
+
+                # Single-select types
+                else:
+                    if value == "__other__":
+                        final_value = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                    else:
+                        final_value = str(value) if value is not None else ""
+
+                if final_value:
+                    RequestAttributeValue.objects.create(
+                        request=req,
+                        attribute_id=attr_id,
+                        value=final_value,
+                    )
+
+            # -----------------------------
+            # 5. Notifications
+            # -----------------------------
+            for admin in User.objects.filter(is_staff=True):
+                Notification.objects.create(
+                    user=admin,
+                    title="New request pending approval",
+                    body=f"🕓 '{listing.title}' was posted by {request.user.username} and is awaiting approval.",
+                    listing=listing,
+                )
+
+            Notification.objects.create(
+                user=request.user,
+                title="✅ تم استلام طلبك",
+                body=f"طلبك '{listing.title}' قيد المراجعة.",
+                listing=listing,
+            )
+
+            messages.success(request, "✅ Your request was submitted (pending review).")
+            return redirect("request_list")
+
+        # INVALID FORM
+        return render(
+            request,
+            "request_create.html",
+            {
+                "form": form,
+                "top_categories": top_categories,
+                "categories": top_categories,
+                "selected_category": selected_category,
+            },
+        )
+
+    # =============================
+    # GET request
+    # =============================
+    form = RequestForm(category=selected_category)
+
+    category_tree = build_category_tree(top_categories, lang)
+    category_tree_json = json.dumps(category_tree, ensure_ascii=False)
+
+    selected_path = get_selected_category_path(selected_category)
+    selected_path_json = json.dumps(selected_path)
+
+    return render(
+        request,
+        "request_create.html",
+        {
+            "form": form,
+            "top_categories": top_categories,
+            "categories": top_categories,
+            "selected_category": selected_category,
+            "category_tree_json": category_tree_json,
+            "selected_category_path_json": selected_path_json,
+        },
     )
 
 
@@ -713,58 +986,120 @@ class AttributeOptionForm(forms.ModelForm):
 @login_required
 def start_conversation(request, item_id):
     item = Item.objects.get(id=item_id)
+    listing = item.listing
 
-    # seller = item's owner
-    seller = item.user
+    seller = listing.user
     buyer = request.user
 
     if seller == buyer:
         return redirect('item_detail', item_id=item_id)
 
-    # Check if a conversation already exists
-    convo = Conversation.objects.filter(item=item, buyer=buyer, seller=seller).first()
+    # Check for existing conversation
+    convo = Conversation.objects.filter(
+        listing=listing,   # FIXED
+        buyer=buyer,
+        seller=seller
+    ).first()
+
     if convo:
         return redirect('chat_room', conversation_id=convo.id)
 
-    # Create new conversation
-    convo = Conversation.objects.create(item=item, buyer=buyer, seller=seller)
+    # Create conversation
+    convo = Conversation.objects.create(
+        listing=listing,   # FIXED
+        buyer=buyer,
+        seller=seller
+    )
+
     return redirect('chat_room', conversation_id=convo.id)
 
 
 @login_required
+def start_conversation_request(request, request_id):
+    req = get_object_or_404(Request, id=request_id)
+    listing = req.listing
+
+    seller = request.user       # the helper
+    buyer = listing.user        # the requester
+
+    if seller == buyer:
+        return redirect('request_detail', request_id=request_id)
+
+    # Check for existing conversation
+    convo = Conversation.objects.filter(
+        listing=listing,
+        buyer=buyer,
+        seller=seller
+    ).first()
+
+    if convo:
+        return redirect("chat_room", conversation_id=convo.id)
+
+    # Create new conversation
+    convo = Conversation.objects.create(
+        listing=listing,
+        buyer=buyer,
+        seller=seller
+    )
+
+    return redirect("chat_room", conversation_id=convo.id)
+
+
+
+@login_required
 def chat_room(request, conversation_id):
-    convo = get_object_or_404(Conversation, id=conversation_id)
+    conversation = get_object_or_404(
+        Conversation.objects.select_related("listing", "buyer", "seller"),
+        id=conversation_id
+    )
 
-    # ✅ Security check
-    if request.user not in [convo.buyer, convo.seller]:
-        return redirect('item_list')
+    # SECURITY: Ensure user is part of the conversation
+    if request.user not in [conversation.buyer, conversation.seller]:
+        return redirect("item_list")
 
-    # ✅ Mark other user's messages as read
+    listing = conversation.listing
+
+    # The listing may be attached to an Item OR a Request (1-to-1)
+    item = getattr(listing, "item", None)
+    request_obj = getattr(listing, "request", None)
+
+    # Mark unread messages (from the other user) as read
     Message.objects.filter(
-        conversation=convo,
+        conversation=conversation,
         is_read=False
     ).exclude(sender=request.user).update(is_read=True)
 
-    # ✅ Handle message sending
-    if request.method == 'POST':
-        body = request.POST.get('body', '').strip()
+    # SEND MESSAGE
+    if request.method == "POST":
+        body = request.POST.get("body", "").strip()
+
         if body:
             try:
                 validate_no_links_or_html(body)
             except ValidationError:
                 messages.error(request, "Links or HTML are not allowed in messages.")
             else:
-                Message.objects.create(conversation=convo, sender=request.user, body=body)
-                # Redirect to avoid resubmission
-                return redirect('chat_room', conversation_id=conversation_id)
+                Message.objects.create(
+                    conversation=conversation,
+                    sender=request.user,
+                    body=body,
+                )
+                return redirect("chat_room", conversation_id=conversation_id)
 
-    # ✅ Load messages after marking read
-    messages = convo.messages.order_by('created_at')
+    messages_qs = conversation.messages.select_related("sender").order_by("created_at")
 
-    return render(request, 'chat_room.html', {
-        'conversation': convo,
-        'messages': messages,
-    })
+    return render(
+        request,
+        "chat_room.html",
+        {
+            "conversation": conversation,
+            "messages": messages_qs,
+            "listing": listing,
+            "item": item,
+            "request_obj": request_obj,
+        },
+    )
+
 
 @login_required
 def user_inbox(request):
@@ -975,42 +1310,64 @@ def cancel_item(request, item_id):
 def toggle_favorite(request, item_id):
     item = get_object_or_404(Item, id=item_id)
 
-    # Optional: prevent favoriting your own item
-    if item.user == request.user:
+    # Prevent favoriting your own item
+    if item.listing.user == request.user:
         messages.info(request, "ℹ️ You cannot favorite your own item.")
         return redirect("item_detail", item_id=item.id)
 
-    fav, created = Favorite.objects.get_or_create(user=request.user, item=item)
+    # Favorite the LISTING (always)
+    fav, created = Favorite.objects.get_or_create(
+        user=request.user,
+        listing=item.listing
+    )
+
     if created:
         messages.success(request, "⭐ Added to your favorites.")
     else:
         fav.delete()
         messages.info(request, "✳️ Removed from your favorites.")
 
-    # Redirect back to item page or favorites page if query param present
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
     return redirect(next_url)
 
 
 
+
 @login_required
 def my_favorites(request):
+
     fav_qs = (
-        Favorite.objects
-        .filter(user=request.user)
-        .select_related("item", "item__user", "item__category")
-        .prefetch_related("item__photos")
+        Favorite.objects.filter(user=request.user)
+        .select_related(
+            "listing",
+            "listing__item",
+            "listing__item__user",
+            "listing__item__category",
+            "listing__item__city",
+            "listing__request",
+            "listing__request__user",
+            "listing__request__category",
+            "listing__request__city",
+        )
+        .prefetch_related("listing__item__photos")
         .order_by("-created_at")
     )
 
-    paginator = Paginator(fav_qs, 12)  # 12 per page
+    # SPLIT THEM
+    fav_items = [f for f in fav_qs if f.listing.type == "item"]
+    fav_requests = [f for f in fav_qs if f.listing.type == "request"]
+
+    # PAGINATION ONLY FOR ITEMS (requests usually few)
+    paginator = Paginator(fav_items, 12)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(request, "my_favorites.html", {
-        "page_obj": page_obj
-    })
+    context = {
+        "page_obj": page_obj,
+        "fav_requests": fav_requests,
+    }
 
+    return render(request, "my_favorites.html", context)
 
 
 
@@ -1057,11 +1414,12 @@ def search_suggestions(request):
         return JsonResponse({"results": []})
 
     results = []
+    seen_categories = set()   # <<< FIX ADDED
 
     # ============================================================
     # 1️⃣ TRY ELASTICSEARCH FIRST
     # ============================================================
-    if not IS_RENDER and hasattr(ItemDocument, "search"):
+    if not IS_RENDER and hasattr(ListingDocument, "search"):
         try:
             from elasticsearch_dsl.query import Q as ES_Q
 
@@ -1080,7 +1438,7 @@ def search_suggestions(request):
                 fuzziness="AUTO",
             )
 
-            es_results = ItemDocument.search().query(es_query)[:6].execute()
+            es_results = ListingDocument.search().query(es_query)[:6].execute()
 
             # categories via DB
             categories = Category.objects.filter(
@@ -1088,14 +1446,17 @@ def search_suggestions(request):
             ).select_related("parent")[:8]
 
             for c in categories:
-                results.append({
-                    "type": "category",
-                    "name": c.name_ar,
-                    "parent": c.parent.name_ar if c.parent else "",
-                    "category_id": c.id,
-                    "emoji": "📂",
-                })
+                if c.id not in seen_categories:     # <<< FIX
+                    seen_categories.add(c.id)
+                    results.append({
+                        "type": "category",
+                        "name": c.name_ar,
+                        "parent": c.parent.name_ar if c.parent else "",
+                        "category_id": c.id,
+                        "emoji": c.icon or "📂",
+                    })
 
+            # ES → items
             for hit in es_results:
                 try:
                     item = Item.objects.select_related("category").prefetch_related("photos").get(id=hit.meta.id)
@@ -1114,7 +1475,7 @@ def search_suggestions(request):
             return JsonResponse({"results": results})
 
         except Exception:
-            pass  # ES DOWN → fall through
+            pass  # ES DOWN → fallback
 
     # ============================================================
     # 2️⃣ FALLBACK: POSTGRES TRIGRAM IF AVAILABLE
@@ -1130,13 +1491,15 @@ def search_suggestions(request):
             )
 
             for c in categories:
-                results.append({
-                    "type": "category",
-                    "name": c.name_ar,
-                    "parent": c.parent.name_ar if c.parent else "",
-                    "category_id": c.id,
-                    "emoji": "📂",
-                })
+                if c.id not in seen_categories:    # <<< FIX
+                    seen_categories.add(c.id)
+                    results.append({
+                        "type": "category",
+                        "name": c.name_ar,
+                        "parent": c.parent.name_ar if c.parent else "",
+                        "category_id": c.id,
+                        "emoji": c.icon or "📂",
+                    })
 
             # items
             items = (
@@ -1161,41 +1524,47 @@ def search_suggestions(request):
             return JsonResponse({"results": results})
 
         except Exception:
-            pass  # trigram failed → use last fallback
+            pass
 
     # ============================================================
-    # 3️⃣ FINAL FALLBACK: simple icontains (never crashes)
+    # 3️⃣ FINAL FALLBACK: simple icontains
     # ============================================================
     categories = Category.objects.filter(
         Q(name_ar__icontains=query) | Q(name_en__icontains=query)
     )[:8]
 
     for c in categories:
-        results.append({
-            "type": "category",
-            "name": c.name_ar,
-            "parent": c.parent.name_ar if c.parent else "",
-            "category_id": c.id,
-            "emoji": "📂",
-        })
+        if c.id not in seen_categories:    # <<< FIX
+            seen_categories.add(c.id)
+            results.append({
+                "type": "category",
+                "name": c.name_ar,
+                "parent": c.parent.name_ar if c.parent else "",
+                "category_id": c.id,
+                "emoji": c.icon or "📂",
+            })
 
+    # ---- ITEMS MATCHING TITLE ----
     items = Item.objects.filter(
-        Q(title__icontains=query),
-        is_approved=True,
-        is_active=True
-    ).select_related("category").prefetch_related("photos")[:6]
+        Q(listing__title__icontains=query),
+        listing__is_approved=True,
+        listing__is_active=True
+    ).select_related("listing", "listing__category").prefetch_related("photos")[:6]
 
     for i in items:
-        photo = i.photos.first()
         results.append({
             "type": "item",
             "id": i.id,
-            "name": i.title,
-            "category": i.category.name_ar if i.category else "",
-            "photo_url": photo.image.url if photo else "",
+            "name": i.listing.title,
+            "category": i.listing.category.name_ar,
+            "city": i.listing.city.name_ar if i.listing.city else "",
+            "price": i.price,
+            "emoji": i.listing.category.icon or "🛒",
+            "photo_url": i.main_photo.image.url if i.main_photo else "",
         })
 
     return JsonResponse({"results": results})
+
 
 
 

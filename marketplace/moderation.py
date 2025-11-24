@@ -10,13 +10,22 @@ import traceback
 def moderate_item(item) -> Tuple[str, Optional[str]]:
     """
     Real moderation using OpenAI (text only).
-    - It checks title and description.
-    - Returns ("reject", reason) or ("manual", None).
+    FIXED VERSION:
+    - After Listing refactor, Item no longer has (title, description)
+    - Now uses item.listing.title and item.listing.description
     """
 
-    # Prepare text
-    title = item.title or ""
-    description = item.description or ""
+    # Listing may not exist if something failed earlier
+    listing = getattr(item, "listing", None)
+
+    if listing:
+        title = listing.title or ""
+        description = listing.description or ""
+    else:
+        # fallback to avoid crashes
+        title = ""
+        description = ""
+
     text = f"{title}\n{description}"
 
     # Connect to OpenAI client

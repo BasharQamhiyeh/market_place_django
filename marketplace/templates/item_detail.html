@@ -1,24 +1,31 @@
 {% extends 'base.html' %}
 {% load i18n humanize %}
 
-{% block title %}{{ item.title }}{% endblock %}
+{% block title %}{{ item.listing.title }}{% endblock %}
 
 {% block content %}
 <div class="grid grid-cols-1 gap-4">
 
   <div class="bg-white border border-gray-200 rounded-xl shadow">
     <div class="p-6">
-      <h3 class="text-2xl font-semibold mb-3">{{ item.title }}</h3>
 
+      <!-- TITLE -->
+      <h3 class="text-2xl font-semibold mb-3">{{ item.listing.title }}</h3>
+
+      <!-- CATEGORY + CITY -->
       <p class="text-gray-500 text-sm mb-3">
-        {% if item.category.parent %}
-          {{ item.category.parent }} › {{ item.category }}
+        {% if item.listing.category.parent %}
+          {{ item.listing.category.parent }} › {{ item.listing.category }}
         {% else %}
-          {{ item.category }}
+          {{ item.listing.category }}
         {% endif %}
-        {% if item.city %} • {{ item.city }}{% endif %}
+
+        {% if item.listing.city %}
+          • {{ item.listing.city }}
+        {% endif %}
       </p>
 
+      <!-- PHOTOS -->
       {% if item.photos.exists %}
         <div class="relative mb-4">
           <div class="overflow-hidden rounded-xl">
@@ -39,30 +46,44 @@
           {% endif %}
         </div>
       {% else %}
-        <div class="bg-gray-100 border text-gray-600 px-4 py-3 rounded">{% trans "No photos available." %}</div>
+        <div class="bg-gray-100 border text-gray-600 px-4 py-3 rounded">
+          {% trans "No photos available." %}
+        </div>
       {% endif %}
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+        <!-- LEFT INFO BOX -->
         <div>
           <ul class="divide-y border rounded-lg">
+
+            <!-- SELLER -->
             <li class="flex justify-between items-center px-4 py-2">
               <span class="font-semibold">{% trans "Seller" %}</span>
-              <a href="{% url 'user_profile' item.user.user_id %}"
-                 class="text-jordan hover:underline">{{ item.user.username }}</a>
+
+              {% if item.listing.user %}
+                  <a href="{% url 'user_profile' item.listing.user.user_id %}"
+                     class="text-jordan hover:underline">
+                      {{ item.listing.user.username }}
+                  </a>
+              {% else %}
+                  <span class="text-gray-400">{% trans "Unknown seller" %}</span>
+              {% endif %}
             </li>
 
+            <!-- CITY -->
             <li class="flex justify-between items-center px-4 py-2">
               <span class="font-semibold">{% trans "City" %}</span>
-              <span>{{ item.city|default:_("Not specified") }}</span>
+              <span>{{ item.listing.city|default:_("Not specified") }}</span>
             </li>
 
+            <!-- PHONE -->
             <li class="px-4 py-2">
               <span class="font-semibold">{% trans "Phone" %}: </span>
               {% if request.user.is_authenticated %}
                 <span id="seller-phone"
-                      data-phone="{{ item.user.phone|default_if_none:'' }}"
-                      data-show-phone="{{ item.user.show_phone|yesno:'true,false' }}"
+                      data-phone="{{ item.listing.user.phone|default_if_none:'' }}"
+                      data-show-phone="{{ item.listing.user.show_phone|yesno:'true,false' }}"
                       class="underline cursor-pointer text-jordan">
                   {% trans "Click to show phone" %}
                 </span>
@@ -73,16 +94,25 @@
               {% endif %}
             </li>
 
+            <!-- CATEGORY -->
             <li class="flex justify-between items-center px-4 py-2">
               <span class="font-semibold">{% trans "Category" %}</span>
-              <span>{{ item.category }}</span>
+              <span>{{ item.listing.category }}</span>
             </li>
 
+            <!-- CONDITION -->
             <li class="flex justify-between items-center px-4 py-2">
               <span class="font-semibold">{% trans "Condition" %}</span>
-              <span>{% if item.condition == 'new' %}{% trans "New" %}{% else %}{% trans "Used" %}{% endif %}</span>
+              <span>
+                {% if item.condition == 'new' %}
+                  {% trans "New" %}
+                {% else %}
+                  {% trans "Used" %}
+                {% endif %}
+              </span>
             </li>
 
+            <!-- PRICE -->
             <li class="flex justify-between items-center px-4 py-2">
               <span class="font-semibold">{% trans "Price" %}</span>
               <span class="px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full font-semibold">
@@ -90,6 +120,7 @@
               </span>
             </li>
 
+            <!-- DYNAMIC ATTRIBUTES -->
             {% for attr in attributes %}
               <li class="flex justify-between items-center px-4 py-2">
                 <span class="font-semibold">{{ attr.attribute }}</span>
@@ -99,54 +130,58 @@
           </ul>
         </div>
 
+        <!-- DESCRIPTION -->
         <div class="bg-gray-50 border rounded-xl p-4">
           <h6 class="font-semibold mb-2">{% trans "Description" %}</h6>
-          <div>{{ item.description|linebreaksbr }}</div>
+          <div>{{ item.listing.description|linebreaksbr }}</div>
         </div>
 
       </div>
 
       <hr class="my-4">
 
-      {% if not item.is_approved %}
+      <!-- APPROVAL / ACTIVE STATUS -->
+      {% if not item.listing.is_approved %}
         <div class="bg-yellow-100 text-yellow-800 px-4 py-3 rounded mb-2">
           {% trans "This announcement is pending admin approval and not visible to others." %}
         </div>
       {% endif %}
-      {% if not item.is_active %}
+      {% if not item.listing.is_active %}
         <div class="bg-red-100 text-red-800 px-4 py-3 rounded mb-2">
           {% trans "This announcement has expired and is no longer visible to others." %}
         </div>
       {% endif %}
 
+      <!-- TIME -->
       <p class="text-gray-500 text-sm mb-1">
         {% if LANGUAGE_CODE == 'ar' %}
-          {% trans "Posted before" %} {{ item.created_at|timesince|cut:"," }}
+          {% trans "Posted before" %} {{ item.listing.created_at|timesince|cut:"," }}
         {% else %}
-          {% trans "Posted" %} {{ item.created_at|timesince }} {% trans "ago" %}
+          {% trans "Posted" %} {{ item.listing.created_at|timesince }} {% trans "ago" %}
         {% endif %}
       </p>
 
       <p class="text-gray-500 text-sm mb-0">
-        <strong>{% trans "Last updated" %}:</strong> {{ item.updated_at|date:"Y-m-d H:i" }}
+        <strong>{% trans "Last updated" %}:</strong> {{ item.listing.updated_at|date:"Y-m-d H:i" }}
       </p>
     </div>
 
+    <!-- FOOTER BUTTONS -->
     <div class="px-6 py-3 bg-gray-50 rounded-b-xl flex flex-wrap gap-2">
-      {% if request.user == item.user %}
+      {% if request.user == item.listing.user %}
         <a href="{% url 'item_edit' item.id %}"
            class="px-4 py-2 bg-gray-700 text-white rounded hover:opacity-90">{% trans "Edit" %}</a>
 
         <a href="{% url 'cancel_item' item.id %}"
            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Delete" %}</a>
 
-        {% if not item.is_active %}
+        {% if not item.listing.is_active %}
           <a href="{% url 'reactivate_item' item.id %}"
              class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">{% trans "Reactivate" %}</a>
         {% endif %}
       {% endif %}
 
-      {% if request.user.is_authenticated and request.user != item.user and item.is_approved and item.is_active %}
+      {% if request.user.is_authenticated and request.user != item.listing.user and item.listing.is_approved and item.listing.is_active %}
         <a href="{% url 'start_conversation' item.id %}"
            class="px-4 py-2 bg-jordan text-white rounded hover:opacity-90">{% trans "Message Seller" %}</a>
 
@@ -169,6 +204,7 @@
     </div>
   </div>
 
+  <!-- SIMILAR ITEMS -->
   {% if similar_items %}
     <div class="bg-white border border-gray-200 rounded-xl shadow">
       <div class="px-5 py-3 border-b">
@@ -193,25 +229,26 @@
 
 {% block scripts %}
 {{ block.super }}
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const sp = document.getElementById("seller-phone");
-  if (!sp) return;
-  sp.addEventListener("click", function () {
-    const showPhone = sp.getAttribute("data-show-phone") === "true";
-    const phone = sp.getAttribute("data-phone") || "";
-    if (showPhone && phone) {
-      let display = phone;
-      if (phone.startsWith("9627") && phone.length === 12) display = "0" + phone.slice(3);
-      sp.textContent = display;
-    } else {
-      sp.textContent = "{{ _('Seller prefers to be contacted via messages') }}";
-    }
-    sp.classList.remove("underline");
-    sp.style.color = "inherit";
-    sp.style.cursor = "default";
-  });
+  if (sp) {
+    sp.addEventListener("click", function () {
+      const showPhone = sp.getAttribute("data-show-phone") === "true";
+      const phone = sp.getAttribute("data-phone") || "";
+      if (showPhone && phone) {
+        let display = phone;
+        if (phone.startsWith("9627") && phone.length === 12)
+          display = "0" + phone.slice(3);
+        sp.textContent = display;
+      } else {
+        sp.textContent = "{{ _('Seller prefers to be contacted via messages') }}";
+      }
+      sp.classList.remove("underline");
+      sp.style.color = "inherit";
+      sp.style.cursor = "default";
+    });
+  }
 
   const slides = document.querySelectorAll(".item-photo-slide");
   const indicators = document.querySelectorAll(".item-photo-indicator");
@@ -220,8 +257,8 @@ document.addEventListener("DOMContentLoaded", function () {
   function showSlide(i) {
     slides.forEach(s => s.classList.add("hidden"));
     slides[i].classList.remove("hidden");
-    indicators.forEach(ind => ind.classList.remove("ring-2", "ring-jordan"));
-    indicators[i].classList.add("ring-2", "ring-jordan");
+    indicators.forEach(ind => ind.classList.remove("ring-2","ring-jordan"));
+    indicators[i].classList.add("ring-2","ring-jordan");
     current = i;
   }
 
@@ -229,11 +266,14 @@ document.addEventListener("DOMContentLoaded", function () {
     ind.addEventListener("click", () => showSlide(parseInt(ind.dataset.index)));
   });
 
-  setInterval(() => {
-    current = (current + 1) % slides.length;
-    showSlide(current);
-  }, 4000);
+  if (slides.length > 1) {
+    setInterval(() => {
+      current = (current + 1) % slides.length;
+      showSlide(current);
+    }, 4000);
+  }
 });
 </script>
 {% endblock %}
+
 {% endblock %}

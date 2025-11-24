@@ -15,7 +15,7 @@ from .models import (
     Conversation, Message, Notification, Favorite,
     IssueReport, Subscriber, PhoneVerificationCode, User
 )
-from .documents import ItemDocument
+from .documents import ListingDocument
 from .utils.sms import send_sms_code
 from .utils.verification import send_code, verify_session_code
 
@@ -212,7 +212,10 @@ class CityViewSet(viewsets.ReadOnlyModelViewSet):
 # -------------------------
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = (
-        Item.objects.filter(is_approved=True, is_active=True)
+        Item.objects.filter(
+    listing__is_active=True,
+    listing__is_approved=True
+)
         .select_related("category","user","city")
         .prefetch_related("photos","attribute_values")
         .order_by("-created_at")

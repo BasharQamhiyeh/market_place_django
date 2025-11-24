@@ -1,0 +1,36 @@
+<!-- DEBUG: PARTIAL LOADED SUCCESSFULLY -->
+
+{% load form_extras %}
+
+{% for field in form %}
+  {% if field.name|slice:":5" == "attr_" and field.name|slice:"-6:" != "_other" %}
+    <div class="mb-4">
+      <label class="block font-semibold mb-2">{{ field.label }}</label>
+      {{ field }}
+
+      {% if field.errors %}
+        <p class="text-red-600 text-xs mt-1">{{ field.errors }}</p>
+      {% endif %}
+
+      {% with other_name=field.name|add:"_other" %}
+        {% if other_name in form.fields %}
+          {% with other_field=form|getitem:other_name %}
+
+            <!-- DEBUG: field.name={{ field.name }} field.value={{ field.value }} -->
+
+            {# ALWAYS RENDER _other, but hidden by default #}
+            <div class="mt-3 other-wrapper" style="display:none;">
+              <label class="block font-semibold mb-2">{{ other_field.label }}</label>
+              {{ other_field }}
+              {% if other_field.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ other_field.errors }}</p>
+              {% endif %}
+            </div>
+
+          {% endwith %}
+        {% endif %}
+      {% endwith %}
+
+    </div>
+  {% endif %}
+{% endfor %}

@@ -70,35 +70,62 @@
                 <span class="badge">{{ favorite_count }}</span>
               {% endif %}
             </button>
+
             <div id="favMenu" class="dropdown" aria-labelledby="favBtn">
               <div class="dropdown-header">المفضلة</div>
+
               <div class="dropdown-list">
+
                 {% for fav in recent_favorites %}
-                  {% with item=fav.item %}
-                    <a href="{% url 'item_detail' item.id %}" class="dropdown-item">
-                      <div class="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border flex-shrink-0">
-                        {% with photo=item.photos.first %}
-                          {% if photo %}
-                            <img src="{{ photo.image.url }}" alt="{{ item.title }}"
-                                 class="w-full h-full object-cover">
+                  {% with item=fav.listing.item request_obj=fav.listing.request %}
+
+                    {% if item %}
+                      <a href="{% url 'item_detail' item.id %}"
+                         class="dropdown-item border-r-4 border-[var(--rukn-orange)]">
+                    {% elif request_obj %}
+                      <a href="{% url 'request_detail' request_obj.id %}"
+                         class="dropdown-item border-r-4 border-[var(--rukn-green)]">
+                    {% endif %}
+
+                        <!-- THUMB -->
+                        <div class="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border flex-shrink-0">
+                          {% if item %}
+                            {% with photo=item.photos.first %}
+                              {% if photo %}
+                                <img src="{{ photo.image.url }}"
+                                     alt="{{ item.listing.title }}"
+                                     class="w-full h-full object-cover">
+                              {% else %}
+                                <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🖼️</div>
+                              {% endif %}
+                            {% endwith %}
                           {% else %}
-                            <div class="w-full h-full flex items-center justify-center
-                                        text-gray-400 text-xs">🖼️</div>
+                            <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🙋‍♂️</div>
                           {% endif %}
-                        {% endwith %}
-                      </div>
-                      <div>
-                        <div class="font-medium text-gray-900 truncate">{{ item.title }}</div>
-                        <div class="text-xs text-[var(--muted)]">{{ item.price }} د.أ</div>
-                      </div>
-                    </a>
+                        </div>
+
+                        <!-- TEXT INFO -->
+                        <div>
+                          {% if item %}
+                            <div class="font-medium text-gray-900 truncate">{{ item.listing.title }}</div>
+                            <div class="text-xs text-[var(--muted)]">{{ item.price }} د.أ</div>
+                          {% elif request_obj %}
+                            <div class="font-medium text-gray-900 truncate">{{ request_obj.listing.title }}</div>
+                            <div class="text-xs text-[var(--muted)]">طلب شراء</div>
+                          {% endif %}
+                        </div>
+
+                      </a>  {# ✔ PROPERLY CLOSED #}
+
                   {% endwith %}
                 {% empty %}
                   <div class="px-4 py-3 text-sm text-gray-500">
                     لا يوجد عناصر في المفضلة.
                   </div>
                 {% endfor %}
+
               </div>
+
               <div class="p-3 border-t">
                 <a href="{% url 'my_favorites' %}"
                    class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
@@ -118,51 +145,82 @@
                 <span class="badge">{{ unread_messages }}</span>
               {% endif %}
             </button>
+
             <div id="msgMenu" class="dropdown" aria-labelledby="msgBtn">
               <div class="dropdown-header">الرسائل</div>
+
               <div class="dropdown-list">
+
                 {% for msg in recent_messages %}
-                  <a href="{% url 'chat_room' msg.conversation.id %}"
-                     class="dropdown-item {% if not msg.is_read %}bg-orange-50{% endif %}">
-                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 text-orange-700
-                                flex items-center justify-center text-xs font-semibold">
-                      {{ msg.sender.username|first|upper }}
-                    </div>
-                    <div class="min-w-0">
-                      <div class="flex justify-between gap-2">
-                        <div class="font-medium text-gray-900 truncate">
-                          {{ msg.sender.username }}
+                  {% with listing=msg.conversation.listing item=listing.item req=listing.request %}
+
+                    <a href="{% url 'chat_room' msg.conversation.id %}"
+                       class="
+                         dropdown-item
+                         {% if item %} bg-orange-50 border-r-4 border-[var(--rukn-orange)] {% endif %}
+                         {% if req %} bg-green-50 border-r-4 border-[var(--rukn-green)] {% endif %}
+                         {% if not msg.is_read %} shadow-sm {% endif %}
+                       ">
+
+                      <!-- ICON CIRCLE -->
+                      <div class="
+                          flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold
+                          {% if item %} bg-orange-200 text-orange-800 {% endif %}
+                          {% if req %} bg-green-200 text-green-800 {% endif %}
+                      ">
+                        {{ msg.sender.username|first|upper }}
+                      </div>
+
+                      <!-- TEXT -->
+                      <div class="min-w-0">
+
+                        <div class="flex justify-between gap-2">
+                          <div class="font-medium text-gray-900 truncate">
+                            {{ msg.sender.username }}
+                          </div>
+                          <div class="text-xs text-[var(--muted)] whitespace-nowrap">
+                            {{ msg.created_at|timesince }} {% trans "ago" %}
+                          </div>
                         </div>
-                        <div class="text-xs text-[var(--muted)] whitespace-nowrap">
-                          {{ msg.created_at|timesince }} {% trans "ago" %}
+
+                        <div class="text-xs text-gray-600 truncate">
+                          {% if item %}
+                            {{ item.listing.title }}
+                          {% elif req %}
+                            {{ req.listing.title }}
+                          {% else %}
+                            {% trans "Conversation" %}
+                          {% endif %}
                         </div>
+
+                        <div class="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                          {{ msg.body }}
+                        </div>
+
                       </div>
-                      <div class="text-xs text-gray-600 truncate">
-                        {% if msg.conversation.item %}
-                          {{ msg.conversation.item.title }}
-                        {% else %}
-                          {% trans "Conversation" %}
-                        {% endif %}
-                      </div>
-                      <div class="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                        {{ msg.body }}
-                      </div>
-                    </div>
-                  </a>
+
+                    </a>
+
+                  {% endwith %}
                 {% empty %}
+
                   <div class="px-4 py-3 text-sm text-gray-500">
                     لا يوجد رسائل.
                   </div>
+
                 {% endfor %}
               </div>
+
               <div class="p-3 border-t">
                 <a href="{% url 'user_inbox' %}"
                    class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
                   فتح صندوق الرسائل
                 </a>
               </div>
+
             </div>
           </div>
+
 
           <!-- Notifications -->
           <div class="relative">
@@ -174,34 +232,82 @@
                 <span class="badge">{{ unread_notifications }}</span>
               {% endif %}
             </button>
+
             <div id="notiMenu" class="dropdown" aria-labelledby="notiBtn">
               <div class="dropdown-header">الإشعارات</div>
+
               <div class="dropdown-list">
                 {% for n in recent_notifications %}
-                  <div class="dropdown-item">
-                    <div class="flex-none w-10 h-10 rounded-full bg-green-50 text-green-600
-                                flex items-center justify-content-center">✔️</div>
-                    <div>
-                      <div class="font-medium text-gray-900">{{ n.title }}</div>
-                      <div class="text-xs text-[var(--muted)]">
-                        {{ n.created_at|timesince }} {% trans "ago" %}
+                  {% with listing=n.listing item=listing.item req=listing.request %}
+
+                    <a href="
+                      {% if item %}{% url 'item_detail' item.id %}
+                      {% elif req %}{% url 'request_detail' req.id %}
+                      {% endif %}
+                    "
+                    class="
+                      dropdown-item
+                      {% if item %} bg-orange-50 border-r-4 border-[var(--rukn-orange)] {% endif %}
+                      {% if req %} bg-green-50 border-r-4 border-[var(--rukn-green)] {% endif %}
+                      {% if not n.is_read %} shadow-sm {% endif %}
+                    ">
+
+                      <!-- ICON -->
+                      <div class="
+                        flex-none w-10 h-10 rounded-full flex items-center justify-center text-lg
+                        {% if item %} bg-orange-200 text-orange-700 {% endif %}
+                        {% if req %} bg-green-200 text-green-700 {% endif %}
+                      ">
+                        ✔️
                       </div>
-                    </div>
-                  </div>
+
+                      <!-- TEXT -->
+                      <div class="min-w-0">
+                        <div class="font-medium text-gray-900 truncate">
+                          {{ n.title }}
+                        </div>
+
+                        <div class="text-xs text-[var(--muted)]">
+                          {{ n.created_at|timesince }} {% trans "ago" %}
+                        </div>
+
+                        {% if n.body %}
+                        <div class="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                          {{ n.body }}
+                        </div>
+                        {% endif %}
+
+                        <div class="text-xs mt-1 font-semibold
+                          {% if item %} text-orange-700 {% endif %}
+                          {% if req %} text-green-700 {% endif %}
+                        ">
+                          {% if item %} إعلان: {{ item.listing.title }} {% endif %}
+                          {% if req %} طلب: {{ req.listing.title }} {% endif %}
+                        </div>
+                      </div>
+
+                    </a>
+
+                  {% endwith %}
                 {% empty %}
-                  <div class="px-4 py-3 text-sm text-gray-500">
-                    لا يوجد إشعارات.
-                  </div>
+
+                <div class="px-4 py-3 text-sm text-gray-500">
+                  لا يوجد إشعارات.
+                </div>
+
                 {% endfor %}
               </div>
+
               <div class="p-3 border-t">
                 <a href="{% url 'notifications' %}"
                    class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
                   كل الإشعارات
                 </a>
               </div>
+
             </div>
           </div>
+
 
           <!-- User Menu -->
           <div class="relative">

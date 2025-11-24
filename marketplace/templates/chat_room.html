@@ -1,44 +1,76 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}{{ conversation.item.title }}{% endblock %}
+{% block title %}
+  {% if item %}
+    {{ item.listing.title }}
+  {% elif request_obj %}
+    {{ request_obj.listing.title }}
+  {% else %}
+    Chat
+  {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="space-y-4">
 
   <div class="bg-white border border-gray-200 rounded-xl shadow">
+
+    <!-- HEADER -->
     <div class="bg-gray-800 text-white px-4 py-3 rounded-t-xl">
       <h5 class="text-lg font-semibold">
-        {% trans "Chat about" %} “{{ conversation.item.title }}”
+        {% if item %}
+          {% trans "Chat about" %} “{{ item.listing.title }}”
+        {% else %}
+          {% trans "Chat about request" %} “{{ request_obj.listing.title }}”
+        {% endif %}
       </h5>
     </div>
 
     <div class="p-4">
+
+      <!-- CHAT MESSAGES -->
       <div class="border border-gray-300 bg-gray-50 rounded-lg p-4 h-80 overflow-y-auto space-y-4">
 
         {% for msg in messages %}
-          <div class="pb-4 border-b border-gray-200">
+          <div class="p-3 rounded-lg border-b bg-[var(--rukn-orange-light)]
+                      border-l-4 border-[var(--rukn-orange)]">
+
             <div class="flex justify-between items-center">
               <strong>
-                <a href="{% url 'user_profile' msg.sender.user_id %}"
-                   class="text-jordan hover:underline">
-                  {{ msg.sender.username }}
-                </a>
+
+                {% if msg.sender and msg.sender.pk %}
+                  <!-- FIXED: safe sender profile link -->
+                  <a href="{% url 'user_profile' msg.sender.pk %}"
+                     class="text-jordan hover:underline">
+                    {{ msg.sender.username }}
+                  </a>
+                {% else %}
+                  <span class="text-gray-500">
+                    {% trans "Unknown user" %}
+                  </span>
+                {% endif %}
+
               </strong>
-              <small class="text-gray-500">{{ msg.created_at|date:"Y-m-d H:i" }}</small>
+
+              <small class="text-gray-500">
+                {{ msg.created_at|date:"Y-m-d H:i" }}
+              </small>
             </div>
+
             <p class="mt-2 text-gray-800">{{ msg.body }}</p>
           </div>
+
         {% empty %}
           <p class="text-gray-500">{% trans "No messages yet." %}</p>
         {% endfor %}
-
       </div>
 
+      <!-- SEND MESSAGE -->
       <form method="post" class="mt-4 space-y-2">
         {% csrf_token %}
-        <label for="body" class="font-semibold">{% trans "Message" %}</label>
-        <textarea id="body" name="body" rows="3"
+        <label class="font-semibold">{% trans "Message" %}</label>
+        <textarea name="body" rows="3"
                   class="w-full border border-gray-300 rounded-lg p-2"
                   placeholder="{% trans 'Write a message…' %}"></textarea>
 
@@ -50,12 +82,22 @@
         </div>
       </form>
 
+      <!-- BACK LINK -->
       <div class="mt-4">
-        <a href="{% url 'item_detail' conversation.item.id %}"
-           class="bg-orange-600 inline-block border border-jordan text-jordan px-4 py-2 rounded hover:bg-jordan hover:text-white transition">
-          {% trans "Back to announcement" %}
-        </a>
+        {% if item %}
+          <a href="{% url 'item_detail' item.id %}"
+             class="bg-orange-600 inline-block border border-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition">
+            {% trans "Back to announcement" %}
+          </a>
+
+        {% elif request_obj %}
+          <a href="{% url 'request_detail' request_obj.id %}"
+             class="bg-green-600 inline-block border border-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+            {% trans "Back to request" %}
+          </a>
+        {% endif %}
       </div>
+
     </div>
   </div>
 

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load i18n humanize %}
+
+{% block title %}{{ request_obj.listing.title }}{% endblock %}
+
+{% block content %}
+
+<div class="max-w-5xl mx-auto mt-10 mb-16 px-4">
+
+  <!-- ======================== HEADER ======================== -->
+  <header class="text-center mb-10">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-[#16a34a] mb-3">
+      {{ request_obj.listing.title }}
+    </h1>
+
+    <p class="text-gray-500 text-sm sm:text-base leading-relaxed">
+      تفاصيل هذا الطلب من المستخدمين الباحثين عن عروض مناسبة.
+    </p>
+  </header>
+
+  <!-- ======================== MAIN CARD ======================== -->
+  <div class="request-card bg-white border border-green-200 rounded-2xl shadow p-6 sm:p-8 mb-12">
+
+    <!-- ===== CATEGORY & CITY ===== -->
+    <p class="text-gray-500 text-sm mb-4">
+      {% if request_obj.listing.category.parent %}
+        {{ request_obj.listing.category.parent }} › {{ request_obj.listing.category }}
+      {% else %}
+        {{ request_obj.listing.category }}
+      {% endif %}
+
+      {% if request_obj.listing.city %}
+        • {{ request_obj.listing.city }}
+      {% endif %}
+    </p>
+
+    <!-- ===== DESCRIPTION ===== -->
+    <div class="bg-green-50 border border-green-100 rounded-xl p-4 mb-8">
+      <h3 class="font-semibold text-lg mb-2 text-green-800">{% trans "Description" %}</h3>
+      <p class="text-gray-700 leading-relaxed">{{ request_obj.listing.description|linebreaksbr }}</p>
+    </div>
+
+    <!-- ======================== INFO GRID ======================== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- LEFT INFO LIST -->
+      <div class="space-y-4">
+
+        <!-- BUDGET -->
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <span class="font-semibold text-gray-800 block mb-1">الميزانية المتوقعة</span>
+          {% if request_obj.budget %}
+            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
+              {{ request_obj.budget }} د.أ
+            </span>
+          {% else %}
+            <span class="text-gray-400">غير محددة</span>
+          {% endif %}
+        </div>
+
+        <!-- CONDITION -->
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <span class="font-semibold text-gray-800 block mb-1">الحالة المطلوبة</span>
+          <span class="text-gray-700">
+            {% if request_obj.condition_preference == "new" %}
+              جديد
+            {% elif request_obj.condition_preference == "used" %}
+              مستعمل
+            {% else %}
+              أي حالة
+            {% endif %}
+          </span>
+        </div>
+
+        <!-- SHOW PHONE -->
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <span class="font-semibold text-gray-800 block mb-1">رقم الهاتف</span>
+
+          {% if request_obj.show_phone %}
+            {% if request.user.is_authenticated %}
+              <span class="text-green-700 underline cursor-pointer"
+                    id="buyer-phone"
+                    data-phone="{{ request_obj.listing.user.phone }}">
+                اضغط لإظهار الرقم
+              </span>
+            {% else %}
+              <a href="{% url 'login' %}?next={{ request.path }}"
+                 class="underline text-green-600">سجّل دخولك لرؤية الرقم</a>
+            {% endif %}
+          {% else %}
+            <span class="text-gray-400">يفضّل التواصل عبر الرسائل</span>
+          {% endif %}
+        </div>
+
+        <!-- DYNAMIC ATTRIBUTES -->
+        {% if attributes %}
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+          <span class="font-semibold text-gray-800 block mb-2">خصائص إضافية</span>
+
+          <ul class="space-y-1">
+            {% for attr in attributes %}
+              <li class="flex justify-between">
+                <span class="font-medium text-gray-700">{{ attr.attribute }}</span>
+                <span class="text-gray-600">{{ attr.value }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+      </div>
+
+      <!-- RIGHT CONTACT CARD -->
+      <div class="bg-green-50 border border-green-200 rounded-xl p-5 shadow-sm">
+
+        <h4 class="font-bold text-green-800 text-lg mb-2">معلومات مقدم الطلب</h4>
+
+        <div class="mb-3">
+          <span class="font-semibold text-gray-800">الاسم:</span>
+          <span>{{ request_obj.listing.user.username }}</span>
+        </div>
+
+        <div class="mb-6">
+          <span class="font-semibold text-gray-800">المدينة:</span>
+          <span>{{ request_obj.listing.city|default:"غير محددة" }}</span>
+        </div>
+
+        {% if request.user.is_authenticated and request.user != request_obj.listing.user %}
+          <a href="{% url 'start_conversation_request' request_obj.id %}"
+             class="block w-full text-center bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition">
+            تواصل مع مقدم الطلب
+          </a>
+        {% else %}
+          <div class="text-gray-500 text-sm">
+            لا يمكنك مراسلة نفسك.
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- ======================== STATUS ======================== -->
+    <hr class="my-8">
+
+    {% if not request_obj.listing.is_approved %}
+      <div class="bg-yellow-100 text-yellow-800 px-4 py-3 rounded mb-3">
+        هذا الطلب قيد المراجعة وغير ظاهر للجميع.
+      </div>
+    {% endif %}
+
+    {% if not request_obj.listing.is_active %}
+      <div class="bg-red-100 text-red-800 px-4 py-3 rounded mb-3">
+        هذا الطلب غير نشط حاليًا.
+      </div>
+    {% endif %}
+
+    <p class="text-gray-500 text-sm">
+      تم النشر قبل {{ request_obj.listing.created_at|timesince|cut:"," }}
+    </p>
+    <p class="text-gray-500 text-sm">
+      آخر تحديث: {{ request_obj.listing.updated_at|date:"Y-m-d H:i" }}
+    </p>
+
+  </div>
+
+  <!-- ======================== SIMILAR REQUESTS ======================== -->
+  <div class="bg-white border border-gray-200 rounded-xl shadow">
+    <div class="px-6 py-4 border-b">
+      <h5 class="text-lg font-semibold text-gray-800">طلبات مشابهة</h5>
+    </div>
+    <div class="p-6">
+      {% if similar_requests %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for r in similar_requests %}
+            {% include "partials/_request_card.html" with request_obj=r %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-gray-500 text-center">لا توجد طلبات مشابهة حاليًا.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <a href="{% url 'home' %}"
+     class="inline-block mt-6 px-6 py-3 text-green-700 border border-green-700 rounded-lg hover:bg-green-700 hover:text-white transition">
+    العودة للصفحة الرئيسية
+  </a>
+
+</div>
+
+
+{% block scripts %}
+{{ block.super }}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const phone = document.getElementById("buyer-phone");
+  if (phone) {
+    phone.addEventListener("click", function () {
+      const number = phone.getAttribute("data-phone") || "";
+      let display = number;
+      if (number.startsWith("9627") && number.length === 12) {
+        display = "0" + number.slice(3);
+      }
+      phone.textContent = display || "غير متوفر";
+      phone.classList.remove("underline");
+      phone.style.cursor = "default";
+      phone.style.color = "inherit";
+    });
+  }
+});
+</script>
+
+{% endblock %}
+
+{% endblock %}

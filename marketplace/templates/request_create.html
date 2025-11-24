@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% load static i18n form_extras %}
+
+{% block title %}إضافة طلب شراء{% endblock %}
+
+{% block base_css %}
+<style>
+  :root {
+    --rukn-green: #16a34a;
+    --rk-muted: #6b7280;
+  }
+
+  body {
+    background: linear-gradient(to bottom, #f0fdf4, #ffffff);
+  }
+
+  .request-card {
+    background: #fff;
+    border: 1px solid #bbf7d0;
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+  }
+
+  .rk-input {
+    border: 2px solid var(--rukn-green);
+    border-radius: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    width: 100%;
+  }
+
+  .rk-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px #86efac;
+  }
+
+  .rk-btn {
+    background: var(--rukn-green);
+    color: white;
+    border-radius: 9999px;
+    padding: 0.85rem 2.2rem;
+    font-weight: 700;
+    transition: 0.25s;
+  }
+
+  .rk-btn:hover {
+    transform: scale(1.05);
+  }
+
+  .condition-box button {
+    flex: 1;
+    padding: 0.75rem;
+    font-weight: 700;
+    transition: .25s;
+  }
+
+  .condition-active {
+    background: var(--rukn-green);
+    color: white !important;
+  }
+
+  .condition-inactive {
+    background: white;
+    color: var(--rk-muted);
+  }
+
+  .cat-block {
+    padding: 1rem;
+    border: 1px solid #d1fae5;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+    background: #f8fff9;
+  }
+
+  /* ⭐⭐⭐ VERY IMPORTANT: CATEGORY DROPDOWN BEHAVIOR (from item_create) ⭐⭐⭐ */
+
+  /* Hide dropdown by default */
+  .category-dropdown {
+    display: none;
+  }
+
+  /* When JS adds .open → show dropdown */
+  .category-level-block.open .category-dropdown {
+    display: block;
+  }
+
+  /* Green theme override */
+  .category-level-block input {
+    border-color: var(--rukn-green) !important;
+  }
+
+  .category-dropdown {
+    border-color: var(--rukn-green) !important;
+  }
+
+  .category-dropdown li:hover {
+    background-color: #ecfdf5 !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="max-w-4xl mx-auto mt-10 mb-16 px-4">
+
+  <!-- HEADER -->
+  <header class="text-center mb-10">
+    <h1 class="text-4xl font-extrabold text-[var(--rukn-green)] mb-3">
+      إضافة طلب شراء جديد
+    </h1>
+    <p class="text-[var(--rk-muted)] text-sm sm:text-base leading-relaxed">
+      لم تجد المنتج الذي تبحث عنه؟ قدّم طلب شراء وسيتواصل معك البائعون بعروضهم المناسبة.
+    </p>
+  </header>
+
+  <!-- FORM -->
+  <form method="POST" enctype="multipart/form-data" class="request-card p-6 sm:p-8 space-y-8">
+    {% csrf_token %}
+
+    <!-- TITLE -->
+    <div>
+      <label class="block font-semibold mb-2">اسم المنتج المطلوب</label>
+      <div class="rk-input">{{ form.title }}</div>
+      {% if form.title.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- CATEGORY -->
+    <div>
+      <label class="block font-semibold mb-2">القسم</label>
+
+      <div id="category-levels" class="flex flex-col gap-4"></div>
+
+      <input type="hidden"
+             name="category"
+             id="id_category_final"
+             value="{% if selected_category %}{{ selected_category.id }}{% endif %}">
+
+      {% if form.category.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.category.errors }}</p>
+      {% endif %}
+
+      <script id="category-tree-data" type="application/json">
+        {{ category_tree_json|default:"[]"|safe }}
+      </script>
+
+      <script id="selected-category-path" type="application/json">
+        {{ selected_category_path_json|default:"[]"|safe }}
+      </script>
+    </div>
+
+    <!-- ATTRIBUTES -->
+    <div id="attribute-fields"
+         data-url-template="{% url 'item_attributes_partial' 0 %}">
+      {% if selected_category %}
+        {% for field in form %}
+          {% if field.name|slice:":5" == "attr_" %}
+            <div class="mb-4">
+              <label class="block font-semibold mb-2">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ field.errors }}</p>
+              {% endif %}
+
+              {% with other_name=field.name|add:"_other" %}
+                {% if other_name in form.fields %}
+                  {% with other_field=form|getitem:other_name %}
+                    <div class="mt-3">
+                      <label class="block font-semibold mb-2">{{ other_field.label }}</label>
+                      {{ other_field }}
+                      {% if other_field.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ other_field.errors }}</p>
+                      {% endif %}
+                    </div>
+                  {% endwith %}
+                {% endif %}
+              {% endwith %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div>
+      <label class="block font-semibold mb-2">وصف الطلب</label>
+      <div class="rk-input">{{ form.description }}</div>
+      {% if form.description.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- PRICE -->
+    <div>
+      <label class="block font-semibold mb-2">الميزانية الأعلى (د.أ)</label>
+      <div class="rk-input">{{ form.budget }}</div>
+      {% if form.budget.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.budget.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- CITY -->
+    <div>
+      <label class="block font-semibold mb-2">المدينة</label>
+      <div class="rk-input">{{ form.city }}</div>
+      {% if form.city.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.city.errors.0 }}</p>
+      {% endif %}
+    </div>
+
+    <!-- CONDITION -->
+    <div>
+      <label class="block font-semibold mb-2">الحالة المطلوبة</label>
+
+      <div class="condition-box flex border border-gray-200 rounded-2xl overflow-hidden w-full sm:w-80 shadow bg-white">
+        {% for radio in form.condition_preference %}
+          <button type="button"
+                  data-value="{{ radio.data.value }}"
+                  class="condition-inactive text-sm">
+            {{ radio.choice_label }}
+          </button>
+        {% endfor %}
+      </div>
+
+      <div class="hidden">
+        {{ form.condition_preference }}
+      </div>
+    </div>
+
+    <!-- SHOW PHONE -->
+    <div>
+      <label class="flex items-center gap-3 cursor-pointer select-none">
+        {{ form.show_phone }}
+        <span class="font-semibold text-gray-700">إظهار رقم الهاتف للبائعين</span>
+      </label>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="text-center pt-4">
+      <button type="submit" class="rk-btn w-full sm:w-auto">
+        إرسال الطلب
+      </button>
+    </div>
+
+  </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'js/category_selector.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  // INIT CATEGORY SELECTOR
+  const treeScript = document.getElementById("category-tree-data");
+  const pathScript = document.getElementById("selected-category-path");
+  const container = document.getElementById("category-levels");
+  const hiddenInput = document.getElementById("id_category_final");
+
+  let tree = [];
+  let selected = [];
+
+  try { tree = JSON.parse(treeScript.textContent); } catch {}
+  try { selected = JSON.parse(pathScript.textContent); } catch {}
+
+  if (window.initCategorySelector) {
+    window.initCategorySelector({
+      container: container,
+      tree: tree,
+      selectedPath: selected,
+      hiddenInput: hiddenInput
+    });
+  }
+
+  // HTMX Reload attributes
+  const attrDiv = document.getElementById("attribute-fields");
+  if (hiddenInput && attrDiv) {
+    hiddenInput.addEventListener("change", () => {
+      const url = attrDiv.dataset.urlTemplate.replace("0", hiddenInput.value);
+      htmx.ajax("GET", url, attrDiv);
+    });
+  }
+
+  // CONDITION LOGIC
+  const btns = document.querySelectorAll(".condition-box button");
+  const radios = document.querySelectorAll("input[name='condition_preference']");
+
+  btns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const val = btn.dataset.value;
+
+      btns.forEach(b => b.classList.remove("condition-active"));
+      btns.forEach(b => b.classList.add("condition-inactive"));
+
+      btn.classList.add("condition-active");
+
+      radios.forEach(r => r.checked = (r.value === val));
+    });
+  });
+
+});
+</script>
+{% endblock %}

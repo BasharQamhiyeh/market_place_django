@@ -88,6 +88,20 @@ if (input && button && buyBtn && sellBtn && addAdBtn && intentBox) {
     addAdBtn.style.backgroundColor = color;
     addAdBtn.textContent = btnText;
 
+    // Change button link
+    addAdBtn.href = isBuy
+      ? "/ar/request/create/"     // request
+      : "/ar/item/create/";       // item
+
+    // Change search form action (items vs requests)
+    const form = document.getElementById("siteSearch");
+    if (form) {
+        form.action = isBuy
+          ? "/ar/requests/"   // request search page
+          : "/ar/items/";     // item search page
+    }
+
+
     // Enable search only when text exists
     button.disabled = !hasText;
     button.style.opacity = hasText ? "1" : "0.5";

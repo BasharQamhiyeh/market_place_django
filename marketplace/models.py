@@ -2,10 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.utils import timezone
+from datetime import timedelta
+import uuid
 
-# -----------------------
-# Custom User
-# -----------------------
+# ======================================================
+# USER
+# ======================================================
+
 class UserManager(BaseUserManager):
     def create_user(self, phone, username, password=None, email=None):
         if not phone:
@@ -23,10 +27,6 @@ class UserManager(BaseUserManager):
         return user
 
 
-import uuid
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-
 class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=100, unique=True)
@@ -35,20 +35,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
 
-    show_phone = models.BooleanField(
-        default=True,
-        help_text="If true, your phone number will be visible to other users."
-    )
+    show_phone = models.BooleanField(default=True)
 
-    # NEW FIELDS
     referral_code = models.CharField(max_length=12, unique=True, blank=True, null=True)
-    referred_by = models.ForeignKey(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="referrals"
-    )
+    referred_by = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL, related_name="referrals")
     points = models.IntegerField(default=0)
 
     is_active = models.BooleanField(default=True)
@@ -65,59 +55,33 @@ class User(AbstractBaseUser, PermissionsMixin):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.username} ({self.first_name or ''} {self.last_name or ''})".strip()
+        return f"{self.username}"
 
 
+# ======================================================
+# CATEGORY + ATTRIBUTE MODEL SYSTEM
+# ======================================================
 
-# -----------------------
-# Categories and Attributes
-# -----------------------
 class Category(models.Model):
     name_en = models.CharField(max_length=255, unique=True)
     name_ar = models.CharField(max_length=255, unique=True)
     subtitle_en = models.CharField(max_length=255, blank=True, null=True)
     subtitle_ar = models.CharField(max_length=255, blank=True, null=True)
-    icon = models.CharField(
-        max_length=50,  # 👈 IMPORTANT: keep it 50 (NOT 10)
-        blank=True,
-        null=True,
-        help_text="Choose an emoji icon for this category"
-    )
-
-    # 🧩 Icon color (text field — admin can pick or type a color)
-    color = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True,
-        help_text="Emoji color (optional)"
-    )
+    icon = models.CharField(max_length=50, blank=True, null=True)
+    color = models.CharField(max_length=20, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    parent = models.ForeignKey(
-        "self",
-        on_delete=models.CASCADE,
-        related_name="subcategories",
-        null=True,
-        blank=True
-    )
+    parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="subcategories", null=True, blank=True)
 
     def __str__(self):
         from django.utils import translation
-        lang = translation.get_language()
-        return self.name_ar if lang == 'ar' else self.name_en
+        return self.name_ar if translation.get_language() == 'ar' else self.name_en
 
     class Meta:
         verbose_name_plural = "Categories"
 
 
-
-
 class Attribute(models.Model):
-    INPUT_TYPE_CHOICES = [
-        ('text', 'Text'),
-        ('number', 'Number'),
-        ('select', 'Select'),
-    ]
-
+    INPUT_TYPE_CHOICES = [('text', 'Text'), ('number', 'Number'), ('select', 'Select')]
     UI_TYPE_CHOICES = [
         ('dropdown', 'Dropdown'),
         ('radio', 'Radio Buttons'),
@@ -129,15 +93,13 @@ class Attribute(models.Model):
     name_en = models.CharField(max_length=255)
     name_ar = models.CharField(max_length=255)
     input_type = models.CharField(max_length=50, choices=INPUT_TYPE_CHOICES, default='text')
-    ui_type = models.CharField(max_length=50, choices=UI_TYPE_CHOICES, default='dropdown')  # NEW
+    ui_type = models.CharField(max_length=50, choices=UI_TYPE_CHOICES, default='dropdown')
     is_required = models.BooleanField(default=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="attributes")
 
     def __str__(self):
         from django.utils import translation
-        lang = translation.get_language()
-        return self.name_ar if lang == 'ar' else self.name_en
-
+        return self.name_ar if translation.get_language() == 'ar' else self.name_en
 
 
 class AttributeOption(models.Model):
@@ -147,60 +109,77 @@ class AttributeOption(models.Model):
 
     def __str__(self):
         from django.utils import translation
-        lang = translation.get_language()
-        return self.value_ar if lang == 'ar' else self.value_en
+        return self.value_ar if translation.get_language() == 'ar' else self.value_en
 
 
+# ======================================================
+# LISTING (Parent for ITEM + REQUEST)
+# ======================================================
 
-# -----------------------
-# Items and related tables
-# -----------------------
-class Item(models.Model):
-    CONDITION_CHOICES = [
-        ('new', 'New'),
-        ('used', 'Used'),
+class Listing(models.Model):
+    TYPE_CHOICES = [
+        ('item', 'Item'),
+        ('request', 'Request'),
     ]
 
-    title = models.TextField()
-    category = models.ForeignKey('Category', on_delete=models.CASCADE, related_name='items')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
+
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="listings")
+    city = models.ForeignKey('City', on_delete=models.SET_NULL, null=True, related_name="listings")
+
+    title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    price = models.FloatField()
+
+    is_active = models.BooleanField(default=True)
+    is_approved = models.BooleanField(default=True)    # same moderation workflow
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    city = models.ForeignKey('City', on_delete=models.SET_NULL, null=True, blank=True, related_name='items')
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='items')
+
+    approved_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="approved_listings"
+    )
+    rejected_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="rejected_listings"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
+
+    auto_rejected = models.BooleanField(default=False)
+    moderation_reason = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.type})"
+
+
+# ======================================================
+# ITEM (child of Listing)
+# ======================================================
+
+class Item(models.Model):
+    CONDITION_CHOICES = [('new', 'New'), ('used', 'Used')]
+
+    listing = models.OneToOneField(Listing, on_delete=models.CASCADE, related_name="item")
+
+    price = models.FloatField()
+    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
 
     sold_on_site = models.BooleanField(null=True, blank=True)
     cancel_reason = models.CharField(max_length=255, blank=True, null=True)
 
-    # moderation/state
-    is_approved = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    was_edited = models.BooleanField(default=False)
-
-    # ✅ NEW
-    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
-
-    # ✅ NEW: external id coming from Excel sheet (used to match photos in later ZIP uploads)
     external_id = models.CharField(max_length=64, null=True, blank=True, unique=True, db_index=True)
 
-    # ✅ NEW: track who approved/rejected (+ optional timestamps)
-    approved_by = models.ForeignKey('User', null=True, blank=True, on_delete=models.SET_NULL, related_name='approved_items')
-    rejected_by = models.ForeignKey('User', null=True, blank=True, on_delete=models.SET_NULL, related_name='rejected_items')
-    approved_at = models.DateTimeField(null=True, blank=True)
-    rejected_at = models.DateTimeField(null=True, blank=True)
-
-    auto_rejected = models.BooleanField(default=False)  # True if AI did the rejection
-    moderation_reason = models.TextField(blank=True, null=True)  # why AI rejected it
+    auto_rejected = models.BooleanField(default=False)
+    moderation_reason = models.TextField(blank=True, null=True)
 
     @property
     def main_photo(self):
-        """Return the preferred (is_main) photo, or first one."""
-        return self.photos.filter(is_main=True).first() or self.photos.first()
+        main = self.photos.filter(is_main=True).first()
+        return main or self.photos.order_by('id').first()
+
 
     def __str__(self):
-        return self.title
-
+        return self.listing.title
 
 
 class ItemPhoto(models.Model):
@@ -210,7 +189,7 @@ class ItemPhoto(models.Model):
     is_main = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Photo for {self.item.title}"
+        return f"Photo for {self.item.listing.title}"
 
 
 class ItemAttributeValue(models.Model):
@@ -219,52 +198,42 @@ class ItemAttributeValue(models.Model):
     value = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"{self.attribute.name_en}/{self.attribute.name_ar}: {self.value}"
-
-    # TODO: see why chatgpt changed it to this ?
-    # def __str__(self):
-    #     # safe label
-    #     try:
-    #         from django.utils import translation
-    #         return f"{self.attribute.name_ar if translation.get_language() == 'ar' else self.attribute.name_en}: {self.value}"
-    #     except Exception:
-    #         return f"{self.attribute_id}: {self.value}"
+        return f"{self.attribute}: {self.value}"
 
 
+# ======================================================
+# REQUEST (child of Listing)
+# ======================================================
 
-class Conversation(models.Model):
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="conversations")
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="buyer_conversations")
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="seller_conversations")
-    created_at = models.DateTimeField(auto_now_add=True)
+class Request(models.Model):
+    CONDITION_CHOICES = [
+        ("any", "أي حالة"),
+        ("new", "جديد"),
+        ("used", "مستعمل"),
+    ]
 
-    def __str__(self):
-        return f"Conversation on {self.item.title} between {self.buyer} and {self.seller}"
+    listing = models.OneToOneField(Listing, on_delete=models.CASCADE, related_name="request")
 
-
-class Message(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    body = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)  # 👈 add this field
-
+    budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    condition_preference = models.CharField(max_length=10, choices=CONDITION_CHOICES, default="any")
+    show_phone = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"From {self.sender}: {self.body[:20]}"
+        return self.listing.title
 
 
-class Notification(models.Model):
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='notifications')
-    title = models.CharField(max_length=255)
-    body = models.TextField(blank=True)
-    item = models.ForeignKey('Item', on_delete=models.CASCADE, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
+class RequestAttributeValue(models.Model):
+    request = models.ForeignKey(Request, on_delete=models.CASCADE, related_name="attribute_values")
+    attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+    value = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.user} - {self.title}"
+        return f"{self.attribute} = {self.value or '(no preference)'}"
 
+
+# ======================================================
+# CITY
+# ======================================================
 
 class City(models.Model):
     name_en = models.CharField(max_length=150, unique=True)
@@ -277,51 +246,74 @@ class City(models.Model):
 
     def __str__(self):
         from django.utils import translation
-        lang = translation.get_language()
-        return self.name_ar if lang == "ar" else self.name_en
+        return self.name_ar if translation.get_language() == "ar" else self.name_en
 
 
-# -----------------------
-# Favorites (Wishlist)
-# -----------------------
+# ======================================================
+# CONVERSATION / MESSAGE (now linked to Listing)
+# ======================================================
+
+class Conversation(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="conversations")
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="buyer_conversations")
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="seller_conversations")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Conversation on {self.listing.title}"
+
+
+class Message(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.sender}: {self.body[:20]}"
+
+
+# ======================================================
+# FAVORITES (now linked to Listing)
+# ======================================================
+
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorites")
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="favorited_by")
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="favorited_by")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("user", "item")
+        unique_together = ("user", "listing")
         indexes = [
-            models.Index(fields=["user", "item"]),
+            models.Index(fields=["user", "listing"]),
             models.Index(fields=["created_at"]),
         ]
 
     def __str__(self):
-        return f"{self.user.username} → {self.item.title}"
+        return f"{self.user.username} → {self.listing.title}"
 
 
-from datetime import timedelta, datetime
-from django.utils import timezone
+# ======================================================
+# NOTIFICATIONS (now linked to Listing)
+# ======================================================
 
-class PhoneVerificationCode(models.Model):
-    PURPOSE_CHOICES = [
-        ('verify', 'Phone Verification'),
-        ('reset', 'Password Reset'),
-    ]
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='verification_codes')
-    code = models.CharField(max_length=6)
-    purpose = models.CharField(max_length=10, choices=PURPOSE_CHOICES)
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    body = models.TextField(blank=True)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def is_valid(self):
-        """Code is valid for 10 minutes."""
-        return timezone.now() < self.created_at + timedelta(minutes=10)
+    is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.phone} → {self.code} ({self.purpose})"
+        return f"{self.user} - {self.title}"
 
 
-# models.py
+# ======================================================
+# SUBSCRIBER / ISSUE REPORT / VERIFICATION
+# ======================================================
+
 class Subscriber(models.Model):
     email = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
@@ -332,10 +324,24 @@ class Subscriber(models.Model):
 
 class IssueReport(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, null=True, blank=True)
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, null=True, blank=True)
     message = models.TextField()
     status = models.CharField(max_length=20, choices=[("open", "Open"), ("resolved", "Resolved")], default="open")
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class PhoneVerificationCode(models.Model):
+    PURPOSE_CHOICES = [
+        ('verify', 'Phone Verification'),
+        ('reset', 'Password Reset'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_codes')
+    code = models.CharField(max_length=6)
+    purpose = models.CharField(max_length=10, choices=PURPOSE_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        return timezone.now() < self.created_at + timedelta(minutes=10)
 
 
 class PhoneVerification(models.Model):
@@ -359,18 +365,14 @@ class MobileVerification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_valid(self):
-        """Code is valid for 5 minutes"""
         return self.created_at >= timezone.now() - timedelta(minutes=5)
 
-    def __str__(self):
-        return f"{self.phone} ({self.purpose})"
 
+# ======================================================
+# DELETE FILES FOR ITEM PHOTOS
+# ======================================================
 
 @receiver(post_delete, sender=ItemPhoto)
 def delete_itemphoto_file(sender, instance, **kwargs):
-    """
-    Delete image file from storage (local or Cloudinary) when ItemPhoto is deleted.
-    This runs automatically after an Item or ItemPhoto is deleted.
-    """
     if instance.image:
         instance.image.delete(save=False)

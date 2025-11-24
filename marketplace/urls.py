@@ -15,7 +15,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('items/', views.item_list, name='item_list'),
     path('item/<int:item_id>/', views.item_detail, name='item_detail'),
-    path('create/', views.item_create, name='create_item'),
+    path('item/create/', views.item_create, name='create_item'),
 
     # --- Categories & Attributes ---
     path('categories/', views.category_list, name='category_list'),
@@ -26,6 +26,7 @@ urlpatterns = [
     path('messages/<int:item_id>/', views.start_conversation, name='start_conversation'),
     path('chat/<int:conversation_id>/', views.chat_room, name='chat_room'),
     path('inbox/', views.user_inbox, name='user_inbox'),
+    path("request/<int:request_id>/message/", views.start_conversation_request, name="start_conversation_request"),
 
     # --- Item Management ---
     path('item/edit/<int:item_id>/', views.item_edit, name='item_edit'),
@@ -65,7 +66,15 @@ urlpatterns = [
 
     path('item/<int:item_id>/report/', views.report_issue, name='report_issue'),
 
-    path('api/', include('marketplace.api_urls')),
+    path("items/attributes/<int:category_id>/", views.item_attributes_partial, name="item_attributes_partial"),
+
+    # REQUEST CREATION + LISTING + DETAIL
+    path("request/create/", views.request_create, name="create_request"),
+    path("requests/", views.request_list, name="request_list"),
+    path("request/<int:request_id>/", views.request_detail, name="request_detail"),
+
+
+    # path('api/', include('marketplace.api_urls')),
 ]
 
 # ✅ Static & media for local dev

@@ -4,41 +4,81 @@
 {% block title %}{% trans "Notifications" %}{% endblock %}
 
 {% block content %}
+
 <div class="bg-white border border-gray-200 rounded-xl shadow">
 
+  <!-- HEADER -->
   <div class="bg-gray-900 text-white px-5 py-3 rounded-t-xl">
     <h5 class="text-lg font-semibold mb-0">{% trans "Notifications" %}</h5>
   </div>
 
   <div class="p-6">
+
     {% if notifications %}
       <div class="space-y-3">
-        {% for n in notifications %}
-          <div class="rounded-lg border p-4
-            {% if not n.is_read %}bg-gray-100{% else %}bg-white{% endif %}">
 
-            <div class="flex justify-between mb-1">
-              <h6 class="text-base font-semibold">{{ n.title }}</h6>
-              <small class="text-gray-500">{{ n.created_at }}</small>
+        {% for n in notifications %}
+          {% with listing=n.listing %}
+
+            <!-- ============================
+                 NOTIFICATION WRAPPER + COLOR
+                 ============================ -->
+            <div class="
+                rounded-lg border p-4
+                {% if listing %}
+                    {% if listing.type == 'item' %}
+                        border-[var(--rukn-orange)] bg-[var(--rukn-orange-light)]
+                    {% elif listing.type == 'request' %}
+                        border-[var(--rukn-green)] bg-[var(--rukn-green-50)]
+                    {% else %}
+                        border-gray-200 bg-white
+                    {% endif %}
+                {% else %}
+                    border-gray-200 bg-white
+                {% endif %}
+                {% if not n.is_read %} ring-2 ring-yellow-300 {% endif %}
+            ">
+
+              <!-- TITLE + DATE -->
+              <div class="flex justify-between mb-1">
+                <h6 class="text-base font-semibold">{{ n.title }}</h6>
+                <small class="text-gray-600">{{ n.created_at|date:"Y-m-d H:i" }}</small>
+              </div>
+
+              <!-- BODY -->
+              <p class="text-gray-800 mb-3">{{ n.body }}</p>
+
+              <!-- BUTTONS -->
+              {% if listing %}
+                {% if listing.type == "item" %}
+                  {% if request.user.is_staff %}
+                    <a href="/admin/marketplace/item/{{ listing.item.id }}/change/"
+                       class="px-3 py-1.5 text-sm rounded border border-jordan text-jordan hover:bg-jordan hover:text-white">
+                      {% trans "Review Item" %}
+                    </a>
+                  {% else %}
+                    <a href="{% url 'item_detail' listing.item.id %}"
+                       class="px-3 py-1.5 text-sm rounded border border-jordan text-jordan hover:bg-jordan hover:text-white">
+                      {% trans "View Item" %}
+                    </a>
+                  {% endif %}
+
+                {% elif listing.type == "request" %}
+
+                  <a href="{% url 'request_detail' listing.request.id %}"
+                     class="px-3 py-1.5 text-sm rounded border border-[var(--rukn-green)] text-[var(--rukn-green)] hover:bg-green-50">
+                    {% trans "View Request" %}
+                  </a>
+
+                {% endif %}
+
+              {% endif %}
+
             </div>
 
-            <p class="text-gray-700 mb-3">{{ n.body }}</p>
-
-            {% if n.item_id %}
-              {% if request.user.is_staff %}
-                <a href="{% url 'admin:marketplace_item_change' n.item_id %}"
-                   class="px-3 py-1.5 text-sm border border-jordan text-jordan rounded hover:bg-jordan hover:text-white">
-                  {% trans "Review Item" %}
-                </a>
-              {% else %}
-                <a href="{% url 'item_detail' n.item_id %}"
-                   class="px-3 py-1.5 text-sm border border-jordan text-jordan rounded hover:bg-jordan hover:text-white">
-                  {% trans "View Item" %}
-                </a>
-              {% endif %}
-            {% endif %}
-          </div>
+          {% endwith %}
         {% endfor %}
+
       </div>
 
     {% else %}
@@ -46,7 +86,9 @@
         {% trans "No notifications." %}
       </div>
     {% endif %}
+
   </div>
 
 </div>
+
 {% endblock %}

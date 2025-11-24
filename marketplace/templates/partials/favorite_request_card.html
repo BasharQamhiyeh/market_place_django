@@ -1,0 +1,27 @@
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm h-full ring-2 ring-[var(--rukn-green)]">
+
+  <div class="p-4">
+    <h6 class="text-base font-semibold mb-1 text-[var(--rukn-green)]">
+      <a href="{% url 'request_detail' req.id %}" class="hover:text-green-700">
+        {{ req.title }}
+      </a>
+    </h6>
+
+    <div class="text-gray-600 text-sm">
+      {% trans "Budget" %}: {{ req.budget }} د.أ
+      · {{ req.listing.created_at|date:"Y-m-d H:i" }}
+    </div>
+  </div>
+
+  <div class="px-4 py-3 bg-gray-50 rounded-b-xl">
+    <form method="post" action="{% url 'toggle_favorite_request' req.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'my_favorites' %}">
+      <button type="submit"
+        class="px-3 py-1.5 text-sm border rounded text-gray-700 hover:bg-gray-100">
+        ✳️ {% trans "Remove from Favorites" %}
+      </button>
+    </form>
+  </div>
+
+</div>

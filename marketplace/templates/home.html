@@ -266,7 +266,7 @@
       <div class="absolute -bottom-6 left-4
                   bg-green-600 btn-green border-2 border-green-600 rounded-2xl
                   shadow-md px-6 py-2 z-20">
-        <a href="#" class="text-sm md:text-base font-bold text-white">جميع الطلبات</a>
+        <a href="{% url 'request_list' %}" class="text-sm md:text-base font-bold text-white">جميع الطلبات</a>
       </div>
 
       <div class="mt-10">
@@ -274,18 +274,15 @@
              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
           {% if latest_requests %}
-            {% for req in latest_requests %}
-              <div class="bg-white p-4 border rounded-xl shadow-sm">
-                <div class="font-bold mb-2">{{ req.title }}</div>
-                <div class="text-gray-600 text-sm">{{ req.description|truncatewords:20 }}</div>
-                <div class="mt-2 text-sm text-green-600 font-semibold">الميزانية: {{ req.budget }} د.أ</div>
-              </div>
-            {% endfor %}
+              {% for req in latest_requests %}
+                  {% include "partials/_request_card.html" with request=req %}
+              {% endfor %}
           {% else %}
-            <p class="col-span-full text-center text-gray-500 py-6">
-              لا توجد طلبات حالياً.
-            </p>
+              <p class="col-span-full text-center text-gray-500 py-6">
+                  لا توجد طلبات حالياً.
+              </p>
           {% endif %}
+
 
         </div>
 

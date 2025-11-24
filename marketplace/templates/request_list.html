@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Browse Requests" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-10">
+  <div class="flex flex-col lg:flex-row gap-6">
+
+    <!-- FILTERS -->
+    <aside class="w-full lg:w-72 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+      <h2 class="text-sm font-semibold mb-3">
+        {% trans "Filter" %}
+      </h2>
+
+      <form method="get" action="{% url 'request_list' %}" class="space-y-4">
+
+        <input type="hidden" name="q" value="{{ q }}">
+
+        <!-- Categories -->
+        <div>
+          <p class="text-xs font-medium text-gray-500 mb-1">{% trans "Categories" %}</p>
+          <div class="space-y-2 max-h-64 overflow-y-auto text-xs">
+            {% for cat in categories %}
+              <label class="flex items-center gap-2">
+                <input type="checkbox" name="categories"
+                       value="{{ cat.id }}"
+                       {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+                {{ cat.name_ar }}
+              </label>
+
+              {% for sub in cat.subcategories.all %}
+                <label class="flex items-center gap-2 ms-4 text-gray-500">
+                  <input type="checkbox" name="categories"
+                         value="{{ sub.id }}"
+                         {% if sub.id|stringformat:"s" in selected_categories %}checked{% endif %}>
+                  – {{ sub.name_ar }}
+                </label>
+              {% endfor %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- City -->
+        <div>
+          <p class="text-xs font-medium text-gray-500 mb-1">{% trans "City" %}</p>
+          <select name="city" class="w-full rounded-lg border text-xs py-1.5">
+            <option value="">{% trans "All cities" %}</option>
+            {% for city in cities %}
+              <option value="{{ city.id }}"
+                {% if request.GET.city == city.id|stringformat:"s" %}selected{% endif %}
+              >{{ city.name_ar }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit"
+          class="w-full mt-2 rounded-full bg-[var(--rukn-green)] text-white text-xs font-semibold py-2">
+          {% trans "Apply filters" %}
+        </button>
+
+      </form>
+    </aside>
+
+    <!-- RESULTS -->
+    <section class="flex-1">
+
+      <h1 class="text-lg md:text-xl font-bold mb-4">
+        {% trans "Requests" %}
+      </h1>
+
+      {% if page_obj %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+          {% for req in page_obj %}
+            <a href="{% url 'request_detail' req.id %}"
+              class="block rounded-xl overflow-hidden bg-white shadow border border-gray-100 p-4 hover:shadow-lg duration-200">
+
+              <div class="font-semibold text-gray-900 text-lg truncate mb-1">
+                {{ req.listing.title }}
+              </div>
+
+              <div class="text-sm text-gray-600 line-clamp-2 mb-2">
+                {{ req.listing.description }}
+              </div>
+
+              <div class="text-xs text-gray-500 mb-1">
+                📍 {{ req.listing.city }}
+              </div>
+
+              <div class="text-xs text-gray-500">
+                {{ req.listing.created_at|timesince }} {% trans "ago" %}
+              </div>
+
+              <div class="mt-2 font-bold text-[var(--rukn-green)]">
+                {% if req.budget %}
+                  💰 {{ req.budget }} د.أ
+                {% else %}
+                  {% trans "No budget specified" %}
+                {% endif %}
+              </div>
+
+            </a>
+          {% endfor %}
+
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-8 flex items-center justify-center gap-3 text-sm">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}"
+               class="px-3 py-1 rounded border hover:bg-gray-100">&laquo; {% trans "Prev" %}</a>
+          {% endif %}
+
+          <span class="px-3 py-1 bg-gray-100 rounded">
+            {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}&q={{ q }}"
+               class="px-3 py-1 rounded border hover:bg-gray-100">{% trans "Next" %} &raquo;</a>
+          {% endif %}
+        </div>
+
+      {% else %}
+        <p class="text-gray-500 mt-10 text-center">{% trans "No requests found." %}</p>
+      {% endif %}
+
+    </section>
+
+  </div>
+</div>
+
+{% endblock %}

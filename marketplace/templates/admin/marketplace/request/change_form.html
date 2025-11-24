@@ -1,0 +1,26 @@
+{% extends "admin/change_form.html" %}
+
+{% load i18n static admin_urls %}
+
+{% block submit_buttons_bottom %}
+  {{ block.super }}
+
+  {% if original %}
+    <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd;">
+
+      <a href="{% url 'admin:request_approve' original.id %}"
+         class="button"
+         style="background:#16a34a;border-color:#16a34a;color:white;">
+        ✔️ Approve Request
+      </a>
+
+      <a href="{% url 'admin:request_reject' original.id %}"
+         class="button"
+         style="background:#dc2626;border-color:#dc2626;color:white;margin-left:10px;">
+        ❌ Reject Request
+      </a>
+
+    </div>
+  {% endif %}
+
+{% endblock %}

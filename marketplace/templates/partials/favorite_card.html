@@ -1,0 +1,36 @@
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm h-full ring-2 ring-[var(--rukn-orange)]">
+
+  {% if item.photos.first %}
+    <img src="{{ item.photos.first.image.url }}"
+         class="w-full rounded-t-xl h-40 object-cover">
+  {% else %}
+    <div class="w-full h-40 flex items-center justify-center bg-gray-100 text-gray-400">
+      {% trans "No image" %}
+    </div>
+  {% endif %}
+
+  <div class="p-4">
+    <h6 class="text-base font-semibold mb-1">
+      <a href="{% url 'item_detail' item.id %}" class="hover:text-jordan">
+        {{ item.listing.title }}
+      </a>
+    </h6>
+
+    <div class="text-gray-600 text-sm">
+      {{ item.price }} د.أ
+      · {{ item.listing.created_at|date:"Y-m-d H:i" }}
+    </div>
+  </div>
+
+  <div class="px-4 py-3 bg-gray-50 rounded-b-xl">
+    <form method="post" action="{% url 'toggle_favorite' item.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'my_favorites' %}">
+      <button type="submit"
+        class="px-3 py-1.5 text-sm border rounded text-gray-700 hover:bg-gray-100">
+        ✳️ {% trans "Remove from Favorites" %}
+      </button>
+    </form>
+  </div>
+
+</div>

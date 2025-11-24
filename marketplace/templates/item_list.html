@@ -14,14 +14,14 @@
       </h2>
 
       <form method="get" action="{% url 'item_list' %}" class="space-y-4">
-        {# keep current search text in filters #}
         <input type="hidden" name="q" value="{{ q }}">
 
-        {# CATEGORIES (multi-select) #}
+        {# CATEGORIES (Listing.category) #}
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1">
             {% trans "Categories" %}
           </p>
+
           <div class="space-y-2 max-h-64 overflow-y-auto text-xs">
             {% for cat in categories %}
               <label class="flex items-center gap-2 text-gray-700">
@@ -35,7 +35,6 @@
                 <span>{{ cat }}</span>
               </label>
 
-              {# show subcategories indented if you want #}
               {% for sub in cat.subcategories.all %}
                 <label class="flex items-center gap-2 text-gray-500 ms-4">
                   <input
@@ -52,7 +51,7 @@
           </div>
         </div>
 
-        {# CITY #}
+        {# CITY (Listing.city) #}
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1">
             {% trans "City" %}
@@ -71,7 +70,7 @@
           </select>
         </div>
 
-        {# PRICE RANGE #}
+        {# PRICE — from Item.price #}
         <div>
           <p class="text-xs font-medium text-gray-500 mb-1">
             {% trans "Price (JOD)" %}
@@ -117,7 +116,7 @@
       </div>
 
       <div id="results">
-        {# This uses page_obj from the view and the old working design #}
+        {# IMPORTANT: this partial must also be updated #}
         {% include "partials/item_results.html" %}
       </div>
     </section>

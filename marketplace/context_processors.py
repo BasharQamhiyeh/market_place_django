@@ -17,40 +17,64 @@ def navbar_counters(request):
 
     user = request.user
 
+    # -------------------------
     # Unread notifications
+    # -------------------------
     unread_notifications = Notification.objects.filter(
-        user=user, is_read=False
+        user=user,
+        is_read=False,
     ).count()
 
-    # Unread messages (user is buyer or seller, but exclude own sent messages)
-    unread_messages = Message.objects.filter(
-        Q(conversation__buyer=user) | Q(conversation__seller=user),
-        is_read=False,
-    ).exclude(sender=user).count()
+    # -------------------------
+    # Unread messages
+    # (buyer or seller, but not own sent)
+    # -------------------------
+    unread_messages = (
+        Message.objects.filter(
+            Q(conversation__buyer=user) | Q(conversation__seller=user),
+            is_read=False,
+        )
+        .exclude(sender=user)
+        .count()
+    )
 
-    # Last 6 notifications
+    # -------------------------
+    # Recent notifications
+    # (linked to Listing now)
+    # -------------------------
     recent_notifications = (
         Notification.objects.filter(user=user)
-        .select_related("item")
+        .select_related("listing")          # ✅ Notification.listing FK
         .order_by("-created_at")[:6]
     )
 
-    # Last 6 messages
+    # -------------------------
+    # Recent messages
+    # (Conversation → Listing)
+    # -------------------------
     recent_messages = (
         Message.objects.filter(
             Q(conversation__buyer=user) | Q(conversation__seller=user)
         )
-        .select_related("conversation", "sender", "conversation__item")
+        .select_related(
+            "conversation",          # FK on Message
+            "sender",                # FK on Message
+            "conversation__listing", # FK on Conversation
+        )
         .order_by("-created_at")[:6]
     )
 
-    # Favorites count and recent favorites
+    # -------------------------
+    # Favorites
+    # Favorite → Listing → (Item/Request)
+    # -------------------------
     fav_qs = (
         Favorite.objects.filter(user=user)
-        .select_related("item", "item__category")
-        .prefetch_related("item__photos")
+        .select_related("listing")                  # ✅ Favorite.listing FK
+        .prefetch_related("listing__item__photos")  # Item.photos for thumbnail
         .order_by("-created_at")
     )
+
     favorite_count = fav_qs.count()
     recent_favorites = fav_qs[:5]
 
