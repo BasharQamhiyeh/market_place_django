@@ -1,7 +1,5 @@
 {% load i18n %}
 
-{# inside: {% for item in latest_items %} ... {% endfor %} #}
-
 <article class="bg-white rounded-xl overflow-hidden
                border border-orange-200
                transition-all duration-300
@@ -14,25 +12,60 @@
   <!-- IMAGE + HEART + CATEGORY BADGE -->
   <div class="relative">
 
-    {% if item.main_photo %}
+    {% if item.main_photo and item.main_photo.thumbnail %}
+      <img src="{{ item.main_photo.thumbnail.url }}"
+           alt="{{ item.listing.title }}"
+           class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
+
+    {% elif item.main_photo %}
+      {# fallback for old items without thumbnail #}
       <img src="{{ item.main_photo.image.url }}"
            alt="{{ item.listing.title }}"
-           class="w-full h-44 object-cover hover:scale-105 transition-transform duration-300" />
+           class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
+
     {% else %}
-      <div class="w-full h-44 bg-gray-100 flex items-center justify-center text-sm text-gray-400">
+      <div class="w-full h-[260px] bg-gray-100 flex items-center justify-center text-sm text-gray-400">
         {% trans "No image" %}
       </div>
     {% endif %}
 
-    <!-- Heart (just visual, JS handles wiggle / color) -->
-    <button type="button"
-            class="absolute bottom-2 left-2 heart-btn text-2xl transition duration-300 hover:scale-110 drop-shadow-md z-20">
-      🤍
+    <!-- Heart -->
+    {% if request.user.is_authenticated %}
+    <form
+        class="absolute bottom-2 left-2 z-50"
+        onsubmit="toggleFavorite(event, {{ item.id }}, this)"
+    >
+        {% csrf_token %}
+        <button type="submit"
+                class="heart-btn text-2xl transition duration-200 hover:scale-110">
+            {% if item.is_favorited %}
+                ❤️
+            {% else %}
+                🤍
+            {% endif %}
+        </button>
+    </form>
+{% else %}
+    <button
+        type="button"
+        onclick="document.getElementById('loginModal').classList.remove('hidden')"
+        class="absolute bottom-2 left-2 heart-btn text-2xl z-50 transition duration-200 hover:scale-110">
+        🤍
     </button>
+{% endif %}
 
-    <!-- Category badge (top-right) -->
+
+    <!-- Category badge -->
     {% if item.listing.category %}
-      <span class="absolute top-3 right-3 bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
+      <span class="absolute top-3 right-3
+                   bg-white/90
+                   text-gray-800
+                   text-xs font-semibold
+                   px-3 py-1
+                   rounded-full
+                   shadow-sm
+                   flex items-center gap-1
+                   border border-orange-300">
 
         {% if item.listing.category.icon %}
           {{ item.listing.category.icon }}
@@ -48,11 +81,11 @@
 
       </span>
     {% endif %}
-
   </div>
 
-  <!-- CONTENT (TITLE + CITY/TIME) -->
+  <!-- CONTENT -->
   <div class="p-4">
+
     <!-- Title -->
     <h3 class="font-semibold text-lg line-clamp-2 min-h-[55px] text-gray-900"
         title="{{ item.listing.title }}">
@@ -83,11 +116,13 @@
         {% endwith %}
       </span>
     </div>
+
   </div>
 
-  <!-- FOOTER (SELLER + PRICE PILL) -->
+  <!-- FOOTER -->
   <div class="flex items-center justify-between p-4 border-t border-gray-100 bg-white">
-    <!-- Seller (avatar-style circle + name) -->
+
+    <!-- Seller -->
     <div class="flex items-center gap-2">
       <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center
                   text-xs font-bold text-gray-700 shadow">
@@ -102,10 +137,14 @@
     <div class="text-white text-base font-bold rounded-3xl shadow text-center min-w-[90px] py-2 px-4 bg-[var(--rukn-orange)]">
       {{ item.price|floatformat:0 }} د.أ
     </div>
+
   </div>
 
   <!-- CLICKABLE OVERLAY -->
   <a href="{% url 'item_detail' item.id %}"
-     class="absolute inset-0 z-10"
-     aria-label="{% trans 'View Details' %}"></a>
+   class="absolute inset-0 z-0 pointer-events-auto"
+   aria-label="{% trans 'View Details' %}"></a>
+
+
+
 </article>

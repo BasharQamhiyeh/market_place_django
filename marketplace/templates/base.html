@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+
   <title>{% block title %}ركن — منصة إعلانات{% endblock %}</title>
 
   <meta name="description" content="منصة ركن للإعلانات المبوبة - بيع، اشتري، أو اطلب ما تحتاجه بسهولة وأمان">
@@ -48,9 +49,9 @@
     <!-- IF USER NOT LOGGED IN: mockup auth buttons -->
     {% if not request.user.is_authenticated %}
       <div id="authButtons" class="auth-buttons">
-        <a href="{% url 'login' %}" id="loginBtn" class="btn-login">
+        <button id="loginBtn" type="button" class="btn-login">
           تسجيل الدخول
-        </a>
+        </button>
         <a href="{% url 'register' %}" class="btn-signup">
           إنشاء حساب
         </a>
@@ -357,7 +358,8 @@
   </div>
 </div>
 
-<!-- ========== LOGIN MODAL (mockup style) ========== -->
+<!-- ========== LOGIN MODAL (REAL FORM) ========== -->
+<!-- ========== LOGIN MODAL ========== -->
 {% if not request.user.is_authenticated %}
 <div id="loginModal" class="modal hidden">
   <div class="modal-box">
@@ -367,15 +369,35 @@
     <div class="login-icon">🔒</div>
     <h2 class="modal-title">تسجيل الدخول</h2>
 
-    <!-- For now: redirect to login page -->
-    <form id="loginForm" class="modal-form" action="{% url 'login' %}" method="get">
-      <button type="submit" class="modal-submit">
-        الذهاب لصفحة تسجيل الدخول
-      </button>
+    {% if request.GET.login_error %}
+    <div class="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-3">
+      اسم المستخدم أو كلمة المرور غير صحيحة.
+    </div>
+    {% endif %}
+
+    <form id="loginForm"
+          class="modal-form"
+          method="post"
+          action="{% url 'login' %}">
+      {% csrf_token %}
+
+      <input name="username"
+             type="text"
+             class="modal-input"
+             placeholder="رقم الهاتف أو اسم المستخدم"
+             required />
+
+      <input name="password"
+             type="password"
+             class="modal-input"
+             placeholder="كلمة المرور"
+             required />
+
+      <button type="submit" class="modal-submit">دخول</button>
     </form>
 
     <div class="modal-footer-link">
-      <a href="{% url 'login' %}">نسيت كلمة المرور؟</a>
+      <a href="{% url 'reset_password' %}">نسيت كلمة المرور؟</a>
     </div>
 
     <div class="modal-footer-link">
@@ -386,6 +408,8 @@
   </div>
 </div>
 {% endif %}
+
+
 
 <!-- =================== HEADER (SEARCH) =================== -->
 {% block searchbar %}
@@ -402,6 +426,7 @@
 
           <!-- Search input -->
           <div class="relative flex-1">
+            <input type="hidden" name="mode" id="searchMode" value="sell">
             <input id="searchInput"
                    name="q"
                    type="search"
@@ -543,6 +568,23 @@
   <script src="{% static 'js/header.js' %}"></script>
 
 {% endblock %}
+
+{% if form and form.errors %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("loginModal").classList.remove("hidden");
+  });
+</script>
+{% endif %}
+
+{% if request.GET.login_error %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("loginModal").classList.remove("hidden");
+  });
+</script>
+{% endif %}
+
 
 
 </body>

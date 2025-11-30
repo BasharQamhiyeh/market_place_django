@@ -12,7 +12,7 @@
     </div>
 
     <div class="flex justify-center mt-6">
-        {% if latest_items|length < 36 %}
+        {% if latest_items|length < 36 and latest_items|length >= 12 %}
             <button id="loadMoreBtn"
                     hx-get="?limit={{ latest_items|length|add:'12' }}"
                     hx-target="#latest-items-container"
