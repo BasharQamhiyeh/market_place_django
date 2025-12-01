@@ -70,6 +70,26 @@
     transform: scale(1.05);
   }
 
+  .existing-photo.main {
+    border: 3px solid var(--rukn-orange) !important;
+    box-shadow: 0 0 10px rgba(255, 122, 24, 0.5);
+  }
+
+  .existing-photo {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: .75rem;
+    border: 2px solid #ddd;
+    cursor: pointer;
+    transition: .2s;
+  }
+
+  .existing-photo:hover {
+    transform: scale(1.03);
+    border-color: #aaa;
+  }
+
   .tip-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
@@ -77,67 +97,6 @@
   .tip-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .category-level-block.open .category-dropdown {
-    display: block;
-  }
-
-  .category-dropdown {
-    display: none;
-  }
-
-  /* Existing photos styling to match previews as much as possible */
-  .existing-photo-wrapper {
-    position: relative;
-    width: 120px;
-    height: 120px;
-  }
-
-  .existing-photo-wrapper img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: .75rem;
-    border: 2px dashed var(--rukn-orange);
-    cursor: pointer;
-    transition: .3s;
-  }
-
-  .existing-photo-wrapper img.main {
-    border: 3px solid var(--rukn-orange);
-    box-shadow: 0 0 10px rgba(255, 122, 24, 0.5);
-  }
-
-  .existing-photo-wrapper img.main::after {
-    content: "⭐ الصورة الرئيسية";
-    position: absolute;
-    bottom: 0;
-    inset-inline: 0;
-    background: rgba(255, 122, 24, 0.9);
-    color: #fff;
-    font-size: 12px;
-    text-align: center;
-    padding: 2px 0;
-  }
-
-  .existing-photo-wrapper button.delete-btn {
-    position: absolute;
-    top: -6px;
-    inset-inline-end: -6px;
-    background: #dc2626;
-    color: #fff;
-    border-radius: 999px;
-    font-size: 11px;
-    padding: 2px 6px;
-    line-height: 1;
-  }
-
-  @media (min-width: 640px) {
-    .existing-photo-wrapper {
-      width: 150px;
-      height: 150px;
-    }
   }
 </style>
 {% endblock %}
@@ -152,7 +111,7 @@
       تعديل الإعلان
     </h1>
     <p class="text-[var(--muted)] text-sm sm:text-base font-medium">
-      عدّل تفاصيل إعلانك بسهولة، سيتم مراجعته من جديد من قبل الإدارة
+      عدّل بيانات إعلانك ثم احفظ التغييرات
     </p>
   </header>
 
@@ -183,34 +142,36 @@
         {% endif %}
       </div>
 
-      <!-- PHOTOS -->
+      <!-- EXISTING PHOTOS -->
       <div class="mb-6">
-        <label class="block font-semibold mb-3">صور الإعلان</label>
-
-        <!-- Existing photos -->
-        <div class="flex flex-wrap gap-3 mb-4" id="existingPhotos">
+        <label class="block font-semibold mb-3">الصور الحالية</label>
+        <div class="flex flex-wrap gap-3" id="existingPhotos">
           {% for photo in item.photos.all %}
-            <div class="existing-photo-wrapper">
+            <div class="relative">
               <img src="{{ photo.image.url }}"
                    data-photo-id="{{ photo.id }}"
-                   class="{% if photo.is_main %}main{% endif %}">
-              <button type="submit"
-                      name="delete_photo_{{ photo.id }}"
-                      class="delete-btn">
+                   class="existing-photo {% if photo.is_main %}main{% endif %}">
+              <button type="submit" name="delete_photo_{{ photo.id }}"
+                      class="absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full px-2 py-0.5 transform translate-x-1/3 -translate-y-1/3">
                 ×
               </button>
             </div>
           {% empty %}
-            <p class="text-gray-500 text-sm">لا توجد صور حاليًا، يمكنك إضافة صور جديدة أدناه.</p>
+            <p class="text-gray-500 text-sm">لا توجد صور حالياً.</p>
           {% endfor %}
         </div>
+      </div>
 
-        <!-- Hidden Django input for new photos -->
+      <!-- ADD NEW PHOTOS -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-3">إضافة صور جديدة</label>
+
+        <!-- Hidden Django input -->
         <div class="hidden">
           {{ form.images }}
         </div>
 
-        <!-- Preview for newly added photos -->
+        <!-- Preview -->
         <div id="previewContainer" class="flex flex-wrap gap-3 mb-3"></div>
 
         <p id="imageHint"
@@ -221,7 +182,7 @@
 
         <!-- Button -->
         <label for="id_images" class="upload-btn mt-3 inline-flex cursor-pointer">
-          <span>إضافة صور جديدة</span>
+          <span>إضافة صور</span>
         </label>
 
         {% if form.images.errors %}
@@ -229,24 +190,17 @@
         {% endif %}
       </div>
 
-      <!-- CATEGORY (read-only, but same visual area) -->
+      <!-- CATEGORY (fixed, not editable) -->
       <div class="mb-6">
-        <label class="block font-semibold mb-2">الفئة</label>
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border-2 border-[var(--rukn-orange)] bg-orange-50 text-sm font-semibold text-gray-800">
-          {{ category }}
-          <span class="text-[var(--muted)] text-xs">(لا يمكن تعديل الفئة بعد إنشاء الإعلان)</span>
-        </div>
-
-        <input type="hidden"
-               name="category"
-               id="id_category_final"
-               value="{{ category.id }}">
-        {% if form.category.errors %}
-          <p class="text-red-600 text-xs mt-1">{{ form.category.errors }}</p>
-        {% endif %}
+        <label class="block font-semibold mb-2">القسم</label>
+        <input type="text"
+               class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 bg-gray-100 cursor-not-allowed"
+               value="{{ category }}"
+               disabled>
+        <input type="hidden" name="category" value="{{ category.id }}">
       </div>
 
-      <!-- DYNAMIC ATTRIBUTES (same pattern as create) -->
+      <!-- DYNAMIC ATTRIBUTES -->
       <div id="attribute-fields" class="mb-6">
         {% for field in form %}
           {% if field.name|slice:":5" == "attr_" %}
@@ -287,14 +241,13 @@
           <p class="text-red-600 text-xs mt-1">{{ form.description.errors }}</p>
         {% endif %}
 
-        <!-- AI description button -->
         <button type="button" id="aiBtn"
                 class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 transition w-full sm:w-auto justify-center">
-          تحسين الوصف بالذكاء الاصطناعي
+          توليد الوصف بالذكاء الصناعي
         </button>
       </div>
 
-      <!-- CONDITION (same toggle as create) -->
+      <!-- CONDITION -->
       <div class="mb-6">
         <label class="block font-semibold mb-3">حالة المنتج</label>
 
@@ -312,7 +265,6 @@
           </button>
         </div>
 
-        <!-- Actual Django radios (hidden) -->
         <div class="hidden">
           {{ form.condition }}
         </div>
@@ -354,7 +306,7 @@
         </div>
       </div>
 
-      <!-- CONTACT INFO -->
+      <!-- CONTACT INFO (same as create) -->
       <div class="mb-4">
         <label class="font-semibold mb-2 block">معلومات التواصل</label>
         <p class="text-sm text-gray-500 mb-2">
@@ -362,12 +314,10 @@
         </p>
       </div>
 
-      <!-- SHOW PHONE NUMBER -->
       <div class="mb-6">
         <label class="flex items-center gap-3 cursor-pointer select-none">
           <input type="checkbox" name="show_phone"
-                 class="w-5 h-5 accent-[var(--rukn-orange)] rounded-lg"
-                 {% if request.user.profile.show_phone %}checked{% endif %}>
+                 class="w-5 h-5 accent-[var(--rukn-orange)] rounded-lg">
           <span class="font-semibold text-gray-700">إظهار رقم الهاتف في الإعلان</span>
         </label>
         <p class="text-xs text-[var(--muted)] mt-1 pr-8">
@@ -376,77 +326,22 @@
       </div>
 
       <!-- SUBMIT -->
-      <div class="mt-8 text-center flex flex-col sm:flex-row sm:justify-between gap-3">
-        <a href="{% url 'item_detail' item.id %}"
-           class="px-6 py-3 border-2 border-gray-200 rounded-3xl text-gray-700 font-semibold hover:bg-gray-50 text-center">
-          إلغاء التعديل
-        </a>
-
+      <div class="mt-8 text-center">
         <button type="submit"
                 class="px-8 py-3 bg-[var(--rukn-orange)] text-white font-bold text-lg rounded-3xl shadow-md hover:scale-105 transition w-full sm:w-auto">
-          حفظ التعديلات
+          حفظ التغييرات
         </button>
       </div>
 
     </form>
-
   </div>
 
-  <!-- TIPS (same as create) -->
+  <!-- (Optional) Tips section – you can keep or remove -->
   <section class="bg-gradient-to-b from-orange-50 to-white rounded-2xl p-8 mt-10 shadow-lg border border-orange-300">
     <h2 class="text-2xl font-bold text-[var(--rukn-orange)] mb-8 text-center flex items-center justify-center gap-2">
       💡 نصائح لإعلان ناجح
     </h2>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-center">
-      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
-        <div class="text-3xl mb-2">📸</div>
-        <h3 class="font-semibold text-gray-800">صور جذابة</h3>
-        <p class="text-sm text-[var(--muted)] mt-1">
-          التقط صورًا واضحة من زوايا متعددة لعرض المنتج بأفضل شكل.
-        </p>
-      </div>
-
-      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
-        <div class="text-3xl mb-2">🖋️</div>
-        <h3 class="font-semibold text-gray-800">عنوان واضح</h3>
-        <p class="text-sm text-[var(--muted)] mt-1">
-          اختر عنوانًا دقيقًا يصف منتجك باحترافية.
-        </p>
-      </div>
-
-      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
-        <div class="text-3xl mb-2">📃</div>
-        <h3 class="font-semibold text-gray-800">وصف صادق</h3>
-        <p class="text-sm text-[var(--muted)] mt-1">
-          اشرح تفاصيل المنتج ومميزاته بوضوح وصدق.
-        </p>
-      </div>
-
-      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
-        <div class="text-3xl mb-2">💰</div>
-        <h3 class="font-semibold text-gray-800">سعر مناسب</h3>
-        <p class="text-sm text-[var(--muted)] mt-1">
-          حدد سعرًا عادلًا يجذب المشترين الجادين.
-        </p>
-      </div>
-
-      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
-        <div class="text-3xl mb-2">📍</div>
-        <h3 class="font-semibold text-gray-800">موقع دقيق</h3>
-        <p class="text-sm text-[var(--muted)] mt-1">
-          أضف موقعك الصحيح لتسهيل التواصل مع المشتري.
-        </p>
-      </div>
-
-      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
-        <div class="text-3xl mb-2">⏱️</div>
-        <h3 class="font-semibold text-gray-800">الرد السريع</h3>
-        <p class="text-sm text-[var(--muted)] mt-1">
-          كن متفاعلاً مع الرسائل والاستفسارات لتزيد من فرص البيع.
-        </p>
-      </div>
-    </div>
+    <!-- same tip cards as create... -->
   </section>
 
 </div>
@@ -454,33 +349,12 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'js/ai_description.js' %}"></script>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  // ----------------------------------------------------------
-  // EXISTING PHOTOS: select main
-  // ----------------------------------------------------------
-  const existingPhotos = document.querySelectorAll("#existingPhotos img");
-  const selectedMainPhotoInput = document.getElementById("selected_main_photo");
-  const mainIndexInput = document.getElementById("main_photo_index");
-
-  existingPhotos.forEach((img) => {
-    img.addEventListener("click", () => {
-      existingPhotos.forEach((i) => i.classList.remove("main"));
-      img.classList.add("main");
-      selectedMainPhotoInput.value = img.dataset.photoId || "";
-      if (mainIndexInput) {
-        mainIndexInput.value = "";
-      }
-    });
-  });
-
-  // ----------------------------------------------------------
-  // IMAGE PREVIEW + MAIN PHOTO (new images)
-  // ----------------------------------------------------------
+  // ---------------- IMAGE PREVIEW + MAIN (NEW PHOTOS) ----------------
   const imageInput = document.getElementById("id_images");
   const previewContainer = document.getElementById("previewContainer");
+  const mainIndexInput = document.getElementById("main_photo_index");
   const imageHint = document.getElementById("imageHint");
 
   if (imageInput && previewContainer) {
@@ -503,25 +377,17 @@ document.addEventListener("DOMContentLoaded", function () {
           div.innerHTML = `<img src="${e.target.result}" alt="">`;
 
           div.addEventListener("click", () => {
-            document
-              .querySelectorAll(".upload-preview")
-              .forEach((p) => p.classList.remove("main"));
+            document.querySelectorAll(".upload-preview").forEach((p) => p.classList.remove("main"));
             div.classList.add("main");
-            if (mainIndexInput) {
-              mainIndexInput.value = String(idx);
-            }
-            if (selectedMainPhotoInput) {
-              selectedMainPhotoInput.value = "";
-            }
+            mainIndexInput.value = String(idx);
+            document.getElementById("selected_main_photo").value = "";
           });
 
           previewContainer.appendChild(div);
 
-          if (idx === 0 && (!mainIndexInput || !mainIndexInput.value)) {
+          if (idx === 0 && !mainIndexInput.value) {
             div.classList.add("main");
-            if (mainIndexInput) {
-              mainIndexInput.value = "0";
-            }
+            mainIndexInput.value = "0";
           }
         };
         reader.readAsDataURL(file);
@@ -529,19 +395,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ----------------------------------------------------------
-  // CONDITION TOGGLE (NEW / USED)
-  // ----------------------------------------------------------
+  // ---------------- EXISTING PHOTO MAIN SELECTION ----------------
+  document.addEventListener("click", function (e) {
+    const img = e.target.closest(".existing-photo");
+    if (!img) return;
+    document.querySelectorAll(".existing-photo").forEach((p) => p.classList.remove("main"));
+    img.classList.add("main");
+    document.getElementById("selected_main_photo").value = img.dataset.photoId;
+    document.getElementById("main_photo_index").value = "";
+  });
+
+  // ---------------- CONDITION TOGGLE ----------------
   const conditionToggle = document.getElementById("conditionToggle");
   const conditionRadios = document.querySelectorAll("input[name='condition']");
 
   function setCondition(value) {
-    conditionRadios.forEach((r) => {
-      r.checked = r.value === value;
-    });
+    conditionRadios.forEach(r => { r.checked = (r.value === value); });
     if (!conditionToggle) return;
     const buttons = conditionToggle.querySelectorAll("button[data-value]");
-    buttons.forEach((btn) => {
+    buttons.forEach(btn => {
       if (btn.dataset.value === value) {
         btn.classList.remove("text-[var(--muted)]", "bg-white");
         btn.classList.add("text-white", "bg-[var(--rukn-orange)]");
@@ -554,12 +426,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (conditionToggle && conditionRadios.length) {
     let initial = "used";
-    conditionRadios.forEach((r) => {
-      if (r.checked) initial = r.value;
-    });
+    conditionRadios.forEach(r => { if (r.checked) initial = r.value; });
     setCondition(initial);
 
-    conditionToggle.querySelectorAll("button[data-value]").forEach((btn) => {
+    conditionToggle.querySelectorAll("button[data-value]").forEach(btn => {
       btn.addEventListener("click", () => {
         const val = btn.dataset.value || "used";
         setCondition(val);
@@ -567,18 +437,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ----------------------------------------------------------
-  // LIVE HANDLING OF "OTHER" OPTION FOR ATTRIBUTE SELECT FIELDS
-  // ----------------------------------------------------------
+  // ---------------- "OTHER" OPTION FOR ATTRIBUTES ----------------
   document.addEventListener("change", function (e) {
     const target = e.target;
-
     if (!target.name || !target.name.startsWith("attr_")) return;
     if (target.tagName.toLowerCase() !== "select") return;
 
     const otherName = target.name + "_other";
     const otherField = document.querySelector(`[name="${otherName}"]`);
-
     if (!otherField) return;
 
     const wrapper = otherField.closest("div");
@@ -592,10 +458,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Init visibility for existing "_other" fields on load
-  document.querySelectorAll("select[name^='attr_']").forEach((select) => {
-    const event = new Event("change");
-    select.dispatchEvent(event);
+  // Show already-selected "__other__" fields on load
+  document.querySelectorAll("select[name^='attr_']").forEach(select => {
+    const otherName = select.name + "_other";
+    const otherField = document.querySelector(`[name="${otherName}"]`);
+    if (!otherField) return;
+    const wrapper = otherField.closest("div");
+    if (!wrapper) return;
+    wrapper.style.display = (select.value === "__other__") ? "" : "none";
   });
 });
 </script>

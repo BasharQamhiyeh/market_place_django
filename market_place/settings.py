@@ -278,11 +278,17 @@ else:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
 
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://market-place-rhjg.onrender.com",
+    "http://localhost:8000"
+]
+
 
 SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_HTTPONLY = False
 
 X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
@@ -291,7 +297,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 60 * 60 * 24  # 1 day in seconds
 
 # Extra CSRF protection
-CSRF_USE_SESSIONS = True
+# CSRF_USE_SESSIONS = True
 
 
 LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO")

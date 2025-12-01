@@ -1198,24 +1198,17 @@ def user_inbox(request):
 
 @login_required
 def item_edit(request, item_id):
-
-    # Load the item with its listing & ensure user owns it
+    # Load item with listing and ensure ownership
     item = get_object_or_404(
         Item.objects.select_related("listing", "listing__category", "listing__user"),
         id=item_id,
-        listing__user=request.user
+        listing__user=request.user,
     )
 
     listing = item.listing
     category = listing.category
 
-    # Prepare dynamic attribute initial values
-    attribute_initial = {
-        f"attr_{av.attribute_id}": av.value
-        for av in item.attribute_values.all()
-    }
-
-    # Main form initial data (listing + item fields)
+    # Initial values for listing + item + attributes
     initial = {
         "title": listing.title,
         "description": listing.description,
@@ -1223,20 +1216,23 @@ def item_edit(request, item_id):
         "price": item.price,
         "condition": item.condition,
     }
+
+    # Dynamic attributes -> must match "attr_<id>"
+    attribute_initial = {
+        f"attr_{av.attribute_id}": av.value
+        for av in item.attribute_values.all()
+    }
     initial.update(attribute_initial)
 
-    # Build the form
     form = ItemForm(
         request.POST or None,
         request.FILES or None,
-        instance=listing,      # IMPORTANT — listing instance, not item!
-        category=category,
-        initial=initial
+        instance=listing,      # Model = Listing
+        category=category,     # For dynamic attributes
+        initial=initial,
     )
 
-    # Process form submission
     if request.method == "POST" and form.is_valid():
-
         # Save listing fields
         listing = form.save(commit=False)
         listing.is_approved = False
@@ -1248,13 +1244,13 @@ def item_edit(request, item_id):
         item.condition = form.cleaned_data["condition"]
         item.save()
 
-        # Delete photos when requested
+        # Delete photos
         for key in request.POST:
             if key.startswith("delete_photo_"):
                 pid = key.split("_")[-1]
                 ItemPhoto.objects.filter(id=pid, item=item).delete()
 
-        # Reset attribute values
+        # Attributes
         ItemAttributeValue.objects.filter(item=item).delete()
         for key, value in request.POST.items():
             if key.startswith("attr_") and not key.endswith("_other"):
@@ -1269,10 +1265,12 @@ def item_edit(request, item_id):
                 value = value.strip()
                 if value:
                     ItemAttributeValue.objects.create(
-                        item=item, attribute_id=attr_id, value=value
+                        item=item,
+                        attribute_id=attr_id,
+                        value=value,
                     )
 
-        # Handle new uploaded photos
+        # New photos
         new_images = request.FILES.getlist("images")
         created_photos = [
             ItemPhoto.objects.create(item=item, image=img)
@@ -1282,25 +1280,22 @@ def item_edit(request, item_id):
         # Main photo logic
         selected_existing = request.POST.get("selected_main_photo")
         new_index = request.POST.get("main_photo_index")
+        new_index = int(new_index) if new_index and new_index.isdigit() else None
 
         ItemPhoto.objects.filter(item=item).update(is_main=False)
 
         if selected_existing:
             ItemPhoto.objects.filter(id=selected_existing, item=item).update(is_main=True)
-
-        elif new_index and new_index.isdigit():
-            idx = int(new_index)
-            if idx < len(created_photos):
-                created_photos[idx].is_main = True
-                created_photos[idx].save()
-
+        elif new_index is not None and 0 <= new_index < len(created_photos):
+            created_photos[new_index].is_main = True
+            created_photos[new_index].save()
         else:
             first = item.photos.first()
             if first:
                 first.is_main = True
                 first.save()
 
-        # Admin notifications
+        # Notifications
         for admin in User.objects.filter(is_staff=True):
             Notification.objects.create(
                 user=admin,
@@ -1318,6 +1313,9 @@ def item_edit(request, item_id):
 
         return redirect("item_detail", item_id=item.id)
 
+    print(form)
+    print(item)
+    print(category)
     return render(
         request,
         "item_edit.html",
@@ -1327,6 +1325,7 @@ def item_edit(request, item_id):
             "category": category,
         },
     )
+
 
 
 
