@@ -6,13 +6,12 @@ const ENABLE_ITEM_SUGGESTIONS = true;
 /* =========================================================
    NAVBAR DROPDOWNS
 ========================================================= */
-const menus ??= {
+window.menus = window.menus || {
   fav:  { btn: document.getElementById("favBtn"),  menu: document.getElementById("favMenu") },
   msg:  { btn: document.getElementById("msgBtn"),  menu: document.getElementById("msgMenu") },
   noti: { btn: document.getElementById("notiBtn"), menu: document.getElementById("notiMenu") },
   user: { btn: document.getElementById("userBtn"), menu: document.getElementById("userMenu") }
 };
-
 function closeAll(except) {
   Object.keys(menus).forEach(k => {
     const o = menus[k];
