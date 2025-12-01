@@ -48,6 +48,7 @@ urlpatterns = [
 
     # --- Notifications ---
     path('notifications/', views.notifications, name='notifications'),
+    path("notifications/mark-read/", views.mark_notifications_read, name="mark_notifications_read"),
 
     # --- Search ---
     path("search/suggestions/", views.search_suggestions, name="search_suggestions"),

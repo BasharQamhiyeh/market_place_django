@@ -3,6 +3,16 @@
 ========================================================= */
 const ENABLE_ITEM_SUGGESTIONS = true;
 
+function getCSRFToken() {
+  return document.cookie
+    .split("; ")
+    .find(row => row.startsWith("csrftoken="))
+    ?.split("=")[1];
+}
+
+console.log(CSRF_TOKEN);
+
+
 /* =========================================================
    NAVBAR DROPDOWNS
 ========================================================= */
@@ -28,14 +38,34 @@ Object.keys(menus).forEach(key => {
   if (!o.btn || !o.menu) return;
 
   o.btn.addEventListener("click", e => {
-    e.stopPropagation();
-    const isOpen = o.menu.classList.contains("show");
-    closeAll(key);
-    if (!isOpen) {
-      o.menu.classList.add("show");
-      o.btn.setAttribute("aria-expanded", "true");
-    }
-  });
+      e.stopPropagation();
+      const isOpen = o.menu.classList.contains("show");
+      closeAll(key);
+
+      if (!isOpen) {
+        o.menu.classList.add("show");
+        o.btn.setAttribute("aria-expanded", "true");
+
+        // REMOVE BADGE VISUALLY
+        if (key === "noti") {
+          const badge = document.querySelector("#notiBtn .badge");
+          if (badge) badge.remove();
+
+          // MARK AS READ IN BACKEND
+          fetch(`/${document.documentElement.lang}/notifications/mark-read/`, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCSRFToken(),
+        "X-Requested-With": "XMLHttpRequest",
+    },
+    body: JSON.stringify({})  // ← REQUIRED FOR CSRF
+});
+
+
+        }
+      }
+    });
 });
 
 document.addEventListener("click", () => closeAll(null));

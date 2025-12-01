@@ -1245,6 +1245,12 @@ def notifications(request):
     })
 
 
+@login_required
+def mark_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({"success": True})
+
+
 def my_items(request):
     items = (
         Item.objects
