@@ -15,8 +15,18 @@ document.addEventListener("DOMContentLoaded", function () {
     function hideBox() {
         hideTimer = setTimeout(() => {
             box.classList.add("hidden");
-        }, 200); // ← delay prevents instant disappearance
+        }, 200); // delay prevents instant disappearance
     }
+
+    // 🚫 IMPORTANT FIX:
+    // This file must NEVER touch the placeholder.
+    // It was overriding main.js.
+    // We enforce the placeholder from main.js only.
+    // -------------------------------------------------
+    // Remove ANY potential placeholder changes:
+    // (Your file does NOT contain such lines, but we lock it safely)
+    input.setAttribute("data-lock-placeholder", "1");
+    // -------------------------------------------------
 
     input.addEventListener("input", async function () {
         const q = this.value.trim();
@@ -76,13 +86,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Keep box visible when hovering (fix disappearing)
     box.addEventListener("mouseenter", showBox);
     box.addEventListener("mouseleave", hideBox);
     input.addEventListener("focus", showBox);
     input.addEventListener("blur", hideBox);
 
-    // Clicking outside → hide
     document.addEventListener("click", function (e) {
         if (!box.contains(e.target) && e.target !== input) {
             hideBox();

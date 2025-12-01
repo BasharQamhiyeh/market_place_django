@@ -5,6 +5,29 @@ from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
+
+
+# ======================================================
+# CITY
+# ======================================================
+
+class City(models.Model):
+    name_en = models.CharField(max_length=150, unique=True)
+    name_ar = models.CharField(max_length=150, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = "Cities"
+        ordering = ["name_en"]
+
+    def __str__(self):
+        from django.utils import translation
+        return self.name_ar if translation.get_language() == "ar" else self.name_en
+
+
 
 # ======================================================
 # USER
@@ -56,6 +79,58 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.username}"
+
+
+class Store(models.Model):
+    owner = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="store",
+        help_text="Owner of this store"
+    )
+
+    # BASIC STORE INFO
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+
+    # MEDIA
+    logo = models.ImageField(upload_to="stores/logos/", blank=True, null=True)
+    cover = models.ImageField(upload_to="stores/covers/", blank=True, null=True)
+
+    # CONTACT
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    whatsapp = models.CharField(max_length=20, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    instagram = models.URLField(blank=True, null=True)
+    facebook = models.URLField(blank=True, null=True)
+
+    # LOCATION
+    city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="stores"
+    )
+
+    # APPROVAL & STATUS
+    is_approved = models.BooleanField(default=False)  # Admin review
+    is_active = models.BooleanField(default=True)     # Auto-hide if needed
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+
+    # For safely showing logo
+    def logo_url(self):
+        if self.logo:
+            return self.logo.url
+        return "/static/img/default-store.png"
 
 
 # ======================================================
@@ -182,14 +257,60 @@ class Item(models.Model):
         return self.listing.title
 
 
+THUMB_WIDTH = 600
+THUMB_HEIGHT = 450
+
 class ItemPhoto(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='photos')
     image = models.ImageField(upload_to='items/')
+    thumbnail = models.ImageField(upload_to='items/thumbs/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_main = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Photo for {self.item.listing.title}"
+
+    def save(self, *args, **kwargs):
+        """
+        Save original image first, then generate thumbnail if not exists.
+        """
+        super().save(*args, **kwargs)
+
+        if self.image and not self.thumbnail:
+            self.generate_thumbnail()
+
+    def generate_thumbnail(self):
+        """
+        Generates a full-image thumbnail with padding so the ENTIRE image is visible,
+        resized to fit exactly 600×450 (mockup-perfect).
+        """
+        try:
+            img = Image.open(self.image)
+            img = img.convert("RGB")
+
+            # Resize proportionally to fit within the target box
+            img.thumbnail((THUMB_WIDTH, THUMB_HEIGHT), Image.LANCZOS)
+
+            # Create background for exact thumbnail size
+            background = Image.new("RGB", (THUMB_WIDTH, THUMB_HEIGHT), (255, 255, 255))
+
+            # Paste resized image into the center
+            offset = (
+                (THUMB_WIDTH - img.width) // 2,
+                (THUMB_HEIGHT - img.height) // 2,
+            )
+            background.paste(img, offset)
+
+            # Save thumbnail to memory buffer
+            buffer = BytesIO()
+            background.save(buffer, format="JPEG", quality=90)
+
+            thumb_name = f"thumb_{self.image.name.split('/')[-1]}"
+            self.thumbnail.save(thumb_name, ContentFile(buffer.getvalue()), save=False)
+            super().save(update_fields=["thumbnail"])
+
+        except Exception as e:
+            print("Thumbnail generation failed:", e)
 
 
 class ItemAttributeValue(models.Model):
@@ -230,23 +351,6 @@ class RequestAttributeValue(models.Model):
     def __str__(self):
         return f"{self.attribute} = {self.value or '(no preference)'}"
 
-
-# ======================================================
-# CITY
-# ======================================================
-
-class City(models.Model):
-    name_en = models.CharField(max_length=150, unique=True)
-    name_ar = models.CharField(max_length=150, unique=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name_plural = "Cities"
-        ordering = ["name_en"]
-
-    def __str__(self):
-        from django.utils import translation
-        return self.name_ar if translation.get_language() == "ar" else self.name_en
 
 
 # ======================================================

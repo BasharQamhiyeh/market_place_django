@@ -103,6 +103,18 @@ def home(request):
         .order_by("-listing__created_at")[:limit]
     )
 
+    from django.db.models import Exists, OuterRef
+
+    if request.user.is_authenticated:
+        latest_items = latest_items.annotate(
+            is_favorited=Exists(
+                Favorite.objects.filter(
+                    user=request.user,
+                    listing=OuterRef("listing")
+                )
+            )
+        )
+
     latest_requests = (
         Request.objects
         .filter(
@@ -1305,6 +1317,10 @@ def cancel_item(request, item_id):
 
 
 
+from django.http import JsonResponse
+
+from django.http import JsonResponse
+
 @login_required
 @require_POST
 def toggle_favorite(request, item_id):
@@ -1312,24 +1328,42 @@ def toggle_favorite(request, item_id):
 
     # Prevent favoriting your own item
     if item.listing.user == request.user:
+        # AJAX case
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({
+                "is_favorited": False,
+                "error": "cannot_favorite_own_item"
+            }, status=400)
+
+        # Normal POST case
         messages.info(request, "ℹ️ You cannot favorite your own item.")
         return redirect("item_detail", item_id=item.id)
 
-    # Favorite the LISTING (always)
+    # Toggle favorite
     fav, created = Favorite.objects.get_or_create(
         user=request.user,
         listing=item.listing
     )
 
     if created:
+        is_favorited = True
         messages.success(request, "⭐ Added to your favorites.")
     else:
         fav.delete()
+        is_favorited = False
         messages.info(request, "✳️ Removed from your favorites.")
 
+    # AJAX request — return JSON only (NO PAGE REFRESH)
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        new_count = Favorite.objects.filter(user=request.user).count()
+        return JsonResponse({
+            "is_favorited": is_favorited,
+            "favorite_count": new_count
+        })
+
+    # Normal POST (from item detail page)
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER") or "/"
     return redirect(next_url)
-
 
 
 
@@ -1817,28 +1851,33 @@ def user_login(request):
         identifier = request.POST['username'].strip()
         password = request.POST['password']
 
-        # Normalize phones like registration
+        # Normalize phones
         if identifier.startswith("07") and len(identifier) == 10:
             identifier = "962" + identifier[1:]
 
-        # Try login by USERNAME
+        # Try username
         user = authenticate(request, username=identifier, password=password)
 
-        # Try login by PHONE
+        # Try phone
         if not user:
             try:
-                user_obj = User.objects.get(phone=identifier)
-                user = authenticate(request, username=user_obj.username, password=password)
+                u = User.objects.get(phone=identifier)
+                user = authenticate(request, username=u.username, password=password)
             except User.DoesNotExist:
                 user = None
 
+        # SUCCESS
         if user:
             login(request, user)
-            return redirect('home')
+            return redirect(request.META.get("HTTP_REFERER", "/"))
 
-        return render(request, 'login.html', {'error': "بيانات تسجيل الدخول غير صحيحة"})
+        # FAIL → re-open modal with error
+        referer = request.META.get("HTTP_REFERER", "/")
+        return redirect(f"{referer}?login_error=1")
 
-    return render(request, 'login.html')
+    # GET should never show a login page → always redirect home
+    return redirect("/")
+
 
 # Logout
 def user_logout(request):
