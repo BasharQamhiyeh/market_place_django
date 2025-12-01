@@ -662,13 +662,22 @@ def item_attributes_partial(request, category_id):
 
 
 @login_required
+@transaction.atomic
 def item_edit(request, item_id):
-    item = get_object_or_404(Item, id=item_id, user=request.user)
-    category = item.category
+    # IMPORTANT: Item has NO user field → go through listing__user
+    item = get_object_or_404(
+        Item.objects.select_related("listing", "listing__category", "listing__user"),
+        id=item_id,
+        listing__user=request.user,
+    )
 
+    listing = item.listing
+    category = listing.category
+
+    # Initial data for non-model fields on the form
     initial = {
-        f"attribute_{av.attribute.id}": av.value
-        for av in item.attribute_values.all()
+        "price": item.price,
+        "condition": item.condition,
     }
 
     form = ItemForm(
@@ -676,72 +685,129 @@ def item_edit(request, item_id):
         request.FILES or None,
         category=category,
         initial=initial,
-        instance=item,
+        instance=listing,  # ItemForm edits Listing
     )
 
     if request.method == "POST" and form.is_valid():
-        item = form.save(commit=False)
-        item.is_approved = False
-        item.was_edited = True
+        # -----------------------------
+        # 1. Save LISTING
+        # -----------------------------
+        listing = form.save(commit=False)
+        listing.is_approved = False
+        listing.was_edited = True
+        listing.save()
+
+        # -----------------------------
+        # 2. Save ITEM-specific fields
+        # -----------------------------
+        item.price = form.cleaned_data.get("price")
+        item.condition = form.cleaned_data.get("condition")
         item.save()
 
-        # Delete removed photos
+        # -----------------------------
+        # 3. Delete removed photos
+        # -----------------------------
         for key in request.POST:
             if key.startswith("delete_photo_"):
-                pid = key.split("_")[-1]
-                ItemPhoto.objects.filter(id=pid, item=item).delete()
-
-        # Reset attributes
-        ItemAttributeValue.objects.filter(item=item).delete()
-        for key, val in request.POST.items():
-            if key.startswith("attribute_") and not key.endswith("_other"):
                 try:
-                    attr_id = int(key.split("_")[1])
-                except:
+                    photo_id = int(key.split("_")[-1])
+                except ValueError:
                     continue
-                if val == "__other__":
-                    val = request.POST.get(f"{key}_other", "").strip()
-                if val:
-                    ItemAttributeValue.objects.create(
-                        item=item, attribute_id=attr_id, value=val
-                    )
+                ItemPhoto.objects.filter(id=photo_id, item=item).delete()
 
-        # Add new photos
+        # -----------------------------
+        # 4. Rebuild dynamic attributes
+        # -----------------------------
+        ItemAttributeValue.objects.filter(item=item).delete()
+
+        # NOTE: ItemForm builds dynamic fields as "attr_<id>"
+        for field_name, value in form.cleaned_data.items():
+            if not field_name.startswith("attr_"):
+                continue
+            if field_name.endswith("_other"):
+                continue
+
+            try:
+                attr_id = int(field_name.split("_")[1])
+            except Exception:
+                continue
+
+            if value is None or value == "":
+                continue
+
+            # Multi-select types (checkbox/tags) come as list
+            if isinstance(value, list):
+                parts = []
+                for v in value:
+                    if v == "__other__":
+                        other_text = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                        if other_text:
+                            parts.append(other_text)
+                    else:
+                        parts.append(str(v))
+                final_value = ", ".join(parts) if parts else ""
+            else:
+                # Single choice
+                if value == "__other__":
+                    final_value = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                else:
+                    final_value = str(value)
+
+            if final_value:
+                ItemAttributeValue.objects.create(
+                    item=item,
+                    attribute_id=attr_id,
+                    value=final_value,
+                )
+
+        # -----------------------------
+        # 5. New photos + main photo
+        # -----------------------------
         new_images = request.FILES.getlist("images")
-        created_photos = [ItemPhoto.objects.create(item=item, image=img) for img in new_images]
+        created_photos = [
+            ItemPhoto.objects.create(item=item, image=img)
+            for img in new_images
+        ]
 
         selected_main_id = request.POST.get("selected_main_photo")
         main_index = request.POST.get("main_photo_index")
         main_index = int(main_index) if main_index and main_index.isdigit() else None
 
-        # Reset all main flags first
+        # Reset all main flags
         ItemPhoto.objects.filter(item=item).update(is_main=False)
 
-        # Set main for new or existing
+        # Priority 1: main existing photo chosen
         if selected_main_id:
             ItemPhoto.objects.filter(id=selected_main_id, item=item).update(is_main=True)
+
+        # Priority 2: one of the newly uploaded photos (by index)
         elif main_index is not None and 0 <= main_index < len(created_photos):
             created_photos[main_index].is_main = True
             created_photos[main_index].save()
+
+        # Priority 3: ensure some main photo exists
         elif not item.photos.filter(is_main=True).exists():
             first = item.photos.first()
             if first:
                 first.is_main = True
                 first.save()
 
+        # -----------------------------
+        # 6. Notifications
+        # -----------------------------
         for admin in User.objects.filter(is_staff=True):
             Notification.objects.create(
                 user=admin,
                 title="Edited item pending approval",
-                body=f"✏️ '{item.title}' was edited by {request.user.username} and needs re-approval.",
-                item=item,
+                body=f"✏️ '{listing.title}' was edited by {request.user.username} and needs re-approval.",
+                listing=listing,
             )
 
         Notification.objects.create(
             user=request.user,
             title="📋 إعلانك قيد المراجعة مجددًا",
-            body=f"تم تعديل إعلانك '{item.title}' وهو الآن بانتظار المراجعة من الإدارة.",
-            item=item,
+            body=f"تم تعديل إعلانك '{listing.title}' وهو الآن بانتظار المراجعة من الإدارة.",
+            listing=listing,
         )
 
         return redirect("item_detail", item_id=item.id)
@@ -749,8 +815,14 @@ def item_edit(request, item_id):
     return render(
         request,
         "item_edit.html",
-        {"form": form, "item": item, "category": category},
+        {
+            "form": form,
+            "item": item,
+            "category": category,
+        },
     )
+
+
 
 
 @login_required
@@ -1126,92 +1198,136 @@ def user_inbox(request):
 
 @login_required
 def item_edit(request, item_id):
-    item = get_object_or_404(Item, id=item_id, user=request.user)
-    category = item.category
 
-    initial = {
-        f"attribute_{av.attribute.id}": av.value
+    # Load the item with its listing & ensure user owns it
+    item = get_object_or_404(
+        Item.objects.select_related("listing", "listing__category", "listing__user"),
+        id=item_id,
+        listing__user=request.user
+    )
+
+    listing = item.listing
+    category = listing.category
+
+    # Prepare dynamic attribute initial values
+    attribute_initial = {
+        f"attr_{av.attribute_id}": av.value
         for av in item.attribute_values.all()
     }
 
+    # Main form initial data (listing + item fields)
+    initial = {
+        "title": listing.title,
+        "description": listing.description,
+        "city": listing.city_id,
+        "price": item.price,
+        "condition": item.condition,
+    }
+    initial.update(attribute_initial)
+
+    # Build the form
     form = ItemForm(
         request.POST or None,
         request.FILES or None,
+        instance=listing,      # IMPORTANT — listing instance, not item!
         category=category,
-        initial=initial,
-        instance=item,
+        initial=initial
     )
 
+    # Process form submission
     if request.method == "POST" and form.is_valid():
-        item = form.save(commit=False)
-        item.is_approved = False
-        item.was_edited = True
+
+        # Save listing fields
+        listing = form.save(commit=False)
+        listing.is_approved = False
+        listing.was_edited = True
+        listing.save()
+
+        # Save item fields
+        item.price = form.cleaned_data["price"]
+        item.condition = form.cleaned_data["condition"]
         item.save()
 
-        # --- delete requests ---
+        # Delete photos when requested
         for key in request.POST:
             if key.startswith("delete_photo_"):
                 pid = key.split("_")[-1]
                 ItemPhoto.objects.filter(id=pid, item=item).delete()
 
-        # --- attributes ---
+        # Reset attribute values
         ItemAttributeValue.objects.filter(item=item).delete()
-        for key, val in request.POST.items():
-            if key.startswith("attribute_") and not key.endswith("_other"):
+        for key, value in request.POST.items():
+            if key.startswith("attr_") and not key.endswith("_other"):
                 try:
-                    aid = int(key.split("_")[1])
-                except:
+                    attr_id = int(key.split("_")[1])
+                except ValueError:
                     continue
-                if val == "__other__":
-                    val = request.POST.get(f"{key}_other", "").strip()
-                if val:
+
+                if value == "__other__":
+                    value = request.POST.get(f"{key}_other", "")
+
+                value = value.strip()
+                if value:
                     ItemAttributeValue.objects.create(
-                        item=item, attribute_id=aid, value=val
+                        item=item, attribute_id=attr_id, value=value
                     )
 
-        # --- new uploads ---
-        new_imgs = request.FILES.getlist("images")
-        new_objs = [ItemPhoto.objects.create(item=item, image=f) for f in new_imgs]
+        # Handle new uploaded photos
+        new_images = request.FILES.getlist("images")
+        created_photos = [
+            ItemPhoto.objects.create(item=item, image=img)
+            for img in new_images
+        ]
 
-        # --- main photo logic ---
-        selected_id = request.POST.get("selected_main_photo")
+        # Main photo logic
+        selected_existing = request.POST.get("selected_main_photo")
         new_index = request.POST.get("main_photo_index")
-        new_index = int(new_index) if new_index and new_index.isdigit() else None
 
         ItemPhoto.objects.filter(item=item).update(is_main=False)
 
-        if selected_id:
-            ItemPhoto.objects.filter(id=selected_id, item=item).update(is_main=True)
-        elif new_index is not None and 0 <= new_index < len(new_objs):
-            new_objs[new_index].is_main = True
-            new_objs[new_index].save()
+        if selected_existing:
+            ItemPhoto.objects.filter(id=selected_existing, item=item).update(is_main=True)
+
+        elif new_index and new_index.isdigit():
+            idx = int(new_index)
+            if idx < len(created_photos):
+                created_photos[idx].is_main = True
+                created_photos[idx].save()
+
         else:
             first = item.photos.first()
             if first:
                 first.is_main = True
                 first.save()
 
-        # --- notifications ---
+        # Admin notifications
         for admin in User.objects.filter(is_staff=True):
             Notification.objects.create(
                 user=admin,
                 title="Edited item pending approval",
-                body=f"✏️ '{item.title}' was edited by {request.user.username} and needs re-approval.",
-                item=item,
+                body=f"✏️ '{listing.title}' was edited by {request.user.username}.",
+                listing=listing,
             )
+
         Notification.objects.create(
             user=request.user,
             title="📋 إعلانك قيد المراجعة مجددًا",
-            body=f"تم تعديل إعلانك '{item.title}' وهو الآن بانتظار المراجعة من الإدارة.",
-            item=item,
+            body=f"تم تعديل إعلانك '{listing.title}' وهو الآن بانتظار المراجعة.",
+            listing=listing,
         )
+
         return redirect("item_detail", item_id=item.id)
 
     return render(
         request,
         "item_edit.html",
-        {"form": form, "item": item, "category": category},
+        {
+            "form": form,
+            "item": item,
+            "category": category,
+        },
     )
+
 
 
 
@@ -1270,7 +1386,7 @@ def my_items(request):
 
 @login_required
 def reactivate_item(request, item_id):
-    item = get_object_or_404(Item, id=item_id, user=request.user)
+    item = get_object_or_404(Item, id=item_id, listing__user=request.user)
     if not item.is_active:
         item.is_active = True
         item.save()
@@ -1296,7 +1412,7 @@ def delete_item_photo(request, photo_id):
 
 @login_required
 def delete_item(request, item_id):
-    item = get_object_or_404(Item, id=item_id, user=request.user)
+    item = get_object_or_404(Item, id=item_id, listing__user=request.user)
     item.delete()
     messages.success(request, "Item deleted successfully.")
     return redirect('my_items')
@@ -1304,7 +1420,7 @@ def delete_item(request, item_id):
 
 @login_required
 def cancel_item(request, item_id):
-    item = get_object_or_404(Item, id=item_id, user=request.user)
+    item = get_object_or_404(Item, id=item_id, listing__user=request.user)
 
     if request.method == "POST":
         sold = request.POST.get("sold_on_site")

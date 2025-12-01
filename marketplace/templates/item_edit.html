@@ -1,205 +1,602 @@
-{% extends 'base.html' %}
-{% load i18n form_extras %}
+{% extends "base.html" %}
+{% load static i18n form_extras %}
 
-{% block title %}{% trans "Edit Announcement" %}{% endblock %}
+{% block base_css %}
+<link rel="stylesheet" href="{% static 'css/add_ad.css' %}">
+<style>
+  :root {
+    --rukn-orange: #ff7a18;
+    --muted: #6b7280;
+  }
+
+  .upload-preview {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: .75rem;
+    overflow: hidden;
+    border: 2px dashed var(--rukn-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: .3s;
+  }
+
+  .upload-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .upload-preview.main {
+    border: 3px solid var(--rukn-orange);
+    box-shadow: 0 0 10px rgba(255, 122, 24, 0.5);
+  }
+
+  .upload-preview.main::after {
+    content: "⭐ الصورة الرئيسية";
+    position: absolute;
+    bottom: 0;
+    inset-inline: 0;
+    background: rgba(255, 122, 24, 0.9);
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    padding: 2px 0;
+  }
+
+  @media (min-width: 640px) {
+    .upload-preview {
+      width: 150px;
+      height: 150px;
+    }
+  }
+
+  .upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--rukn-orange) !important;
+    color: white !important;
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: .3s;
+  }
+
+  .upload-btn:hover {
+    transform: scale(1.05);
+  }
+
+  .tip-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .tip-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .category-level-block.open .category-dropdown {
+    display: block;
+  }
+
+  .category-dropdown {
+    display: none;
+  }
+
+  /* Existing photos styling to match previews as much as possible */
+  .existing-photo-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+  }
+
+  .existing-photo-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: .75rem;
+    border: 2px dashed var(--rukn-orange);
+    cursor: pointer;
+    transition: .3s;
+  }
+
+  .existing-photo-wrapper img.main {
+    border: 3px solid var(--rukn-orange);
+    box-shadow: 0 0 10px rgba(255, 122, 24, 0.5);
+  }
+
+  .existing-photo-wrapper img.main::after {
+    content: "⭐ الصورة الرئيسية";
+    position: absolute;
+    bottom: 0;
+    inset-inline: 0;
+    background: rgba(255, 122, 24, 0.9);
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    padding: 2px 0;
+  }
+
+  .existing-photo-wrapper button.delete-btn {
+    position: absolute;
+    top: -6px;
+    inset-inline-end: -6px;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 11px;
+    padding: 2px 6px;
+    line-height: 1;
+  }
+
+  @media (min-width: 640px) {
+    .existing-photo-wrapper {
+      width: 150px;
+      height: 150px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="bg-white border border-gray-200 rounded-xl shadow">
 
-  <div class="px-5 py-3 text-white rounded-t-xl" style="background-color: var(--jordan-green);">
-    <h4 class="text-lg font-semibold mb-0">{% trans "Edit Announcement" %}</h4>
-  </div>
+<div class="max-w-5xl mx-auto px-4 py-10">
 
-  <div class="p-6">
-    <form method="post" enctype="multipart/form-data" class="space-y-6">
+  <!-- HEADER -->
+  <header class="text-center mb-8">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-[var(--rukn-orange)] drop-shadow-sm mb-2">
+      تعديل الإعلان
+    </h1>
+    <p class="text-[var(--muted)] text-sm sm:text-base font-medium">
+      عدّل تفاصيل إعلانك بسهولة، سيتم مراجعته من جديد من قبل الإدارة
+    </p>
+  </header>
+
+  <!-- MAIN CARD -->
+  <div class="bg-white shadow-xl rounded-2xl p-6 md:p-8 border border-orange-200">
+
+    {% if form.non_field_errors %}
+      <div class="mb-4 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
+        <span>⚠️</span> <span>{{ form.non_field_errors }}</span>
+      </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" id="itemForm">
       {% csrf_token %}
 
       <input type="hidden" name="selected_main_photo" id="selected_main_photo" value="">
       <input type="hidden" name="main_photo_index" id="main_photo_index" value="">
 
-      <div>
-        <label for="id_title" class="font-semibold block mb-1">{% trans "Title" %}</label>
+      <!-- TITLE -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-2">عنوان الإعلان</label>
         <input type="text" name="title" id="id_title"
+               class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none"
                value="{{ form.title.value|default_if_none:'' }}"
-               class="w-full border rounded px-3 py-2" maxlength="255" required>
+               placeholder="مثلاً: لابتوب HP جديد">
+        {% if form.title.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ form.title.errors }}</p>
+        {% endif %}
       </div>
 
-      <div>
-        <label for="categorySelect" class="font-semibold block mb-1">{% trans "Category" %}</label>
-        <select name="category" id="categorySelect"
-                class="w-full border rounded px-3 py-2 bg-gray-100 cursor-not-allowed" disabled>
-          <option value="{{ category.id }}" selected>{{ category }}</option>
-        </select>
+      <!-- PHOTOS -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-3">صور الإعلان</label>
+
+        <!-- Existing photos -->
+        <div class="flex flex-wrap gap-3 mb-4" id="existingPhotos">
+          {% for photo in item.photos.all %}
+            <div class="existing-photo-wrapper">
+              <img src="{{ photo.image.url }}"
+                   data-photo-id="{{ photo.id }}"
+                   class="{% if photo.is_main %}main{% endif %}">
+              <button type="submit"
+                      name="delete_photo_{{ photo.id }}"
+                      class="delete-btn">
+                ×
+              </button>
+            </div>
+          {% empty %}
+            <p class="text-gray-500 text-sm">لا توجد صور حاليًا، يمكنك إضافة صور جديدة أدناه.</p>
+          {% endfor %}
+        </div>
+
+        <!-- Hidden Django input for new photos -->
+        <div class="hidden">
+          {{ form.images }}
+        </div>
+
+        <!-- Preview for newly added photos -->
+        <div id="previewContainer" class="flex flex-wrap gap-3 mb-3"></div>
+
+        <p id="imageHint"
+           class="text-xs text-[var(--muted)] mt-1 text-center sm:text-right hidden">
+          اضغط على الصورة لاختيارها كـ
+          <span class="text-[var(--rukn-orange)] font-semibold">الصورة الرئيسية</span>
+        </p>
+
+        <!-- Button -->
+        <label for="id_images" class="upload-btn mt-3 inline-flex cursor-pointer">
+          <span>إضافة صور جديدة</span>
+        </label>
+
+        {% if form.images.errors %}
+          <p class="text-red-600 text-xs mt-2">{{ form.images.errors }}</p>
+        {% endif %}
       </div>
 
-      {% for field in form.visible_fields %}
-        {% if field.name|slice:"0:10" == "attribute_" and not "_other" in field.name %}
-          <div>
-            <label class="font-semibold block mb-1" for="id_{{ field.name }}">{{ field.label }}</label>
-            {{ field }}
-            <div id="{{ field.name }}_other_box" class="mt-2 hidden">
+      <!-- CATEGORY (read-only, but same visual area) -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-2">الفئة</label>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border-2 border-[var(--rukn-orange)] bg-orange-50 text-sm font-semibold text-gray-800">
+          {{ category }}
+          <span class="text-[var(--muted)] text-xs">(لا يمكن تعديل الفئة بعد إنشاء الإعلان)</span>
+        </div>
+
+        <input type="hidden"
+               name="category"
+               id="id_category_final"
+               value="{{ category.id }}">
+        {% if form.category.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ form.category.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- DYNAMIC ATTRIBUTES (same pattern as create) -->
+      <div id="attribute-fields" class="mb-6">
+        {% for field in form %}
+          {% if field.name|slice:":5" == "attr_" %}
+            <div class="mb-4">
+              <label class="block font-semibold mb-2">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ field.errors }}</p>
+              {% endif %}
+
               {% with other_name=field.name|add:"_other" %}
                 {% if other_name in form.fields %}
-                  {{ form|get_bound_field:other_name }}
+                  {% with other_field=form|getitem:other_name %}
+                    <div class="mt-3">
+                      <label class="block font-semibold mb-2">{{ other_field.label }}</label>
+                      {{ other_field }}
+                      {% if other_field.errors %}
+                        <p class="text-red-600 text-xs mt-1">{{ other_field.errors }}</p>
+                      {% endif %}
+                    </div>
+                  {% endwith %}
                 {% endif %}
               {% endwith %}
             </div>
-          </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <!-- DESCRIPTION -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-2">الوصف</label>
+        <textarea id="id_description"
+                  name="description"
+                  rows="4"
+                  class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none"
+                  placeholder="اكتب وصفاً موجزاً وواضحاً للمنتج">{{ form.description.value|default_if_none:'' }}</textarea>
+        {% if form.description.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ form.description.errors }}</p>
         {% endif %}
-      {% endfor %}
 
-      <div>
-        <label class="font-semibold block mb-1">{% trans "Condition" %}</label>
-        <div class="flex gap-6">
-          <label class="flex items-center gap-2">
-            <input type="radio" name="condition" value="new" class="h-4 w-4" {% if form.condition.value == 'new' %}checked{% endif %}>
-            <span>{% trans "New" %}</span>
-          </label>
-          <label class="flex items-center gap-2">
-            <input type="radio" name="condition" value="used" class="h-4 w-4" {% if form.condition.value == 'used' %}checked{% endif %}>
-            <span>{% trans "Used" %}</span>
-          </label>
-        </div>
-      </div>
-
-      <div>
-        <label for="id_description" class="font-semibold block mb-1">{% trans "Description" %}</label>
-        <textarea name="description" id="id_description" rows="6"
-                  class="w-full border rounded px-3 py-2">{{ form.description.value|default_if_none:'' }}</textarea>
-      </div>
-
-      <div>
-        <label for="id_price" class="font-semibold block mb-1">{% trans "Price" %}</label>
-        {{ form.price }}
-      </div>
-
-      <div>
-        <label for="id_city" class="font-semibold block mb-1">{% trans "City" %}</label>
-        {{ form.city }}
-      </div>
-
-      <div>
-        <h6 class="font-semibold mb-2">{% trans "Existing Photos" %}</h6>
-        <div class="flex flex-wrap gap-3" id="existingPhotos">
-          {% for photo in item.photos.all %}
-            <div class="relative">
-              <img src="{{ photo.image.url }}"
-                   data-photo-id="{{ photo.id }}"
-                   class="existing-photo {% if photo.is_main %}selected-main{% endif %}"
-                   style="width:120px;height:120px;object-fit:cover;border:3px solid {% if photo.is_main %}var(--jordan-green){% else %}#ccc{% endif %};border-radius:.5rem;cursor:pointer;transition:all .2s ease;">
-              <button type="submit" name="delete_photo_{{ photo.id }}"
-                      class="absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full px-2 py-0.5 transform translate-x-1/3 -translate-y-1/3">×</button>
-            </div>
-          {% empty %}
-            <p class="text-gray-500 mb-0">{% trans "No photos uploaded." %}</p>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div>
-        <label class="font-semibold block mb-1">{% trans "Add More Photos" %}</label>
-        {{ form.images }}
-        {% if form.images.errors %}
-          <div class="text-red-600 text-sm mt-1">{{ form.images.errors }}</div>
-        {% endif %}
-        <div id="preview" class="mt-3 flex flex-wrap gap-2"></div>
-      </div>
-
-      <div class="flex justify-end gap-3">
-        <a href="{% url 'item_detail' item.id %}" class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100">{% trans "Cancel" %}</a>
-        <button type="submit" class="bg-orange-600 px-4 py-2 bg-jordan text-white rounded hover:opacity-90">
-          {% trans "Save Changes" %}
+        <!-- AI description button -->
+        <button type="button" id="aiBtn"
+                class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 transition w-full sm:w-auto justify-center">
+          تحسين الوصف بالذكاء الاصطناعي
         </button>
       </div>
+
+      <!-- CONDITION (same toggle as create) -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-3">حالة المنتج</label>
+
+        <div id="conditionToggle"
+             class="flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-2xl w-full sm:w-64">
+          <button type="button"
+                  data-value="new"
+                  class="flex-1 py-2.5 text-sm font-bold">
+            جديد
+          </button>
+          <button type="button"
+                  data-value="used"
+                  class="flex-1 py-2.5 text-sm font-bold">
+            مستعمل
+          </button>
+        </div>
+
+        <!-- Actual Django radios (hidden) -->
+        <div class="hidden">
+          {{ form.condition }}
+        </div>
+
+        {% if form.condition.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ form.condition.errors }}</p>
+        {% endif %}
+      </div>
+
+      <!-- PRICE + CITY -->
+      <div class="flex flex-col gap-6 mb-6">
+        <!-- PRICE -->
+        <div>
+          <label class="font-semibold mb-2 block">السعر (د.أ)</label>
+          <input type="number" step="0.01"
+                 name="price"
+                 id="id_price"
+                 value="{{ form.price.value|default_if_none:'' }}"
+                 class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none"
+                 placeholder="مثلاً: 150">
+          {% if form.price.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ form.price.errors }}</p>
+          {% endif %}
+        </div>
+
+        <!-- CITY -->
+        <div>
+          <label class="font-semibold mb-2 block">المدينة</label>
+          <select name="city"
+                  class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none">
+            {% for value, label in form.city.field.choices %}
+              <option value="{{ value }}" {% if form.city.value == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+
+          {% if form.city.errors %}
+            <p class="text-red-600 text-xs mt-1">{{ form.city.errors }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- CONTACT INFO -->
+      <div class="mb-4">
+        <label class="font-semibold mb-2 block">معلومات التواصل</label>
+        <p class="text-sm text-gray-500 mb-2">
+          رقم هاتفك المسجل سيتم عرضه حسب إعدادات الخصوصية في حسابك.
+        </p>
+      </div>
+
+      <!-- SHOW PHONE NUMBER -->
+      <div class="mb-6">
+        <label class="flex items-center gap-3 cursor-pointer select-none">
+          <input type="checkbox" name="show_phone"
+                 class="w-5 h-5 accent-[var(--rukn-orange)] rounded-lg"
+                 {% if request.user.profile.show_phone %}checked{% endif %}>
+          <span class="font-semibold text-gray-700">إظهار رقم الهاتف في الإعلان</span>
+        </label>
+        <p class="text-xs text-[var(--muted)] mt-1 pr-8">
+          في حال تفعيله، سيتم عرض رقمك للمشترين لتسهيل التواصل مباشرة.
+        </p>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="mt-8 text-center flex flex-col sm:flex-row sm:justify-between gap-3">
+        <a href="{% url 'item_detail' item.id %}"
+           class="px-6 py-3 border-2 border-gray-200 rounded-3xl text-gray-700 font-semibold hover:bg-gray-50 text-center">
+          إلغاء التعديل
+        </a>
+
+        <button type="submit"
+                class="px-8 py-3 bg-[var(--rukn-orange)] text-white font-bold text-lg rounded-3xl shadow-md hover:scale-105 transition w-full sm:w-auto">
+          حفظ التعديلات
+        </button>
+      </div>
+
     </form>
+
   </div>
+
+  <!-- TIPS (same as create) -->
+  <section class="bg-gradient-to-b from-orange-50 to-white rounded-2xl p-8 mt-10 shadow-lg border border-orange-300">
+    <h2 class="text-2xl font-bold text-[var(--rukn-orange)] mb-8 text-center flex items-center justify-center gap-2">
+      💡 نصائح لإعلان ناجح
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-center">
+      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
+        <div class="text-3xl mb-2">📸</div>
+        <h3 class="font-semibold text-gray-800">صور جذابة</h3>
+        <p class="text-sm text-[var(--muted)] mt-1">
+          التقط صورًا واضحة من زوايا متعددة لعرض المنتج بأفضل شكل.
+        </p>
+      </div>
+
+      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
+        <div class="text-3xl mb-2">🖋️</div>
+        <h3 class="font-semibold text-gray-800">عنوان واضح</h3>
+        <p class="text-sm text-[var(--muted)] mt-1">
+          اختر عنوانًا دقيقًا يصف منتجك باحترافية.
+        </p>
+      </div>
+
+      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
+        <div class="text-3xl mb-2">📃</div>
+        <h3 class="font-semibold text-gray-800">وصف صادق</h3>
+        <p class="text-sm text-[var(--muted)] mt-1">
+          اشرح تفاصيل المنتج ومميزاته بوضوح وصدق.
+        </p>
+      </div>
+
+      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
+        <div class="text-3xl mb-2">💰</div>
+        <h3 class="font-semibold text-gray-800">سعر مناسب</h3>
+        <p class="text-sm text-[var(--muted)] mt-1">
+          حدد سعرًا عادلًا يجذب المشترين الجادين.
+        </p>
+      </div>
+
+      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
+        <div class="text-3xl mb-2">📍</div>
+        <h3 class="font-semibold text-gray-800">موقع دقيق</h3>
+        <p class="text-sm text-[var(--muted)] mt-1">
+          أضف موقعك الصحيح لتسهيل التواصل مع المشتري.
+        </p>
+      </div>
+
+      <div class="tip-card bg-white border-t-4 border-[var(--rukn-orange)] rounded-xl p-5 shadow-sm">
+        <div class="text-3xl mb-2">⏱️</div>
+        <h3 class="font-semibold text-gray-800">الرد السريع</h3>
+        <p class="text-sm text-[var(--muted)] mt-1">
+          كن متفاعلاً مع الرسائل والاستفسارات لتزيد من فرص البيع.
+        </p>
+      </div>
+    </div>
+  </section>
+
 </div>
+
 {% endblock %}
 
 {% block scripts %}
-{{ block.super }}
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/trumbowyg.min.css">
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/trumbowyg.min.js"></script>
-
-<style>
-  .form-label {display:block;margin-bottom:.4rem;font-weight:600}
-  [id$="_other_box"]{display:none}
-
-  .existing-photo.selected-main,
-  #preview img.preview-img.selected-main {
-    border:4px solid var(--jordan-green)!important;
-    box-shadow:0 0 12px 4px rgba(0,128,0,0.4);
-    transform:scale(1.05);
-    transition:all .2s ease-in-out;
-  }
-
-  .existing-photo:hover,
-  #preview img.preview-img:hover {
-    border-color:#999;
-    transform:scale(1.03);
-  }
-</style>
+<script src="{% static 'js/ai_description.js' %}"></script>
 
 <script>
-(function(){
-  function updateOtherInputs(){
-    document.querySelectorAll("select[name^='attribute_']").forEach(select=>{
-      if(select.name.endsWith("_other"))return;
-      const box=document.getElementById(select.name+"_other_box");
-      if(box)box.style.display=(select.value==="__other__")?"block":"none";
+document.addEventListener("DOMContentLoaded", function () {
+  // ----------------------------------------------------------
+  // EXISTING PHOTOS: select main
+  // ----------------------------------------------------------
+  const existingPhotos = document.querySelectorAll("#existingPhotos img");
+  const selectedMainPhotoInput = document.getElementById("selected_main_photo");
+  const mainIndexInput = document.getElementById("main_photo_index");
+
+  existingPhotos.forEach((img) => {
+    img.addEventListener("click", () => {
+      existingPhotos.forEach((i) => i.classList.remove("main"));
+      img.classList.add("main");
+      selectedMainPhotoInput.value = img.dataset.photoId || "";
+      if (mainIndexInput) {
+        mainIndexInput.value = "";
+      }
     });
-  }
+  });
 
-  document.addEventListener('change',e=>{
-    if(e.target && e.target.name==='images'){
-      const preview=document.getElementById('preview');
-      preview.innerHTML='';
-      document.getElementById('main_photo_index').value='';
+  // ----------------------------------------------------------
+  // IMAGE PREVIEW + MAIN PHOTO (new images)
+  // ----------------------------------------------------------
+  const imageInput = document.getElementById("id_images");
+  const previewContainer = document.getElementById("previewContainer");
+  const imageHint = document.getElementById("imageHint");
 
-      Array.from(e.target.files).forEach((file,index)=>{
-        const reader=new FileReader();
-        reader.onload=ev=>{
-          const img=document.createElement('img');
-          img.src=ev.target.result;
-          img.classList.add('preview-img');
-          img.dataset.index=index;
-          img.style.cssText='width:100px;height:100px;object-fit:cover;border:2px solid #ddd;border-radius:.5rem;cursor:pointer;transition:all .2s';
-          img.addEventListener('click',()=>{
-            document.querySelectorAll('#preview img').forEach(i=>i.classList.remove('selected-main'));
-            img.classList.add('selected-main');
-            document.getElementById('main_photo_index').value=index;
-            document.getElementById('selected_main_photo').value='';
+  if (imageInput && previewContainer) {
+    imageInput.addEventListener("change", function () {
+      const files = Array.from(this.files || []);
+      previewContainer.innerHTML = "";
+
+      if (files.length > 0 && imageHint) {
+        imageHint.classList.remove("hidden");
+      } else if (imageHint) {
+        imageHint.classList.add("hidden");
+      }
+
+      files.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement("div");
+          div.className = "upload-preview cursor-pointer";
+          div.dataset.index = String(idx);
+          div.innerHTML = `<img src="${e.target.result}" alt="">`;
+
+          div.addEventListener("click", () => {
+            document
+              .querySelectorAll(".upload-preview")
+              .forEach((p) => p.classList.remove("main"));
+            div.classList.add("main");
+            if (mainIndexInput) {
+              mainIndexInput.value = String(idx);
+            }
+            if (selectedMainPhotoInput) {
+              selectedMainPhotoInput.value = "";
+            }
           });
-          preview.appendChild(img);
+
+          previewContainer.appendChild(div);
+
+          if (idx === 0 && (!mainIndexInput || !mainIndexInput.value)) {
+            div.classList.add("main");
+            if (mainIndexInput) {
+              mainIndexInput.value = "0";
+            }
+          }
         };
         reader.readAsDataURL(file);
       });
+    });
+  }
+
+  // ----------------------------------------------------------
+  // CONDITION TOGGLE (NEW / USED)
+  // ----------------------------------------------------------
+  const conditionToggle = document.getElementById("conditionToggle");
+  const conditionRadios = document.querySelectorAll("input[name='condition']");
+
+  function setCondition(value) {
+    conditionRadios.forEach((r) => {
+      r.checked = r.value === value;
+    });
+    if (!conditionToggle) return;
+    const buttons = conditionToggle.querySelectorAll("button[data-value]");
+    buttons.forEach((btn) => {
+      if (btn.dataset.value === value) {
+        btn.classList.remove("text-[var(--muted)]", "bg-white");
+        btn.classList.add("text-white", "bg-[var(--rukn-orange)]");
+      } else {
+        btn.classList.remove("text-white", "bg-[var(--rukn-orange)]");
+        btn.classList.add("text-[var(--muted)]", "bg-white");
+      }
+    });
+  }
+
+  if (conditionToggle && conditionRadios.length) {
+    let initial = "used";
+    conditionRadios.forEach((r) => {
+      if (r.checked) initial = r.value;
+    });
+    setCondition(initial);
+
+    conditionToggle.querySelectorAll("button[data-value]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const val = btn.dataset.value || "used";
+        setCondition(val);
+      });
+    });
+  }
+
+  // ----------------------------------------------------------
+  // LIVE HANDLING OF "OTHER" OPTION FOR ATTRIBUTE SELECT FIELDS
+  // ----------------------------------------------------------
+  document.addEventListener("change", function (e) {
+    const target = e.target;
+
+    if (!target.name || !target.name.startsWith("attr_")) return;
+    if (target.tagName.toLowerCase() !== "select") return;
+
+    const otherName = target.name + "_other";
+    const otherField = document.querySelector(`[name="${otherName}"]`);
+
+    if (!otherField) return;
+
+    const wrapper = otherField.closest("div");
+    if (!wrapper) return;
+
+    if (target.value === "__other__") {
+      wrapper.style.display = "";
+    } else {
+      wrapper.style.display = "none";
+      otherField.value = "";
     }
   });
 
-  document.addEventListener('click',e=>{
-    if(e.target && e.target.classList.contains('existing-photo')){
-      document.querySelectorAll('.existing-photo').forEach(i=>i.classList.remove('selected-main'));
-      e.target.classList.add('selected-main');
-      document.getElementById('selected_main_photo').value=e.target.dataset.photoId;
-      document.getElementById('main_photo_index').value='';
-    }
+  // Init visibility for existing "_other" fields on load
+  document.querySelectorAll("select[name^='attr_']").forEach((select) => {
+    const event = new Event("change");
+    select.dispatchEvent(event);
   });
-
-  document.addEventListener('DOMContentLoaded',function(){
-    setTimeout(updateOtherInputs,0);
-    document.addEventListener('change',e=>{
-      if(e.target && e.target.matches("select[name^='attribute_']"))updateOtherInputs();
-    });
-
-    $('#id_description').trumbowyg({
-      btns:[['strong','em','underline'],['unorderedList','orderedList'],['link'],['removeformat']],
-      autogrow:true,
-      svgPath:'https://cdn.jsdelivr.net/npm/trumbowyg@2.27.3/dist/ui/icons.svg'
-    });
-  });
-})();
+});
 </script>
 {% endblock %}
