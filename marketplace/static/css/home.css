@@ -227,3 +227,18 @@ body {
     width: 110px;
   }
 }
+
+
+/* ---- Home categories arrows small adjustment ---- */
+.cat-arrow {
+  top: 45%;            /* a bit higher than exact middle */
+}
+
+.cat-arrow-right {
+  right: -2px;        /* a bit more to the right, outside the box */
+}
+
+.cat-arrow-left {
+  left: -2px;         /* a bit more to the left, outside the box */
+}
+
