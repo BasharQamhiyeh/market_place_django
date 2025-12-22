@@ -34,16 +34,16 @@ class City(models.Model):
 # ======================================================
 
 class UserManager(BaseUserManager):
-    def create_user(self, phone, username, password=None, email=None):
+    def create_user(self, phone, password=None):
         if not phone:
             raise ValueError("Users must have a phone number")
-        user = self.model(phone=phone, username=username, email=email)
+        user = self.model(phone=phone)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, username, password, email=None):
-        user = self.create_user(phone=phone, username=username, password=password, email=email)
+    def create_superuser(self, phone, username, password):
+        user = self.create_user(phone=phone, password=password)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
@@ -52,7 +52,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=100, unique=True)
+    username = models.CharField(max_length=100, unique=True, null=True)
     phone = models.CharField(max_length=20, unique=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     first_name = models.CharField(max_length=100, blank=True, null=True)

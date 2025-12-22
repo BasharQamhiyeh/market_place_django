@@ -53,11 +53,10 @@ from .forms import (
     ItemForm,
     UserProfileEditForm,
     UserPasswordChangeForm,
-    UserRegistrationForm,
     PhoneVerificationForm,
     ForgotPasswordForm,
     ResetPasswordForm,
-    RequestForm
+    RequestForm, SignupAfterOtpForm, UserRegistrationForm
 )
 
 # Local imports
@@ -76,6 +75,7 @@ from elasticsearch_dsl.query import Q as ES_Q
 from collections import deque
 from datetime import timedelta
 import json
+import re
 
 try:
     from django.contrib.postgres.search import TrigramSimilarity
@@ -1774,75 +1774,154 @@ def report_issue(request, item_id):
 
 
 
-# ✅ Step 1: Send verification code (for logged-in users)
-@login_required
-def send_verification_code(request):
-    user = request.user
-    send_code(request, user.phone, "verification", "verify", send_sms_code)
-    messages.info(request, "📱 تم إرسال رمز التحقق إلى رقم هاتفك (افتح وحدة التحكم لتراه في الوضع التجريبي).")
-    return redirect('verify_phone')
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+
+from .models import User
+# from .forms import UserRegistrationForm
 
 
-# ✅ Step 2: Verify phone during registration
-# Step 2: Verify phone during registration
-def verify_phone(request):
-    pending_data = request.session.get('pending_user_data')
+def register(request):
+    """
+    Render the SINGLE-PAGE mockup UI.
+    (No user creation here.)
+    """
+    # capture referral if present
+    ref_code = request.GET.get("ref")
+    if ref_code:
+        request.session["ref_code"] = ref_code
 
-    if not pending_data:
-        messages.error(request, "انتهت الجلسة. يرجى التسجيل مجددًا.")
-        return redirect('register')
-
-    if request.method == 'POST':
-        form = PhoneVerificationForm(request.POST)
-        if form.is_valid():
-            entered_code = form.cleaned_data['code']
-            if verify_session_code(request, "verification", entered_code):
-
-                # Create user
-                user = User.objects.create_user(
-                    username=pending_data['username'],
-                    phone=pending_data['phone'],
-                    email=pending_data.get('email'),
-                    password=pending_data['password'],
-                )
-                user.first_name = pending_data.get('first_name', '')
-                user.last_name = pending_data.get('last_name', '')
-                user.show_phone = pending_data.get('show_phone', True)
-                user.phone_verified = True
-                user.is_active = True
-
-                # 🔥 assign referral BEFORE save()
-                ref_code = request.session.get('ref_code')
-                if ref_code:
-                    try:
-                        referrer = User.objects.get(referral_code=ref_code)
-                        user.referred_by = referrer
-                    except User.DoesNotExist:
-                        pass
-
-                user.save()
-
-                # 🔥 reward referrer AFTER save()
-                if user.referred_by:
-                    user.referred_by.points += 50  # ⭐ points reward
-                    user.referred_by.save()
-
-                # cleanup session
-                for key in ['pending_user_data', 'verification_code', 'verification_sent_at', 'ref_code']:
-                    request.session.pop(key, None)
-
-                login(request, user)
-                messages.success(request, "✅ تم التحقق من رقم الهاتف وإنشاء الحساب بنجاح!")
-                return redirect('home')
-            else:
-                messages.error(request, "⚠️ الرمز غير صحيح أو منتهي الصلاحية.")
-    else:
-        form = PhoneVerificationForm()
-
-    return render(request, 'verify_phone.html', {'form': form})
+    form = UserRegistrationForm()
+    return render(request, "register.html", {"form": form})
 
 
+@require_POST
+@csrf_protect
+def ajax_send_signup_otp(request):
+    """
+    Mockup Step 1:
+    - receive phone only
+    - normalize
+    - check not registered
+    - send_code(...)
+    - store pending phone in session
+    """
+    phone = (request.POST.get("phone") or "").strip().replace(" ", "").replace("-", "")
 
+    # ✅ ONLY allow 07########
+    if not re.fullmatch(r"07\d{8}", phone):
+        return JsonResponse(
+            {"ok": False, "error": "رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام. مثال: 0790000000"},
+            status=400
+        )
+
+    # ✅ canonical format saved/used by OTP: 9627xxxxxxxx
+    phone_norm = "962" + phone[1:]  # 9627xxxxxxxx
+
+    # ✅ robust duplicate check (in case DB has old formats)
+    local07 = phone  # 07xxxxxxxx
+    plus = "+" + phone_norm  # +9627xxxxxxxx
+    zerozero = "00" + phone_norm  # 009627xxxxxxxx
+
+    if User.objects.filter(Q(phone=phone_norm) | Q(phone=local07) | Q(phone=plus) | Q(phone=zerozero)).exists():
+        return JsonResponse(
+            {"ok": False, "duplicated": True, "error": "هذا الرقم مسجَّل لدينا بالفعل."},
+            status=409
+        )
+
+    request.session["pending_phone"] = phone_norm
+    request.session["phone_verified_ok"] = False
+
+    send_code(request, phone_norm, "verification", "verify", send_sms_code)
+    return JsonResponse({"ok": True})
+
+
+@require_POST
+@csrf_protect
+def ajax_verify_signup_otp(request):
+    """
+    Mockup Step 2 (popup):
+    - verify code using verify_session_code
+    - mark session verified
+    """
+    pending_phone = request.session.get("pending_phone")
+    if not pending_phone:
+        return JsonResponse({"ok": False, "error": "انتهت الجلسة. يرجى إعادة المحاولة."}, status=400)
+
+    code = (request.POST.get("code") or "").strip()
+    if not code:
+        return JsonResponse({"ok": False, "error": "أدخل رمز التحقق."}, status=400)
+
+    if not verify_session_code(request, "verification", code):
+        return JsonResponse({"ok": False, "error": "⚠️ الرمز غير صحيح أو منتهي الصلاحية."}, status=400)
+
+    request.session["phone_verified_ok"] = True
+    return JsonResponse({"ok": True, "phone": pending_phone})
+
+
+@csrf_protect
+def complete_signup(request):
+    if request.method != "POST":
+        return redirect("register")
+
+    pending_phone = request.session.get("pending_phone")
+    verified_ok = request.session.get("phone_verified_ok", False)
+    if not pending_phone or not verified_ok:
+        messages.error(request, "يرجى تأكيد رقم الهاتف أولاً.")
+        return redirect("register")
+
+    form = SignupAfterOtpForm(request.POST)
+    if not form.is_valid():
+        # IMPORTANT: do NOT pass variable name "form" if your base.html opens login modal on form.errors
+        # pass it as "signup_form" instead.
+        return render(request, "register.html", {"signup_form": form})
+
+    # safety re-check (handle old formats too)
+    local07 = "0" + pending_phone[3:]     # 07xxxxxxxx
+    plus = "+" + pending_phone            # +9627xxxxxxxx
+    zerozero = "00" + pending_phone       # 009627xxxxxxxx
+
+    if User.objects.filter(Q(phone=pending_phone) | Q(phone=local07) | Q(phone=plus) | Q(phone=zerozero)).exists():
+        messages.error(request, "هذا الرقم مسجَّل لدينا بالفعل.")
+        return redirect("register")
+
+    user = User.objects.create_user(
+        phone=pending_phone,
+        password=form.cleaned_data["password"],
+    )
+    user.first_name = form.cleaned_data.get("first_name", "")
+    user.last_name = form.cleaned_data.get("last_name", "")
+    user.phone_verified = True
+    user.is_active = True
+    # default visibility (change if you want later)
+    user.show_phone = True
+
+    # referral
+    ref_code = request.session.get("ref_code")
+    if ref_code:
+        try:
+            referrer = User.objects.get(referral_code=ref_code)
+            user.referred_by = referrer
+        except User.DoesNotExist:
+            pass
+
+    user.save()
+
+    if user.referred_by:
+        user.referred_by.points += 50
+        user.referred_by.save()
+
+    # cleanup
+    for key in ["pending_phone", "phone_verified_ok", "verification_code", "verification_sent_at", "ref_code"]:
+        request.session.pop(key, None)
+
+    login(request, user)
+    messages.success(request, "✅ تم إنشاء الحساب بنجاح!")
+    return redirect("home")
 
 # ✅ Step 3: Forgot password – request code
 def forgot_password(request):
@@ -1935,67 +2014,40 @@ def reset_password(request):
     return render(request, 'reset_password.html', {'form': form})
 
 
-# Registration
-def register(request):
-    """
-    Step 1: Collect registration data, send code (no user yet).
-    Step 2: Verify code and create user only after success.
-    """
-
-    # Capture referral code from URL
-    ref_code = request.GET.get("ref")
-    if ref_code:
-        request.session["ref_code"] = ref_code
-
-    if request.method == 'POST':
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            # Temporarily store the data, not saving user yet
-            request.session['pending_user_data'] = form.cleaned_data
-
-            # Send code to phone (simulated)
-            phone = form.cleaned_data['phone']
-            send_code(request, phone, "verification", "verify", send_sms_code)
-
-            messages.info(request, "📱 تم إرسال رمز التحقق إلى رقم هاتفك.")
-            return redirect('verify_phone')
-    else:
-        form = UserRegistrationForm()
-    return render(request, 'register.html', {'form': form})
-
-
-
 # Login
 def user_login(request):
-    if request.method == 'POST':
-        identifier = request.POST['username'].strip()
-        password = request.POST['password']
+    if request.method == "POST":
+        phone = (request.POST.get("username") or "").strip()   # keep input name "username" in modal
+        password = request.POST.get("password") or ""
 
-        # Normalize phones
-        if identifier.startswith("07") and len(identifier) == 10:
-            identifier = "962" + identifier[1:]
+        # Normalize phones to 9627xxxxxxxx
+        phone = phone.replace(" ", "")
+        if phone.startswith("07") and len(phone) == 10 and phone.isdigit():
+            phone = "962" + phone[1:]
+        elif phone.startswith("+962") and len(phone) == 13 and phone[1:].isdigit():
+            phone = phone[1:]  # remove +
+        elif phone.startswith("9627") and len(phone) == 12 and phone.isdigit():
+            pass
+        else:
+            referer = request.META.get("HTTP_REFERER", "/")
+            return redirect(f"{referer}?login_error=1")
 
-        # Try username
-        user = authenticate(request, username=identifier, password=password)
+        # Phone-only lookup
+        try:
+            u = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            u = None
 
-        # Try phone
-        if not user:
-            try:
-                u = User.objects.get(phone=identifier)
-                user = authenticate(request, username=u.username, password=password)
-            except User.DoesNotExist:
-                user = None
-
-        # SUCCESS
-        if user:
-            login(request, user)
-            return redirect(request.META.get("HTTP_REFERER", "/"))
+        if u:
+            user = authenticate(request, username=u.username, password=password)
+            if user:
+                login(request, user)
+                return redirect(request.META.get("HTTP_REFERER", "/"))
 
         # FAIL → re-open modal with error
         referer = request.META.get("HTTP_REFERER", "/")
         return redirect(f"{referer}?login_error=1")
 
-    # GET should never show a login page → always redirect home
     return redirect("/")
 
 

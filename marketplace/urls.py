@@ -7,7 +7,6 @@ from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
     # --- Auth ---
-    path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
 
@@ -54,8 +53,13 @@ urlpatterns = [
     path("search/suggestions/", views.search_suggestions, name="search_suggestions"),
 
     # --- Verification / Password ---
-    path('send-verification/', views.send_verification_code, name='send_verification'),
-    path('verify-phone/', views.verify_phone, name='verify_phone'),
+
+    path("register/", views.register, name="register"),  # renders the mockup page
+    path("auth/send-otp/", views.ajax_send_signup_otp, name="ajax_send_signup_otp"),
+    path("auth/verify-otp/", views.ajax_verify_signup_otp, name="ajax_verify_signup_otp"),
+    path("auth/complete-signup/", views.complete_signup, name="complete_signup"),
+
+
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('verify-reset-code/', views.verify_reset_code, name='verify_reset_code'),
     path('reset-password/', views.reset_password, name='reset_password'),
