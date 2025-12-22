@@ -140,6 +140,9 @@ class Store(models.Model):
 class Category(models.Model):
     name_en = models.CharField(max_length=255, unique=True)
     name_ar = models.CharField(max_length=255, unique=True)
+
+    child_label = models.CharField(max_length=255, blank=True, null=True)
+
     subtitle_en = models.CharField(max_length=255, blank=True, null=True)
     subtitle_ar = models.CharField(max_length=255, blank=True, null=True)
     icon = models.CharField(max_length=50, blank=True, null=True)

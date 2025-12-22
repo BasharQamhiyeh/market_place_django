@@ -29861,3 +29861,1001 @@ WARNING 2025-12-01 19:37:36,838 log Not Found: /favicon.ico
 WARNING 2025-12-01 19:37:36,872 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
 INFO 2025-12-01 19:42:23,086 basehttp "GET / HTTP/1.1" 302 0
 INFO 2025-12-01 19:42:23,453 basehttp "GET /en/ HTTP/1.1" 200 90120
+INFO 2025-12-13 15:56:26,933 autoreload Watching for file changes with StatReloader
+INFO 2025-12-13 15:56:35,146 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-13 15:56:35,628 basehttp "GET /en/ HTTP/1.1" 200 66488
+INFO 2025-12-13 15:56:35,661 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-13 15:56:35,664 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-13 15:56:35,668 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-13 15:56:35,670 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-13 15:56:37,001 basehttp "GET /static/js/main.js HTTP/1.1" 200 4309
+INFO 2025-12-13 15:56:37,001 basehttp "GET /static/js/swiper-init.js HTTP/1.1" 200 599
+INFO 2025-12-13 15:56:37,001 basehttp "GET /static/js/search.js HTTP/1.1" 200 3595
+INFO 2025-12-13 15:56:37,001 basehttp "GET /static/js/header.js HTTP/1.1" 200 5088
+INFO 2025-12-13 15:56:37,017 basehttp "GET /media/items/thumbs/thumb_download_1_jluiE95.jpg HTTP/1.1" 200 8589
+INFO 2025-12-13 15:56:37,017 basehttp "GET /media/items/thumbs/thumb_49194_03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 32039
+INFO 2025-12-13 15:56:37,017 basehttp "GET /media/items/thumbs/thumb_49197_03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 20660
+INFO 2025-12-13 15:56:37,017 basehttp "GET /media/items/thumbs/thumb_49199_03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 42787
+INFO 2025-12-13 15:56:37,017 basehttp "GET /media/items/thumbs/thumb_49200_03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 31400
+INFO 2025-12-13 15:56:37,033 basehttp "GET /media/items/thumbs/thumb_49201_03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 43996
+INFO 2025-12-13 15:56:37,033 basehttp "GET /media/items/thumbs/thumb_49202_03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 29924
+INFO 2025-12-13 15:56:37,033 basehttp "GET /media/items/thumbs/thumb_49203_03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 66808
+INFO 2025-12-13 15:56:37,033 basehttp "GET /media/items/thumbs/thumb_49205_03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 20692
+INFO 2025-12-13 15:56:37,033 basehttp "GET /media/items/thumbs/thumb_49206_03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 55406
+INFO 2025-12-13 15:56:37,049 basehttp "GET /media/items/thumbs/thumb_49207_49207_1.jpg HTTP/1.1" 200 79327
+WARNING 2025-12-13 15:56:37,732 log Not Found: /favicon.ico
+WARNING 2025-12-13 15:56:37,733 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-13 15:57:07,975 basehttp "GET /en/register/ HTTP/1.1" 200 15089
+INFO 2025-12-13 15:57:32,110 basehttp "GET /en/register/ HTTP/1.1" 200 15089
+INFO 2025-12-13 16:30:55,105 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py changed, reloading.
+INFO 2025-12-13 16:30:56,549 autoreload Watching for file changes with StatReloader
+INFO 2025-12-13 16:38:56,538 basehttp "GET /en/ HTTP/1.1" 200 66488
+INFO 2025-12-13 16:38:57,170 basehttp "GET /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:57,186 basehttp "GET /login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:57,193 basehttp "GET /en/login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:57,208 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:57,385 basehttp "GET /en/ HTTP/1.1" 200 66488
+INFO 2025-12-13 16:38:58,963 basehttp "GET /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:58,975 basehttp "GET /login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:58,979 basehttp "GET /en/login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:58,991 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-13 16:38:59,167 basehttp "GET /en/ HTTP/1.1" 200 66488
+WARNING 2025-12-13 16:39:02,605 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-12-13 16:39:02,606 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3456
+INFO 2025-12-13 16:39:05,569 basehttp "GET /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:39:05,583 basehttp "GET /login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:39:05,588 basehttp "GET /en/login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:39:05,599 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-13 16:39:05,773 basehttp "GET /en/ HTTP/1.1" 200 66488
+WARNING 2025-12-13 16:39:05,803 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-12-13 16:39:05,805 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3456
+INFO 2025-12-13 16:39:12,518 basehttp "GET /en/ HTTP/1.1" 200 66488
+WARNING 2025-12-13 16:39:12,548 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-12-13 16:39:12,553 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3456
+INFO 2025-12-13 16:39:12,554 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-13 16:39:12,555 basehttp - Broken pipe from ('127.0.0.1', 56947)
+INFO 2025-12-13 16:39:12,557 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-13 16:39:12,561 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-13 16:39:12,562 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-13 16:39:12,988 basehttp "GET /static/js/search.js HTTP/1.1" 200 3595
+INFO 2025-12-13 16:39:12,989 basehttp "GET /static/js/swiper-init.js HTTP/1.1" 200 599
+INFO 2025-12-13 16:39:12,990 basehttp "GET /static/js/header.js HTTP/1.1" 200 5088
+INFO 2025-12-13 16:39:12,990 basehttp "GET /static/js/main.js HTTP/1.1" 200 4309
+INFO 2025-12-13 16:39:12,996 basehttp "GET /media/items/thumbs/thumb_download_1_jluiE95.jpg HTTP/1.1" 200 8589
+INFO 2025-12-13 16:39:12,997 basehttp "GET /media/items/thumbs/thumb_49194_03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 32039
+INFO 2025-12-13 16:39:13,006 basehttp "GET /media/items/thumbs/thumb_49197_03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 20660
+INFO 2025-12-13 16:39:13,007 basehttp "GET /media/items/thumbs/thumb_49199_03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 42787
+INFO 2025-12-13 16:39:13,012 basehttp "GET /media/items/thumbs/thumb_49200_03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 31400
+INFO 2025-12-13 16:39:13,013 basehttp "GET /media/items/thumbs/thumb_49201_03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 43996
+INFO 2025-12-13 16:39:13,020 basehttp "GET /media/items/thumbs/thumb_49203_03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 66808
+INFO 2025-12-13 16:39:13,021 basehttp "GET /media/items/thumbs/thumb_49202_03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 29924
+INFO 2025-12-13 16:39:13,030 basehttp "GET /media/items/thumbs/thumb_49205_03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 20692
+INFO 2025-12-13 16:39:13,031 basehttp "GET /media/items/thumbs/thumb_49206_03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 55406
+INFO 2025-12-13 16:39:13,037 basehttp "GET /media/items/thumbs/thumb_49207_49207_1.jpg HTTP/1.1" 200 79327
+WARNING 2025-12-13 16:39:13,843 log Not Found: /favicon.ico
+WARNING 2025-12-13 16:39:13,843 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-13 16:39:27,931 basehttp "POST /en/login/ HTTP/1.1" 302 0
+WARNING 2025-12-13 16:39:28,118 log Forbidden (CSRF token from POST incorrect.): /en/login/
+WARNING 2025-12-13 16:39:28,125 basehttp "POST /en/login/ HTTP/1.1" 403 2503
+WARNING 2025-12-13 16:39:28,152 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-12-13 16:39:28,159 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3456
+INFO 2025-12-13 16:39:28,166 basehttp - Broken pipe from ('127.0.0.1', 56711)
+INFO 2025-12-13 16:39:34,177 basehttp "GET /en/login/ HTTP/1.1" 302 0
+INFO 2025-12-13 16:39:34,190 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-13 16:39:34,535 basehttp "GET /en/ HTTP/1.1" 200 90214
+WARNING 2025-12-13 16:39:34,564 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-12-13 16:39:34,567 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3456
+INFO 2025-12-13 16:39:36,291 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43782
+WARNING 2025-12-13 16:39:36,318 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-12-13 16:39:36,320 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 3456
+INFO 2025-12-13 16:39:36,322 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-13 16:39:36,330 basehttp "GET /static/js/category_selector.js HTTP/1.1" 200 7473
+INFO 2025-12-13 16:39:36,348 basehttp "GET /static/js/ai_description.js HTTP/1.1" 200 1879
+INFO 2025-12-13 16:39:36,349 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 6190
+INFO 2025-12-13 16:40:04,029 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43782
+INFO 2025-12-13 16:40:04,050 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-13 16:40:04,154 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-13 16:40:06,302 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-13 16:40:07,491 basehttp "GET /ar/items/attributes/3/ HTTP/1.1" 200 76
+INFO 2025-12-13 16:40:11,502 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 1293
+INFO 2025-12-13 16:40:23,304 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43782
+INFO 2025-12-13 16:40:23,331 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-13 16:40:23,415 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-13 16:40:46,334 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-13 16:41:37,144 basehttp "GET /ar/items/attributes/3/ HTTP/1.1" 200 76
+INFO 2025-12-13 16:41:52,564 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 1293
+INFO 2025-12-21 12:33:41,459 autoreload Watching for file changes with StatReloader
+INFO 2025-12-21 12:33:54,000 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-21 12:33:54,398 basehttp "GET /en/ HTTP/1.1" 200 66399
+INFO 2025-12-21 12:33:54,951 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:33:54,957 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:33:54,963 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:33:54,965 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:33:56,847 basehttp "GET /static/js/search.js HTTP/1.1" 200 3595
+INFO 2025-12-21 12:33:56,848 basehttp "GET /static/js/swiper-init.js HTTP/1.1" 200 599
+INFO 2025-12-21 12:33:56,849 basehttp "GET /static/js/header.js HTTP/1.1" 200 5088
+INFO 2025-12-21 12:33:56,849 basehttp "GET /static/js/main.js HTTP/1.1" 200 4309
+INFO 2025-12-21 12:33:57,153 basehttp "GET /media/items/thumbs/thumb_download_1_jluiE95.jpg HTTP/1.1" 200 8589
+INFO 2025-12-21 12:33:57,153 basehttp "GET /media/items/thumbs/thumb_49194_03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 32039
+INFO 2025-12-21 12:33:59,324 basehttp "GET /media/items/thumbs/thumb_49197_03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 20660
+INFO 2025-12-21 12:33:59,326 basehttp "GET /media/items/thumbs/thumb_49199_03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 42787
+INFO 2025-12-21 12:33:59,332 basehttp "GET /media/items/thumbs/thumb_49200_03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 31400
+INFO 2025-12-21 12:33:59,340 basehttp "GET /media/items/thumbs/thumb_49202_03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 29924
+INFO 2025-12-21 12:33:59,340 basehttp "GET /media/items/thumbs/thumb_49203_03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 66808
+INFO 2025-12-21 12:33:59,340 basehttp "GET /media/items/thumbs/thumb_49201_03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 43996
+INFO 2025-12-21 12:33:59,355 basehttp "GET /media/items/thumbs/thumb_49205_03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 20692
+INFO 2025-12-21 12:33:59,358 basehttp "GET /media/items/thumbs/thumb_49206_03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 55406
+INFO 2025-12-21 12:33:59,360 basehttp "GET /media/items/thumbs/thumb_49207_49207_1.jpg HTTP/1.1" 200 79327
+WARNING 2025-12-21 12:33:59,518 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:33:59,518 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:34:12,681 basehttp "POST /en/login/ HTTP/1.1" 302 0
+INFO 2025-12-21 12:34:12,833 basehttp "GET /en/?login_error=1 HTTP/1.1" 200 66719
+INFO 2025-12-21 12:34:21,964 basehttp "POST /en/login/ HTTP/1.1" 302 0
+INFO 2025-12-21 12:34:22,174 basehttp "GET /en/?login_error=1 HTTP/1.1" 200 90286
+INFO 2025-12-21 12:34:27,836 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43776
+INFO 2025-12-21 12:34:27,866 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 12:34:27,883 basehttp "GET /static/js/category_selector.js HTTP/1.1" 200 7473
+INFO 2025-12-21 12:34:27,890 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 22299
+INFO 2025-12-21 12:34:27,898 basehttp "GET /static/js/ai_description.js HTTP/1.1" 200 1879
+INFO 2025-12-21 12:47:03,987 basehttp "GET /ar/item/create/ HTTP/1.1" 200 58941
+INFO 2025-12-21 12:47:04,013 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:47:04,015 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:47:04,019 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:47:04,024 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:47:04,028 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+WARNING 2025-12-21 12:47:04,282 basehttp "GET /static/js/post-ad-django-mock.js HTTP/1.1" 404 1889
+WARNING 2025-12-21 12:47:04,826 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:47:04,834 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:47:26,229 autoreload Watching for file changes with StatReloader
+INFO 2025-12-21 12:47:27,172 basehttp "GET /ar/item/create/ HTTP/1.1" 200 58941
+WARNING 2025-12-21 12:47:27,286 basehttp "GET /static/js/post-ad-django-mock.js HTTP/1.1" 404 1889
+WARNING 2025-12-21 12:47:27,762 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:47:27,800 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:49:54,988 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43242
+INFO 2025-12-21 12:49:55,009 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:49:55,013 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:49:55,019 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:49:55,019 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:49:55,024 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+WARNING 2025-12-21 12:49:55,206 basehttp "GET /static/js/post-ad-django-mock.js HTTP/1.1" 404 1889
+WARNING 2025-12-21 12:49:55,645 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:49:55,649 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:50:08,251 autoreload Watching for file changes with StatReloader
+INFO 2025-12-21 12:50:09,306 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43242
+INFO 2025-12-21 12:50:09,334 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:50:09,335 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:50:09,336 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:50:09,341 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 12:50:09,341 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+WARNING 2025-12-21 12:50:09,499 basehttp "GET /static/js/post-ad-django-mock.js HTTP/1.1" 404 1889
+WARNING 2025-12-21 12:50:09,710 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:50:09,713 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:50:11,236 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43242
+INFO 2025-12-21 12:50:11,264 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:50:11,266 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:50:11,266 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:50:11,266 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:50:11,271 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 12:50:11,523 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43242
+INFO 2025-12-21 12:50:11,548 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:50:11,548 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:50:11,550 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:50:11,554 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:50:11,559 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 12:50:11,830 basehttp "GET /ar/item/create/ HTTP/1.1" 200 43242
+WARNING 2025-12-21 12:50:11,840 basehttp "GET /static/js/post-ad-django-mock.js HTTP/1.1" 404 1889
+INFO 2025-12-21 12:50:11,931 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:50:11,948 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:50:11,948 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:50:11,948 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:50:11,948 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 12:50:11,955 basehttp - Broken pipe from ('127.0.0.1', 54931)
+WARNING 2025-12-21 12:50:12,120 basehttp "GET /static/js/post-ad-django-mock.js HTTP/1.1" 404 1889
+WARNING 2025-12-21 12:50:12,303 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:50:12,303 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:57:49,442 basehttp "GET /ar/item/create/ HTTP/1.1" 200 52427
+INFO 2025-12-21 12:57:49,474 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 12:57:49,474 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 12:57:49,476 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 12:57:49,479 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 12:57:49,481 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 12:57:49,686 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 21615
+WARNING 2025-12-21 12:57:49,962 log Not Found: /favicon.ico
+WARNING 2025-12-21 12:57:49,964 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 12:57:54,378 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 1293
+INFO 2025-12-21 12:58:06,979 basehttp "GET /ar/items/attributes/5/ HTTP/1.1" 200 76
+INFO 2025-12-21 12:58:09,351 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-21 13:06:19,800 basehttp "GET /ar/item/create/ HTTP/1.1" 200 47412
+INFO 2025-12-21 13:06:19,838 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-21 13:06:19,838 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-21 13:06:19,842 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-21 13:06:19,842 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-21 13:06:19,842 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-21 13:06:20,118 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 14077
+WARNING 2025-12-21 13:06:20,392 log Not Found: /favicon.ico
+WARNING 2025-12-21 13:06:20,394 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-21 13:06:27,511 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-21 13:06:29,985 basehttp "GET /ar/items/attributes/3/ HTTP/1.1" 200 76
+INFO 2025-12-21 13:06:35,428 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 1293
+ERROR 2025-12-21 13:07:43,325 log Internal Server Error: /ar/item/create/
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py", line 504, in item_create
+    listing.save()
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 1023, in save_base
+    post_save.send(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\dispatch\dispatcher.py", line 189, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\signals.py", line 61, in handle_save
+    registry.update(instance)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\registries.py", line 141, in update
+    doc().update(instance, **kwargs)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 259, in update
+    return self._bulk(
+           ^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 236, in _bulk
+    return self.bulk(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 178, in bulk
+    response = bulk(client=self._get_connection(), actions=actions, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 521, in bulk
+    for ok, item in streaming_bulk(
+                    ^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 436, in streaming_bulk
+    for data, (ok, info) in zip(
+                            ^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 339, in _process_bulk_chunk
+    resp = client.bulk(*args, operations=bulk_actions, **kwargs)  # type: ignore[arg-type]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\utils.py", line 446, in wrapped
+    return api(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\__init__.py", line 714, in bulk
+    return self.perform_request(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 271, in perform_request
+    response = self._perform_request(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 316, in _perform_request
+    meta, resp_body = self.transport.perform_request(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_transport.py", line 342, in perform_request
+    resp = node.perform_request(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_node\_http_urllib3.py", line 202, in perform_request
+    raise err from None
+elastic_transport.ConnectionError: Connection error caused by: ConnectionError(Connection error caused by: NewConnectionError(<urllib3.connection.HTTPConnection object at 0x0000022F005A66F0>: Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it))
+ERROR 2025-12-21 13:07:43,341 basehttp "POST /ar/item/create/ HTTP/1.1" 500 200082
+ERROR 2025-12-21 13:08:31,630 log Internal Server Error: /ar/item/create/
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py", line 504, in item_create
+    listing.save()
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 1023, in save_base
+    post_save.send(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\dispatch\dispatcher.py", line 189, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\signals.py", line 61, in handle_save
+    registry.update(instance)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\registries.py", line 141, in update
+    doc().update(instance, **kwargs)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 259, in update
+    return self._bulk(
+           ^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 236, in _bulk
+    return self.bulk(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 178, in bulk
+    response = bulk(client=self._get_connection(), actions=actions, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 521, in bulk
+    for ok, item in streaming_bulk(
+                    ^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 436, in streaming_bulk
+    for data, (ok, info) in zip(
+                            ^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 339, in _process_bulk_chunk
+    resp = client.bulk(*args, operations=bulk_actions, **kwargs)  # type: ignore[arg-type]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\utils.py", line 446, in wrapped
+    return api(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\__init__.py", line 714, in bulk
+    return self.perform_request(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 271, in perform_request
+    response = self._perform_request(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 316, in _perform_request
+    meta, resp_body = self.transport.perform_request(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_transport.py", line 342, in perform_request
+    resp = node.perform_request(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_node\_http_urllib3.py", line 202, in perform_request
+    raise err from None
+elastic_transport.ConnectionError: Connection error caused by: ConnectionError(Connection error caused by: ProtocolError(('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))))
+ERROR 2025-12-21 13:08:31,638 basehttp "POST /ar/item/create/ HTTP/1.1" 500 198331
+WARNING 2025-12-21 13:08:31,815 log Not Found: /favicon.ico
+WARNING 2025-12-21 13:08:31,818 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+ERROR 2025-12-21 13:08:38,172 log Internal Server Error: /ar/item/create/
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py", line 504, in item_create
+    listing.save()
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 1023, in save_base
+    post_save.send(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\dispatch\dispatcher.py", line 189, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\signals.py", line 61, in handle_save
+    registry.update(instance)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\registries.py", line 141, in update
+    doc().update(instance, **kwargs)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 259, in update
+    return self._bulk(
+           ^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 236, in _bulk
+    return self.bulk(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 178, in bulk
+    response = bulk(client=self._get_connection(), actions=actions, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 521, in bulk
+    for ok, item in streaming_bulk(
+                    ^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 436, in streaming_bulk
+    for data, (ok, info) in zip(
+                            ^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 339, in _process_bulk_chunk
+    resp = client.bulk(*args, operations=bulk_actions, **kwargs)  # type: ignore[arg-type]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\utils.py", line 446, in wrapped
+    return api(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\__init__.py", line 714, in bulk
+    return self.perform_request(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 271, in perform_request
+    response = self._perform_request(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 316, in _perform_request
+    meta, resp_body = self.transport.perform_request(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_transport.py", line 342, in perform_request
+    resp = node.perform_request(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_node\_http_urllib3.py", line 202, in perform_request
+    raise err from None
+elastic_transport.ConnectionError: Connection error caused by: ConnectionError(Connection error caused by: ProtocolError(('Connection aborted.', ConnectionAbortedError(10053, 'An established connection was aborted by the software in your host machine', None, 10053, None))))
+ERROR 2025-12-21 13:08:38,181 basehttp "POST /ar/item/create/ HTTP/1.1" 500 198728
+ERROR 2025-12-21 13:08:41,343 log Internal Server Error: /ar/item/create/
+Traceback (most recent call last):
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 59, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\AppData\Local\Programs\Python\Python312\Lib\contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py", line 504, in item_create
+    listing.save()
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 902, in save
+    self.save_base(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\db\models\base.py", line 1023, in save_base
+    post_save.send(
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django\dispatch\dispatcher.py", line 189, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\signals.py", line 61, in handle_save
+    registry.update(instance)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\registries.py", line 141, in update
+    doc().update(instance, **kwargs)
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 259, in update
+    return self._bulk(
+           ^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 236, in _bulk
+    return self.bulk(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\django_elasticsearch_dsl\documents.py", line 178, in bulk
+    response = bulk(client=self._get_connection(), actions=actions, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 521, in bulk
+    for ok, item in streaming_bulk(
+                    ^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 436, in streaming_bulk
+    for data, (ok, info) in zip(
+                            ^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\helpers\actions.py", line 339, in _process_bulk_chunk
+    resp = client.bulk(*args, operations=bulk_actions, **kwargs)  # type: ignore[arg-type]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\utils.py", line 446, in wrapped
+    return api(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\__init__.py", line 714, in bulk
+    return self.perform_request(  # type: ignore[return-value]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 271, in perform_request
+    response = self._perform_request(
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elasticsearch\_sync\client\_base.py", line 316, in _perform_request
+    meta, resp_body = self.transport.perform_request(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_transport.py", line 342, in perform_request
+    resp = node.perform_request(
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bqamhiyeh\source\repos\Market_Place\.venv\Lib\site-packages\elastic_transport\_node\_http_urllib3.py", line 202, in perform_request
+    raise err from None
+elastic_transport.ConnectionError: Connection error caused by: ConnectionError(Connection error caused by: ProtocolError(('Connection aborted.', ConnectionAbortedError(10053, 'An established connection was aborted by the software in your host machine', None, 10053, None))))
+ERROR 2025-12-21 13:08:41,347 basehttp "POST /ar/item/create/ HTTP/1.1" 500 198852
+INFO 2025-12-21 13:08:55,795 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-21 13:08:59,446 basehttp "GET /ar/items/attributes/5/ HTTP/1.1" 200 76
+INFO 2025-12-21 13:09:02,545 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 1293
+INFO 2025-12-21 13:09:24,991 basehttp "POST /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-21 13:09:25,078 basehttp "GET /ar/items/ HTTP/1.1" 200 50048
+INFO 2025-12-21 13:09:25,098 basehttp "GET /media/items/download_1_jluiE95.jpg HTTP/1.1" 200 2653
+INFO 2025-12-21 13:09:25,110 basehttp "GET /media/items/49197_03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-12-21 13:09:25,112 basehttp "GET /media/items/49194_03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 358823
+INFO 2025-12-21 13:09:25,122 basehttp "GET /media/items/49199_03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-12-21 13:09:25,151 basehttp "GET /media/items/49200_03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-12-21 13:09:25,165 basehttp "GET /media/items/49202_03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-12-21 13:09:25,169 basehttp "GET /media/items/49201_03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-12-21 13:09:25,180 basehttp "GET /media/items/49205_03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-12-21 13:09:25,180 basehttp "GET /media/items/49203_03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-12-21 13:09:25,197 basehttp "GET /media/items/49206_03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+INFO 2025-12-21 13:09:25,202 basehttp "GET /media/items/49207_49207_1.jpg HTTP/1.1" 200 790853
+INFO 2025-12-21 13:09:27,885 basehttp "POST /ar/notifications/mark-read/ HTTP/1.1" 200 17
+INFO 2025-12-22 09:23:26,309 basehttp "GET /ar/item/create/ HTTP/1.1" 200 47292
+INFO 2025-12-22 09:23:26,329 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-22 09:23:26,337 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-22 09:25:39,309 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-22 09:25:39,785 basehttp "GET /en/ HTTP/1.1" 200 90115
+INFO 2025-12-22 09:26:04,173 basehttp "GET /admin/ HTTP/1.1" 200 16909
+INFO 2025-12-22 09:26:04,198 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-12-22 09:26:04,198 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-12-22 09:26:04,213 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-12-22 09:26:04,213 basehttp "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-12-22 09:26:04,228 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-12-22 09:26:04,229 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-12-22 09:26:04,236 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-12-22 09:26:04,254 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-12-22 09:26:04,255 basehttp "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-12-22 09:26:04,262 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-12-22 09:26:04,264 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-12-22 09:26:04,272 basehttp "GET /static/admin/img/icon-deletelink.svg HTTP/1.1" 200 392
+INFO 2025-12-22 09:26:06,906 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 15290
+INFO 2025-12-22 09:26:06,943 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-12-22 09:26:06,944 basehttp "GET /static/admin/js/emoji_picker.js HTTP/1.1" 200 2069
+INFO 2025-12-22 09:26:06,945 basehttp "GET /static/nested_admin/dist/nested_admin.min.css HTTP/1.1" 200 9822
+INFO 2025-12-22 09:26:06,945 basehttp "GET /static/admin/css/changelists.css HTTP/1.1" 200 6878
+INFO 2025-12-22 09:26:06,951 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 09:26:06,959 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-12-22 09:26:06,960 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-12-22 09:26:06,963 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-12-22 09:26:06,968 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-12-22 09:26:06,970 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-12-22 09:26:06,976 basehttp "GET /static/nested_admin/dist/nested_admin.min.js HTTP/1.1" 200 106690
+INFO 2025-12-22 09:26:06,979 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-12-22 09:26:06,984 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-12-22 09:26:06,993 basehttp "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-12-22 09:32:17,788 basehttp "GET /admin/ HTTP/1.1" 200 16760
+INFO 2025-12-22 09:32:18,066 basehttp "GET /en/ HTTP/1.1" 200 90115
+INFO 2025-12-22 09:47:50,999 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-12-22 09:47:54,450 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 09:48:05,711 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\models.py changed, reloading.
+INFO 2025-12-22 09:48:07,454 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 09:56:45,959 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 09:56:47,753 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48112
+INFO 2025-12-22 09:56:47,792 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 09:56:47,793 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 09:56:47,796 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 09:56:47,799 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 09:56:47,802 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 09:56:48,034 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 15583
+WARNING 2025-12-22 09:56:48,596 log Not Found: /favicon.ico
+WARNING 2025-12-22 09:56:48,599 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 09:57:10,605 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-22 09:57:13,523 basehttp "GET /ar/items/attributes/3/ HTTP/1.1" 200 76
+INFO 2025-12-22 09:57:16,608 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 76
+INFO 2025-12-22 09:59:59,561 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-22 09:59:59,813 basehttp "GET /en/ HTTP/1.1" 200 90115
+INFO 2025-12-22 10:00:02,894 basehttp "GET /admin/ HTTP/1.1" 200 16760
+INFO 2025-12-22 10:00:05,744 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 15290
+INFO 2025-12-22 10:00:05,778 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:00:09,746 basehttp "GET /admin/marketplace/category/1/change/ HTTP/1.1" 200 47468
+INFO 2025-12-22 10:00:09,773 basehttp "GET /static/admin/attribute_options_toggle.js HTTP/1.1" 200 1324
+INFO 2025-12-22 10:00:09,774 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-12-22 10:00:09,780 basehttp "GET /static/admin/js/inlines.js HTTP/1.1" 200 15628
+INFO 2025-12-22 10:00:09,788 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-12-22 10:00:09,788 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 200 11973
+INFO 2025-12-22 10:00:09,801 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-12-22 10:00:09,942 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:00:09,973 basehttp "GET /static/admin/img/inline-delete.svg HTTP/1.1" 200 537
+INFO 2025-12-22 10:00:44,561 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-12-22 10:00:46,388 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 10:00:53,280 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-12-22 10:00:54,600 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 10:01:00,162 basehttp "GET /admin/marketplace/category/1/change/ HTTP/1.1" 200 48095
+INFO 2025-12-22 10:01:00,195 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-12-22 10:01:00,198 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-12-22 10:01:00,200 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-12-22 10:01:00,205 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-12-22 10:01:00,207 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-12-22 10:01:00,211 basehttp "GET /static/nested_admin/dist/nested_admin.min.css HTTP/1.1" 200 9822
+INFO 2025-12-22 10:01:00,214 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-12-22 10:01:00,219 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 200 11973
+INFO 2025-12-22 10:01:00,223 basehttp "GET /static/admin/js/emoji_picker.js HTTP/1.1" 200 2069
+INFO 2025-12-22 10:01:00,228 basehttp "GET /static/admin/attribute_options_toggle.js HTTP/1.1" 200 1324
+INFO 2025-12-22 10:01:00,232 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-12-22 10:01:00,236 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-12-22 10:01:00,237 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-12-22 10:01:00,241 basehttp "GET /static/admin/js/inlines.js HTTP/1.1" 200 15628
+INFO 2025-12-22 10:01:00,244 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-12-22 10:01:00,248 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-12-22 10:01:00,250 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-12-22 10:01:00,255 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-12-22 10:01:00,258 basehttp "GET /static/nested_admin/dist/nested_admin.min.js HTTP/1.1" 200 106690
+INFO 2025-12-22 10:01:00,258 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-12-22 10:01:00,258 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-12-22 10:01:00,275 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-12-22 10:01:00,281 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-12-22 10:01:00,284 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-12-22 10:01:00,289 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-12-22 10:01:00,292 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-12-22 10:01:00,338 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:01:00,354 basehttp "GET /static/admin/img/inline-delete.svg HTTP/1.1" 200 537
+WARNING 2025-12-22 10:01:00,376 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:01:00,379 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:01:05,010 basehttp "POST /admin/marketplace/category/1/change/ HTTP/1.1" 302 0
+INFO 2025-12-22 10:01:05,193 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 15518
+INFO 2025-12-22 10:01:05,224 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:01:09,045 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48120
+INFO 2025-12-22 10:01:09,067 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:01:09,068 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:01:09,068 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:01:09,069 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:01:09,069 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:01:09,274 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 15583
+WARNING 2025-12-22 10:01:09,631 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:01:09,635 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:04:14,053 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48120
+INFO 2025-12-22 10:04:14,083 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:04:14,085 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:04:14,085 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:04:14,086 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:04:14,087 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:04:14,267 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:04:14,479 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:04:14,481 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:04:20,535 basehttp "GET /ar/items/attributes/5/ HTTP/1.1" 200 76
+INFO 2025-12-22 10:16:11,431 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48118
+INFO 2025-12-22 10:16:11,460 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:16:11,462 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:16:11,464 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:16:11,467 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:16:11,470 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:16:11,720 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:16:12,200 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:16:12,203 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:16:19,754 basehttp "GET /ar/items/attributes/5/ HTTP/1.1" 200 4546
+INFO 2025-12-22 10:16:24,594 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 7481
+INFO 2025-12-22 10:17:07,006 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48118
+INFO 2025-12-22 10:17:07,031 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:17:07,033 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:17:07,036 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:17:07,036 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:17:07,037 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:17:07,277 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:17:07,461 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:17:07,473 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:17:11,364 basehttp "GET /ar/items/attributes/3/ HTTP/1.1" 200 4546
+INFO 2025-12-22 10:17:16,174 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 7481
+INFO 2025-12-22 10:17:21,377 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48118
+INFO 2025-12-22 10:19:24,662 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48116
+INFO 2025-12-22 10:19:24,699 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:19:24,700 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:19:24,704 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:19:24,704 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:19:24,704 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:19:24,914 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:19:25,114 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:19:25,116 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:19:32,843 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48118
+INFO 2025-12-22 10:19:43,645 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48061
+INFO 2025-12-22 10:19:43,669 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:19:43,669 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:19:43,670 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:19:43,671 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:19:43,671 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:19:43,901 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:19:44,074 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:19:44,076 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:21:11,579 basehttp "GET /ar/items/attributes/5/ HTTP/1.1" 200 4546
+INFO 2025-12-22 10:21:15,383 basehttp "GET /ar/items/attributes/6/ HTTP/1.1" 200 7481
+INFO 2025-12-22 10:25:12,292 basehttp "GET /admin/ HTTP/1.1" 200 16822
+WARNING 2025-12-22 10:25:12,468 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:25:12,470 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:25:15,373 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 15290
+INFO 2025-12-22 10:25:15,395 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:25:23,339 basehttp "GET /admin/marketplace/category/add/ HTTP/1.1" 200 47706
+INFO 2025-12-22 10:25:23,369 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:30:06,443 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-12-22 10:30:09,462 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 10:31:33,391 basehttp "GET /admin/marketplace/category/add/ HTTP/1.1" 200 49493
+INFO 2025-12-22 10:31:33,781 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-12-22 10:31:33,783 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-12-22 10:31:33,784 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-12-22 10:31:33,791 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-12-22 10:31:33,791 basehttp "GET /static/nested_admin/dist/nested_admin.min.css HTTP/1.1" 200 9822
+INFO 2025-12-22 10:31:33,793 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-12-22 10:31:33,805 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-12-22 10:31:33,811 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 200 11973
+INFO 2025-12-22 10:31:33,818 basehttp "GET /static/admin/js/emoji_picker.js HTTP/1.1" 200 2069
+INFO 2025-12-22 10:31:33,824 basehttp "GET /static/admin/attribute_options_toggle.js HTTP/1.1" 200 1621
+INFO 2025-12-22 10:31:33,826 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-12-22 10:31:33,830 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-12-22 10:31:33,834 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-12-22 10:31:33,844 basehttp "GET /static/admin/js/inlines.js HTTP/1.1" 200 15628
+INFO 2025-12-22 10:31:33,850 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-12-22 10:31:33,851 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-12-22 10:31:33,858 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-12-22 10:31:33,859 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-12-22 10:31:33,873 basehttp "GET /static/nested_admin/dist/nested_admin.min.js HTTP/1.1" 200 106690
+INFO 2025-12-22 10:31:33,880 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-12-22 10:31:33,886 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-12-22 10:31:33,890 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-12-22 10:31:33,894 basehttp "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-12-22 10:31:33,899 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-12-22 10:31:33,904 basehttp "GET /static/admin/img/icon-viewlink.svg HTTP/1.1" 200 581
+INFO 2025-12-22 10:31:33,908 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-12-22 10:31:33,944 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:31:33,983 basehttp "GET /static/admin/img/inline-delete.svg HTTP/1.1" 200 537
+WARNING 2025-12-22 10:31:34,018 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:31:34,022 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:33:47,699 basehttp "POST /admin/marketplace/category/add/ HTTP/1.1" 302 0
+INFO 2025-12-22 10:33:47,775 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 15679
+INFO 2025-12-22 10:33:47,801 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 10:33:52,041 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:33:52,063 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:33:52,063 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:33:52,064 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:33:52,069 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:33:52,070 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9315
+INFO 2025-12-22 10:33:52,564 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:33:52,902 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:33:52,904 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:33:55,185 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 6700
+INFO 2025-12-22 10:39:17,474 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:39:17,497 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:39:17,498 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:39:17,501 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:39:17,502 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:39:17,505 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 10593
+INFO 2025-12-22 10:39:17,674 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:39:17,940 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:39:17,943 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:39:24,275 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 5628
+INFO 2025-12-22 10:39:28,027 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:39:28,052 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:39:28,052 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:39:28,053 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:39:28,053 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:39:28,055 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 10593
+INFO 2025-12-22 10:39:28,326 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:39:28,514 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:39:28,516 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:39:31,964 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 5628
+INFO 2025-12-22 10:41:04,176 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:41:04,205 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 10593
+INFO 2025-12-22 10:41:04,207 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:41:04,209 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:41:04,211 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:41:04,211 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:41:04,394 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:41:04,575 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:41:04,575 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:41:06,941 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 6260
+INFO 2025-12-22 10:41:31,748 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:41:31,773 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:41:31,775 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:41:31,777 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:41:31,778 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 10:41:31,782 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:41:31,990 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:41:32,174 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:41:32,177 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:41:33,620 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 6260
+INFO 2025-12-22 10:45:29,991 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:45:30,019 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:45:30,020 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:45:30,020 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 10:45:30,020 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:45:30,020 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:45:30,255 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:45:30,467 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:45:30,469 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:45:32,174 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 6110
+INFO 2025-12-22 10:47:02,496 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:47:02,517 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:47:02,518 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:47:02,520 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:47:02,522 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 10:47:02,523 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:47:02,742 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:47:02,930 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:47:02,933 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:47:04,497 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 6465
+INFO 2025-12-22 10:48:44,885 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:48:44,910 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:48:44,913 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:48:44,914 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:48:44,915 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 10:48:44,916 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:48:45,151 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:48:45,319 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:48:45,322 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:48:47,864 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 9277
+INFO 2025-12-22 10:48:57,308 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:48:57,337 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:48:57,337 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 10:48:57,337 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:48:57,338 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:48:57,338 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:48:57,544 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:48:57,724 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:48:57,726 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:49:00,454 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 8990
+INFO 2025-12-22 10:51:00,794 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 10:51:00,822 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 10:51:00,823 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 10:51:00,823 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 10:51:00,823 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 10:51:00,824 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 10:51:01,058 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 18372
+WARNING 2025-12-22 10:51:01,268 log Not Found: /favicon.ico
+WARNING 2025-12-22 10:51:01,271 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 10:51:02,969 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 8954
+INFO 2025-12-22 11:00:32,516 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48239
+INFO 2025-12-22 11:00:32,540 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 11:00:32,544 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 11:00:32,545 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 11:00:32,552 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 11:00:32,552 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 11:00:32,802 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19238
+WARNING 2025-12-22 11:00:33,275 log Not Found: /favicon.ico
+WARNING 2025-12-22 11:00:33,278 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 11:00:35,842 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2324
+INFO 2025-12-22 11:02:02,136 basehttp "POST /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 11:02:02,260 basehttp "GET /ar/items/ HTTP/1.1" 200 50566
+INFO 2025-12-22 11:02:08,149 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 58333
+INFO 2025-12-22 11:02:08,173 basehttp "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-12-22 11:02:08,177 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:02:08,199 basehttp "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-12-22 11:02:09,992 basehttp "GET /admin/marketplace/item/620/change/ HTTP/1.1" 200 24902
+INFO 2025-12-22 11:02:10,013 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:02:47,256 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 58184
+INFO 2025-12-22 11:02:47,285 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:02:49,199 basehttp "GET /admin/marketplace/item/620/change/ HTTP/1.1" 200 24902
+INFO 2025-12-22 11:02:49,227 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:03:00,891 basehttp "GET /admin/marketplace/item/620/approve/ HTTP/1.1" 302 0
+INFO 2025-12-22 11:03:01,222 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 58336
+INFO 2025-12-22 11:03:01,252 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:03:04,727 basehttp "GET /en/ HTTP/1.1" 200 90538
+INFO 2025-12-22 11:03:04,749 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 11:03:04,750 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 11:03:04,755 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 11:03:04,756 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 11:03:04,949 basehttp "GET /static/js/main.js HTTP/1.1" 200 4309
+INFO 2025-12-22 11:03:04,949 basehttp "GET /static/js/swiper-init.js HTTP/1.1" 200 599
+INFO 2025-12-22 11:03:04,953 basehttp "GET /static/js/header.js HTTP/1.1" 200 5088
+INFO 2025-12-22 11:03:04,953 basehttp "GET /static/js/search.js HTTP/1.1" 200 3595
+INFO 2025-12-22 11:03:04,958 basehttp "GET /media/items/thumbs/thumb_download_1_jluiE95.jpg HTTP/1.1" 200 8589
+INFO 2025-12-22 11:03:04,959 basehttp "GET /media/items/thumbs/thumb_49194_03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 32039
+INFO 2025-12-22 11:03:04,969 basehttp "GET /media/items/thumbs/thumb_49199_03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 42787
+INFO 2025-12-22 11:03:04,969 basehttp "GET /media/items/thumbs/thumb_49197_03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 20660
+INFO 2025-12-22 11:03:04,978 basehttp "GET /media/items/thumbs/thumb_49200_03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 31400
+INFO 2025-12-22 11:03:04,978 basehttp "GET /media/items/thumbs/thumb_49201_03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 43996
+INFO 2025-12-22 11:03:04,982 basehttp "GET /media/items/thumbs/thumb_49202_03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 29924
+INFO 2025-12-22 11:03:04,984 basehttp "GET /media/items/thumbs/thumb_49203_03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 66808
+INFO 2025-12-22 11:03:04,989 basehttp "GET /media/items/thumbs/thumb_49205_03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 20692
+INFO 2025-12-22 11:03:04,990 basehttp "GET /media/items/thumbs/thumb_49206_03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 55406
+WARNING 2025-12-22 11:03:05,581 log Not Found: /favicon.ico
+WARNING 2025-12-22 11:03:05,582 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 11:03:06,587 basehttp "POST /ar/notifications/mark-read/ HTTP/1.1" 200 17
+INFO 2025-12-22 11:03:07,527 basehttp "GET /en/ HTTP/1.1" 200 90445
+INFO 2025-12-22 11:03:12,708 basehttp "GET /en/item/620/ HTTP/1.1" 200 37894
+INFO 2025-12-22 11:15:10,805 basehttp "GET /admin/marketplace/item/620/change/ HTTP/1.1" 200 24932
+INFO 2025-12-22 11:15:10,831 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:17:47,811 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48230
+INFO 2025-12-22 11:17:47,826 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-22 11:17:47,836 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-22 11:17:52,250 basehttp "GET /ar/items/attributes/2/ HTTP/1.1" 200 109
+INFO 2025-12-22 11:18:14,369 basehttp "POST /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 11:18:14,456 basehttp "GET /ar/items/ HTTP/1.1" 200 50512
+INFO 2025-12-22 11:18:19,784 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 59243
+INFO 2025-12-22 11:18:19,804 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:18:21,059 basehttp "GET /admin/marketplace/item/621/change/ HTTP/1.1" 200 24878
+INFO 2025-12-22 11:18:21,088 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:21:43,658 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48316
+INFO 2025-12-22 11:21:43,674 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-22 11:21:43,687 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19372
+INFO 2025-12-22 11:21:50,001 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2324
+INFO 2025-12-22 11:22:07,713 basehttp "POST /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 11:22:07,826 basehttp "GET /ar/items/ HTTP/1.1" 200 50512
+INFO 2025-12-22 11:22:12,833 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 60148
+INFO 2025-12-22 11:22:12,861 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:22:14,350 basehttp "GET /admin/marketplace/item/622/change/ HTTP/1.1" 200 28866
+INFO 2025-12-22 11:22:14,375 basehttp "GET /media/items/download_1_NsIJwyL.jpg HTTP/1.1" 200 2653
+INFO 2025-12-22 11:22:14,379 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:22:14,383 basehttp "GET /media/items/images_mhQMmZC.jpg HTTP/1.1" 200 4657
+INFO 2025-12-22 11:32:50,575 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-12-22 11:32:56,206 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 11:33:10,019 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-12-22 11:33:14,535 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 11:33:17,545 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\admin.py changed, reloading.
+INFO 2025-12-22 11:33:22,965 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 11:33:26,969 basehttp "GET /ar/items/ HTTP/1.1" 200 50516
+INFO 2025-12-22 11:33:26,997 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 11:33:26,997 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 11:33:26,998 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 11:33:27,007 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 11:33:27,024 basehttp "GET /media/items/download_1_jluiE95.jpg HTTP/1.1" 200 2653
+INFO 2025-12-22 11:33:27,046 basehttp "GET /media/items/49194_03-16-2021_0602pm1dad5a6fbeced889e740.jpg HTTP/1.1" 200 358823
+INFO 2025-12-22 11:33:27,058 basehttp "GET /media/items/49197_03-16-2021_0613pm7ca8941cc56b7ee0d6db.jpg HTTP/1.1" 200 115494
+INFO 2025-12-22 11:33:27,083 basehttp "GET /media/items/49199_03-16-2021_0623pm354c52896bd582289a72.jpg HTTP/1.1" 200 396080
+INFO 2025-12-22 11:33:27,485 basehttp "GET /static/js/search.js HTTP/1.1" 200 3595
+INFO 2025-12-22 11:33:27,486 basehttp "GET /static/js/swiper-init.js HTTP/1.1" 200 599
+INFO 2025-12-22 11:33:27,486 basehttp "GET /static/js/main.js HTTP/1.1" 200 4309
+INFO 2025-12-22 11:33:27,489 basehttp "GET /static/js/header.js HTTP/1.1" 200 5088
+INFO 2025-12-22 11:33:27,520 basehttp "GET /media/items/49202_03-16-2021_0643pmd28bca55ccba05271ddf.jpg HTTP/1.1" 200 192461
+INFO 2025-12-22 11:33:27,535 basehttp "GET /media/items/49205_03-16-2021_0705pm5b0035c7b4ed14bc47bc.jpg HTTP/1.1" 200 227039
+INFO 2025-12-22 11:33:27,535 basehttp "GET /media/items/49200_03-16-2021_0630pm41aede97a5caaa314108.jpg HTTP/1.1" 200 288804
+INFO 2025-12-22 11:33:27,544 basehttp "GET /media/items/49203_03-16-2021_0645pm97fb382a3f962cc17373.jpg HTTP/1.1" 200 520401
+INFO 2025-12-22 11:33:27,545 basehttp "GET /media/items/49201_03-16-2021_0636pm97dd579a8c689d1291fb.jpg HTTP/1.1" 200 506300
+INFO 2025-12-22 11:33:27,566 basehttp "GET /media/items/49206_03-16-2021_0708pm5521ebffa35725d86ffa.jpg HTTP/1.1" 200 620978
+WARNING 2025-12-22 11:33:27,747 log Not Found: /favicon.ico
+WARNING 2025-12-22 11:33:27,750 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 11:33:28,391 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48319
+INFO 2025-12-22 11:33:28,409 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-22 11:33:28,424 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-22 11:33:31,129 basehttp "GET /admin/marketplace/item/622/change/ HTTP/1.1" 200 30987
+INFO 2025-12-22 11:33:31,168 basehttp "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2808
+INFO 2025-12-22 11:33:31,173 basehttp "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2810
+INFO 2025-12-22 11:33:31,173 basehttp "GET /static/admin/css/forms.css HTTP/1.1" 200 8525
+INFO 2025-12-22 11:33:31,177 basehttp "GET /static/admin/css/base.css HTTP/1.1" 200 22120
+INFO 2025-12-22 11:33:31,177 basehttp "GET /static/admin/js/theme.js HTTP/1.1" 200 1653
+INFO 2025-12-22 11:33:31,190 basehttp "GET /static/admin/css/responsive.css HTTP/1.1" 200 16565
+INFO 2025-12-22 11:33:31,192 basehttp "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-12-22 11:33:31,195 basehttp "GET /static/admin/js/core.js HTTP/1.1" 200 6208
+INFO 2025-12-22 11:33:31,197 basehttp "GET /static/admin/js/inlines.js HTTP/1.1" 200 15628
+INFO 2025-12-22 11:33:31,210 basehttp "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-12-22 11:33:31,210 basehttp "GET /static/admin/js/actions.js HTTP/1.1" 200 8076
+INFO 2025-12-22 11:33:31,213 basehttp "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 9777
+INFO 2025-12-22 11:33:31,218 basehttp "GET /static/admin/css/widgets.css HTTP/1.1" 200 11973
+INFO 2025-12-22 11:33:31,226 basehttp "GET /media/items/download_1_NsIJwyL.jpg HTTP/1.1" 200 2653
+INFO 2025-12-22 11:33:31,227 basehttp "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-12-22 11:33:31,231 basehttp "GET /media/items/images_mhQMmZC.jpg HTTP/1.1" 200 4657
+INFO 2025-12-22 11:33:31,236 basehttp "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-12-22 11:33:31,238 basehttp "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 285314
+INFO 2025-12-22 11:33:31,248 basehttp "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 325171
+INFO 2025-12-22 11:33:31,319 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:33:31,328 basehttp "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-12-22 11:33:31,337 basehttp "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-12-22 11:33:31,347 basehttp "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+WARNING 2025-12-22 11:33:31,598 log Not Found: /favicon.ico
+WARNING 2025-12-22 11:33:31,600 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 11:33:40,203 basehttp "GET /admin/marketplace/item/622/change/ HTTP/1.1" 200 30987
+INFO 2025-12-22 11:33:40,229 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:33:47,382 basehttp "GET /admin/marketplace/category/ HTTP/1.1" 200 15447
+INFO 2025-12-22 11:33:47,409 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:33:50,261 basehttp "GET /admin/marketplace/item/622/change/ HTTP/1.1" 200 30987
+INFO 2025-12-22 11:33:55,246 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 59999
+INFO 2025-12-22 11:33:55,273 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 11:34:21,702 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 11:34:23,423 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 59999
+INFO 2025-12-22 11:34:23,463 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+WARNING 2025-12-22 11:34:23,565 log Not Found: /favicon.ico
+WARNING 2025-12-22 11:34:23,570 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 11:34:26,758 basehttp "GET /admin/marketplace/item/622/change/ HTTP/1.1" 200 30987
+INFO 2025-12-22 11:34:26,799 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:13:21,200 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py changed, reloading.
+INFO 2025-12-22 12:13:23,323 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 12:13:31,666 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py changed, reloading.
+INFO 2025-12-22 12:13:36,955 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 12:14:38,540 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py changed, reloading.
+INFO 2025-12-22 12:14:41,331 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 12:15:21,959 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py changed, reloading.
+INFO 2025-12-22 12:15:26,905 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 12:19:49,000 autoreload C:\Users\bqamhiyeh\source\repos\Market_Place\marketplace\views.py changed, reloading.
+INFO 2025-12-22 12:19:50,422 autoreload Watching for file changes with StatReloader
+INFO 2025-12-22 12:19:55,292 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48373
+INFO 2025-12-22 12:19:55,319 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 12:19:55,321 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 12:19:55,321 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 12:19:55,327 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 12:19:55,328 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 12:19:55,805 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19372
+WARNING 2025-12-22 12:19:56,211 log Not Found: /favicon.ico
+WARNING 2025-12-22 12:19:56,213 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 12:20:03,445 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2324
+INFO 2025-12-22 12:20:31,082 basehttp "POST /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:20:31,208 basehttp "GET /ar/items/ HTTP/1.1" 200 50565
+INFO 2025-12-22 12:20:40,431 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 61058
+INFO 2025-12-22 12:20:40,450 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:20:41,612 basehttp "GET /admin/marketplace/item/623/change/ HTTP/1.1" 200 31862
+INFO 2025-12-22 12:20:41,639 basehttp "GET /media/items/images_sDo3J17.jpg HTTP/1.1" 200 4657
+INFO 2025-12-22 12:20:41,639 basehttp "GET /media/items/download_1_2g7PsYf.jpg HTTP/1.1" 200 2653
+INFO 2025-12-22 12:20:41,648 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:20:55,896 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48354
+INFO 2025-12-22 12:21:03,253 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2324
+INFO 2025-12-22 12:21:33,957 basehttp "POST /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:21:34,048 basehttp "GET /ar/items/ HTTP/1.1" 200 50531
+INFO 2025-12-22 12:21:44,516 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 61966
+INFO 2025-12-22 12:21:45,691 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 61817
+INFO 2025-12-22 12:21:45,716 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:21:46,562 basehttp "GET /admin/marketplace/item/624/change/ HTTP/1.1" 200 31868
+INFO 2025-12-22 12:21:46,597 basehttp "GET /media/items/download_1_cSLAL4n.jpg HTTP/1.1" 200 2653
+INFO 2025-12-22 12:21:46,600 basehttp "GET /media/items/images_MiDq11E.jpg HTTP/1.1" 200 4657
+INFO 2025-12-22 12:21:46,603 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:21:53,028 basehttp "GET /admin/marketplace/item/624/approve/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:21:53,611 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 61969
+INFO 2025-12-22 12:21:53,634 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:28:30,762 basehttp "GET /admin/marketplace/item/622/approve/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:28:31,176 basehttp "GET /admin/marketplace/item/ HTTP/1.1" 200 61974
+INFO 2025-12-22 12:28:31,201 basehttp "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+INFO 2025-12-22 12:28:32,557 basehttp "GET /en/ HTTP/1.1" 200 90308
+INFO 2025-12-22 12:28:32,602 basehttp "GET /media/items/thumbs/thumb_download_1_cSLAL4n.jpg HTTP/1.1" 200 8589
+INFO 2025-12-22 12:28:32,603 basehttp "GET /media/items/thumbs/thumb_download_1_NsIJwyL.jpg HTTP/1.1" 200 8589
+INFO 2025-12-22 12:28:35,317 basehttp "GET /en/item/624/ HTTP/1.1" 200 45257
+INFO 2025-12-22 12:28:35,344 basehttp "GET /media/items/download_1_cSLAL4n.jpg HTTP/1.1" 304 0
+INFO 2025-12-22 12:28:35,349 basehttp "GET /media/items/images_MiDq11E.jpg HTTP/1.1" 304 0
+INFO 2025-12-22 12:30:10,124 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48295
+INFO 2025-12-22 12:30:10,147 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-22 12:30:10,162 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0

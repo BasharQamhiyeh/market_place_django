@@ -1,36 +1,77 @@
-<!-- DEBUG: PARTIAL LOADED SUCCESSFULLY -->
-
 {% load form_extras %}
 
-{% for field in form %}
-  {% if field.name|slice:":5" == "attr_" and field.name|slice:"-6:" != "_other" %}
-    <div class="mb-4">
-      <label class="block font-semibold mb-2">{{ field.label }}</label>
-      {{ field }}
+<div id="attrsRoot" class="space-y-4">
 
-      {% if field.errors %}
-        <p class="text-red-600 text-xs mt-1">{{ field.errors }}</p>
-      {% endif %}
+  {% for field in form %}
+    {% if field.name|slice:":5" == "attr_" and field.name|slice:"-6:" != "_other" %}
 
-      {% with other_name=field.name|add:"_other" %}
-        {% if other_name in form.fields %}
-          {% with other_field=form|getitem:other_name %}
+      <div class="attr-block mb-3" data-field-name="{{ field.html_name }}">
 
-            <!-- DEBUG: field.name={{ field.name }} field.value={{ field.value }} -->
+        <label class="label">{{ field.label }}</label>
 
-            {# ALWAYS RENDER _other, but hidden by default #}
-            <div class="mt-3 other-wrapper" style="display:none;">
-              <label class="block font-semibold mb-2">{{ other_field.label }}</label>
-              {{ other_field }}
-              {% if other_field.errors %}
-                <p class="text-red-600 text-xs mt-1">{{ other_field.errors }}</p>
+        {# ================= TEXT / NUMBER ================= #}
+        {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" %}
+          {{ field }}
+
+        {# ================= RADIO (MOCKUP STYLE) ================= #}
+        {% elif field.field.widget.input_type == "radio" %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {% for value,label in field.field.choices %}
+              {% if value %}
+                <label class="elect-card flex items-center gap-2 border border-gray-200 rounded-xl p-3 cursor-pointer bg-white">
+                  <input type="radio"
+                         name="{{ field.html_name }}"
+                         value="{{ value }}"
+                         {% if field.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}>
+                  <span>{{ label }}</span>
+                </label>
               {% endif %}
-            </div>
+            {% endfor %}
+          </div>
 
-          {% endwith %}
+        {# ================= CHECKBOX LIST ================= #}
+        {% elif field.field.widget.input_type == "checkbox" and field.field.widget.allow_multiple_selected %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+            {% for value,label in field.field.choices %}
+              {% if value %}
+                <label class="elect-card flex items-center gap-2 border border-gray-200 rounded-xl p-3 cursor-pointer bg-white">
+                  <input type="checkbox"
+                         name="{{ field.html_name }}"
+                         value="{{ value }}"
+                         {% if field.value and value in field.value %}checked{% endif %}>
+                  <span>{{ label }}</span>
+                </label>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+        {# ================= DROPDOWN (DEFAULT DJANGO) ================= #}
+        {% elif field.field.widget.input_type == "select" %}
+          {{ field }}
+
+        {% else %}
+          {{ field }}
         {% endif %}
-      {% endwith %}
 
-    </div>
-  {% endif %}
-{% endfor %}
+        {% if field.errors %}
+          <p class="field-error">{{ field.errors }}</p>
+        {% endif %}
+
+        {# ================= OTHER FIELD (ALWAYS RENDERED, HIDDEN) ================= #}
+        {% with other_name=field.name|add:"_other" %}
+          {% if other_name in form.fields %}
+            {% with other_field=form|getitem:other_name %}
+              <div class="other-wrapper mt-2" style="display:none;">
+                <label class="label">{{ other_field.label }}</label>
+                {{ other_field }}
+              </div>
+            {% endwith %}
+          {% endif %}
+        {% endwith %}
+
+      </div>
+
+    {% endif %}
+  {% endfor %}
+
+</div>

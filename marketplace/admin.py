@@ -53,7 +53,7 @@ class AttributeOptionInline(nested_admin.NestedTabularInline):
 class AttributeInline(nested_admin.NestedStackedInline):
     model = Attribute
     extra = 1
-    fields = ("name_en", "name_ar", "input_type", "is_required")
+    fields = ("name_en", "name_ar", "input_type", "ui_type", "is_required")
     inlines = [AttributeOptionInline]
     verbose_name = "Attribute"
     verbose_name_plural = "Attributes"
@@ -78,6 +78,7 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         "name_ar",
         "subtitle_en",
         "subtitle_ar",
+        "child_label",
         "icon",
         "color",
         "description",
@@ -191,6 +192,13 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
 # ======================================================
 # ✅ ITEM ADMIN — cleaned, color-coded, review-based
 # ======================================================
+class ItemAttributeValueInline(admin.TabularInline):
+    model = ItemAttributeValue
+    extra = 0
+    can_delete = False
+    fields = ("attribute", "value")
+    readonly_fields = ("attribute", "value")
+
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     change_form_template = "admin/marketplace/item/change_form.html"
@@ -275,7 +283,7 @@ class ItemAdmin(admin.ModelAdmin):
     # ============================
     # LISTING FIELDS (READ ONLY)
     # ============================
-    inlines = [ItemPhotoInline]
+    inlines = [ItemPhotoInline, ItemAttributeValueInline]
 
     def listing_title(self, obj):
         return obj.listing.title

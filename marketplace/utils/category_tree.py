@@ -21,6 +21,7 @@ def build_category_tree(categories, lang="ar"):
         return {
             "id": cat.id,
             "name": name,
+            "child_label": cat.child_label or "",
             "children": [serialize(c) for c in cat.subcategories.all()]
         }
 

@@ -506,7 +506,6 @@ def item_create(request):
             # -----------------------------
             # 3. Create ITEM (1-to-1)
             # -----------------------------
-            # These fields live in Item, not Listing
             item = Item.objects.create(
                 listing=listing,
                 price=form.cleaned_data["price"],
@@ -534,11 +533,12 @@ def item_create(request):
                     first.save()
 
             # -----------------------------
-            # 5. Save dynamic attributes
+            # 5. ✅ Save dynamic attributes (FIXED)
             # -----------------------------
             for field_name, value in form.cleaned_data.items():
 
-                if not field_name.startswith("attribute_"):
+                # ✅ correct prefix for your dynamic fields
+                if not field_name.startswith("attr_"):
                     continue
                 if field_name.endswith("_other"):
                     continue
@@ -557,20 +557,22 @@ def item_create(request):
                     parts = []
                     for v in value:
                         if v == "__other__":
-                            other_text = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                            other_text = (form.cleaned_data.get(f"{field_name}_other") or "").strip()
                             if other_text:
                                 parts.append(other_text)
                         else:
                             parts.append(str(v))
                     final_value = ", ".join(parts) if parts else ""
 
-                # Single-select types
+                # Single-select types / text / number
                 else:
                     if value == "__other__":
-                        final_value = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                        final_value = (form.cleaned_data.get(f"{field_name}_other") or "").strip()
                     else:
-                        final_value = str(value) if value is not None else ""
+                        final_value = str(value).strip() if value is not None else ""
 
+                # ✅ THIS was the bug in your project when you copied from request_create:
+                # must save to ItemAttributeValue with item=item
                 if final_value:
                     ItemAttributeValue.objects.create(
                         item=item,
@@ -586,14 +588,14 @@ def item_create(request):
                     user=admin,
                     title="New item pending approval",
                     body=f"🕓 '{listing.title}' was posted by {request.user.username} and is awaiting approval.",
-                    listing=listing,  # FIXED
+                    listing=listing,
                 )
 
             Notification.objects.create(
                 user=request.user,
                 title="✅ إعلانك قيد المراجعة",
                 body=f"تم استلام إعلانك '{listing.title}' وهو الآن بانتظار موافقة الإدارة.",
-                listing=listing,  # FIXED
+                listing=listing,
             )
 
             messages.success(request, "✅ Your ad was submitted (pending review).")
@@ -1313,9 +1315,6 @@ def item_edit(request, item_id):
 
         return redirect("item_detail", item_id=item.id)
 
-    print(form)
-    print(item)
-    print(category)
     return render(
         request,
         "item_edit.html",
