@@ -30859,3 +30859,87 @@ INFO 2025-12-22 12:28:35,349 basehttp "GET /media/items/images_MiDq11E.jpg HTTP/
 INFO 2025-12-22 12:30:10,124 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48295
 INFO 2025-12-22 12:30:10,147 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
 INFO 2025-12-22 12:30:10,162 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-22 12:31:20,321 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2324
+INFO 2025-12-22 12:38:18,132 basehttp "GET /ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:38:18,148 basehttp "GET /login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:38:18,155 basehttp "GET /en/login/?next=/ar/item/create/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:38:18,161 basehttp "GET / HTTP/1.1" 302 0
+INFO 2025-12-22 12:38:18,359 basehttp "GET /en/ HTTP/1.1" 200 66555
+INFO 2025-12-22 12:38:18,422 basehttp "GET /media/items/thumbs/thumb_download_1_cSLAL4n.jpg HTTP/1.1" 304 0
+INFO 2025-12-22 12:38:18,423 basehttp "GET /media/items/thumbs/thumb_download_1_NsIJwyL.jpg HTTP/1.1" 304 0
+INFO 2025-12-22 12:38:30,060 basehttp "POST /en/login/ HTTP/1.1" 302 0
+INFO 2025-12-22 12:38:30,245 basehttp "GET /en/ HTTP/1.1" 200 90315
+INFO 2025-12-22 12:38:33,100 basehttp "GET /ar/item/create/ HTTP/1.1" 200 48696
+INFO 2025-12-22 12:38:33,136 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-22 12:39:18,717 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49892
+INFO 2025-12-22 12:39:18,737 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 12:39:18,751 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 12:39:18,754 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 12:39:18,759 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 12:39:18,763 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 12:39:19,111 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19372
+WARNING 2025-12-22 12:39:19,583 log Not Found: /favicon.ico
+WARNING 2025-12-22 12:39:19,584 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:15:07,830 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49892
+INFO 2025-12-22 13:15:07,851 basehttp "GET /static/css/post-ad.css HTTP/1.1" 304 0
+INFO 2025-12-22 13:15:07,864 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 304 0
+INFO 2025-12-22 13:15:23,851 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2324
+INFO 2025-12-22 13:24:07,059 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49969
+INFO 2025-12-22 13:24:07,084 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 13:24:07,085 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 13:24:07,085 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 13:24:07,092 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 13:24:07,092 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 13:24:07,324 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19488
+WARNING 2025-12-22 13:24:07,808 log Not Found: /favicon.ico
+WARNING 2025-12-22 13:24:07,810 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:24:14,221 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2329
+INFO 2025-12-22 13:24:32,406 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49969
+INFO 2025-12-22 13:24:32,443 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 13:24:32,443 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 13:24:32,444 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 13:24:32,445 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 13:24:32,447 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 13:24:32,653 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19488
+WARNING 2025-12-22 13:24:32,841 log Not Found: /favicon.ico
+WARNING 2025-12-22 13:24:32,843 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:24:35,413 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49961
+INFO 2025-12-22 13:24:35,443 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 13:24:35,443 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 13:24:35,444 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 13:24:35,444 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 13:24:35,445 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 13:24:35,599 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 19488
+WARNING 2025-12-22 13:24:35,771 log Not Found: /favicon.ico
+WARNING 2025-12-22 13:24:35,772 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:24:39,252 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2329
+INFO 2025-12-22 13:32:22,807 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49975
+INFO 2025-12-22 13:32:22,838 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 13:32:22,839 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 13:32:22,841 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 13:32:22,845 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 13:32:22,846 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 13:32:23,067 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 20103
+WARNING 2025-12-22 13:32:23,365 log Not Found: /favicon.ico
+WARNING 2025-12-22 13:32:23,367 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:32:25,190 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2447
+INFO 2025-12-22 13:32:32,417 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49975
+INFO 2025-12-22 13:32:32,445 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 13:32:32,447 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 13:32:32,447 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 13:32:32,448 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 13:32:32,450 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 13:32:32,651 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 20103
+WARNING 2025-12-22 13:32:32,835 log Not Found: /favicon.ico
+WARNING 2025-12-22 13:32:32,837 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:32:36,013 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2447
+INFO 2025-12-22 13:34:42,853 basehttp "GET /ar/item/create/ HTTP/1.1" 200 49975
+INFO 2025-12-22 13:34:42,882 basehttp "GET /static/css/footer.css HTTP/1.1" 200 1321
+INFO 2025-12-22 13:34:42,883 basehttp "GET /static/css/home.css HTTP/1.1" 200 4985
+INFO 2025-12-22 13:34:42,884 basehttp "GET /static/css/post-ad.css HTTP/1.1" 200 9319
+INFO 2025-12-22 13:34:42,884 basehttp "GET /static/css/search.css HTTP/1.1" 200 1288
+INFO 2025-12-22 13:34:42,884 basehttp "GET /static/css/header.css HTTP/1.1" 200 5629
+INFO 2025-12-22 13:34:43,096 basehttp "GET /static/js/post-ad-django.js HTTP/1.1" 200 20103
+WARNING 2025-12-22 13:34:43,302 log Not Found: /favicon.ico
+WARNING 2025-12-22 13:34:43,302 basehttp "GET /favicon.ico HTTP/1.1" 404 3345
+INFO 2025-12-22 13:34:46,570 basehttp "GET /ar/items/attributes/7/ HTTP/1.1" 200 2519

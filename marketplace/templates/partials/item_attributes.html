@@ -1,7 +1,7 @@
+{# ✅ COPY-PASTE REPLACE: templates/partials/item_attributes.html #}
 {% load form_extras %}
 
 <div id="attrsRoot" class="space-y-4">
-
   {% for field in form %}
     {% if field.name|slice:":5" == "attr_" and field.name|slice:"-6:" != "_other" %}
 
@@ -18,12 +18,13 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {% for value,label in field.field.choices %}
               {% if value %}
-                <label class="elect-card flex items-center gap-2 border border-gray-200 rounded-xl p-3 cursor-pointer bg-white">
+                {# ✅ IMPORTANT: removed border-gray-200 so .elect-card:has(input:checked) wins #}
+                <label class="elect-card flex items-center gap-2 border border-orange-200 rounded-xl p-3 cursor-pointer bg-white">
                   <input type="radio"
                          name="{{ field.html_name }}"
                          value="{{ value }}"
                          {% if field.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}>
-                  <span>{{ label }}</span>
+                  <span class="font-semibold text-sm">{{ label }}</span>
                 </label>
               {% endif %}
             {% endfor %}
@@ -34,18 +35,19 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {% for value,label in field.field.choices %}
               {% if value %}
-                <label class="elect-card flex items-center gap-2 border border-gray-200 rounded-xl p-3 cursor-pointer bg-white">
+                {# ✅ IMPORTANT: removed border-gray-200 so .elect-card:has(input:checked) wins #}
+                <label class="elect-card flex items-center gap-2 border rounded-xl p-3 cursor-pointer bg-white">
                   <input type="checkbox"
                          name="{{ field.html_name }}"
                          value="{{ value }}"
                          {% if field.value and value in field.value %}checked{% endif %}>
-                  <span>{{ label }}</span>
+                  <span class="font-semibold text-sm">{{ label }}</span>
                 </label>
               {% endif %}
             {% endfor %}
           </div>
 
-        {# ================= DROPDOWN (DEFAULT DJANGO) ================= #}
+        {# ================= DROPDOWN ================= #}
         {% elif field.field.widget.input_type == "select" %}
           {{ field }}
 
@@ -73,5 +75,4 @@
 
     {% endif %}
   {% endfor %}
-
 </div>

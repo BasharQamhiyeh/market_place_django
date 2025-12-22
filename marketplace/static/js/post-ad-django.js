@@ -269,22 +269,6 @@ document.addEventListener("DOMContentLoaded", () => {
       categoryDynamicHint.classList.remove("hidden");
     }
 
-    async function loadAttributesForCategory(categoryId) {
-      const tpl = attributeFields?.getAttribute("data-url-template");
-      if (!tpl || !categoryId) return;
-
-      const url = tpl.replace(/0\/?$/, `${categoryId}/`);
-
-      try {
-        const resp = await fetch(url, { credentials: "same-origin" });
-        if (resp.ok) {
-          attributeFields.innerHTML = await resp.text();
-
-          // ✅ THIS LINE IS REQUIRED (same as mockup behavior)
-          initAttributeOtherLogic(attributeFields);
-        }
-      } catch {}
-    }
 
 
     function closeAllCategoryPanels(exceptPanel = null) {
@@ -454,27 +438,64 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function initAttributeOtherLogic(root) {
-      if (!root) return;
+async function loadAttributesForCategory(categoryId) {
+  const tpl = attributeFields?.getAttribute("data-url-template");
+  if (!tpl || !categoryId) return;
 
-      root.querySelectorAll(".attr-block").forEach(block => {
+  const url = tpl.replace(/0\/?$/, `${categoryId}/`);
+
+  try {
+    const resp = await fetch(url, { credentials: "same-origin" });
+    if (!resp.ok) return;
+
+    attributeFields.innerHTML = await resp.text();
+
+    // ✅ after replacing the partial, toggle "Other" for anything already selected
+    initAttributeOtherLogic(attributeFields);
+  } catch {}
+}
+
+    function initAttributeOtherLogic(root) {
+      const scope = root || document;
+      const attrsRoot = scope.querySelector("#attrsRoot");
+      if (!attrsRoot) return;
+
+      // 1) RADIO / CHECKBOX: show/hide the other-wrapper
+      function syncBlock(block) {
         const otherWrap = block.querySelector(".other-wrapper");
         if (!otherWrap) return;
 
         const name = block.dataset.fieldName;
-        const inputs = block.querySelectorAll(`input[name="${name}"]`);
+        if (!name) return;
 
-        function syncOther() {
-          const show = Array.from(inputs).some(
-            i => i.checked && i.value === "__other__"
-          );
-          otherWrap.style.display = show ? "block" : "none";
-        }
+        const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
 
-        inputs.forEach(i => i.addEventListener("change", syncOther));
-        syncOther(); // initial
-      });
+        // ✅ if there are no inputs, it might be a <select> (dropdown) — ignore here
+        if (!inputs.length) return;
+
+        const show = inputs.some(i => i.checked && i.value === "__other__");
+        otherWrap.style.display = show ? "block" : "none";
+      }
+
+      attrsRoot.querySelectorAll(".attr-block").forEach(syncBlock);
+
+      // ✅ delegate change listener ONCE per load to handle clicks after render
+      // (avoid stacking listeners)
+      if (!attrsRoot.dataset.otherBound) {
+        attrsRoot.addEventListener("change", (e) => {
+          const t = e.target;
+          if (!t || t.tagName !== "INPUT") return;
+          const block = t.closest(".attr-block");
+          if (!block) return;
+          syncBlock(block);
+        });
+        attrsRoot.dataset.otherBound = "1";
+      }
     }
+
+// ✅ ADD THIS ONE LINE once, RIGHT AFTER the function definitions above,
+// so "Other" works on initial GET render too (not only after category fetch):
+initAttributeOtherLogic(attributeFields);
 
   // ===== Close dropdowns on outside click =====
   document.addEventListener("click", () => {
