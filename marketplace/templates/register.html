@@ -1,139 +1,281 @@
-{% extends 'base.html' %}
-{% load i18n %}
-{% load widget_tweaks %}
+{% extends "base.html" %}
+{% load static %}
 
-{% block title %}{% trans "Register" %}{% endblock %}
+{% block title %}ركن — إنشاء حساب{% endblock %}
+
+{% block base_css %}
+<link rel="stylesheet" href="{% static 'css/signup.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="flex justify-center px-4">
-  <div class="w-full max-w-2xl">
-    <div class="rounded-xl shadow border border-gray-200 bg-white">
-      <div class="bg-gray-900 text-white px-5 py-3 rounded-t-xl">
-        <h4 class="text-lg font-semibold">{% trans "Create account" %}</h4>
+<div class="min-h-screen flex items-center justify-center px-4">
+  <div id="signupContainer" class="auth-card w-full">
+
+    <div class="auth-header">
+      <div class="flex justify-center items-center pb-8">
+        <img
+          src="https://iili.io/fo9Iynj.png"
+          alt="شعار ركن"
+          class="h-12 w-auto object-contain"
+        />
       </div>
 
-      <div class="p-6 space-y-5">
+      <h1 class="auth-title">إنشاء حساب في ركن</h1>
+      <p class="auth-subtitle">سجّل معنا للوصول إلى جميع خدمات المنصة</p>
+    </div>
 
-        <form method="post" class="space-y-5">
-          {% csrf_token %}
-          {{ form.non_field_errors }}
+    <!-- STEP 1: Mobile -->
+    <form id="mobileForm">
+      {% csrf_token %}
+      <label class="label">أدخل رقم الموبايل الخاص بك</label>
+      <input
+        type="text"
+        id="mobile"
+        inputmode="numeric"
+        maxlength="10"
+        class="input-field text-right placeholder:text-right"
+        placeholder="مثال: 0790000000"
+      >
+      <div id="mobileErr"></div>
 
-          <!-- Username -->
-          <div>
-            {{ form.username.label_tag }}
-            {{ form.username|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
-            <div class="text-red-600 text-sm">{{ form.username.errors }}</div>
-          </div>
+      <button id="sendOtpBtn" type="submit" class="submit-btn text-base block">
+        إرسال رمز التحقق
+      </button>
+    </form>
 
-          <!-- Phone (Country prefix + flag) -->
-          <div>
-            {{ form.country.as_hidden }}
-            {{ form.phone.label_tag }}
+    <!-- STEP 3: Full signup (hidden until verified) -->
+    <form id="signupForm" class="space-y-6 hidden mt-4"
+          method="post" action="{% url 'complete_signup' %}">
+      {% csrf_token %}
 
-            <div class="flex items-center border rounded overflow-hidden">
-              <span class="px-3 bg-gray-100 border-r select-none">
-                🇯🇴 +962
-              </span>
-              {{ form.phone }}
-            </div>
+      <!-- Verified phone stored here -->
+      <input type="hidden" id="verifiedMobile" name="verifiedMobile">
 
-            <div class="text-red-600 text-sm">{{ form.phone.errors }}</div>
-          </div>
+      <div class="flex flex-col md:flex-row gap-6">
+        <div class="flex-1">
+          <label class="label">الاسم الأول *</label>
+          <input type="text" id="firstName" name="first_name" class="input-field" placeholder="مثال: أحمد">
+          <div id="firstNameErr"></div>
+        </div>
 
-          <!-- Show phone -->
-          <div class="flex flex-col">
-            <label class="flex items-center gap-2">
-              {{ form.show_phone|add_class:"h-4 w-4 border-gray-300 rounded" }}
-              <span>{{ form.show_phone.label }}</span>
-            </label>
-
-            <small class="text-gray-500 mt-1">
-              {{ form.show_phone.help_text }}
-            </small>
-          </div>
-
-          <!-- First/Last Name -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              {{ form.first_name.label_tag }}
-              {{ form.first_name|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
-              <div class="text-red-600 text-sm">{{ form.first_name.errors }}</div>
-            </div>
-
-            <div>
-              {{ form.last_name.label_tag }}
-              {{ form.last_name|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
-              <div class="text-red-600 text-sm">{{ form.last_name.errors }}</div>
-            </div>
-          </div>
-
-          <!-- Email -->
-          <div>
-            {{ form.email.label_tag }}
-            {{ form.email|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
-            <div class="text-red-600 text-sm">{{ form.email.errors }}</div>
-          </div>
-
-          <!-- Password -->
-          <div>
-            {{ form.password.label_tag }}
-
-            <div class="flex border rounded overflow-hidden">
-              {{ form.password|add_class:"w-full px-3 py-2 focus:ring focus:ring-jordan border-none" }}
-              <button
-                type="button"
-                class="px-3 bg-gray-100 border-l hover:bg-gray-200"
-                id="togglePwd"
-              >
-                👁
-              </button>
-            </div>
-
-            <small class="text-gray-500 block mt-1">
-              {% trans "Password must be at least 8 characters and contain only letters and numbers." %}
-            </small>
-
-            <div class="text-red-600 text-sm">{{ form.password.errors }}</div>
-          </div>
-
-          <!-- Confirm Password -->
-          <div>
-            {{ form.password2.label_tag }}
-            {{ form.password2|add_class:"w-full border rounded px-3 py-2 focus:ring focus:ring-jordan" }}
-            <div class="text-red-600 text-sm">{{ form.password2.errors }}</div>
-          </div>
-
-          <!-- Submit -->
-          <div class="flex justify-end">
-            <button
-              type="submit"
-              class="bg-orange-600 bg-jordan text-white px-5 py-2 rounded hover:opacity-90"
-            >
-              {% trans "Register" %}
-            </button>
-          </div>
-        </form>
+        <div class="flex-1">
+          <label class="label">الاسم الأخير *</label>
+          <input type="text" id="lastName" name="last_name" class="input-field" placeholder="مثال: الأحمد">
+          <div id="lastNameErr"></div>
+        </div>
       </div>
 
+      <!-- Account type (UI only for now) -->
+      <div class="mt-2">
+        <label class="label">نوع الحساب *</label>
+
+        <div id="conditionBox"
+             class="flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-lg w-full">
+          <button id="btnPersonal" type="button"
+            class="flex-1 py-2.5 text-sm font-bold toggle-active bg-[var(--rukn-orange)] text-white">
+            فرد
+          </button>
+
+          <button id="btnStore" type="button"
+            class="flex-1 py-2.5 text-sm font-bold text-[var(--muted)] bg-white">
+            تاجر
+          </button>
+        </div>
+
+        <input type="hidden" id="conditionValue" value="personal">
+      </div>
+
+      <!-- Store box (UI only for now) -->
+      <div id="storeBox" class="hidden mt-4 rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-[var(--rukn-orange)] text-white px-5 py-3 flex items-center gap-2">
+          <h3 class="font-bold text-lg">بيانات المتجر</h3>
+        </div>
+
+        <div class="bg-white p-6 space-y-5">
+          <div>
+            <label class="label">اسم المتجر *</label>
+            <input type="text" id="storeName" class="input-field" placeholder="مثال: متجر المهند">
+            <div id="storeNameErr"></div>
+          </div>
+
+          <div>
+            <label class="label">لوجو المتجر (اختياري)</label>
+
+            <div class="flex items-center gap-4 mt-2">
+              <div class="relative w-24 h-24 rounded-3xl bg-gray-50 border border-gray-200 shadow-sm flex items-center justify-center overflow-hidden">
+                <button id="removeLogo" type="button"
+                  class="submit-btn hidden absolute top-1 right-1 bg-white text-red-600 border border-red-400 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow">
+                  ✖
+                </button>
+
+                <img id="logoPreview" class="w-full h-full hidden" alt="logo">
+                <span id="logoPlaceholder" class="text-4xl text-gray-400">📷</span>
+              </div>
+
+              <label for="storeLogo"
+                class="cursor-pointer bg-[var(--rukn-orange)] text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-[#e56a00] transition">
+                اختر صورة
+              </label>
+
+              <input type="file" id="storeLogo" accept="image/*" class="hidden">
+            </div>
+
+            <div id="storeLogoErr"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passwords -->
+      <div class="flex flex-col md:flex-row gap-6">
+        <div class="flex-1">
+          <label class="label mt-2">كلمة المرور *</label>
+          <div class="relative">
+            <input type="password" id="pass1" name="password" class="input-field" placeholder="********">
+            <button type="button" id="togglePass1"
+              class="absolute top-1/2 -translate-y-1/2 left-4 text-gray-500"></button>
+          </div>
+          <div id="pass1Err"></div>
+        </div>
+
+        <div class="flex-1">
+          <label class="label mt-2">تأكيد كلمة المرور *</label>
+          <div class="relative">
+            <input type="password" id="pass2" name="password2" class="input-field" placeholder="********">
+            <button type="button" id="togglePass2"
+              class="absolute top-1/2 -translate-y-1/2 left-4 text-gray-500"></button>
+          </div>
+          <div id="pass2Err"></div>
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <div class="mt-2 flex items-start gap-3 select-none">
+        <input type="checkbox" id="acceptTerms" class="checkbox-large mt-1">
+        <span class="text-sm text-gray-700 leading-relaxed">
+          أوافق على
+          <button type="button" id="termsLink"
+                  class="text-[var(--rukn-orange)] font-semibold hover:underline">
+            الشروط والأحكام
+          </button>
+          و
+          <button type="button" id="privacyLink"
+                  class="text-[var(--rukn-orange)] font-semibold hover:underline">
+            سياسة الخصوصية
+          </button>
+        </span>
+      </div>
+      <div id="acceptTermsErr"></div>
+
+      <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full">
+        إنشاء الحساب
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- OTP success popup -->
+<div id="otpSuccessPopup" class="success-popup-bg hidden" style="z-index:9999;">
+  <div class="success-popup">
+    <div class="flex flex-col items-center mb-3">
+      <div class="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center text-[var(--rukn-orange)] text-3xl mb-2">
+        ✓
+      </div>
+      <h2 class="text-lg font-extrabold text-gray-900">تم التحقق بنجاح</h2>
+      <p class="text-sm text-gray-500 text-center">جاري الانتقال إلى نموذج إنشاء الحساب...</p>
     </div>
   </div>
 </div>
 
+<!-- Verify popup -->
+<div id="verifyPopup" class="popup-bg hidden">
+  <div class="popup-box">
+
+    <div class="flex items-center justify-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center text-[var(--rukn-orange)] text-2xl">
+        🔐
+      </div>
+      <div class="text-right">
+        <h2 class="text-lg font-extrabold text-gray-900">تأكيد رقم الموبايل</h2>
+        <p class="text-xs text-gray-500 mt-1">أدخل رمز التحقق المكوّن من 4 أرقام لإتمام إنشاء الحساب</p>
+      </div>
+    </div>
+
+    <label class="label text-sm mt-2">رمز التحقق *</label>
+    <input type="text" id="verifyCodeInput" inputmode="numeric" maxlength="4"
+           class="input-field font-bold text-2xl mb-1 text-center tracking-[0.4em]"
+           placeholder="0 0 0 0">
+    <div id="verifyCodeErr"></div>
+
+    <div class="flex gap-3 mt-5">
+      <!-- ✅ IMPORTANT: type="button" -->
+      <button id="checkVerifyCode" type="button"
+        class="flex-1 py-3 rounded-xl font-bold bg-[var(--rukn-orange)] text-white hover:bg-[#e56a00] transition duration-200 shadow-md">
+        تحقق الآن
+      </button>
+
+      <!-- ✅ IMPORTANT: type="button" -->
+      <button id="closeVerify" type="button"
+        class="flex-1 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition duration-200">
+        إلغاء
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Success popup (optional, kept like mockup) -->
+<div id="successPopup" class="success-popup-bg hidden">
+  <div class="success-popup">
+    <div class="flex flex-col items-center mb-4">
+      <div class="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center text-[var(--rukn-orange)] text-3xl mb-3">
+        ✓
+      </div>
+      <h2 class="text-lg font-extrabold text-gray-900 mb-1">تم إنشاء الحساب بنجاح</h2>
+      <p class="text-sm text-gray-500 text-center leading-relaxed">
+        تم إنشاء حسابك الجديد بنجاح. يمكنك الآن تسجيل الدخول والبدء باستخدام منصة ركن.
+      </p>
+    </div>
+
+    <button id="closeSuccess" type="button"
+      class="w-full mt-2 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#e56a00] transition duration-200 shadow-md">
+      حسناً
+    </button>
+  </div>
+</div>
+
+<!-- Terms popup -->
+<div id="termsPopup" class="popup-bg hidden">
+  <div class="popup-box">
+    <h2 class="text-lg font-bold text-[var(--rukn-orange)] mb-4 text-center">الشروط والأحكام</h2>
+    <div class="popup-content text-sm leading-relaxed text-gray-800">
+      <p>...</p>
+    </div>
+    <button id="closeTerms" type="button"
+      class="w-full mt-4 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#e56a00] transition">
+      إغلاق
+    </button>
+  </div>
+</div>
+
+<!-- Privacy popup -->
+<div id="privacyPopup" class="popup-bg hidden">
+  <div class="popup-box max-h-[80vh]">
+    <h2 class="text-lg font-bold text-[var(--rukn-orange)] mb-3 text-center">سياسة الخصوصية</h2>
+    <div class="popup-content text-sm leading-relaxed text-gray-800">
+      <p>...</p>
+    </div>
+    <button id="closePrivacy" type="button"
+      class="w-full mt-4 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#e56a00] transition">
+      إغلاق
+    </button>
+  </div>
+</div>
+{% endblock %}
+
 {% block scripts %}
 {{ block.super }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const toggleBtn = document.getElementById('togglePwd');
-  if (!toggleBtn) return;
-
-  toggleBtn.addEventListener('click', function() {
-    const p1 = document.querySelector('input[name="password"]');
-    const p2 = document.querySelector('input[name="password2"]');
-    [p1, p2].forEach(function(inp) {
-      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
-    });
-  });
-});
+  window.SIGNUP_SEND_OTP_URL = "{% url 'ajax_send_signup_otp' %}";
+  window.SIGNUP_VERIFY_OTP_URL = "{% url 'ajax_verify_signup_otp' %}";
 </script>
-{% endblock %}
+<script src="{% static 'js/signup_django.js' %}" defer></script>
 {% endblock %}
