@@ -316,7 +316,7 @@
                     class="flex items-center gap-2 transition-colors hover:text-gray-900"
                     aria-expanded="false" aria-haspopup="true" aria-label="حساب المستخدم">
               <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
-                {{ request.user.first_name|first|upper }}
+                {{ request.user.first_name|default:""|first|upper }}
               </div>
               <span class="hidden sm:inline-block">
                 مرحبًا، {{ request.user.first_name }}

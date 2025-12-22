@@ -2015,28 +2015,41 @@ def reset_password(request):
 
 
 # Login
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login
+from django.db.models import Q
+from .models import User
+
 def user_login(request):
     if request.method == "POST":
-        phone = (request.POST.get("username") or "").strip()   # keep input name "username" in modal
+        raw = (request.POST.get("username") or "").strip().replace(" ", "")
         password = request.POST.get("password") or ""
 
-        # Normalize phones to 9627xxxxxxxx
-        phone = phone.replace(" ", "")
-        if phone.startswith("07") and len(phone) == 10 and phone.isdigit():
-            phone = "962" + phone[1:]
-        elif phone.startswith("+962") and len(phone) == 13 and phone[1:].isdigit():
-            phone = phone[1:]  # remove +
-        elif phone.startswith("9627") and len(phone) == 12 and phone.isdigit():
-            pass
+        # Accept 07xxxxxxxx, 9627xxxxxxxx, +9627xxxxxxxx, 009627xxxxxxxx
+        phone_candidates = set()
+
+        if raw.startswith("07") and len(raw) == 10 and raw.isdigit():
+            local07 = raw                      # 07xxxxxxxx
+            norm962 = "962" + raw[1:]          # 9627xxxxxxxx
+            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
+        elif raw.startswith("9627") and len(raw) == 12 and raw.isdigit():
+            norm962 = raw                      # 9627xxxxxxxx
+            local07 = "0" + raw[3:]            # 07xxxxxxxx
+            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
+        elif raw.startswith("+9627") and len(raw) == 13 and raw[1:].isdigit():
+            norm962 = raw[1:]                  # 9627xxxxxxxx
+            local07 = "0" + norm962[3:]        # 07xxxxxxxx
+            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
+        elif raw.startswith("009627") and len(raw) == 14 and raw.isdigit():
+            norm962 = raw[2:]                  # 9627xxxxxxxx
+            local07 = "0" + norm962[3:]        # 07xxxxxxxx
+            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
         else:
             referer = request.META.get("HTTP_REFERER", "/")
             return redirect(f"{referer}?login_error=1")
 
-        # Phone-only lookup
-        try:
-            u = User.objects.get(phone=phone)
-        except User.DoesNotExist:
-            u = None
+        # Phone-only lookup across formats
+        u = User.objects.filter(phone__in=list(phone_candidates)).first()
 
         if u:
             user = authenticate(request, username=u.username, password=password)
@@ -2044,11 +2057,11 @@ def user_login(request):
                 login(request, user)
                 return redirect(request.META.get("HTTP_REFERER", "/"))
 
-        # FAIL → re-open modal with error
         referer = request.META.get("HTTP_REFERER", "/")
         return redirect(f"{referer}?login_error=1")
 
     return redirect("/")
+
 
 
 # Logout
