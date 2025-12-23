@@ -2024,46 +2024,33 @@ def _digits_only(s: str) -> str:
     return re.sub(r"\D+", "", (s or ""))
 
 
-def _candidate_phones(raw: str) -> list[str]:
-    print("RAW INPUT:", repr(raw))
-
+def _phone_candidates(raw: str) -> list[str]:
     d = _digits_only(raw)
-    print("DIGITS ONLY:", repr(d), "LEN:", len(d))
 
     candidates = set()
 
     if d.startswith("07") and len(d) == 10:
-        local07 = d
-        norm962 = "962" + d[1:]
-        print("CASE: 07xxxxxxxx")
+        local07 = d                      # 07xxxxxxxx
+        norm962 = "962" + d[1:]          # 9627xxxxxxxx
         candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        candidates.add(local07.lstrip("0"))
+        candidates.add(local07.lstrip("0"))   # 767xxxxxx (legacy)
 
     elif d.startswith("9627") and len(d) == 12:
         norm962 = d
-        local07 = "0" + d[3:]
-        print("CASE: 9627xxxxxxxx")
+        local07 = "0" + d[3:]            # 07xxxxxxxx
         candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        candidates.add(local07.lstrip("0"))
+        candidates.add(local07.lstrip("0"))   # 767xxxxxx (legacy)
 
     elif d.startswith("009627") and len(d) == 14:
-        norm962 = d[2:]
-        local07 = "0" + norm962[3:]
-        print("CASE: 009627xxxxxxxx")
+        norm962 = d[2:]                  # 9627xxxxxxxx
+        local07 = "0" + norm962[3:]      # 07xxxxxxxx
         candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        candidates.add(local07.lstrip("0"))
+        candidates.add(local07.lstrip("0"))   # 767xxxxxx (legacy)
 
     else:
-        print("CASE: INVALID FORMAT")
         return []
 
-    candidates.update({c.lstrip("0") for c in list(candidates)})
     candidates.discard("")
-
-    print("PHONE CANDIDATES:")
-    for c in candidates:
-        print(" -", repr(c), "LEN:", len(c))
-
     return list(candidates)
 
 
@@ -2075,40 +2062,26 @@ def user_login(request):
     password = request.POST.get("password") or ""
     referer = request.META.get("HTTP_REFERER", "/")
 
-    print("\n========== LOGIN ATTEMPT ==========")
+    candidates = _phone_candidates(raw)
+    print("LOGIN raw:", repr(raw))
+    print("LOGIN candidates:", candidates)
 
-    candidates = _candidate_phones(raw)
     if not candidates:
-        print("NO VALID CANDIDATES")
         return redirect(f"{referer}?login_error=1")
 
-    print("QUERYING DB WITH:")
-    for c in candidates:
-        print(" >", repr(c))
+    u = User.objects.filter(phone__in=candidates).first()
+    print("FOUND user:", u, "pk:", getattr(u, "pk", None), "stored phone:", getattr(u, "phone", None))
 
-    users = User.objects.filter(phone__in=candidates)
-    print("MATCH COUNT (phone__in):", users.count())
-
-    if not users.exists():
-        print("NO USER FOUND VIA phone__in")
-        print("DB PHONE SAMPLE:")
-        for p in User.objects.all().values_list("phone", flat=True)[:10]:
-            print(" *", repr(p), "LEN:", len(str(p)))
+    if not u:
         return redirect(f"{referer}?login_error=1")
-
-    u = users.first()
-    print("FOUND USER ID:", u.id)
-    print("DB PHONE STORED:", repr(u.phone), "LEN:", len(str(u.phone)))
 
     user = authenticate(request, username=u.username, password=password)
-    print("AUTH RESULT:", user)
+    print("AUTH user:", user)
 
     if not user:
-        print("PASSWORD INVALID")
         return redirect(f"{referer}?login_error=1")
 
     login(request, user)
-    print("LOGIN SUCCESS")
     return redirect(referer)
 
 
