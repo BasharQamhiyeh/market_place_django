@@ -2026,32 +2026,31 @@ def _digits_only(s: str) -> str:
 
 def _phone_candidates(raw: str) -> list[str]:
     d = _digits_only(raw)
-
-    candidates = set()
+    c = set()
 
     if d.startswith("07") and len(d) == 10:
-        local07 = d                      # 07xxxxxxxx
-        norm962 = "962" + d[1:]          # 9627xxxxxxxx
-        candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        candidates.add(local07.lstrip("0"))   # 767xxxxxx (legacy)
+        local07 = d
+        norm962 = "962" + d[1:]
+        c.update({local07, norm962, "+" + norm962, "00" + norm962})
+        c.add(local07.lstrip("0"))  # legacy: 767xxxxxx
 
     elif d.startswith("9627") and len(d) == 12:
         norm962 = d
-        local07 = "0" + d[3:]            # 07xxxxxxxx
-        candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        candidates.add(local07.lstrip("0"))   # 767xxxxxx (legacy)
+        local07 = "0" + d[3:]
+        c.update({local07, norm962, "+" + norm962, "00" + norm962})
+        c.add(local07.lstrip("0"))
 
     elif d.startswith("009627") and len(d) == 14:
-        norm962 = d[2:]                  # 9627xxxxxxxx
-        local07 = "0" + norm962[3:]      # 07xxxxxxxx
-        candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        candidates.add(local07.lstrip("0"))   # 767xxxxxx (legacy)
+        norm962 = d[2:]
+        local07 = "0" + norm962[3:]
+        c.update({local07, norm962, "+" + norm962, "00" + norm962})
+        c.add(local07.lstrip("0"))
 
     else:
         return []
 
-    candidates.discard("")
-    return list(candidates)
+    c.discard("")
+    return list(c)
 
 
 def user_login(request):
@@ -2062,26 +2061,44 @@ def user_login(request):
     password = request.POST.get("password") or ""
     referer = request.META.get("HTTP_REFERER", "/")
 
+    print("\n=== LOGIN ATTEMPT ===")
+    print("raw:", repr(raw))
+
     candidates = _phone_candidates(raw)
-    print("LOGIN raw:", repr(raw))
-    print("LOGIN candidates:", candidates)
+    print("candidates:", candidates)
 
     if not candidates:
+        print("INVALID INPUT FORMAT")
         return redirect(f"{referer}?login_error=1")
+
+    # Show exactly which phone value matched in DB
+    matches = list(User.objects.filter(phone__in=candidates).values("pk", "phone")[:5])
+    print("DB matches (pk, phone):", matches)
 
     u = User.objects.filter(phone__in=candidates).first()
-    print("FOUND user:", u, "pk:", getattr(u, "pk", None), "stored phone:", getattr(u, "phone", None))
-
     if not u:
+        print("NO USER FOUND")
         return redirect(f"{referer}?login_error=1")
 
-    user = authenticate(request, username=u.username, password=password)
-    print("AUTH user:", user)
+    print("found pk:", u.pk)
+    print("stored phone repr:", repr(getattr(u, "phone", None)))
+    print("USERNAME_FIELD:", getattr(User, "USERNAME_FIELD", None))
+    print("has_usable_password:", u.has_usable_password())
+
+    # Authenticate using the model's USERNAME_FIELD (works for custom User models)
+    login_key = User.USERNAME_FIELD
+    login_val = getattr(u, login_key, None)
+    print("auth using:", login_key, "=", repr(login_val))
+
+    user = authenticate(request, password=password, **{login_key: login_val})
+    print("authenticate() result:", user)
 
     if not user:
+        print("AUTH FAILED (backend/USERNAME_FIELD mismatch, unusable password, or user created differently)")
         return redirect(f"{referer}?login_error=1")
 
     login(request, user)
+    print("LOGIN SUCCESS")
     return redirect(referer)
 
 
