@@ -2050,6 +2050,7 @@ def user_login(request):
             referer = request.META.get("HTTP_REFERER", "/")
             return redirect(f"{referer}?login_error=1")
 
+        print(list(phone_candidates))
         print("XXXXXXXXXXXXXXXXXXXXXXx")
         # Phone-only lookup across formats
         u = User.objects.filter(phone__in=list(phone_candidates)).first()
