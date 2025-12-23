@@ -34,25 +34,26 @@ class City(models.Model):
 # ======================================================
 
 class UserManager(BaseUserManager):
-    def create_user(self, phone, password=None):
+    def create_user(self, phone, password=None, **extra_fields):
         if not phone:
             raise ValueError("Users must have a phone number")
-        user = self.model(phone=phone)
+        user = self.model(phone=phone, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, username, password):
-        user = self.create_user(phone=phone, password=password)
+    def create_superuser(self, phone, password, **extra_fields):
+        user = self.create_user(phone=phone, password=password, **extra_fields)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
         return user
 
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     user_id = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=100, unique=True, null=True)
+    username = models.CharField(max_length=100, unique=True, null=True, blank=True)
     phone = models.CharField(max_length=20, unique=True)
     email = models.EmailField(unique=True, blank=True, null=True)
     first_name = models.CharField(max_length=100, blank=True, null=True)
@@ -67,7 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
-    USERNAME_FIELD = "username"
+    USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["phone"]
 
     objects = UserManager()
