@@ -2054,6 +2054,7 @@ def user_login(request):
         # Phone-only lookup across formats
         u = User.objects.filter(phone__in=list(phone_candidates)).first()
 
+        print(u)
         if u:
             user = authenticate(request, username=u.username, password=password)
             if user:
