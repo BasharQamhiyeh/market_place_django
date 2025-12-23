@@ -2025,42 +2025,45 @@ def _digits_only(s: str) -> str:
 
 
 def _candidate_phones(raw: str) -> list[str]:
+    print("RAW INPUT:", repr(raw))
+
     d = _digits_only(raw)
+    print("DIGITS ONLY:", repr(d), "LEN:", len(d))
 
     candidates = set()
 
-    # 07xxxxxxxx (Jordan mobile)
     if d.startswith("07") and len(d) == 10:
-        local07 = d                      # 07xxxxxxxx
-        norm962 = "962" + d[1:]          # 9627xxxxxxxx
+        local07 = d
+        norm962 = "962" + d[1:]
+        print("CASE: 07xxxxxxxx")
         candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        # legacy: if stored as integer then became 767xxxxxx (leading 0 dropped)
         candidates.add(local07.lstrip("0"))
 
-    # 9627xxxxxxxx
     elif d.startswith("9627") and len(d) == 12:
         norm962 = d
-        local07 = "0" + d[3:]            # 07xxxxxxxx
+        local07 = "0" + d[3:]
+        print("CASE: 9627xxxxxxxx")
         candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
         candidates.add(local07.lstrip("0"))
 
-    # +9627xxxxxxxx or 009627xxxxxxxx will already become digits-only:
-    # +9627xxxxxxxx => 9627xxxxxxxx (len 12)
-    # 009627xxxxxxxx => 009627xxxxxxxx (len 14)
     elif d.startswith("009627") and len(d) == 14:
-        norm962 = d[2:]                  # 9627xxxxxxxx
-        local07 = "0" + norm962[3:]      # 07xxxxxxxx
+        norm962 = d[2:]
+        local07 = "0" + norm962[3:]
+        print("CASE: 009627xxxxxxxx")
         candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
         candidates.add(local07.lstrip("0"))
 
     else:
+        print("CASE: INVALID FORMAT")
         return []
 
-    # also try versions without any leading zeros (extra safety)
     candidates.update({c.lstrip("0") for c in list(candidates)})
-
-    # remove empties
     candidates.discard("")
+
+    print("PHONE CANDIDATES:")
+    for c in candidates:
+        print(" -", repr(c), "LEN:", len(c))
+
     return list(candidates)
 
 
@@ -2072,24 +2075,40 @@ def user_login(request):
     password = request.POST.get("password") or ""
     referer = request.META.get("HTTP_REFERER", "/")
 
+    print("\n========== LOGIN ATTEMPT ==========")
+
     candidates = _candidate_phones(raw)
     if not candidates:
+        print("NO VALID CANDIDATES")
         return redirect(f"{referer}?login_error=1")
 
-    # Match as-is OR trimmed (in case DB has accidental spaces)
-    q = Q(phone__in=candidates)
+    print("QUERYING DB WITH:")
     for c in candidates:
-        q |= Q(phone=c) | Q(phone__iexact=c) | Q(phone__startswith=c) | Q(phone__endswith=c)
+        print(" >", repr(c))
 
-    u = User.objects.filter(q).first()
-    if not u:
+    users = User.objects.filter(phone__in=candidates)
+    print("MATCH COUNT (phone__in):", users.count())
+
+    if not users.exists():
+        print("NO USER FOUND VIA phone__in")
+        print("DB PHONE SAMPLE:")
+        for p in User.objects.all().values_list("phone", flat=True)[:10]:
+            print(" *", repr(p), "LEN:", len(str(p)))
         return redirect(f"{referer}?login_error=1")
+
+    u = users.first()
+    print("FOUND USER ID:", u.id)
+    print("DB PHONE STORED:", repr(u.phone), "LEN:", len(str(u.phone)))
 
     user = authenticate(request, username=u.username, password=password)
+    print("AUTH RESULT:", user)
+
     if not user:
+        print("PASSWORD INVALID")
         return redirect(f"{referer}?login_error=1")
 
     login(request, user)
+    print("LOGIN SUCCESS")
     return redirect(referer)
 
 
