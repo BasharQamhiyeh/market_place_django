@@ -2028,6 +2028,8 @@ def user_login(request):
         # Accept 07xxxxxxxx, 9627xxxxxxxx, +9627xxxxxxxx, 009627xxxxxxxx
         phone_candidates = set()
 
+        print(raw)
+        print("XXXXXXXXXX")
         if raw.startswith("07") and len(raw) == 10 and raw.isdigit():
             local07 = raw                      # 07xxxxxxxx
             norm962 = "962" + raw[1:]          # 9627xxxxxxxx
@@ -2048,6 +2050,7 @@ def user_login(request):
             referer = request.META.get("HTTP_REFERER", "/")
             return redirect(f"{referer}?login_error=1")
 
+        print("XXXXXXXXXXXXXXXXXXXXXXx")
         # Phone-only lookup across formats
         u = User.objects.filter(phone__in=list(phone_candidates)).first()
 
