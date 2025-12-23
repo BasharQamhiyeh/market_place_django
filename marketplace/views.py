@@ -2020,52 +2020,77 @@ from django.contrib.auth import authenticate, login
 from django.db.models import Q
 from .models import User
 
+def _digits_only(s: str) -> str:
+    return re.sub(r"\D+", "", (s or ""))
+
+
+def _candidate_phones(raw: str) -> list[str]:
+    d = _digits_only(raw)
+
+    candidates = set()
+
+    # 07xxxxxxxx (Jordan mobile)
+    if d.startswith("07") and len(d) == 10:
+        local07 = d                      # 07xxxxxxxx
+        norm962 = "962" + d[1:]          # 9627xxxxxxxx
+        candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
+        # legacy: if stored as integer then became 767xxxxxx (leading 0 dropped)
+        candidates.add(local07.lstrip("0"))
+
+    # 9627xxxxxxxx
+    elif d.startswith("9627") and len(d) == 12:
+        norm962 = d
+        local07 = "0" + d[3:]            # 07xxxxxxxx
+        candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
+        candidates.add(local07.lstrip("0"))
+
+    # +9627xxxxxxxx or 009627xxxxxxxx will already become digits-only:
+    # +9627xxxxxxxx => 9627xxxxxxxx (len 12)
+    # 009627xxxxxxxx => 009627xxxxxxxx (len 14)
+    elif d.startswith("009627") and len(d) == 14:
+        norm962 = d[2:]                  # 9627xxxxxxxx
+        local07 = "0" + norm962[3:]      # 07xxxxxxxx
+        candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
+        candidates.add(local07.lstrip("0"))
+
+    else:
+        return []
+
+    # also try versions without any leading zeros (extra safety)
+    candidates.update({c.lstrip("0") for c in list(candidates)})
+
+    # remove empties
+    candidates.discard("")
+    return list(candidates)
+
+
 def user_login(request):
-    if request.method == "POST":
-        raw = (request.POST.get("username") or "").strip().replace(" ", "")
-        password = request.POST.get("password") or ""
+    if request.method != "POST":
+        return redirect("/")
 
-        # Accept 07xxxxxxxx, 9627xxxxxxxx, +9627xxxxxxxx, 009627xxxxxxxx
-        phone_candidates = set()
+    raw = (request.POST.get("username") or "").strip()
+    password = request.POST.get("password") or ""
+    referer = request.META.get("HTTP_REFERER", "/")
 
-        print(raw)
-        print("XXXXXXXXXX")
-        if raw.startswith("07") and len(raw) == 10 and raw.isdigit():
-            local07 = raw                      # 07xxxxxxxx
-            norm962 = "962" + raw[1:]          # 9627xxxxxxxx
-            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        elif raw.startswith("9627") and len(raw) == 12 and raw.isdigit():
-            norm962 = raw                      # 9627xxxxxxxx
-            local07 = "0" + raw[3:]            # 07xxxxxxxx
-            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        elif raw.startswith("+9627") and len(raw) == 13 and raw[1:].isdigit():
-            norm962 = raw[1:]                  # 9627xxxxxxxx
-            local07 = "0" + norm962[3:]        # 07xxxxxxxx
-            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        elif raw.startswith("009627") and len(raw) == 14 and raw.isdigit():
-            norm962 = raw[2:]                  # 9627xxxxxxxx
-            local07 = "0" + norm962[3:]        # 07xxxxxxxx
-            phone_candidates.update({local07, norm962, "+" + norm962, "00" + norm962})
-        else:
-            referer = request.META.get("HTTP_REFERER", "/")
-            return redirect(f"{referer}?login_error=1")
-
-        print(list(phone_candidates))
-        print("XXXXXXXXXXXXXXXXXXXXXXx")
-        # Phone-only lookup across formats
-        u = User.objects.filter(phone__in=list(phone_candidates)).first()
-
-        print(u)
-        if u:
-            user = authenticate(request, username=u.username, password=password)
-            if user:
-                login(request, user)
-                return redirect(request.META.get("HTTP_REFERER", "/"))
-
-        referer = request.META.get("HTTP_REFERER", "/")
+    candidates = _candidate_phones(raw)
+    if not candidates:
         return redirect(f"{referer}?login_error=1")
 
-    return redirect("/")
+    # Match as-is OR trimmed (in case DB has accidental spaces)
+    q = Q(phone__in=candidates)
+    for c in candidates:
+        q |= Q(phone=c) | Q(phone__iexact=c) | Q(phone__startswith=c) | Q(phone__endswith=c)
+
+    u = User.objects.filter(q).first()
+    if not u:
+        return redirect(f"{referer}?login_error=1")
+
+    user = authenticate(request, username=u.username, password=password)
+    if not user:
+        return redirect(f"{referer}?login_error=1")
+
+    login(request, user)
+    return redirect(referer)
 
 
 
