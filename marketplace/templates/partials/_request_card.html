@@ -71,10 +71,10 @@
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center
                         text-xs font-bold text-gray-700 border">
-              {{ req.listing.user.username|first|upper }}
+              {{ req.listing.user.first_name|first|upper }}
             </div>
             <span class="text-sm font-medium text-gray-800">
-              {{ req.listing.user.username }}
+              {{ req.listing.user.first_name }}
             </span>
           </div>
 
