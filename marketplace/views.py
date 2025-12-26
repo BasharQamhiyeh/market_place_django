@@ -17,6 +17,7 @@ from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
+
 # Django core
 from django import forms
 from django.conf import settings
@@ -28,6 +29,7 @@ from django.db.models import Count, Q
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.contrib.postgres.search import TrigramSimilarity
+from django.urls import reverse
 
 from .models import (
     City,
@@ -41,7 +43,7 @@ from .models import (
     Item,
     Attribute,
     AttributeOption,
-    IssueReport,
+    IssuesReport,
     Favorite,
     User,
     Request,
@@ -76,6 +78,18 @@ from collections import deque
 from datetime import timedelta
 import json
 import re
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.csrf import csrf_protect
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+
+from .models import User
+
 
 try:
     from django.contrib.postgres.search import TrigramSimilarity
@@ -410,7 +424,9 @@ def item_detail(request, item_id):
             if ids:
                 es_items = (
                     Item.objects.filter(
-                        id__in=ids, is_approved=True, is_active=True
+                        id__in=ids,
+                        listing__is_approved=True,
+                        listing__is_active=True,
                     )
                     .exclude(id=item.id)
                     .order_by('-created_at')[:6]
@@ -427,12 +443,21 @@ def item_detail(request, item_id):
             # Keep fallback_similar()
 
     # ----------------------------
+    # Is Favorite
+    # ----------------------------
+    is_favorited = False
+    if request.user.is_authenticated:
+        is_favorited = Favorite.objects.filter(user=request.user, listing=item.listing).exists()
+
+
+    # ----------------------------
     # Final render
     # ----------------------------
     return render(request, 'item_detail.html', {
         'item': item,
         'attributes': attributes,
         'similar_items': similar_items,
+        "is_favorited": is_favorited,
     })
 
 
@@ -1071,33 +1096,46 @@ class AttributeOptionForm(forms.ModelForm):
 
 @login_required
 def start_conversation(request, item_id):
-    item = Item.objects.get(id=item_id)
+    item = get_object_or_404(Item, id=item_id)
     listing = item.listing
 
     seller = listing.user
     buyer = request.user
 
+    # don't allow messaging yourself
     if seller == buyer:
-        return redirect('item_detail', item_id=item_id)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "self_message"}, status=400)
+        return redirect("item_detail", item_id=item_id)
 
-    # Check for existing conversation
-    convo = Conversation.objects.filter(
-        listing=listing,   # FIXED
-        buyer=buyer,
-        seller=seller
-    ).first()
+    convo = Conversation.objects.filter(listing=listing, buyer=buyer, seller=seller).first()
+    if not convo:
+        convo = Conversation.objects.create(listing=listing, buyer=buyer, seller=seller)
 
-    if convo:
-        return redirect('chat_room', conversation_id=convo.id)
+    # If not POST: just go to chat as before
+    if request.method != "POST":
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "conversation_id": convo.id})
+        return redirect("chat_room", conversation_id=convo.id)
 
-    # Create conversation
-    convo = Conversation.objects.create(
-        listing=listing,   # FIXED
-        buyer=buyer,
-        seller=seller
-    )
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        return JsonResponse({"ok": False, "error": "empty"}, status=400)
 
-    return redirect('chat_room', conversation_id=convo.id)
+    # optional validation if you want
+    try:
+        validate_no_links_or_html(body)
+    except ValidationError:
+        return JsonResponse({"ok": False, "error": "invalid"}, status=400)
+
+    Message.objects.create(conversation=convo, sender=request.user, body=body)
+
+    # ✅ IMPORTANT: AJAX returns JSON (NO redirect)
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True})
+
+    # fallback old behavior
+    return redirect("chat_room", conversation_id=convo.id)
 
 
 @login_required
@@ -1105,28 +1143,37 @@ def start_conversation_request(request, request_id):
     req = get_object_or_404(Request, id=request_id)
     listing = req.listing
 
-    seller = request.user       # the helper
-    buyer = listing.user        # the requester
+    # in your logic:
+    seller = request.user       # helper
+    buyer = listing.user        # requester
 
     if seller == buyer:
-        return redirect('request_detail', request_id=request_id)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "self_message"}, status=400)
+        return redirect("request_detail", request_id=request_id)
 
-    # Check for existing conversation
-    convo = Conversation.objects.filter(
-        listing=listing,
-        buyer=buyer,
-        seller=seller
-    ).first()
+    convo = Conversation.objects.filter(listing=listing, buyer=buyer, seller=seller).first()
+    if not convo:
+        convo = Conversation.objects.create(listing=listing, buyer=buyer, seller=seller)
 
-    if convo:
+    if request.method != "POST":
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "conversation_id": convo.id})
         return redirect("chat_room", conversation_id=convo.id)
 
-    # Create new conversation
-    convo = Conversation.objects.create(
-        listing=listing,
-        buyer=buyer,
-        seller=seller
-    )
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        return JsonResponse({"ok": False, "error": "empty"}, status=400)
+
+    try:
+        validate_no_links_or_html(body)
+    except ValidationError:
+        return JsonResponse({"ok": False, "error": "invalid"}, status=400)
+
+    Message.objects.create(conversation=convo, sender=request.user, body=body)
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True})
 
     return redirect("chat_room", conversation_id=convo.id)
 
@@ -1752,36 +1799,74 @@ def contact(request):
 
 
 @login_required
-def report_issue(request, item_id):
-    item = get_object_or_404(Item, id=item_id)
-    if request.method == "POST":
-        message_text = (request.POST.get("message") or "").strip()
-        if not message_text:
-            messages.error(request, "Please enter a message.")
-            return redirect("item_detail", item_id=item.id)
+@require_POST
+@csrf_protect
+def create_issue_report_ajax(request):
+    target_kind = (request.POST.get("target_kind") or "").strip()     # "listing" | "user" | "store"
+    target_id = (request.POST.get("target_id") or "").strip()         # numeric
+    listing_type = (request.POST.get("listing_type") or "").strip()   # "item" | "request" (only for listing)
 
+    # ✅ new: reason separated
+    reason = (request.POST.get("reason") or "").strip()
+
+    # "message" is now DETAILS (optional)
+    details = (request.POST.get("message") or "").strip()
+
+    if target_kind not in ("listing", "user", "store"):
+        return JsonResponse({"ok": False, "message": "Invalid target_kind."}, status=400)
+
+    if not target_id.isdigit():
+        return JsonResponse({"ok": False, "message": "Invalid target_id."}, status=400)
+
+    # ✅ reason is required (matches your modal)
+    if not reason:
+        return JsonResponse({"ok": False, "message": "Please choose a reason."}, status=400)
+
+    # validate both fields if validator exists
+    if validate_no_links_or_html:
         try:
-            validate_no_links_or_html(message_text)
+            validate_no_links_or_html(reason)
+            if details:
+                validate_no_links_or_html(details)
         except ValidationError:
-            messages.error(request, "Links or HTML are not allowed in the issue report.")
-            return redirect("item_detail", item_id=item.id)
+            return JsonResponse({"ok": False, "message": "Links or HTML are not allowed."}, status=400)
 
-        IssueReport.objects.create(user=request.user, item=item, message=message_text)
-        messages.success(request, "✅ Thank you for reporting this issue.")
-        return redirect("item_detail", item_id=item.id)
+    target_id_int = int(target_id)
 
-    return redirect("item_detail", item_id=item.id)
+    # NOTE: your model must have: user, target_kind, reason, message (details)
+    report = IssuesReport(
+        user=request.user,
+        target_kind=target_kind,
+        reason=reason,
+        message=details,   # optional details
+    )
 
+    if target_kind == "listing":
+        if listing_type not in ("item", "request"):
+            return JsonResponse({"ok": False, "message": "Invalid listing_type."}, status=400)
 
+        listing = get_object_or_404(Listing, id=target_id_int)
+        report.listing = listing
+        report.listing_type = listing_type
 
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
+    elif target_kind == "user":
+        reported = get_object_or_404(User, id=target_id_int)
+        report.reported_user = reported
 
-from .models import User
+    else:  # store
+        # uncomment when you enable store reports
+        # store = get_object_or_404(Store, id=target_id_int)
+        # report.store = store
+        return JsonResponse({"ok": False, "message": "Store reporting not enabled yet."}, status=400)
+
+    try:
+        report.full_clean()
+    except ValidationError:
+        return JsonResponse({"ok": False, "message": "Invalid report data."}, status=400)
+
+    report.save()
+    return JsonResponse({"ok": True, "message": "✅ Thank you for reporting this issue."})
+
 # from .forms import UserRegistrationForm
 
 

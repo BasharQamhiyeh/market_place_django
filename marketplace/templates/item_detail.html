@@ -1,279 +1,694 @@
-{% extends 'base.html' %}
-{% load i18n humanize %}
+{% extends "base.html" %}
+{% load static i18n %}
 
-{% block title %}{{ item.listing.title }}{% endblock %}
+{% block title %}ركن — عرض الإعلان{% endblock %}
+
+{% block base_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/view-ad.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 gap-4">
+<body class="px-4 sm:px-0" data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
 
-  <div class="bg-white border border-gray-200 rounded-xl shadow">
-    <div class="p-6">
+  <div class="min-h-screen flex flex-col py-8 lg:py-12">
 
-      <!-- TITLE -->
-      <h3 class="text-2xl font-semibold mb-3">{{ item.listing.title }}</h3>
+    <!-- Header -->
+    <header class="max-w-screen-xl mx-auto w-full mb-4 sm:px-4">
+      <div class="flex flex-col gap-3">
+        <!-- Breadcrumb -->
+        <nav class="text-sm text-[var(--muted)] mt-1">
+          <a href="{% url 'home' %}" class="hover:text-[var(--rukn-orange)]">الرئيسية</a> /
+          <a href="{% url 'item_list' %}" class="hover:text-[var(--rukn-orange)]">الإعلانات</a> /
 
-      <!-- CATEGORY + CITY -->
-      <p class="text-gray-500 text-sm mb-3">
-        {% if item.listing.category.parent %}
-          {{ item.listing.category.parent }} › {{ item.listing.category }}
-        {% else %}
-          {{ item.listing.category }}
-        {% endif %}
+          {% if item.listing.category %}
+            <a href="{% url 'item_list' %}?categories={{ item.listing.category.id }}" class="hover:text-[var(--rukn-orange)]">
+              {% if LANGUAGE_CODE == "ar" %}{{ item.listing.category.name_ar }}{% else %}{{ item.listing.category.name_en }}{% endif %}
+            </a> /
+          {% endif %}
 
-        {% if item.listing.city %}
-          • {{ item.listing.city }}
-        {% endif %}
-      </p>
+          <span class="text-gray-600">{{ item.listing.title }}</span>
+        </nav>
+      </div>
+    </header>
 
-      <!-- PHOTOS -->
-      {% if item.photos.exists %}
-        <div class="relative mb-4">
-          <div class="overflow-hidden rounded-xl">
-            {% for photo in item.photos.all %}
-              <img src="{{ photo.image.url }}"
-                   class="w-full mb-2 {% if not forloop.first %}hidden{% endif %} item-photo-slide"
-                   style="max-height:500px;object-fit:contain;background:#f8f9fa;">
+    <!-- MAIN: 70/30 layout -->
+    <main class="max-w-screen-xl mx-auto mt-2 mb-6 w-full sm:px-4">
+      <div class="flex flex-col lg:flex-row lg:gap-2">
+
+        <!-- Right: Ad details 70% -->
+        <section class="w-full lg:w-[70%] lg:order-1 space-y-5 lg:pe-2">
+
+          <!-- Ad info + gallery + description + attributes -->
+          <div class="container-box z-10">
+
+            <!-- Ad info -->
+            <div class="p-5 sm:p-6 border-b-2 border-gray-200">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <p class="text-[11px] text-[var(--muted)] mb-1">
+                      {% if item.listing.category %}
+                        {% if LANGUAGE_CODE == "ar" %}{{ item.listing.category.name_ar }}{% else %}{{ item.listing.category.name_en }}{% endif %}
+                      {% endif %}
+                    </p>
+                    <h2 class="text-lg md:text-xl font-extrabold text-slate-900 leading-snug">
+                      {{ item.listing.title }}
+                    </h2>
+                  </div>
+
+                  <!-- Price block (Desktop) -->
+                  <div class="flex flex-col items-center gap-1 min-w-[80px]">
+                    <span class="text-[11px] font-semibold text-gray-500">السعر المطلوب</span>
+                    <div class="text-center">
+                      <div class="text-[30px] md:text-[34px] font-extrabold text-[var(--rukn-orange)] leading-none">
+                        {{ item.price|floatformat:0 }}
+                      </div>
+                      <div class="text-[12px] font-semibold text-gray-700 mt-1">
+                        دينار أردني
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Meta pills -->
+                <div class="flex flex-wrap gap-2 text-[11px] sm:text-xs mt-1">
+
+                  <!-- Ad number -->
+                  <button type="button"
+                          onclick="copyAdNumber()"
+                          class="meta-pill hover:border-orange-200 hover:bg-orange-50 transition">
+                    <span class="meta-icon text-orange-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" x2="20" y1="9" y2="9" />
+                        <line x1="4" x2="20" y1="15" y2="15" />
+                        <line x1="10" x2="8" y1="3" y2="21" />
+                        <line x1="16" x2="14" y1="3" y2="21" />
+                      </svg>
+                    </span>
+                    <span>رقم الإعلان: <strong id="adNumber">{{ item.id }}</strong></span>
+                  </button>
+
+                  <!-- Date -->
+                  <span class="meta-pill">
+                    <span class="meta-icon">
+                      <svg class="w-3.5 h-3.5 text-orange-500" viewBox="0 0 20 20" fill="none">
+                        <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6" />
+                        <path d="M7 2v4M13 2v4M4 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    <span>تاريخ النشر: {{ item.listing.created_at|date:"Y/m/d" }}</span>
+                  </span>
+
+                  <!-- Location -->
+                  <span class="meta-pill">
+                    <span class="meta-icon">
+                      <svg class="w-3.5 h-3.5 text-orange-500" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                        <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+                      </svg>
+                    </span>
+                    <span>
+                      {% if item.listing.city %}{{ item.listing.city }}{% else %}—{% endif %}
+                    </span>
+                  </span>
+
+                  {% if item.condition %}
+                  <span class="meta-pill">
+                    <span class="meta-icon">
+                      <svg class="w-3.5 h-3.5 text-orange-500" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 2L5 11h4l-1 7 7-10h-4l3-6h-4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                    <span>{{ item.condition }}</span>
+                  </span>
+                  {% endif %}
+
+                </div>
+              </div>
+
+              <!-- Gallery + description + attributes -->
+              <div class="mt-4 pt-4">
+
+                <!-- Gallery -->
+                <div class="gallery-main w-full aspect-[4/3] sm:aspect-[4/3] lg:aspect-[16/10]"
+                     onclick="openLightbox(currentImageIndex)">
+                  <img id="mainImage" src="" alt="صورة الإعلان الرئيسية">
+                </div>
+
+                <div class="thumbs-row mt-3" id="thumbsRow"></div>
+
+                <div class="mt-3 flex items-center justify-between text-[10px] sm:text-xs text-[var(--muted)]">
+                  <div class="flex items-center gap-1"></div>
+                  <span class="hidden sm:inline">عدد الصور: <span id="imagesCount">0</span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description + Attributes -->
+            <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
+
+              <!-- Description -->
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-6 h-6 rounded-full bg-orange-50 text-[var(--rukn-orange)] flex items-center justify-center text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" />
+                      <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                      <path d="M10 9H8" />
+                      <path d="M16 13H8" />
+                      <path d="M16 17H8" />
+                    </svg>
+                  </span>
+                  <h3 class="text-lg text-[var(--rukn-orange)] font-bold">وصف الإعلان</h3>
+                </div>
+
+                <div class="text-sm text-gray-700 leading-relaxed space-y-3 px-8">
+                  {% if item.listing.description %}
+                    {{ item.listing.description|linebreaks }}
+                  {% else %}
+                    <p class="text-[var(--muted)]">لا يوجد وصف.</p>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Attributes Grid (real data) -->
+              <div class="mb-8 pt-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-orange-50 text-[var(--rukn-orange)] flex items-center justify-center text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                  </span>
+                  <span class="text-[var(--rukn-orange)]">تفاصيل ومواصفات</span>
+                </h3>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 px-8">
+                  {% if attributes %}
+                    {% for a in attributes %}
+                      <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-center transition hover:border-[var(--rukn-orange)]">
+                        <span class="block text-[10px] text-gray-500 mb-1">{{ a.name }}</span>
+                        <span class="font-bold text-gray-900 text-sm">{{ a.value }}</span>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="col-span-full text-center text-[var(--muted)] text-sm py-4">
+                      لا توجد مواصفات.
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Safety tips -->
+          <div class="container-box p-5 sm:p-6">
+            <div class="relative z-10">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">🛡️</span>
+                <h3 class="text-lg font-bold text-gray-800">نصائح وتذكيرات للأمان</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs sm:text-sm text-[var(--muted)]">
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex gap-3 items-start">
+                  <span class="text-lg">👥</span>
+                  <p>رتّب لقاء في مكان عام وآمن، وتجنّب الأماكن المعزولة أو غير المعروفة.</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex gap-3 items-start">
+                  <span class="text-lg">💳</span>
+                  <p>لا تقم بأي تحويلات مالية قبل معاينة المنتج والتأكد من مطابقته للوصف وإتمام الفحص.</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex gap-3 items-start">
+                  <span class="text-lg">🔒</span>
+                  <p>منصة ركن لا تدخل في عمليات البيع والشراء، وتقع مسؤولية الاتفاق بالكامل على البائع والمشتري.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Left: seller + actions + contact 30% -->
+        <aside class="w-full lg:w-[30%] lg:order-2 space-y-5 lg:ps-2 mt-6 sm:mt-0">
+          <div class="space-y-5 lg:sticky lg:top-4">
+            <section class="container-box">
+              <div class="relative z-10">
+
+                <!-- Seller profile -->
+                <div class="relative group cursor-pointer mt-1 p-5 sm:p-6 border-b-2 border-gray-200"
+                     onclick="window.location.href='{% url 'user_profile' item.listing.user.user_id %}'">
+
+                  <div class="absolute inset-0 group-hover:bg-orange-100/70 transition-all duration-200"></div>
+
+                  <div class="absolute top-1/2 -translate-y-1/2 left-3 flex items-center gap-1 pointer-events-none">
+                    <div class="flex flex-col text-[11px] font-extrabold text-[var(--rukn-orange)] opacity-0 group-hover:opacity-100 transition leading-tight text-center">
+                      <span>عرض ملف</span><span>البائع</span>
+                    </div>
+                    <span class="text-3xl sm:text-4xl text-gray-300 group-hover:text-[var(--rukn-orange)] transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                           viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                           class="w-7 h-7">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+                      </svg>
+                    </span>
+                  </div>
+
+                  <div class="relative flex items-center justify-start gap-4 px-2 pb-2">
+                    {% with u=item.listing.user %}
+                      {% if u.photo %}
+                        <img src="{{ u.photo.url }}"
+                             alt="{{ u.get_full_name|default:u.username }}"
+                             class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0 object-cover" />
+                      {% else %}
+                        <div class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0
+                                    bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
+                          {{ u.first_name|default:u.username|default:"م"|first|upper }}
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+
+                    <div class="flex flex-col items-center text-right">
+                      <div class="flex items-center gap-2 justify-end">
+                        <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
+                          {{ item.listing.user.first_name }} {{ item.listing.user.last_name }}
+                        </h4>
+                        {% if item.listing.user.is_verified_store %}
+                          <span class="text-[11px] font-extrabold text-[var(--rukn-orange)] bg-orange-100 px-2 py-0.5 rounded-full">
+                            متجر موثّق
+                          </span>
+                        {% endif %}
+                      </div>
+                      <div class="flex items-center gap-1 justify-end mt-1">
+                        <span class="text-[11px] text-gray-500 ms-1">
+                          ({{ seller_reviews_count|default:0 }} مراجعة)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2 mt-4 text-[11px] text-gray-700 justify-start px-2">
+                    <span class="meta-pill">
+                      <span class="meta-icon text-orange-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" />
+                          <path d="m9 10 2 2 4-4" />
+                        </svg>
+                      </span>{{ seller_items_count|default:0 }} إعلان
+                    </span>
+
+                    <span class="meta-pill">
+                      <span class="meta-icon text-orange-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M5 22h14" />
+                          <path d="M5 2h14" />
+                          <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                          <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                        </svg>
+                      </span>
+                      عضو منذ {{ item.listing.user.date_joined|timesince }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Quick actions -->
+                <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                        <path d="M21 9H3" />
+                        <path d="M21 15H3" />
+                      </svg>
+                      <span>إجراءات سريعة</span>
+                    </h3>
+                  </div>
+
+                  <div class="rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+
+                      <!-- Favorite -->
+                      {% if request.user.is_authenticated %}
+                      <button
+                        type="button"
+                        data-fav-btn="1"
+                        data-url="{% url 'toggle_favorite' item.id %}"
+                        data-favorited="{% if is_favorited %}1{% else %}0{% endif %}"
+                        class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                               bg-white border border-gray-200
+                               hover:border-orange-300 hover:bg-orange-50 hover:shadow-sm
+                               text-[11px] sm:text-xs font-semibold text-gray-700 transition"
+                      >
+                        <span id="favIconWrap"
+                              class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                     bg-gray-50 border border-gray-200 text-gray-400
+                                     group-hover:bg-orange-100 group-hover:border-orange-300 group-hover:text-[var(--rukn-orange)] transition">
+                          <svg class="w-3 h-3 sm:w-4 sm:h-4" viewBox="0 0 24 24">
+                            <path
+                              d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                              fill="currentColor"
+                              stroke="currentColor"
+                              stroke-width="4"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                          </svg>
+                        </span>
+
+                        <!-- ✅ change ONLY this line: id="favText" -> data-fav-text -->
+                        <span data-fav-text class="leading-tight text-center text-xs group-hover:text-orange-700 transition">
+                          {% if is_favorited %}تمت الإضافة إلى المفضلة{% else %}إضافة للمفضلة{% endif %}
+                        </span>
+                      </button>
+
+                      {% else %}
+                      <button
+                        type="button"
+                        data-fav-btn="1"
+                        data-guest="1"
+                        class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                               bg-white border border-gray-200
+                               hover:border-orange-300 hover:bg-orange-50 hover:shadow-sm
+                               text-[11px] sm:text-xs font-semibold text-gray-700 transition"
+                      >
+                        <span
+                          class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                 bg-gray-50 border border-gray-200 text-gray-400
+                                 group-hover:bg-orange-100 group-hover:border-orange-300 group-hover:text-[var(--rukn-orange)] transition">
+                          <svg class="w-3 h-3 sm:w-4 sm:h-4" viewBox="0 0 24 24">
+                            <path
+                              d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                              fill="currentColor"
+                              stroke="currentColor"
+                              stroke-width="4"
+                              stroke-linecap="round"
+                              stroke-linejoin="round" />
+                          </svg>
+                        </span>
+
+                        <!-- ✅ same change here too -->
+                        <span data-fav-text class="leading-tight text-center text-xs group-hover:text-orange-700 transition">
+                          إضافة للمفضلة
+                        </span>
+                      </button>
+                      {% endif %}
+
+
+
+                      <!-- Share -->
+                      <button id="shareBtn"
+                              type="button"
+                              class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                     bg-white border border-gray-200
+                                     hover:border-sky-300 hover:bg-sky-50 hover:shadow-sm
+                                     text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                        <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                     bg-gray-50 border border-gray-200 text-gray-400
+                                     group-hover:bg-sky-100 group-hover:border-sky-300 group-hover:text-sky-600 transition">
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                               class="w-4 h-4 sm:w-5 sm:h-5"
+                               viewBox="0 0 24 24" fill="none"
+                               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <path d="M8.5 11l7-4" />
+                            <path d="M8.5 13l7 4" />
+                          </svg>
+                        </span>
+                        <span class="leading-tight text-center group-hover:text-sky-700 transition">مشاركة الإعلان</span>
+                      </button>
+
+                      <!-- Report (login-only: open modal if logged-in, else open login modal) -->
+                      <button id="openReportModalBtn"
+                        type="button"
+                        data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                        data-login-modal="loginModal"
+                        class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                               bg-white border border-gray-200
+                               hover:border-rose-300 hover:bg-rose-50 hover:shadow-sm
+                               text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                        <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                     bg-gray-50 border border-gray-200 text-gray-400
+                                     group-hover:bg-rose-100 group-hover:border-rose-300 group-hover:text-rose-600 transition">
+                          <svg xmlns="http://www.w3.org/2000/svg"
+                               class="w-4 h-4 sm:w-5 sm:h-5"
+                               viewBox="0 0 24 24" fill="none"
+                               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.3 3.3 2.4 18a1.7 1.7 0 0 0 1.5 2.5h16.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.3a1.7 1.7 0 0 0-3.4 0Z" />
+                            <path d="M12 9v5" />
+                            <path d="M12 17h.01" />
+                          </svg>
+                        </span>
+                        <span class="leading-tight text-center group-hover:text-rose-700 transition">الإبلاغ عن الإعلان</span>
+                      </button>
+
+                    </div>
+                  </div>
+                </div>
+
+                <!-- طرق التواصل -->
+                <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 21a6 6 0 0 0-12 0" />
+                        <circle cx="12" cy="11" r="4" />
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                      </svg>
+                      <span>طرق التواصل</span>
+                    </h3>
+                  </div>
+
+                  <div class="space-y-2 text-[11px] sm:text-xs">
+                    <span class="text-gray-500">رقم الموبايل (اضغط على الرقم لإظهاره بالكامل)</span>
+
+                    <div class="flex items-center justify-start gap-5">
+                      <button type="button"
+                              id="revealPhoneBtn"
+                              {% if not request.user.is_authenticated %}data-guest="1"{% endif %}
+                              class="flex text-right text-lg font-extrabold text-gray-900
+                                     underline-offset-2 hover:text-[var(--rukn-orange)] hover:underline transition">
+                        <span id="sellerPhone"
+                              data-masked="{{ seller_phone_masked|default:'•• •• ••• •07' }}"
+                              data-full="{{ item.listing.user.phone|default:'' }}"
+                              data-revealed="false">
+                          {{ seller_phone_masked|default:"•• •• ••• •07" }}
+                        </span>
+                      </button>
+
+                      <div id="contactActions" class="flex items-center justify-start gap-2">
+                        <a id="callBtn"
+                           href="#"
+                           title="اتصال مباشر"
+                           {% if not request.user.is_authenticated %}data-guest="1"{% endif %}
+                           class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 border border-gray-200
+                                  flex items-center justify-center text-gray-400
+                                  hover:bg-green-50 hover:border-green-300 hover:text-emerald-700 transition">
+                          <!-- phone icon -->
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2a9 9 0 0 1 9 9" />
+                            <path d="M13 6a5 5 0 0 1 5 5" />
+                            <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" />
+                          </svg>
+                        </a>
+
+                        <a id="whatsappBtn"
+                           href="#"
+                           target="_blank" rel="noopener"
+                           title="مراسلة عبر واتساب"
+                           {% if not request.user.is_authenticated %}data-guest="1"{% endif %}
+                           class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 border border-gray-200
+                                  flex items-center justify-center text-gray-400
+                                  hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition">
+                          <!-- whatsapp -->
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                               fill="currentColor" class="bi bi-whatsapp" viewBox="0 0 16 16">
+                            <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326z"/>
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- message accordion -->
+                  <div class="mt-2">
+                    <button id="toggleMessageBox"
+                      type="button"
+                      data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                      data-login-modal="loginModal"
+                      class="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-2xl
+                             bg-white border border-orange-200 text-[var(--rukn-orange)]
+                             text-xs sm:text-sm font-semibold shadow-sm hover:bg-orange-50/60 transition">
+                      <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                          <path d="M4 4h12v8H9.5L6 15v-3H4z"
+                                stroke="currentColor" stroke-width="1.4"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span>تواصل مع البائع من خلال ركن</span>
+                      </span>
+                      <svg id="messageChevron" class="w-4 h-4 text-[var(--rukn-orange)] transition-transform" viewBox="0 0 20 20" fill="none">
+                        <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+
+                    <div id="messageBox" class="mt-3 hidden rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+                      <form
+                        id="messageForm"
+                        class="space-y-2 text-right"
+                        method="post"
+                        action="{% url 'start_conversation' item.id %}"
+                      >
+                        {% csrf_token %}
+
+                        <p class="text-[11px] sm:text-[12px] text-[var(--muted)] mb-1">
+                          يُرجى الالتزام بالآداب وعدم مشاركة بيانات حساسة.
+                        </p>
+
+                        <textarea
+                          id="messageText"
+                          name="body"
+                          rows="5"
+                          placeholder="لا تشارك كلمات المرور أو أرقام الحسابات البنكية أو أي بيانات شخصية حساسة"
+                          class="w-full border border-gray-200 rounded-2xl py-2.5 px-3 text-xs
+                                 focus:outline-none focus:border-[var(--rukn-orange)]"
+                        ></textarea>
+
+                        <p id="messageError" class="text-red-600 text-xs font-bold hidden">
+                          ⚠️ اكتب رسالتك أولاً ليتم إرسالها للبائع
+                        </p>
+
+                        <button
+                          type="submit"
+                          class="px-6 py-2.5 bg-[var(--rukn-orange)] text-white font-semibold
+                                 rounded-2xl text-sm hover:opacity-95 shadow-sm w-full sm:w-auto"
+                        >
+                          إرسال الرسالة
+                        </button>
+                      </form>
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+            </section>
+          </div>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- Mobile Sticky Action Bar -->
+    <div class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 p-3 z-50 lg:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+      <div class="flex items-center gap-3">
+        <div class="flex flex-col">
+          <span class="text-[10px] text-gray-500">السعر المطلوب</span>
+          <span class="text-lg font-extrabold text-[var(--rukn-orange)]">{{ item.price|floatformat:0 }} د.أ</span>
+        </div>
+
+        <div class="h-8 w-px bg-gray-200 mx-1"></div>
+
+        <div class="flex-1 flex gap-2">
+          <button type="button"
+            onclick="
+              document.querySelector('aside').scrollIntoView({behavior: 'smooth' });
+              setTimeout(()=> {
+                const revealBtn=document.getElementById('revealPhoneBtn');
+                if(revealBtn) revealBtn.click();
+              }, 500);
+            "
+            class="flex-1 flex items-center justify-center gap-2 bg-emerald-600 text-white rounded-xl py-2.5 font-bold text-sm hover:bg-emerald-700 transition">
+            اتصال
+          </button>
+
+          <button type="button"
+            onclick="
+              document.querySelector('aside').scrollIntoView({behavior: 'smooth' });
+              setTimeout(()=> {
+                const btn=document.getElementById('toggleMessageBox');
+                if(btn) btn.click();
+                setTimeout(()=> document.getElementById('messageText')?.focus(), 250);
+              }, 300);
+            "
+            class="flex-1 flex items-center justify-center gap-2 bg-[var(--rukn-orange)] text-white rounded-xl py-2.5 font-bold text-sm hover:opacity-90 transition">
+            رسالة
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Alert -->
+    <div id="ruknAlert" class="fixed inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-all duration-300 z-[9999]">
+      <div id="ruknAlertBox"
+           class="bg-[var(--rukn-orange)] text-white px-6 py-3 rounded-2xl shadow-2xl text-sm sm:text-base font-bold transform scale-75 transition-all duration-300">
+        ✔ تم الإجراء
+      </div>
+    </div>
+
+    <!-- Similar ads -->
+    <section class="max-w-screen-xl mx-auto w-full mb-8 sm:px-4">
+      <div class="container-box p-5 sm:p-6">
+        <div class="relative z-10">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
+            <h2 class="text-lg md:text-xl font-extrabold text-gray-900">إعلانات مشابهة قد تهمّك</h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-3">
+            {% for it in similar_items %}
+              {% include "partials/_item_card.html" with item=it %}
+            {% empty %}
+              <p class="col-span-full text-center text-gray-500 py-6">لا توجد إعلانات مشابهة حالياً.</p>
             {% endfor %}
           </div>
 
-          {% if item.photos.count > 1 %}
-            <div class="flex justify-center gap-2 mt-2">
-              {% for photo in item.photos.all %}
-                <button class="w-3 h-3 rounded-full bg-gray-300 item-photo-indicator {% if forloop.first %}ring-2 ring-jordan{% endif %}"
-                        data-index="{{ forloop.counter0 }}"></button>
-              {% endfor %}
-            </div>
-          {% endif %}
         </div>
-      {% else %}
-        <div class="bg-gray-100 border text-gray-600 px-4 py-3 rounded">
-          {% trans "No photos available." %}
-        </div>
-      {% endif %}
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <!-- LEFT INFO BOX -->
-        <div>
-          <ul class="divide-y border rounded-lg">
-
-            <!-- SELLER -->
-            <li class="flex justify-between items-center px-4 py-2">
-              <span class="font-semibold">{% trans "Seller" %}</span>
-
-              {% if item.listing.user %}
-                  <a href="{% url 'user_profile' item.listing.user.user_id %}"
-                     class="text-jordan hover:underline">
-                      {{ item.listing.user.username }}
-                  </a>
-              {% else %}
-                  <span class="text-gray-400">{% trans "Unknown seller" %}</span>
-              {% endif %}
-            </li>
-
-            <!-- CITY -->
-            <li class="flex justify-between items-center px-4 py-2">
-              <span class="font-semibold">{% trans "City" %}</span>
-              <span>{{ item.listing.city|default:_("Not specified") }}</span>
-            </li>
-
-            <!-- PHONE -->
-            <li class="px-4 py-2">
-              <span class="font-semibold">{% trans "Phone" %}: </span>
-              {% if request.user.is_authenticated %}
-                <span id="seller-phone"
-                      data-phone="{{ item.listing.user.phone|default_if_none:'' }}"
-                      data-show-phone="{{ item.listing.user.show_phone|yesno:'true,false' }}"
-                      class="underline cursor-pointer text-jordan">
-                  {% trans "Click to show phone" %}
-                </span>
-              {% else %}
-                <a href="{% url 'login' %}?next={{ request.path }}" class="underline text-jordan">
-                  {% trans "Login to view phone number" %}
-                </a>
-              {% endif %}
-            </li>
-
-            <!-- CATEGORY -->
-            <li class="flex justify-between items-center px-4 py-2">
-              <span class="font-semibold">{% trans "Category" %}</span>
-              <span>{{ item.listing.category }}</span>
-            </li>
-
-            <!-- CONDITION -->
-            <li class="flex justify-between items-center px-4 py-2">
-              <span class="font-semibold">{% trans "Condition" %}</span>
-              <span>
-                {% if item.condition == 'new' %}
-                  {% trans "New" %}
-                {% else %}
-                  {% trans "Used" %}
-                {% endif %}
-              </span>
-            </li>
-
-            <!-- PRICE -->
-            <li class="flex justify-between items-center px-4 py-2">
-              <span class="font-semibold">{% trans "Price" %}</span>
-              <span class="px-3 py-1 bg-yellow-200 text-yellow-800 rounded-full font-semibold">
-                JOD {{ item.price }}
-              </span>
-            </li>
-
-            <!-- DYNAMIC ATTRIBUTES -->
-            {% for attr in attributes %}
-              <li class="flex justify-between items-center px-4 py-2">
-                <span class="font-semibold">{{ attr.attribute }}</span>
-                <span>{{ attr.value }}</span>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-
-        <!-- DESCRIPTION -->
-        <div class="bg-gray-50 border rounded-xl p-4">
-          <h6 class="font-semibold mb-2">{% trans "Description" %}</h6>
-          <div>{{ item.listing.description|linebreaksbr }}</div>
-        </div>
-
       </div>
+    </section>
 
-      <hr class="my-4">
+    <!-- Report modal + Lightbox -->
+    {% include "partials/_report_modal_mockup.html" with report_kind="ad" %}
+    {% include "partials/_lightbox_mockup.html" %}
 
-      <!-- APPROVAL / ACTIVE STATUS -->
-      {% if not item.listing.is_approved %}
-        <div class="bg-yellow-100 text-yellow-800 px-4 py-3 rounded mb-2">
-          {% trans "This announcement is pending admin approval and not visible to others." %}
-        </div>
-      {% endif %}
-      {% if not item.listing.is_active %}
-        <div class="bg-red-100 text-red-800 px-4 py-3 rounded mb-2">
-          {% trans "This announcement has expired and is no longer visible to others." %}
-        </div>
-      {% endif %}
-
-      <!-- TIME -->
-      <p class="text-gray-500 text-sm mb-1">
-        {% if LANGUAGE_CODE == 'ar' %}
-          {% trans "Posted before" %} {{ item.listing.created_at|timesince|cut:"," }}
-        {% else %}
-          {% trans "Posted" %} {{ item.listing.created_at|timesince }} {% trans "ago" %}
-        {% endif %}
-      </p>
-
-      <p class="text-gray-500 text-sm mb-0">
-        <strong>{% trans "Last updated" %}:</strong> {{ item.listing.updated_at|date:"Y-m-d H:i" }}
-      </p>
-    </div>
-
-    <!-- FOOTER BUTTONS -->
-    <div class="px-6 py-3 bg-gray-50 rounded-b-xl flex flex-wrap gap-2">
-      {% if request.user == item.listing.user %}
-        <a href="{% url 'item_edit' item.id %}"
-           class="px-4 py-2 bg-gray-700 text-white rounded hover:opacity-90">{% trans "Edit" %}</a>
-
-        <a href="{% url 'cancel_item' item.id %}"
-           class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">{% trans "Delete" %}</a>
-
-        {% if not item.listing.is_active %}
-          <a href="{% url 'reactivate_item' item.id %}"
-             class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">{% trans "Reactivate" %}</a>
-        {% endif %}
-      {% endif %}
-
-      {% if request.user.is_authenticated and request.user != item.listing.user and item.listing.is_approved and item.listing.is_active %}
-        <a href="{% url 'start_conversation' item.id %}"
-           class="px-4 py-2 bg-jordan text-white rounded hover:opacity-90">{% trans "Message Seller" %}</a>
-
-        <form method="post" action="{% url 'toggle_favorite' item.id %}">
-          {% csrf_token %}
-          <input type="hidden" name="next" value="{{ request.path }}">
-          {% if is_favorited %}
-            <button type="submit"
-              class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100">
-              ✳️ {% trans "Remove from Favorites" %}
-            </button>
-          {% else %}
-            <button type="submit"
-              class="px-4 py-2 bg-yellow-400 text-black rounded hover:bg-yellow-500">
-              ⭐ {% trans "Add to Favorites" %}
-            </button>
-          {% endif %}
-        </form>
-      {% endif %}
-    </div>
   </div>
 
-  <!-- SIMILAR ITEMS -->
-  {% if similar_items %}
-    <div class="bg-white border border-gray-200 rounded-xl shadow">
-      <div class="px-5 py-3 border-b">
-        <h5 class="text-lg font-semibold mb-0">{% trans "Similar Items" %}</h5>
-      </div>
-      <div class="p-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {% for s in similar_items %}
-            {% include "partials/_item_card.html" with item=s %}
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  {% endif %}
+  <!-- Gallery data for JS (real photos) -->
+  <script id="gallery-data" type="application/json">
+    [
+      {% for p in item.photos.all %}
+        "{{ p.image.url }}"{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  </script>
 
-  <a href="{% url 'item_list' %}"
-     class="px-4 py-2 border border-jordan text-jordan rounded hover:bg-jordan hover:text-white w-fit">
-    {% trans "Back to announcements" %}
-  </a>
-
-</div>
-
+  {# optional: gives JS an auth flag if you want later, not required now #}
+  <script id="auth-data" type="application/json">
+    {"is_authenticated": {{ request.user.is_authenticated|yesno:"true,false" }}}
+  </script>
+{% endblock %}
+</body>
 {% block scripts %}
-{{ block.super }}
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const sp = document.getElementById("seller-phone");
-  if (sp) {
-    sp.addEventListener("click", function () {
-      const showPhone = sp.getAttribute("data-show-phone") === "true";
-      const phone = sp.getAttribute("data-phone") || "";
-      if (showPhone && phone) {
-        let display = phone;
-        if (phone.startsWith("9627") && phone.length === 12)
-          display = "0" + phone.slice(3);
-        sp.textContent = display;
-      } else {
-        sp.textContent = "{{ _('Seller prefers to be contacted via messages') }}";
-      }
-      sp.classList.remove("underline");
-      sp.style.color = "inherit";
-      sp.style.cursor = "default";
-    });
-  }
-
-  const slides = document.querySelectorAll(".item-photo-slide");
-  const indicators = document.querySelectorAll(".item-photo-indicator");
-  let current = 0;
-
-  function showSlide(i) {
-    slides.forEach(s => s.classList.add("hidden"));
-    slides[i].classList.remove("hidden");
-    indicators.forEach(ind => ind.classList.remove("ring-2","ring-jordan"));
-    indicators[i].classList.add("ring-2","ring-jordan");
-    current = i;
-  }
-
-  indicators.forEach(ind => {
-    ind.addEventListener("click", () => showSlide(parseInt(ind.dataset.index)));
-  });
-
-  if (slides.length > 1) {
-    setInterval(() => {
-      current = (current + 1) % slides.length;
-      showSlide(current);
-    }, 4000);
-  }
-});
-</script>
+  {{ block.super }}
+  <script src="{% static 'js/view-ad.js' %}" defer></script>
+  <script src="{% static 'js/report-modal.js' %}" defer></script>
+  <script src="{% static 'js/message-box.js' %}" defer></script>
 {% endblock %}
 
-{% endblock %}

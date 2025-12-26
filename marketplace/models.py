@@ -8,6 +8,7 @@ import uuid
 from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
+from django.core.exceptions import ValidationError
 
 
 # ======================================================
@@ -430,12 +431,73 @@ class Subscriber(models.Model):
         return self.email
 
 
-class IssueReport(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, null=True, blank=True)
+class IssuesReport(models.Model):
+    TARGET_KINDS = [
+        ("listing", "Listing"),
+        ("user", "User"),
+        ("store", "Store"),
+    ]
+
+    LISTING_TYPES = [
+        ("item", "Item"),
+        ("request", "Request"),
+    ]
+
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports_made")
+    target_kind = models.CharField(max_length=10, choices=TARGET_KINDS, db_index=True)
+
+    # Targets (only one should be set)
+    listing = models.ForeignKey("marketplace.Listing", null=True, blank=True, on_delete=models.CASCADE, related_name="reports")
+    reported_user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name="reports_received")
+    store = models.ForeignKey("marketplace.Store", null=True, blank=True, on_delete=models.CASCADE, related_name="reports")
+
+    # For listing filtering (only relevant when target_kind="listing")
+    listing_type = models.CharField(max_length=10, choices=LISTING_TYPES, null=True, blank=True, db_index=True)
+
+    reason = models.CharField(max_length=100, blank=True, db_index=True)
     message = models.TextField()
-    status = models.CharField(max_length=20, choices=[("open", "Open"), ("resolved", "Resolved")], default="open")
+    status = models.CharField(
+        max_length=20,
+        choices=[("open", "Open"), ("resolved", "Resolved")],
+        default="open",
+        db_index=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        # Enforce exactly one target is set, matching target_kind
+        targets = {
+            "listing": self.listing_id is not None,
+            "user": self.reported_user_id is not None,
+            "store": self.store_id is not None,
+        }
+
+        if self.target_kind not in targets:
+            raise ValidationError({"target_kind": "Invalid target_kind."})
+
+        # exactly one target overall
+        if sum(bool(v) for v in targets.values()) != 1:
+            raise ValidationError("Exactly one target (listing/user/store) must be set.")
+
+        # the chosen target_kind must match the filled FK
+        if not targets[self.target_kind]:
+            raise ValidationError("target_kind does not match the provided target.")
+
+        # listing_type required only for listing reports
+        if self.target_kind == "listing":
+            if self.listing_type not in ("item", "request"):
+                raise ValidationError({"listing_type": "listing_type is required for listing reports."})
+        else:
+            # not listing -> listing_type must be empty
+            if self.listing_type:
+                raise ValidationError({"listing_type": "listing_type must be empty unless target_kind='listing'."})
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["target_kind", "status", "created_at"]),
+            models.Index(fields=["listing_type", "status", "created_at"]),
+        ]
 
 
 class PhoneVerificationCode(models.Model):

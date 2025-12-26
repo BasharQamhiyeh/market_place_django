@@ -1,3 +1,4 @@
+{# templates/partials/_item_card.html #}
 {% load i18n %}
 
 <article class="bg-white rounded-xl overflow-hidden
@@ -12,61 +13,56 @@
   <!-- IMAGE + HEART + CATEGORY BADGE -->
   <div class="relative">
 
-    {% if item.main_photo and item.main_photo.thumbnail %}
-      <img src="{{ item.main_photo.thumbnail.url }}"
-           alt="{{ item.listing.title }}"
-           class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
-
-    {% elif item.main_photo %}
-      {# fallback for old items without thumbnail #}
-      <img src="{{ item.main_photo.image.url }}"
-           alt="{{ item.listing.title }}"
-           class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
-
-    {% else %}
-      <div class="w-full h-[260px] bg-gray-100 flex items-center justify-center text-sm text-gray-400">
-        {% trans "No image" %}
-      </div>
-    {% endif %}
+    {% with p=item.main_photo %}
+      {% if p %}
+        {% if p.thumbnail %}
+          <img src="{{ p.thumbnail.url }}"
+               alt="{{ item.listing.title }}"
+               class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
+        {% else %}
+          <img src="{{ p.image.url }}"
+               alt="{{ item.listing.title }}"
+               class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
+        {% endif %}
+      {% else %}
+        <div class="w-full h-[260px] bg-gray-100 flex items-center justify-center text-sm text-gray-400">
+          {% trans "No image" %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
     <!-- Heart -->
     {% if request.user.is_authenticated %}
-    <form
-        class="absolute bottom-2 left-2 z-50"
-        onsubmit="toggleFavorite(event, {{ item.id }}, this)"
-    >
+      <form class="absolute bottom-2 left-2 z-50"
+            method="post"
+            action="{% url 'toggle_favorite' item.id %}"
+            onsubmit="toggleFavorite(event, {{ item.id }}, this)">
         {% csrf_token %}
         <button type="submit"
-                class="heart-btn text-2xl transition duration-200 hover:scale-110">
-            {% if item.is_favorited %}
-                ❤️
-            {% else %}
-                🤍
-            {% endif %}
+                class="heart-btn text-2xl transition duration-200 hover:scale-110"
+                aria-label="{% trans 'Toggle favorite' %}">
+          {% if item.is_favorited %}
+            ❤️
+          {% else %}
+            🤍
+          {% endif %}
         </button>
-    </form>
-{% else %}
-    <button
-        type="button"
-        onclick="document.getElementById('loginModal').classList.remove('hidden')"
-        class="absolute bottom-2 left-2 heart-btn text-2xl z-50 transition duration-200 hover:scale-110">
+      </form>
+    {% else %}
+      <button type="button"
+              onclick="document.getElementById('loginModal').classList.remove('hidden')"
+              class="absolute bottom-2 left-2 heart-btn text-2xl z-50 transition duration-200 hover:scale-110"
+              aria-label="{% trans 'Login to favorite' %}">
         🤍
-    </button>
-{% endif %}
-
+      </button>
+    {% endif %}
 
     <!-- Category badge -->
     {% if item.listing.category %}
       <span class="absolute top-3 right-3
-                   bg-white/90
-                   text-gray-800
-                   text-xs font-semibold
-                   px-3 py-1
-                   rounded-full
-                   shadow-sm
-                   flex items-center gap-1
-                   border border-orange-300">
-
+                   bg-white/90 text-gray-800 text-xs font-semibold
+                   px-3 py-1 rounded-full shadow-sm
+                   flex items-center gap-1 border border-orange-300">
         {% if item.listing.category.icon %}
           {{ item.listing.category.icon }}
         {% else %}
@@ -78,14 +74,12 @@
         {% else %}
           {{ item.listing.category.name_en }}
         {% endif %}
-
       </span>
     {% endif %}
   </div>
 
   <!-- CONTENT -->
   <div class="p-4">
-
     <!-- Title -->
     <h3 class="font-semibold text-lg line-clamp-2 min-h-[55px] text-gray-900"
         title="{{ item.listing.title }}">
@@ -110,13 +104,12 @@
             {% if t|timesince == "0 minutes" %}
               الآن
             {% else %}
-              منذ {{ t|timesince }}
+              {% trans "Since" %} {{ t|timesince }}
             {% endif %}
           {% endif %}
         {% endwith %}
       </span>
     </div>
-
   </div>
 
   <!-- FOOTER -->
@@ -126,10 +119,23 @@
     <div class="flex items-center gap-2">
       <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center
                   text-xs font-bold text-gray-700 shadow">
-        {{ item.listing.user.first_name|first|upper }}
+        {% with fn=item.listing.user.first_name|default:"" un=item.listing.user.username|default:"" %}
+          {% if fn %}
+            {{ fn|slice:":1"|upper }}
+          {% elif un %}
+            {{ un|slice:":1"|upper }}
+          {% else %}
+            ?
+          {% endif %}
+        {% endwith %}
       </div>
+
       <span class="text-sm font-medium text-gray-800 truncate max-w-[110px]">
-        {{ item.listing.user.username }}
+        {% if item.listing.user %}
+          {{ item.listing.user.username }}
+        {% else %}
+          {% trans "Unknown" %}
+        {% endif %}
       </span>
     </div>
 
@@ -140,11 +146,9 @@
 
   </div>
 
-  <!-- CLICKABLE OVERLAY -->
+  <!-- CLICKABLE OVERLAY (keep it UNDER the heart) -->
   <a href="{% url 'item_detail' item.id %}"
-   class="absolute inset-0 z-0 pointer-events-auto"
-   aria-label="{% trans 'View Details' %}"></a>
-
-
+     class="absolute inset-0 z-0 pointer-events-auto"
+     aria-label="{% trans 'View Details' %}"></a>
 
 </article>

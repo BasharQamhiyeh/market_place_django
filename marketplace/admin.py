@@ -20,7 +20,7 @@ from django import forms
 from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
-    City, Favorite, IssueReport, Message, Listing, Request
+    City, Favorite, IssuesReport, Message, Listing, Request
 )
 
 # ======================================================
@@ -1232,20 +1232,31 @@ class MessageAdmin(admin.ModelAdmin):
 
 
 
-@admin.register(IssueReport)
+@admin.register(IssuesReport)
 class IssueReportAdmin(admin.ModelAdmin):
-    list_display = ("user", "listing_title", "status", "created_at")
-    list_filter = ("status",)
-    search_fields = (
-        "user__username",
-        "listing__title",
-        "message",
+    list_display = (
+        "id",
+        "user",
+        "target_kind",
+        "listing_type",
+        "status",
+        "created_at",
     )
 
-    def listing_title(self, obj):
-        return obj.listing.title if obj.listing else "—"
+    list_filter = (
+        "target_kind",
+        "listing_type",
+        "status",
+        "created_at",
+    )
 
-    listing_title.short_description = "Listing"
+    search_fields = (
+        "message",
+        "user__first_name",
+        "user__phone",
+    )
+
+    ordering = ("-created_at",)
 
 
 

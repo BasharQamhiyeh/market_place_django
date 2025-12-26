@@ -69,7 +69,7 @@ urlpatterns = [
 
     path('contact/', views.contact, name='contact'),
 
-    path('item/<int:item_id>/report/', views.report_issue, name='report_issue'),
+    path("reports/create/", views.create_issue_report_ajax, name="create_issue_report_ajax"),
 
     path("items/attributes/<int:category_id>/", views.item_attributes_partial, name="item_attributes_partial"),
 
