@@ -95,26 +95,57 @@ class UserRegistrationForm(forms.ModelForm):
 
 
 class SignupAfterOtpForm(forms.Form):
+    CONDITION_CHOICES = (
+        ("personal", _("Personal")),
+        ("store", _("Store")),
+    )
+
     first_name = forms.CharField(label=_("First name"), max_length=150)
     last_name = forms.CharField(label=_("Last name"), max_length=150)
+
+    # from your hidden input: <input name="condition" ...>
+    condition = forms.ChoiceField(
+        label=_("Account type"),
+        choices=CONDITION_CHOICES,
+        required=False,          # default to personal if missing
+    )
+
+    # store fields (only required when condition == "store")
+    store_name = forms.CharField(label=_("Store name"), max_length=255, required=False)
+    store_logo = forms.ImageField(label=_("Store logo"), required=False)
+
     password = forms.CharField(label=_("Password"), widget=forms.PasswordInput)
     password2 = forms.CharField(label=_("Confirm Password"), widget=forms.PasswordInput)
 
     def clean_password(self):
-        pwd = self.cleaned_data.get("password", "")
+        pwd = self.cleaned_data.get("password", "") or ""
         if len(pwd) < 8:
             raise forms.ValidationError(_("Password must be 8 characters long."))
-        # optional: only letters/numbers if you want same old rule
-        # if not re.fullmatch(r"[A-Za-z0-9]+", pwd):
-        #     raise forms.ValidationError(_("Password must contain only letters and numbers."))
         return pwd
 
     def clean(self):
         cleaned = super().clean()
+
+        # passwords match
         p1 = cleaned.get("password")
         p2 = cleaned.get("password2")
         if p1 and p2 and p1 != p2:
             self.add_error("password2", _("Two passwords must match."))
+
+        # default condition if missing
+        condition = cleaned.get("condition") or "personal"
+        cleaned["condition"] = condition
+
+        # store requirements
+        if condition == "store":
+            store_name = (cleaned.get("store_name") or "").strip()
+            if not store_name:
+                self.add_error("store_name", _("Store name is required for store accounts."))
+        else:
+            # ignore store fields for personal accounts
+            cleaned["store_name"] = ""
+            cleaned["store_logo"] = None
+
         return cleaned
 
 

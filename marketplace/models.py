@@ -9,6 +9,7 @@ from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 
 # ======================================================
@@ -82,44 +83,42 @@ class User(AbstractBaseUser, PermissionsMixin):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.username}"
+        return f"{self.phone}"
 
 
 class Store(models.Model):
     owner = models.OneToOneField(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="store",
-        help_text="Owner of this store"
     )
 
-    # BASIC STORE INFO
+    # BASIC
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True)
 
     # MEDIA
     logo = models.ImageField(upload_to="stores/logos/", blank=True, null=True)
     cover = models.ImageField(upload_to="stores/covers/", blank=True, null=True)
 
-    # CONTACT
-    phone = models.CharField(max_length=20, blank=True, null=True)
-    whatsapp = models.CharField(max_length=20, blank=True, null=True)
-    website = models.URLField(blank=True, null=True)
-    instagram = models.URLField(blank=True, null=True)
-    facebook = models.URLField(blank=True, null=True)
+    # CONTACT (optional extras)
+    whatsapp = models.CharField(max_length=20, blank=True)
+    website = models.URLField(blank=True)
+    instagram = models.URLField(blank=True)
+    facebook = models.URLField(blank=True)
 
     # LOCATION
     city = models.ForeignKey(
-        City,
+        "marketplace.City",   # adjust app label if needed
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="stores"
+        related_name="stores",
     )
 
-    # APPROVAL & STATUS
-    is_approved = models.BooleanField(default=False)  # Admin review
-    is_active = models.BooleanField(default=True)     # Auto-hide if needed
+    # STATUS
+    is_approved = models.BooleanField(default=False)  # admin review
+    is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -130,11 +129,9 @@ class Store(models.Model):
     def __str__(self):
         return self.name
 
-    # For safely showing logo
+    @property
     def logo_url(self):
-        if self.logo:
-            return self.logo.url
-        return "/static/img/default-store.png"
+        return self.logo.url if self.logo else "/static/img/default-store.png"
 
 
 # ======================================================

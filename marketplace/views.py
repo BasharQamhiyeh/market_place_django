@@ -48,7 +48,7 @@ from .models import (
     User,
     Request,
     Listing,
-    RequestAttributeValue
+    RequestAttributeValue, Store
 )
 
 from .forms import (
@@ -1978,18 +1978,13 @@ def complete_signup(request):
         messages.error(request, "يرجى تأكيد رقم الهاتف أولاً.")
         return redirect("register")
 
-    form = SignupAfterOtpForm(request.POST)
+    # ✅ IMPORTANT for store_logo
+    form = SignupAfterOtpForm(request.POST, request.FILES)
+
     if not form.is_valid():
-        # IMPORTANT: do NOT pass variable name "form" if your base.html opens login modal on form.errors
-        # pass it as "signup_form" instead.
         return render(request, "register.html", {
             "signup_form": form,
-
-            # ✅ tell JS to restore step 3 after reload
             "restore_step": "details",
-
-            # ✅ so JS can re-fill the hidden verifiedMobile input
-            # (you can use pending_phone since it’s the canonical verified phone)
             "verified_phone": pending_phone,
         })
 
@@ -2002,35 +1997,46 @@ def complete_signup(request):
         messages.error(request, "هذا الرقم مسجَّل لدينا بالفعل.")
         return redirect("register")
 
-    user = User.objects.create_user(
-        phone=pending_phone,
-        password=form.cleaned_data["password"],
-    )
+    with transaction.atomic():
+        user = User.objects.create_user(
+            phone=pending_phone,
+            password=form.cleaned_data["password"],
+        )
 
-    user.first_name = form.cleaned_data.get("first_name", "") or ""
-    user.last_name = form.cleaned_data.get("last_name", "") or ""
-    user.phone_verified = True
-    user.is_active = True
-    user.show_phone = True
+        user.first_name = form.cleaned_data.get("first_name", "") or ""
+        user.last_name = form.cleaned_data.get("last_name", "") or ""
+        user.is_active = True
+        user.show_phone = True
 
-    # ✅ ensure date_joined is set (works even if field default exists)
-    if getattr(user, "date_joined", None) is None:
-        user.date_joined = timezone.now()
+        # ⚠️ only keep this if the field exists in your User model
+        if hasattr(user, "phone_verified"):
+            user.phone_verified = True
 
-    # referral
-    ref_code = request.session.get("ref_code")
-    if ref_code:
-        try:
-            referrer = User.objects.get(referral_code=ref_code)
-            user.referred_by = referrer
-        except User.DoesNotExist:
-            pass
+        if getattr(user, "date_joined", None) is None:
+            user.date_joined = timezone.now()
 
-    user.save()
+        # referral
+        ref_code = request.session.get("ref_code")
+        if ref_code:
+            try:
+                referrer = User.objects.get(referral_code=ref_code)
+                user.referred_by = referrer
+            except User.DoesNotExist:
+                pass
 
-    if user.referred_by:
-        user.referred_by.points += 50
-        user.referred_by.save()
+        user.save()
+
+        # ✅ store creation
+        if form.cleaned_data.get("condition") == "store":
+            Store.objects.create(
+                owner=user,
+                name=form.cleaned_data.get("store_name", "").strip(),
+                logo=form.cleaned_data.get("store_logo"),
+            )
+
+        if user.referred_by:
+            user.referred_by.points += 50
+            user.referred_by.save()
 
     # cleanup
     for key in ["pending_phone", "phone_verified_ok", "verification_code", "verification_sent_at", "ref_code"]:

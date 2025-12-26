@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // add button
     addAdBtn.textContent           = btnText;
     addAdBtn.style.backgroundColor = color;
-    addAdBtn.href = isBuy ? '/ar/request/create/' : '/ar/item/create/';
+    addAdBtn.href = isBuy ? '/request/create/' : '/item/create/';
 
     // search field and btn color
     searchInput.style.borderColor   = color;

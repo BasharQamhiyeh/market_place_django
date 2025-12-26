@@ -46,7 +46,7 @@
     <!-- STEP 3: Full signup -->
     <form id="signupForm"
           class="space-y-6 {% if restore_step == 'details' %}mt-4{% else %}hidden mt-4{% endif %}"
-          method="post" action="{% url 'complete_signup' %}">
+          method="post" action="{% url 'complete_signup' %}" enctype="multipart/form-data">
       {% csrf_token %}
 
       {# ✅ Global (non-field) errors like "passwords don't match", etc #}
