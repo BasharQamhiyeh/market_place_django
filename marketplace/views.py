@@ -48,7 +48,7 @@ from .models import (
     User,
     Request,
     Listing,
-    RequestAttributeValue, Store
+    RequestAttributeValue, Store, StoreReview
 )
 
 from .forms import (
@@ -58,7 +58,7 @@ from .forms import (
     PhoneVerificationForm,
     ForgotPasswordForm,
     ResetPasswordForm,
-    RequestForm, SignupAfterOtpForm, UserRegistrationForm
+    RequestForm, SignupAfterOtpForm, UserRegistrationForm, StoreReviewForm
 )
 
 # Local imports
@@ -453,19 +453,35 @@ def item_detail(request, item_id):
     # ----------------------------
     # Seller stats (✅ NEW)
     # ----------------------------
+    # ----------------------------
+    # Seller / Store stats
+    # ----------------------------
     seller = item.listing.user
 
-    # Count active + approved listings of type "item" for this seller
+    # True if the seller has a Store row (OneToOne)
+    seller_is_store = hasattr(seller, "store") and seller.store is not None
+    store = seller.store if seller_is_store else None
+
+    # verified flag (use is_verified or is_approved depending on your model)
+    seller_is_verified_store = bool(store and getattr(store, "is_verified", False))
+    # if you still have is_approved, use this instead:
+    # seller_is_verified_store = bool(store and getattr(store, "is_approved", False))
+
+    # Reviews: show ONLY for store users (verified or not — your choice)
+    reviews = []
+    if seller_is_store:
+        # if your Review model related_name is "reviews" on Store
+        reviews = store.reviews.select_related("reviewer").order_by("-created_at")[:10]
+
+    seller_reviews_count = len(reviews)
+
+    # Seller items count (same as you already do)
     seller_items_count = Listing.objects.filter(
         user=seller,
         type="item",
         is_active=True,
         is_approved=True,
     ).count()
-
-    # If you have a Review model, replace this with a real query.
-    # For now keep 0 to avoid breaking.
-    seller_reviews_count = 0
 
     # ----------------------------
     # Final render
@@ -477,6 +493,9 @@ def item_detail(request, item_id):
         "is_favorited": is_favorited,
         "seller_items_count": seller_items_count,
         "seller_reviews_count": seller_reviews_count,
+        "seller_is_store": seller_is_store,
+        "seller_is_verified_store": seller_is_verified_store,
+        "store_reviews": reviews,
     })
 
 
@@ -2232,3 +2251,33 @@ def user_logout(request):
     logout(request)
     return redirect('home')
 
+@login_required
+@require_POST
+def submit_store_review(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+    seller = item.listing.user
+
+    # Only if seller has a store AND it's verified
+    store = getattr(seller, "store", None)  # change if your related_name differs
+    if not store or not store.is_verified:
+        messages.error(request, "لا يمكن إضافة مراجعة لهذا البائع.")
+        return redirect("view_item", item_id=item_id)  # adjust url name
+
+    form = StoreReviewForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "تحقق من التقييم/التعليق.")
+        return redirect("view_item", item_id=item_id)
+
+    # Create or update (1 review per store per user)
+    obj, created = StoreReview.objects.update_or_create(
+        store=store,
+        reviewer=request.user,
+        defaults={
+            "rating": form.cleaned_data["rating"],
+            "comment": form.cleaned_data["comment"],
+        },
+    )
+
+    recalc_store_rating(store.id)
+    messages.success(request, "تم إرسال المراجعة بنجاح.")
+    return redirect("view_item", item_id=item_id)

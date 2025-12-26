@@ -78,6 +78,9 @@ urlpatterns = [
     path("requests/", views.request_list, name="request_list"),
     path("request/<int:request_id>/", views.request_detail, name="request_detail"),
 
+    path("items/<int:item_id>/store-review/", views.submit_store_review, name="submit_store_review"),
+
+
 
     # path('api/', include('marketplace.api_urls')),
 ]

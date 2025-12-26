@@ -20,7 +20,7 @@ from django import forms
 from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
-    City, Favorite, IssuesReport, Message, Listing, Request
+    City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview
 )
 
 # ======================================================
@@ -40,6 +40,21 @@ class UserAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return True
+
+
+@admin.register(Store)
+class StoreAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "owner", "is_verified", "is_active", "created_at")
+    list_filter = ("is_verified", "is_active", "created_at")
+    search_fields = ("name", "owner__phone", "owner__username")
+    list_editable = ("is_verified", "is_active")
+
+
+@admin.register(StoreReview)
+class StoreReviewAdmin(admin.ModelAdmin):
+    list_display = ("id", "store", "reviewer", "rating", "created_at")
+    list_filter = ("rating", "created_at")
+    search_fields = ("store__name", "reviewer__phone", "reviewer__username")
 
 
 class AttributeOptionInline(nested_admin.NestedTabularInline):

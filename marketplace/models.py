@@ -117,11 +117,14 @@ class Store(models.Model):
     )
 
     # STATUS
-    is_approved = models.BooleanField(default=False)  # admin review
+    is_verified = models.BooleanField(default=False)  # Admin verifies store
     is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    rating_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ["-created_at"]
@@ -132,6 +135,40 @@ class Store(models.Model):
     @property
     def logo_url(self):
         return self.logo.url if self.logo else "/static/img/default-store.png"
+
+
+from django.db import models
+from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+class StoreReview(models.Model):
+    store = models.ForeignKey(
+        "marketplace.Store",
+        on_delete=models.CASCADE,
+        related_name="reviews",
+        db_index=True,
+    )
+    reviewer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="store_reviews_made",
+    )
+
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)]
+    )
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            # One review per reviewer per store
+            models.UniqueConstraint(fields=["store", "reviewer"], name="uniq_store_reviewer_review")
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.store_id} - {self.reviewer_id} - {self.rating}"
 
 
 # ======================================================
@@ -545,3 +582,4 @@ class MobileVerification(models.Model):
 def delete_itemphoto_file(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+

@@ -280,17 +280,34 @@
                         <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
                           {{ item.listing.user.first_name }} {{ item.listing.user.last_name }}
                         </h4>
-                        {% if item.listing.user.is_verified_store %}
+                        {% if seller_is_verified_store %}
                           <span class="text-[11px] font-extrabold text-[var(--rukn-orange)] bg-orange-100 px-2 py-0.5 rounded-full">
                             متجر موثّق
                           </span>
                         {% endif %}
                       </div>
                       <div class="flex items-center gap-1 justify-end mt-1">
-                        <span class="text-[11px] text-gray-500 ms-1">
-                          ({{ seller_reviews_count|default:0 }} مراجعة)
-                        </span>
+                        {% if seller_is_store %}
+                          {# rating out of 5 (ex: 4.2). send store_rating_avg from the view #}
+                          {% with avg=store_rating_avg|default:0 %}
+                            {# 1 #}
+                            <span class="text-[14px] {% if avg >= 1 %}text-yellow-400{% else %}text-yellow-200{% endif %}">★</span>
+                            {# 2 #}
+                            <span class="text-[14px] {% if avg >= 2 %}text-yellow-400{% else %}text-yellow-200{% endif %}">★</span>
+                            {# 3 #}
+                            <span class="text-[14px] {% if avg >= 3 %}text-yellow-400{% else %}text-yellow-200{% endif %}">★</span>
+                            {# 4 #}
+                            <span class="text-[14px] {% if avg >= 4 %}text-yellow-400{% else %}text-yellow-200{% endif %}">★</span>
+                            {# 5 #}
+                            <span class="text-[14px] {% if avg >= 5 %}text-yellow-400{% else %}text-yellow-200{% endif %}">★</span>
+
+                            <span class="text-[11px] text-gray-500 ms-1">
+                              ({{ seller_reviews_count|default:0 }} مراجعة)
+                            </span>
+                          {% endwith %}
+                        {% endif %}
                       </div>
+
                     </div>
                   </div>
 

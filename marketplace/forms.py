@@ -4,7 +4,7 @@ from django.forms import ClearableFileInput
 from django.contrib.auth.forms import PasswordChangeForm
 
 from .models import (
-    City, Listing
+    City, Listing, StoreReview
 )
 
 from .validators import validate_no_links_or_html
@@ -561,4 +561,9 @@ class RequestForm(ListingBaseForm):
         build_dynamic_attribute_fields(
             self, category, existing, is_request=True
         )
+
+class StoreReviewForm(forms.ModelForm):
+    class Meta:
+        model = StoreReview
+        fields = ["rating", "comment"]
 
