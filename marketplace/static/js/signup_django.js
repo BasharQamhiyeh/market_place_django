@@ -76,6 +76,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const storeBox = document.getElementById("storeBox");
   const conditionValue = document.getElementById("conditionValue");
 
+  // ✅ NEW: restore step after page reload (server-side render with errors)
+  // Template must set:
+  // window.SIGNUP_RESTORE_STEP = "details" (or "")
+  // window.SIGNUP_VERIFIED_PHONE = "07xxxxxxxx" (or "")
+  if (window.SIGNUP_RESTORE_STEP === "details") {
+    mobileForm?.classList.add("hidden");
+    signupForm?.classList.remove("hidden");
+
+    if (verifiedMobile && window.SIGNUP_VERIFIED_PHONE) {
+      verifiedMobile.value = window.SIGNUP_VERIFIED_PHONE;
+    }
+
+    // Also restore account type UI if backend rendered it into the hidden input
+    if (conditionValue?.value === "store") {
+      btnStore?.classList.add("toggle-active", "bg-[var(--rukn-orange)]", "text-white");
+      btnPersonal?.classList.remove("toggle-active", "bg-[var(--rukn-orange)]", "text-white");
+      storeBox?.classList.remove("hidden");
+    } else {
+      btnPersonal?.classList.add("toggle-active", "bg-[var(--rukn-orange)]", "text-white");
+      btnStore?.classList.remove("toggle-active", "bg-[var(--rukn-orange)]", "text-white");
+      storeBox?.classList.add("hidden");
+    }
+  }
+
   function openVerifyPopup() {
     verifyCodeInput.value = "";
     setErr(verifyCodeErr, "");
@@ -139,7 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch(window.SIGNUP_SEND_OTP_URL, {
       method: "POST",
       body: fd,
-      credentials: "same-origin", // ✅ IMPORTANT
+      credentials: "same-origin",
     });
 
     const data = await res.json().catch(() => ({}));
@@ -175,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch(window.SIGNUP_VERIFY_OTP_URL, {
       method: "POST",
       body: fd,
-      credentials: "same-origin", // ✅ IMPORTANT
+      credentials: "same-origin",
     });
 
     const data = await res.json().catch(() => ({}));

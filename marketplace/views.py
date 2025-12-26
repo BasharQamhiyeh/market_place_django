@@ -1982,7 +1982,16 @@ def complete_signup(request):
     if not form.is_valid():
         # IMPORTANT: do NOT pass variable name "form" if your base.html opens login modal on form.errors
         # pass it as "signup_form" instead.
-        return render(request, "register.html", {"signup_form": form})
+        return render(request, "register.html", {
+            "signup_form": form,
+
+            # ✅ tell JS to restore step 3 after reload
+            "restore_step": "details",
+
+            # ✅ so JS can re-fill the hidden verifiedMobile input
+            # (you can use pending_phone since it’s the canonical verified phone)
+            "verified_phone": pending_phone,
+        })
 
     # safety re-check (handle old formats too)
     local07 = "0" + pending_phone[3:]     # 07xxxxxxxx

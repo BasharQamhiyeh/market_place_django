@@ -14,7 +14,7 @@
     <div class="auth-header">
       <div class="flex justify-center items-center pb-8">
         <img
-          src="https://iili.io/fo9Iynj.png"
+          src="{% static 'images/logo.png' %}"
           alt="شعار ركن"
           class="h-12 w-auto object-contain"
         />
@@ -43,50 +43,84 @@
       </button>
     </form>
 
-    <!-- STEP 3: Full signup (hidden until verified) -->
-    <form id="signupForm" class="space-y-6 hidden mt-4"
+    <!-- STEP 3: Full signup -->
+    <form id="signupForm"
+          class="space-y-6 {% if restore_step == 'details' %}mt-4{% else %}hidden mt-4{% endif %}"
           method="post" action="{% url 'complete_signup' %}">
       {% csrf_token %}
 
+      {# ✅ Global (non-field) errors like "passwords don't match", etc #}
+      {% if signup_form and signup_form.non_field_errors %}
+        <div class="bg-red-100 text-red-700 p-3 rounded-lg text-sm">
+          {{ signup_form.non_field_errors.0 }}
+        </div>
+      {% endif %}
+
       <!-- Verified phone stored here -->
-      <input type="hidden" id="verifiedMobile" name="verifiedMobile">
+      <input type="hidden" id="verifiedMobile" name="verifiedMobile"
+             value="{% if signup_form %}{{ signup_form.data.verifiedMobile|default:verified_phone }}{% else %}{{ verified_phone|default:'' }}{% endif %}">
 
       <div class="flex flex-col md:flex-row gap-6">
         <div class="flex-1">
           <label class="label">الاسم الأول *</label>
-          <input type="text" id="firstName" name="first_name" class="input-field" placeholder="مثال: أحمد">
-          <div id="firstNameErr"></div>
+          <input type="text"
+                 id="firstName"
+                 name="first_name"
+                 class="input-field {% if signup_form and signup_form.first_name.errors %}input-error{% endif %}"
+                 value="{% if signup_form %}{{ signup_form.data.first_name|default:'' }}{% endif %}"
+                 placeholder="مثال: أحمد">
+          <div id="firstNameErr">
+            {% if signup_form and signup_form.first_name.errors %}
+              <p class="field-error">⚠️ {{ signup_form.first_name.errors.0 }}</p>
+            {% endif %}
+          </div>
         </div>
 
         <div class="flex-1">
           <label class="label">الاسم الأخير *</label>
-          <input type="text" id="lastName" name="last_name" class="input-field" placeholder="مثال: الأحمد">
-          <div id="lastNameErr"></div>
+          <input type="text"
+                 id="lastName"
+                 name="last_name"
+                 class="input-field {% if signup_form and signup_form.last_name.errors %}input-error{% endif %}"
+                 value="{% if signup_form %}{{ signup_form.data.last_name|default:'' }}{% endif %}"
+                 placeholder="مثال: الأحمد">
+          <div id="lastNameErr">
+            {% if signup_form and signup_form.last_name.errors %}
+              <p class="field-error">⚠️ {{ signup_form.last_name.errors.0 }}</p>
+            {% endif %}
+          </div>
         </div>
       </div>
 
-      <!-- Account type (UI only for now) -->
+      <!-- Account type -->
       <div class="mt-2">
         <label class="label">نوع الحساب *</label>
 
-        <div id="conditionBox"
-             class="flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-lg w-full">
-          <button id="btnPersonal" type="button"
-            class="flex-1 py-2.5 text-sm font-bold toggle-active bg-[var(--rukn-orange)] text-white">
-            فرد
-          </button>
+        {# decide selected type from posted data if present #}
+        {% with acc_type=signup_form.data.condition|default:"personal" %}
+          <div id="conditionBox"
+               class="flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-lg w-full">
+            <button id="btnPersonal" type="button"
+              class="flex-1 py-2.5 text-sm font-bold
+                     {% if acc_type != 'store' %}toggle-active bg-[var(--rukn-orange)] text-white{% else %}text-[var(--muted)] bg-white{% endif %}">
+              فرد
+            </button>
 
-          <button id="btnStore" type="button"
-            class="flex-1 py-2.5 text-sm font-bold text-[var(--muted)] bg-white">
-            تاجر
-          </button>
-        </div>
+            <button id="btnStore" type="button"
+              class="flex-1 py-2.5 text-sm font-bold
+                     {% if acc_type == 'store' %}toggle-active bg-[var(--rukn-orange)] text-white{% else %}text-[var(--muted)] bg-white{% endif %}">
+              تاجر
+            </button>
+          </div>
 
-        <input type="hidden" id="conditionValue" value="personal">
+          {# ✅ IMPORTANT: add name so backend can read it later #}
+          <input type="hidden" id="conditionValue" name="condition" value="{{ acc_type }}">
+        {% endwith %}
       </div>
 
-      <!-- Store box (UI only for now) -->
-      <div id="storeBox" class="hidden mt-4 rounded-2xl shadow-lg overflow-hidden">
+      <!-- Store box -->
+      {% with acc_type=signup_form.data.condition|default:"personal" %}
+      <div id="storeBox" class="{% if acc_type == 'store' %}mt-4{% else %}hidden mt-4{% endif %} rounded-2xl shadow-lg overflow-hidden">
         <div class="bg-[var(--rukn-orange)] text-white px-5 py-3 flex items-center gap-2">
           <h3 class="font-bold text-lg">بيانات المتجر</h3>
         </div>
@@ -94,8 +128,17 @@
         <div class="bg-white p-6 space-y-5">
           <div>
             <label class="label">اسم المتجر *</label>
-            <input type="text" id="storeName" class="input-field" placeholder="مثال: متجر المهند">
-            <div id="storeNameErr"></div>
+            <input type="text"
+                   id="storeName"
+                   name="store_name"
+                   class="input-field {% if signup_form and signup_form.store_name.errors %}input-error{% endif %}"
+                   value="{% if signup_form %}{{ signup_form.data.store_name|default:'' }}{% endif %}"
+                   placeholder="مثال: متجر المهند">
+            <div id="storeNameErr">
+              {% if signup_form and signup_form.store_name.errors %}
+                <p class="field-error">⚠️ {{ signup_form.store_name.errors.0 }}</p>
+              {% endif %}
+            </div>
           </div>
 
           <div>
@@ -117,40 +160,64 @@
                 اختر صورة
               </label>
 
-              <input type="file" id="storeLogo" accept="image/*" class="hidden">
+              {# note: file input won't repopulate on reload by browser security #}
+              <input type="file" id="storeLogo" name="store_logo" accept="image/*" class="hidden">
             </div>
 
-            <div id="storeLogoErr"></div>
+            <div id="storeLogoErr">
+              {% if signup_form and signup_form.store_logo.errors %}
+                <p class="field-error">⚠️ {{ signup_form.store_logo.errors.0 }}</p>
+              {% endif %}
+            </div>
           </div>
         </div>
       </div>
+      {% endwith %}
 
       <!-- Passwords -->
       <div class="flex flex-col md:flex-row gap-6">
         <div class="flex-1">
           <label class="label mt-2">كلمة المرور *</label>
           <div class="relative">
-            <input type="password" id="pass1" name="password" class="input-field" placeholder="********">
+            <input type="password"
+                   id="pass1"
+                   name="password"
+                   class="input-field {% if signup_form and signup_form.password.errors %}input-error{% endif %}"
+                   placeholder="********">
             <button type="button" id="togglePass1"
               class="absolute top-1/2 -translate-y-1/2 left-4 text-gray-500"></button>
           </div>
-          <div id="pass1Err"></div>
+          <div id="pass1Err">
+            {% if signup_form and signup_form.password.errors %}
+              <p class="field-error">⚠️ {{ signup_form.password.errors.0 }}</p>
+            {% endif %}
+          </div>
         </div>
 
         <div class="flex-1">
           <label class="label mt-2">تأكيد كلمة المرور *</label>
           <div class="relative">
-            <input type="password" id="pass2" name="password2" class="input-field" placeholder="********">
+            <input type="password"
+                   id="pass2"
+                   name="password2"
+                   class="input-field {% if signup_form and signup_form.password2.errors %}input-error{% endif %}"
+                   placeholder="********">
             <button type="button" id="togglePass2"
               class="absolute top-1/2 -translate-y-1/2 left-4 text-gray-500"></button>
           </div>
-          <div id="pass2Err"></div>
+          <div id="pass2Err">
+            {% if signup_form and signup_form.password2.errors %}
+              <p class="field-error">⚠️ {{ signup_form.password2.errors.0 }}</p>
+            {% endif %}
+          </div>
         </div>
       </div>
 
       <!-- Terms -->
       <div class="mt-2 flex items-start gap-3 select-none">
-        <input type="checkbox" id="acceptTerms" class="checkbox-large mt-1">
+        {# If you later add accept_terms to the Django form, bind checked from POST #}
+        <input type="checkbox" id="acceptTerms" name="accept_terms" class="checkbox-large mt-1"
+               {% if signup_form and signup_form.data.accept_terms %}checked{% endif %}>
         <span class="text-sm text-gray-700 leading-relaxed">
           أوافق على
           <button type="button" id="termsLink"
@@ -164,7 +231,11 @@
           </button>
         </span>
       </div>
-      <div id="acceptTermsErr"></div>
+      <div id="acceptTermsErr">
+        {% if signup_form and signup_form.accept_terms.errors %}
+          <p class="field-error">⚠️ {{ signup_form.accept_terms.errors.0 }}</p>
+        {% endif %}
+      </div>
 
       <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full">
         إنشاء الحساب
@@ -207,13 +278,11 @@
     <div id="verifyCodeErr"></div>
 
     <div class="flex gap-3 mt-5">
-      <!-- ✅ IMPORTANT: type="button" -->
       <button id="checkVerifyCode" type="button"
         class="flex-1 py-3 rounded-xl font-bold bg-[var(--rukn-orange)] text-white hover:bg-[#e56a00] transition duration-200 shadow-md">
         تحقق الآن
       </button>
 
-      <!-- ✅ IMPORTANT: type="button" -->
       <button id="closeVerify" type="button"
         class="flex-1 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition duration-200">
         إلغاء
@@ -222,7 +291,7 @@
   </div>
 </div>
 
-<!-- Success popup (optional, kept like mockup) -->
+<!-- Success popup -->
 <div id="successPopup" class="success-popup-bg hidden">
   <div class="success-popup">
     <div class="flex flex-col items-center mb-4">
@@ -276,6 +345,8 @@
 <script>
   window.SIGNUP_SEND_OTP_URL = "{% url 'ajax_send_signup_otp' %}";
   window.SIGNUP_VERIFY_OTP_URL = "{% url 'ajax_verify_signup_otp' %}";
+  window.SIGNUP_RESTORE_STEP = "{{ restore_step|default:'' }}";
+  window.SIGNUP_VERIFIED_PHONE = "{{ verified_phone|default:'' }}";
 </script>
 <script src="{% static 'js/signup_django.js' %}" defer></script>
 {% endblock %}
