@@ -379,6 +379,7 @@ def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     attributes = item.attribute_values.all()
 
+
     # ----------------------------
     # 1. Django fallback function
     # ----------------------------
@@ -449,6 +450,22 @@ def item_detail(request, item_id):
     if request.user.is_authenticated:
         is_favorited = Favorite.objects.filter(user=request.user, listing=item.listing).exists()
 
+    # ----------------------------
+    # Seller stats (✅ NEW)
+    # ----------------------------
+    seller = item.listing.user
+
+    # Count active + approved listings of type "item" for this seller
+    seller_items_count = Listing.objects.filter(
+        user=seller,
+        type="item",
+        is_active=True,
+        is_approved=True,
+    ).count()
+
+    # If you have a Review model, replace this with a real query.
+    # For now keep 0 to avoid breaking.
+    seller_reviews_count = 0
 
     # ----------------------------
     # Final render
@@ -458,6 +475,8 @@ def item_detail(request, item_id):
         'attributes': attributes,
         'similar_items': similar_items,
         "is_favorited": is_favorited,
+        "seller_items_count": seller_items_count,
+        "seller_reviews_count": seller_reviews_count,
     })
 
 
@@ -1978,12 +1997,16 @@ def complete_signup(request):
         phone=pending_phone,
         password=form.cleaned_data["password"],
     )
-    user.first_name = form.cleaned_data.get("first_name", "")
-    user.last_name = form.cleaned_data.get("last_name", "")
+
+    user.first_name = form.cleaned_data.get("first_name", "") or ""
+    user.last_name = form.cleaned_data.get("last_name", "") or ""
     user.phone_verified = True
     user.is_active = True
-    # default visibility (change if you want later)
     user.show_phone = True
+
+    # ✅ ensure date_joined is set (works even if field default exists)
+    if getattr(user, "date_joined", None) is None:
+        user.date_joined = timezone.now()
 
     # referral
     ref_code = request.session.get("ref_code")
@@ -2007,6 +2030,7 @@ def complete_signup(request):
     login(request, user)
     messages.success(request, "✅ تم إنشاء الحساب بنجاح!")
     return redirect("home")
+
 
 # ✅ Step 3: Forgot password – request code
 def forgot_password(request):
