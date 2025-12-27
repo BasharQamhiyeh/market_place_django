@@ -33,28 +33,23 @@
 
     <!-- Heart -->
     {% if request.user.is_authenticated %}
-      <form class="absolute bottom-2 left-2 z-50"
-            method="post"
-            action="{% url 'toggle_favorite' item.id %}"
-            onsubmit="toggleFavorite(event, {{ item.id }}, this)">
-        {% csrf_token %}
-        <button type="submit"
-                class="heart-btn text-2xl transition duration-200 hover:scale-110"
-                aria-label="{% trans 'Toggle favorite' %}">
-          {% if item.is_favorited %}
-            ❤️
-          {% else %}
-            🤍
-          {% endif %}
-        </button>
-      </form>
-    {% else %}
-      <button type="button"
-              onclick="document.getElementById('loginModal').classList.remove('hidden')"
-              class="absolute bottom-2 left-2 heart-btn text-2xl z-50 transition duration-200 hover:scale-110"
-              aria-label="{% trans 'Login to favorite' %}">
-        🤍
-      </button>
+      <button
+      type="button"
+      data-fav-btn="1"
+      data-url="{% url 'toggle_favorite' item.id %}"
+      data-guest="{% if request.user.is_authenticated %}0{% else %}1{% endif %}"
+      data-favorited="{% if item.is_favorited %}1{% else %}0{% endif %}"
+      class="absolute bottom-2 left-2 z-50 text-2xl transition duration-200 hover:scale-110"
+      aria-label="{% trans 'Toggle favorite' %}"
+    >
+      <span class="fav-heart">
+        {% if item.is_favorited %}
+          ❤️
+        {% else %}
+          🤍
+        {% endif %}
+      </span>
+    </button>
     {% endif %}
 
     <!-- Category badge -->
