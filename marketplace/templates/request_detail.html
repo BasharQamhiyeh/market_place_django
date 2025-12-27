@@ -1,216 +1,512 @@
 {% extends "base.html" %}
-{% load i18n humanize %}
+{% load static i18n %}
 
-{% block title %}{{ request_obj.listing.title }}{% endblock %}
+{% block title %}ركن — عرض الطلب{% endblock %}
+
+{% block base_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/view-request.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<div class="max-w-5xl mx-auto mt-10 mb-16 px-4">
+<div class="px-4 sm:px-0" data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
+  <div class="min-h-screen flex flex-col py-8 lg:py-12">
 
-  <!-- ======================== HEADER ======================== -->
-  <header class="text-center mb-10">
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-[#16a34a] mb-3">
-      {{ request_obj.listing.title }}
-    </h1>
+    <!-- Header -->
+    <header class="max-w-screen-xl mx-auto w-full mb-4 sm:px-4">
+      <div class="flex flex-col gap-3">
+        <nav class="text-sm text-[var(--muted)] mt-1">
+          <a href="{% url 'home' %}" class="hover:text-[var(--rukn-green)]">الرئيسية</a> /
+          <a href="{% url 'request_list' %}" class="hover:text-[var(--rukn-green)]">الطلبات</a> /
 
-    <p class="text-gray-500 text-sm sm:text-base leading-relaxed">
-      تفاصيل هذا الطلب من المستخدمين الباحثين عن عروض مناسبة.
-    </p>
-  </header>
-
-  <!-- ======================== MAIN CARD ======================== -->
-  <div class="request-card bg-white border border-green-200 rounded-2xl shadow p-6 sm:p-8 mb-12">
-
-    <!-- ===== CATEGORY & CITY ===== -->
-    <p class="text-gray-500 text-sm mb-4">
-      {% if request_obj.listing.category.parent %}
-        {{ request_obj.listing.category.parent }} › {{ request_obj.listing.category }}
-      {% else %}
-        {{ request_obj.listing.category }}
-      {% endif %}
-
-      {% if request_obj.listing.city %}
-        • {{ request_obj.listing.city }}
-      {% endif %}
-    </p>
-
-    <!-- ===== DESCRIPTION ===== -->
-    <div class="bg-green-50 border border-green-100 rounded-xl p-4 mb-8">
-      <h3 class="font-semibold text-lg mb-2 text-green-800">{% trans "Description" %}</h3>
-      <p class="text-gray-700 leading-relaxed">{{ request_obj.listing.description|linebreaksbr }}</p>
-    </div>
-
-    <!-- ======================== INFO GRID ======================== -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-      <!-- LEFT INFO LIST -->
-      <div class="space-y-4">
-
-        <!-- BUDGET -->
-        <div class="bg-white border rounded-xl p-4 shadow-sm">
-          <span class="font-semibold text-gray-800 block mb-1">الميزانية المتوقعة</span>
-          {% if request_obj.budget %}
-            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
-              {{ request_obj.budget }} د.أ
-            </span>
-          {% else %}
-            <span class="text-gray-400">غير محددة</span>
+          {% if request_obj.listing.category %}
+            <a href="{% url 'request_list' %}?categories={{ request_obj.listing.category.id }}"
+               class="hover:text-[var(--rukn-green)]">
+              {% if LANGUAGE_CODE == "ar" %}
+                {{ request_obj.listing.category.name_ar }}
+              {% else %}
+                {{ request_obj.listing.category.name_en }}
+              {% endif %}
+            </a> /
           {% endif %}
-        </div>
 
-        <!-- CONDITION -->
-        <div class="bg-white border rounded-xl p-4 shadow-sm">
-          <span class="font-semibold text-gray-800 block mb-1">الحالة المطلوبة</span>
-          <span class="text-gray-700">
-            {% if request_obj.condition_preference == "new" %}
-              جديد
-            {% elif request_obj.condition_preference == "used" %}
-              مستعمل
-            {% else %}
-              أي حالة
-            {% endif %}
-          </span>
-        </div>
-
-        <!-- SHOW PHONE -->
-        <div class="bg-white border rounded-xl p-4 shadow-sm">
-          <span class="font-semibold text-gray-800 block mb-1">رقم الهاتف</span>
-
-          {% if request_obj.show_phone %}
-            {% if request.user.is_authenticated %}
-              <span class="text-green-700 underline cursor-pointer"
-                    id="buyer-phone"
-                    data-phone="{{ request_obj.listing.user.phone }}">
-                اضغط لإظهار الرقم
-              </span>
-            {% else %}
-              <a href="{% url 'login' %}?next={{ request.path }}"
-                 class="underline text-green-600">سجّل دخولك لرؤية الرقم</a>
-            {% endif %}
-          {% else %}
-            <span class="text-gray-400">يفضّل التواصل عبر الرسائل</span>
-          {% endif %}
-        </div>
-
-        <!-- DYNAMIC ATTRIBUTES -->
-        {% if attributes %}
-        <div class="bg-white border rounded-xl p-4 shadow-sm">
-          <span class="font-semibold text-gray-800 block mb-2">خصائص إضافية</span>
-
-          <ul class="space-y-1">
-            {% for attr in attributes %}
-              <li class="flex justify-between">
-                <span class="font-medium text-gray-700">{{ attr.attribute }}</span>
-                <span class="text-gray-600">{{ attr.value }}</span>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
-
+          <span class="text-gray-600">{{ request_obj.listing.title }}</span>
+        </nav>
       </div>
+    </header>
 
-      <!-- RIGHT CONTACT CARD -->
-      <div class="bg-green-50 border border-green-200 rounded-xl p-5 shadow-sm">
+    <!-- MAIN -->
+    <main class="max-w-screen-xl mx-auto mt-2 mb-6 w-full sm:px-4">
+      <div class="flex flex-col lg:flex-row lg:gap-2">
 
-        <h4 class="font-bold text-green-800 text-lg mb-2">معلومات مقدم الطلب</h4>
+        <!-- Right 70% -->
+        <section class="w-full lg:w-[70%] lg:order-1 space-y-5 lg:pe-2">
 
-        <div class="mb-3">
-          <span class="font-semibold text-gray-800">الاسم:</span>
-          <span>{{ request_obj.listing.user.username }}</span>
-        </div>
+          <div class="container-box z-10">
 
-        <div class="mb-6">
-          <span class="font-semibold text-gray-800">المدينة:</span>
-          <span>{{ request_obj.listing.city|default:"غير محددة" }}</span>
-        </div>
+            <!-- Info -->
+            <div class="p-5 sm:p-6 border-b-2 border-gray-200">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <p class="text-[11px] text-[var(--muted)] mb-1">
+                      {% if request_obj.listing.category %}
+                        {% if LANGUAGE_CODE == "ar" %}
+                          {{ request_obj.listing.category.name_ar }}
+                        {% else %}
+                          {{ request_obj.listing.category.name_en }}
+                        {% endif %}
+                      {% endif %}
+                      {% if request_obj.request_type %}
+                        / {{ request_obj.request_type }}
+                      {% endif %}
+                    </p>
 
-        {% if request.user.is_authenticated and request.user != request_obj.listing.user %}
-          <a href="{% url 'start_conversation_request' request_obj.id %}"
-             class="block w-full text-center bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition">
-            تواصل مع مقدم الطلب
-          </a>
-        {% else %}
-          <div class="text-gray-500 text-sm">
-            لا يمكنك مراسلة نفسك.
+                    <h2 class="text-lg md:text-xl font-extrabold text-slate-900 leading-snug">
+                      {{ request_obj.listing.title }}
+                    </h2>
+                  </div>
+
+                  {% if request_obj.budget %}
+                  <div class="flex flex-col items-center gap-1 min-w-[80px]">
+                    <span class="text-[11px] font-semibold text-gray-500">أقصى ميزانية</span>
+                    <div class="text-center">
+                      <div class="text-[30px] md:text-[34px] font-extrabold text-[var(--rukn-green)] leading-none">
+                        {{ request_obj.budget|floatformat:0 }}
+                      </div>
+                      <div class="text-[12px] font-semibold text-gray-700 mt-1">دينار أردني</div>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+
+                <!-- Meta pills -->
+                <div class="flex flex-wrap gap-2 text-[11px] sm:text-xs mt-1">
+
+                  <button type="button"
+                          onclick="copyAdNumber()"
+                          class="meta-pill hover:border-green-200 hover:bg-green-50 transition">
+                    <span class="meta-icon text-green-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" x2="20" y1="9" y2="9" />
+                        <line x1="4" x2="20" y1="15" y2="15" />
+                        <line x1="10" x2="8" y1="3" y2="21" />
+                        <line x1="16" x2="14" y1="3" y2="21" />
+                      </svg>
+                    </span>
+                    <span>رقم الطلب: <strong id="adNumber">{{ request_obj.id }}</strong></span>
+                  </button>
+
+                  <span class="meta-pill">
+                    <span class="meta-icon">
+                      <svg class="w-3.5 h-3.5 text-green-600" viewBox="0 0 20 20" fill="none">
+                        <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6" />
+                        <path d="M7 2v4M13 2v4M4 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    <span>تاريخ النشر: {{ request_obj.listing.created_at|date:"Y/m/d" }}</span>
+                  </span>
+
+                  <span class="meta-pill">
+                    <span class="meta-icon">
+                      <svg class="w-3.5 h-3.5 text-green-600" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z"
+                              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                        <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+                      </svg>
+                    </span>
+                    <span>{% if request_obj.listing.city %}{{ request_obj.listing.city }}{% else %}—{% endif %}</span>
+                  </span>
+
+                  {% if request_obj.condition %}
+                  <span class="meta-pill">
+                    <span class="meta-icon">
+                      <svg class="w-3.5 h-3.5 text-green-600" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 2L5 11h4l-1 7 7-10h-4l3-6h-4z"
+                              stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                    <span>{{ request_obj.condition }}</span>
+                  </span>
+                  {% endif %}
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Details + Attributes -->
+            <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
+
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-6 h-6 rounded-full bg-green-50 text-[var(--rukn-green)] flex items-center justify-center text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z" />
+                      <path d="M10 13l2 2 4-4" />
+                    </svg>
+                  </span>
+                  <h3 class="text-lg text-[var(--rukn-green)] font-bold">تفاصيل الطلب</h3>
+                </div>
+
+                <div class="text-sm text-gray-700 leading-relaxed space-y-3 px-8">
+                  {% if request_obj.listing.description %}
+                    {{ request_obj.listing.description|linebreaks }}
+                  {% else %}
+                    <p class="text-[var(--muted)]">لا يوجد تفاصيل.</p>
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if attributes %}
+              <div class="mb-8 pt-8">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-green-50 text-[var(--rukn-green)] flex items-center justify-center text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 16v-4" />
+                      <path d="M12 8h.01" />
+                    </svg>
+                  </span>
+                  <span class="text-[var(--rukn-green)]">مواصفات مفضلة</span>
+                </h3>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 px-8">
+                  {% for a in attributes %}
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-center transition hover:border-[var(--rukn-green)]">
+                      <span class="block text-[10px] text-gray-500 mb-1">{{ a.attribute.name }}</span>
+                      <span class="font-bold text-gray-900 text-sm">{{ a.value }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
           </div>
-        {% endif %}
-      </div>
 
+          <!-- Safety tips -->
+          <div class="container-box p-5 sm:p-6">
+            <div class="relative z-10">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">🛡️</span>
+                <h3 class="text-lg font-bold text-gray-800">نصائح وتذكيرات للأمان</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs sm:text-sm text-[var(--muted)]">
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex gap-3 items-start">
+                  <span class="text-lg">👥</span>
+                  <p>رتّب لقاء في مكان عام وآمن، وتجنّب الأماكن المعزولة.</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex gap-3 items-start">
+                  <span class="text-lg">💳</span>
+                  <p>لا تقم بأي تحويلات مالية قبل الاتفاق النهائي.</p>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex gap-3 items-start">
+                  <span class="text-lg">🔒</span>
+                  <p>منصة ركن هي وسيط إعلاني ولا تتدخل في الاتفاقات.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Similar Requests -->
+          <section class="container-box p-5 sm:p-6">
+            <div class="relative z-10">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6">
+                <h2 class="text-lg md:text-xl font-extrabold text-gray-900">طلبات مشابهة في نفس القسم</h2>
+              </div>
+
+              <div id="requestsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                {% for r in similar_requests|slice:":8" %}
+                  {% include "partials/_request_card.html" with request=r %}
+                {% empty %}
+                  <p class="text-center text-gray-500 py-6 col-span-full">لا توجد طلبات مشابهة حالياً.</p>
+                {% endfor %}
+              </div>
+
+              {% if similar_requests|length > 8 %}
+                <div class="mt-8 flex justify-center">
+                  <button id="loadMoreBtn"
+                          class="px-6 py-2.5 rounded-full bg-[var(--rukn-green)] text-white text-sm sm:text-base font-semibold shadow hover:opacity-95 active:opacity-90 transition">
+                    تحميل المزيد من الطلبات
+                  </button>
+                </div>
+                {{ similar_requests|slice:"8:"|json_script:"more-requests-data" }}
+              {% endif %}
+            </div>
+          </section>
+
+        </section>
+
+        <!-- Left 30% -->
+        <aside class="w-full lg:w-[30%] lg:order-2 space-y-5 lg:ps-2 mt-6 sm:mt-0">
+          <div class="space-y-5 lg:sticky lg:top-4">
+            <section class="container-box">
+              <div class="relative z-10">
+
+                {% with u=request_obj.listing.user %}
+                <div class="relative group cursor-pointer mt-1 p-5 sm:p-6 border-b-2 border-gray-200"
+                     onclick="window.location.href='{% url 'user_profile' u.user_id %}'">
+                  <div class="absolute inset-0 group-hover:bg-green-100/70 transition-all duration-200"></div>
+
+                  <div class="relative flex items-center justify-start gap-4 px-2 pb-2">
+                    {% if u.photo %}
+                      <img src="{{ u.photo.url }}"
+                           class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0 object-cover"
+                           alt="requester avatar">
+                    {% else %}
+                      <div class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0
+                                  bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
+                        {{ u.first_name|default:u.username|default:"م"|first|upper }}
+                      </div>
+                    {% endif %}
+
+                    <div class="flex flex-col items-start text-right">
+                      <div class="flex items-center gap-2 justify-end">
+                        <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
+                          {{ u.first_name }} {{ u.last_name }}
+                        </h4>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2 mt-4 text-[11px] text-gray-700 justify-start px-2">
+                      <span class="meta-pill">
+                          <span class="meta-icon text-green-600">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" /><path d="m9 10 2 2 4-4" /></svg>
+                          </span>{{ requester_requests_count|default:0 }} طلب
+                      </span>
+                      <span class="meta-pill">
+                          <span class="meta-icon text-green-600">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14" /><path d="M5 2h14" /><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" /><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" /></svg>
+                          </span>
+                          عضو منذ {{ u.date_joined|timesince }}
+                      </span>
+                  </div>
+                </div>
+                {% endwith %}
+
+                <!-- Quick actions -->
+                <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                        <path d="M21 9H3" />
+                        <path d="M21 15H3" />
+                      </svg>
+                      <span>إجراءات سريعة</span>
+                    </h3>
+                  </div>
+
+                  <div class="rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
+                    <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+
+                      <button id="favBtn" type="button"
+                              class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                     bg-white border border-gray-200
+                                     hover:border-green-300 hover:bg-green-50 hover:shadow-sm
+                                     text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                        <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                     bg-gray-50 border border-gray-200 text-gray-400
+                                     group-hover:bg-green-100 group-hover:border-green-300 group-hover:text-[var(--rukn-green)] transition">
+                          <svg class="w-3 h-3 sm:w-4 sm:h-4" viewBox="0 0 24 24">
+                            <path class="heart-outline"
+                                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                                  fill="currentColor" stroke="currentColor" stroke-width="4"
+                                  stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                        </span>
+                        <span id="favText" class="leading-tight text-center text-xs group-hover:text-green-700 transition">متابعة الطلب</span>
+                      </button>
+
+                      <button id="shareBtn" type="button"
+                              class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                     bg-white border border-gray-200
+                                     hover:border-sky-300 hover:bg-sky-50 hover:shadow-sm
+                                     text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                        <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                     bg-gray-50 border border-gray-200 text-gray-400
+                                     group-hover:bg-sky-100 group-hover:border-sky-300 group-hover:text-sky-600 transition">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5"
+                               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <path d="M8.5 11l7-4" />
+                            <path d="M8.5 13l7 4" />
+                          </svg>
+                        </span>
+                        <span class="leading-tight text-center group-hover:text-sky-700 transition">مشاركة</span>
+                      </button>
+
+                      <button id="openReportModalBtn" type="button"
+                              data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                              data-login-modal="loginModal"
+                              class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                     bg-white border border-gray-200
+                                     hover:border-rose-300 hover:bg-rose-50 hover:shadow-sm
+                                     text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                        <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                     bg-gray-50 border border-gray-200 text-gray-400
+                                     group-hover:bg-rose-100 group-hover:border-rose-300 group-hover:text-rose-600 transition">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5"
+                               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.3 3.3 2.4 18a1.7 1.7 0 0 0 1.5 2.5h16.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.3a1.7 1.7 0 0 0-3.4 0Z" />
+                            <path d="M12 9v5" />
+                            <path d="M12 17h.01" />
+                          </svg>
+                        </span>
+                        <span class="leading-tight text-center group-hover:text-rose-700 transition">إبلاغ</span>
+                      </button>
+
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 21a6 6 0 0 0-12 0" />
+                        <circle cx="12" cy="11" r="4" />
+                        <rect width="18" height="18" x="3" y="3" rx="2" />
+                      </svg>
+                      <span>بيانات التواصل</span>
+                    </h3>
+                  </div>
+
+                  <div class="space-y-2 text-[11px] sm:text-xs">
+                    <span class="text-gray-500">رقم الموبايل (اضغط على الرقم لإظهاره بالكامل)</span>
+
+                    <div class="flex items-center justify-start gap-5">
+                      <button type="button"
+                              id="revealPhoneBtn"
+                              class="flex text-right text-lg font-extrabold text-gray-900 underline-offset-2 hover:text-[var(--rukn-green)] hover:underline transition">
+                        <span id="sellerPhone"
+                              data-full="{{ request_obj.listing.user.phone|default:'' }}"
+                              data-revealed="false">
+                          •• •• ••• •07
+                        </span>
+                      </button>
+
+                      <div id="contactActions" class="flex items-center justify-start gap-2">
+                        <a id="callBtn" href="#"
+                           class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 border border-gray-200
+                                  flex items-center justify-center text-gray-400
+                                  hover:bg-green-50 hover:border-green-300 hover:text-emerald-700 transition"
+                           aria-label="Call">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.05 12.05 0 0 0 .57 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.05 12.05 0 0 0 2.81.57A2 2 0 0 1 22 16.92z"/>
+                          </svg>
+                        </a>
+
+                        <a id="whatsappBtn" href="#" target="_blank" rel="noopener"
+                           class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 border border-gray-200
+                                  flex items-center justify-center text-gray-400
+                                  hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition"
+                           aria-label="WhatsApp">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                               viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.52 3.48A11.94 11.94 0 0 0 12.06 0C5.45 0 .07 5.38.07 12c0 2.11.55 4.17 1.6 6L0 24l6.2-1.63A11.93 11.93 0 0 0 12.06 24C18.67 24 24.05 18.62 24.05 12c0-3.2-1.25-6.21-3.53-8.52z"/>
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Message -->
+                  <div class="mt-2">
+                    <button id="toggleMessageBox"
+                            type="button"
+                            data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                            data-login-modal="loginModal"
+                            class="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-2xl
+                                   bg-white border border-green-200 text-[var(--rukn-green)]
+                                   text-xs sm:text-sm font-semibold
+                                   shadow-sm hover:bg-green-50/60 transition">
+                      <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                          <path d="M4 4h12v8H9.5L6 15v-3H4z"
+                                stroke="currentColor" stroke-width="1.4"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span>تواصل مع مقدم الطلب</span>
+                      </span>
+                      <svg id="messageChevron" class="w-4 h-4 text-[var(--rukn-green)] transition-transform" viewBox="0 0 20 20" fill="none">
+                        <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.5"
+                              stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+
+                    <div id="messageBox" class="mt-3 hidden rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+                      <form id="messageForm"
+                            class="space-y-2 text-right"
+                            method="post"
+                            action="{% url 'start_conversation_request' request_obj.id %}">
+                        {% csrf_token %}
+                        <p class="text-[11px] sm:text-[12px] text-[var(--muted)] mb-1">
+                          لديك شيء مشابه؟ تواصل مع مقدم الطلب.
+                        </p>
+
+                        <textarea id="messageText" name="body" rows="4"
+                                  placeholder="لا تشارك كلمات المرور أو أرقام الحسابات البنكية أو أي بيانات شخصية حساسة"
+                                  class="w-full border border-gray-200 rounded-2xl py-2.5 px-3 text-xs focus:outline-none focus:border-[var(--rukn-green)]"></textarea>
+
+                        <p id="messageError" class="text-red-600 text-xs font-bold hidden">
+                          ⚠️ اكتب رسالتك أولاً ليتم إرسالها
+                        </p>
+
+                        <button type="submit"
+                                class="px-6 py-2.5 bg-[var(--rukn-green)] text-white font-semibold rounded-2xl text-sm hover:opacity-95 shadow-sm w-full sm:w-auto">
+                          إرسال
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </section>
+          </div>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- Toast Alert -->
+    <div id="ruknAlert" class="fixed inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-all duration-300 z-[9999]">
+      <div id="ruknAlertBox" class="bg-[var(--rukn-green)] text-white px-6 py-3 rounded-2xl shadow-2xl text-sm sm:text-base font-bold transform scale-75 transition-all duration-300">
+        ✔ تم الإجراء
+      </div>
     </div>
 
-    <!-- ======================== STATUS ======================== -->
-    <hr class="my-8">
-
-    {% if not request_obj.listing.is_approved %}
-      <div class="bg-yellow-100 text-yellow-800 px-4 py-3 rounded mb-3">
-        هذا الطلب قيد المراجعة وغير ظاهر للجميع.
-      </div>
-    {% endif %}
-
-    {% if not request_obj.listing.is_active %}
-      <div class="bg-red-100 text-red-800 px-4 py-3 rounded mb-3">
-        هذا الطلب غير نشط حاليًا.
-      </div>
-    {% endif %}
-
-    <p class="text-gray-500 text-sm">
-      تم النشر قبل {{ request_obj.listing.created_at|timesince|cut:"," }}
-    </p>
-    <p class="text-gray-500 text-sm">
-      آخر تحديث: {{ request_obj.listing.updated_at|date:"Y-m-d H:i" }}
-    </p>
+    {% include "partials/_report_modal_mockup.html" with report_kind="request" %}
 
   </div>
-
-  <!-- ======================== SIMILAR REQUESTS ======================== -->
-  <div class="bg-white border border-gray-200 rounded-xl shadow">
-    <div class="px-6 py-4 border-b">
-      <h5 class="text-lg font-semibold text-gray-800">طلبات مشابهة</h5>
-    </div>
-    <div class="p-6">
-      {% if similar_requests %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {% for r in similar_requests %}
-            {% include "partials/_request_card.html" with request_obj=r %}
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="text-gray-500 text-center">لا توجد طلبات مشابهة حاليًا.</p>
-      {% endif %}
-    </div>
-  </div>
-
-  <a href="{% url 'home' %}"
-     class="inline-block mt-6 px-6 py-3 text-green-700 border border-green-700 rounded-lg hover:bg-green-700 hover:text-white transition">
-    العودة للصفحة الرئيسية
-  </a>
-
 </div>
-
-
-{% block scripts %}
-{{ block.super }}
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const phone = document.getElementById("buyer-phone");
-  if (phone) {
-    phone.addEventListener("click", function () {
-      const number = phone.getAttribute("data-phone") || "";
-      let display = number;
-      if (number.startsWith("9627") && number.length === 12) {
-        display = "0" + number.slice(3);
-      }
-      phone.textContent = display || "غير متوفر";
-      phone.classList.remove("underline");
-      phone.style.cursor = "default";
-      phone.style.color = "inherit";
-    });
-  }
-});
-</script>
 
 {% endblock %}
 
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/report-modal.js' %}" defer></script>
+  <script src="{% static 'js/message-box.js' %}" defer></script>
+  <script src="{% static 'js/view-request.js' %}" defer></script>
 {% endblock %}

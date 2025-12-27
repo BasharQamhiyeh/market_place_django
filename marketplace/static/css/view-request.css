@@ -1,0 +1,264 @@
+﻿:root {
+    /* Green Theme */
+    --rukn-green: #16a34a; /* green-600 */
+    --rukn-green-dark: #15803d; /* green-700 */
+    --rukn-green-light: #86efac; /* green-300 */
+    --rukn-orange: #ff7a18;
+    --rukn-gray: #f3f4f6;
+    --muted: #6b7280;
+}
+
+body {
+    font-family: 'Cairo',sans-serif;
+    background: #F1F1F1;
+    color: #111827;
+    overflow-x: hidden;
+    /* Padding for Mobile Sticky Bar */
+    padding-bottom: 80px;
+}
+
+@media(min-width: 1024px) {
+    body {
+        padding-bottom: 0;
+    }
+}
+
+.container-box {
+    background: white;
+    border-radius: 24px;
+    width: 100%;
+    margin-bottom: 20px;
+    /* Original Shadow Preserved */
+    box-shadow: 0 24px 60px rgba(15,23,42,.12);
+    position: relative;
+    overflow: hidden;
+}
+
+    .container-box::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 4px;
+        /* Green Gradient */
+        background: linear-gradient(90deg,var(--rukn-green),var(--rukn-green-light));
+        opacity: .9;
+    }
+
+/* Toast */
+@keyframes scaleIn {
+    from {
+        transform: scale(.85);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Meta Pills */
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    font-size: 11px;
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+}
+
+.meta-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+/* Request Card (Text Based) */
+.req-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #bbf7d0; /* green-200 */
+    transition: .25s;
+    position: relative;
+}
+
+    .req-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 26px rgba(15,23,42,.12);
+        border-color: var(--rukn-green);
+    }
+
+/* Favorite Button Styles */
+.ad-fav-btn .heart-filled {
+    display: none;
+}
+
+.ad-fav-btn.is-active .heart-outline {
+    display: none;
+}
+
+.ad-fav-btn.is-active .heart-filled {
+    display: block;
+}
+
+.ad-fav-btn:hover .heart-outline {
+    transform: scale(1.15);
+    transition: transform 0.2s ease;
+    color: var(--rukn-green);
+}
+
+.ad-fav-btn.is-active .heart-filled {
+    animation: favPulse 0.25s ease-out;
+    color: var(--rukn-green);
+}
+
+@keyframes favPulse {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.25);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Popup */
+.popup-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.popup-box {
+    background: #fff;
+    width: 90%;
+    max-width: 520px;
+    border-radius: 1.25rem;
+    box-shadow: 0 25px 50px rgba(0,0,0,.25);
+    overflow: hidden;
+    animation: popupScale .18s ease-out;
+    padding: 1.5rem;
+    position: relative;
+}
+
+    .popup-box::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 4px;
+        background: linear-gradient(90deg,var(--rukn-green),var(--rukn-green-light));
+        opacity: .9;
+    }
+
+@keyframes popupScale {
+    from {
+        transform: scale(.95);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.popup-label {
+    display: block;
+    font-weight: 800;
+    color: #111827;
+    font-size: 13px;
+}
+
+.popup-hint {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+/* Request Card Specific Hover Effects */
+.req-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid #bbf7d0; /* green-200 */
+    transition: .25s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+    .req-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 26px rgba(15,23,42,.12);
+        border-color: var(--rukn-green);
+    }
+
+    /* Hover Mask */
+    .req-card .hover-mask {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(220, 252, 231, 0.7); /* green-100 with opacity */
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 10;
+        pointer-events: none; /* Allows clicking through */
+    }
+
+    .req-card:hover .hover-mask {
+        opacity: 1;
+    }
+
+    /* Hint Text Container */
+    .req-card .hint-container {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 12px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 20;
+    }
+
+    .req-card:hover .hint-container {
+        opacity: 1;
+    }
+
+/* Hint Arrow Animation */
+@keyframes nudgeLeft {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(-6px);
+    }
+}
+
+.req-card:hover .hint-arrow {
+    animation: nudgeLeft 0.65s ease-in-out infinite;
+}

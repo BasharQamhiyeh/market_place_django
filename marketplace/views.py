@@ -501,16 +501,38 @@ def item_detail(request, item_id):
 
 @login_required
 def request_detail(request, request_id):
-    # load request object
     request_obj = get_object_or_404(Request, id=request_id)
 
-    # SECURITY: requester or approved + active OR staff
+    # SECURITY
     if not request_obj.listing.is_approved and request.user != request_obj.listing.user:
         if not request.user.is_staff:
             return redirect("home")
 
-    # attributes
     attributes = request_obj.attribute_values.select_related("attribute").all()
+
+    # Similar requests (fallback like items)
+    similar_requests = (
+        Request.objects.filter(
+            listing__category=request_obj.listing.category,
+            listing__is_approved=True,
+            listing__is_active=True,
+        )
+        .exclude(id=request_obj.id)
+        .order_by("-listing__created_at")[:8]
+    )
+
+    requester = request_obj.listing.user
+
+    # Mask phone (simple)
+    raw_phone = (requester.phone or "").strip()
+    masked = "•• •• ••• •07"
+    if raw_phone:
+        last = raw_phone[-4:] if len(raw_phone) >= 4 else raw_phone
+        masked = f"•• •• ••• •{last}"
+
+    u = request_obj.listing.user
+
+    requester_requests_count = Request.objects.filter(listing__user=u).count()
 
     return render(
         request,
@@ -518,6 +540,11 @@ def request_detail(request, request_id):
         {
             "request_obj": request_obj,
             "attributes": attributes,
+            "similar_requests": similar_requests,
+
+            # contact UI
+            "requester_phone_masked": masked,
+            "requester_requests_count": requester_requests_count
         },
     )
 
