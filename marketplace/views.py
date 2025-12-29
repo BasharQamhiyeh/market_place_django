@@ -521,7 +521,6 @@ def item_detail(request, item_id):
     })
 
 
-@login_required
 def request_detail(request, request_id):
     request_obj = get_object_or_404(Request, id=request_id)
 
