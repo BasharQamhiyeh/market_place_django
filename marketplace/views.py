@@ -496,6 +496,7 @@ def item_detail(request, item_id):
         "seller_is_store": seller_is_store,
         "seller_is_verified_store": seller_is_verified_store,
         "store_reviews": reviews,
+        "store": store,
     })
 
 
@@ -2071,6 +2072,9 @@ def complete_signup(request):
                 pass
 
         user.save()
+
+        print("POST condition:", request.POST.get("condition"))
+        print("FILES keys:", list(request.FILES.keys()))
 
         # ✅ store creation
         if form.cleaned_data.get("condition") == "store":
