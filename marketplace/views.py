@@ -528,7 +528,26 @@ def request_detail(request, request_id):
         if not request.user.is_staff:
             return redirect("home")
 
-    attributes = request_obj.attribute_values.select_related("attribute").all()
+    attributes = []
+    for av in request_obj.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
+        attr = av.attribute
+
+        # Dropdown / select attribute → value is an option ID
+        if attr.input_type == "select" and av.value:
+            option = attr.options.filter(id=av.value).first()
+            if option:
+                value = option.value_ar
+            else:
+                value = av.value  # fallback (should not happen)
+        else:
+            # Free text / number
+            value = av.value
+
+        attributes.append({
+            "name": attr.name_ar,
+            "value": value,
+        })
+
 
     # Similar requests (fallback like items)
     similar_requests = (
