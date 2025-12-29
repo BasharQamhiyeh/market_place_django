@@ -391,18 +391,33 @@
       {% csrf_token %}
 
       <!-- PHONE ONLY -->
-      <input name="username"
-             type="text"
-             inputmode="numeric"
-             class="modal-input"
-             placeholder="رقم الهاتف (مثال: 0790000000)"
-             required />
+      <input id="loginPhone"
+       name="username"
+       type="tel"
+       inputmode="numeric"
+       autocomplete="username"
+       maxlength="10"
+       pattern="\d{10}"
+       class="modal-input"
+       placeholder="رقم الهاتف (مثال: 0790000000)"
+       required />
 
-      <input name="password"
-             type="password"
-             class="modal-input"
-             placeholder="كلمة المرور"
-             required />
+      <div class="relative">
+        <input id="loginPassword"
+               name="password"
+               type="password"
+               autocomplete="current-password"
+               class="modal-input pr-12"
+               placeholder="كلمة المرور"
+               required />
+
+        <button id="toggleLoginPassword"
+                type="button"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--muted)] hover:text-gray-900"
+                aria-label="إظهار كلمة المرور">
+        </button>
+      </div>
+
 
       <button type="submit" class="modal-submit">دخول</button>
     </form>

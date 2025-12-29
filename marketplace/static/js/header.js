@@ -6,6 +6,41 @@ const loginModal  = document.getElementById("loginModal");
 const closeLoginX = document.getElementById("closeLoginX");
 const loginForm   = document.getElementById("loginForm");
 
+const loginPhone = document.getElementById("loginPhone");
+const loginPassword = document.getElementById("loginPassword");
+const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+
+
+// ===== Password Icons =====
+const EYE_OPEN_ICON = `
+<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7
+       -1.274 4.057-5.065 7-9.542 7
+       -4.477 0-8.268-2.943-9.542-7z" />
+</svg>
+`;
+
+const EYE_CLOSED_ICON = `
+<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M10.584 10.587A3 3 0 0113.413 13.41" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M6.697 6.7C4.98 8.018 3.74 10.012 3 12
+           c1.274 4.057 5.065 7 9.542 7
+           1.53 0 2.984-.288 4.293-.812" />
+  <path stroke-linecap="round" stroke-linejoin="round"
+        d="M17.31 17.31C19.022 15.989 20.262 13.994 21 12
+           c-.993-3.164-3.49-5.675-6.57-6.62" />
+</svg>
+`;
+
+
 // فتح نافذة تسجيل الدخول
 if (loginBtn && loginModal) {
   loginBtn.addEventListener("click", () => {
@@ -19,6 +54,43 @@ if (closeLoginX && loginModal) {
     loginModal.classList.add("hidden");
   });
 }
+
+
+// ===== Phone: digits only + max 10 =====
+if (loginPhone) {
+  const sanitizePhone = () => {
+    loginPhone.value = (loginPhone.value || "").replace(/\D+/g, "").slice(0, 10);
+  };
+
+  loginPhone.addEventListener("input", sanitizePhone);
+
+  // handle paste too
+  loginPhone.addEventListener("paste", () => {
+    setTimeout(sanitizePhone, 0);
+  });
+}
+
+// ===== Toggle password show/hide =====
+if (loginPassword && toggleLoginPassword) {
+  // default state: password hidden → show "eye"
+  toggleLoginPassword.innerHTML = EYE_OPEN_ICON;
+
+  toggleLoginPassword.addEventListener("click", () => {
+    const isHidden = loginPassword.type === "password";
+
+    loginPassword.type = isHidden ? "text" : "password";
+    toggleLoginPassword.innerHTML = isHidden
+      ? EYE_CLOSED_ICON
+      : EYE_OPEN_ICON;
+
+    toggleLoginPassword.setAttribute(
+      "aria-label",
+      isHidden ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+    );
+  });
+}
+
+
 
 
 // ===== Toggle Buy / Sell (ONLY HERE) =====
