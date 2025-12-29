@@ -264,6 +264,8 @@ class Listing(models.Model):
     auto_rejected = models.BooleanField(default=False)
     moderation_reason = models.TextField(blank=True, null=True)
 
+    show_phone = models.BooleanField(default=True)  # ✅ add this
+
     def __str__(self):
         return f"{self.title} ({self.type})"
 
@@ -378,7 +380,6 @@ class Request(models.Model):
 
     budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     condition_preference = models.CharField(max_length=10, choices=CONDITION_CHOICES, default="any")
-    show_phone = models.BooleanField(default=True)
 
     def __str__(self):
         return self.listing.title

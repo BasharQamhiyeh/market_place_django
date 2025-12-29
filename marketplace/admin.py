@@ -902,7 +902,6 @@ class RequestAdmin(admin.ModelAdmin):
         "listing_category",
         "budget",
         "condition_preference",
-        "show_phone",
         "listing_description",
         "listing_user",
         "colored_status",

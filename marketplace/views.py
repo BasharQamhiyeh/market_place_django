@@ -515,7 +515,7 @@ def item_detail(request, item_id):
         "seller_is_verified_store": seller_is_verified_store,
         "store_reviews": reviews,
         "store": store,
-        "allow_show_phone": 1, # To be implemented
+        "allow_show_phone": item.listing.show_phone, # To be implemented
     })
 
 
@@ -584,7 +584,7 @@ def request_detail(request, request_id):
             # contact UI
             "requester_phone_masked": masked,
             "requester_requests_count": requester_requests_count,
-            "allow_show_phone": 1
+            "allow_show_phone": request_obj.listing.show_phone
         },
     )
 
@@ -631,6 +631,7 @@ def item_create(request):
             listing.type = "item"                      # IMPORTANT
             listing.is_approved = False
             listing.is_active = True
+            listing.show_phone = (request.POST.get("show_phone") == "on")
             listing.save()
 
             # -----------------------------
@@ -988,6 +989,7 @@ def request_create(request):
             listing.type = "request"
             listing.is_approved = False
             listing.is_active = True
+            listing.show_phone = (request.POST.get("show_phone") == "on")
             listing.save()
 
             # -----------------------------
@@ -997,7 +999,6 @@ def request_create(request):
                 listing=listing,
                 budget=form.cleaned_data.get("budget"),
                 condition_preference=form.cleaned_data.get("condition_preference"),
-                show_phone=form.cleaned_data.get("show_phone", True),
             )
 
             # -----------------------------

@@ -237,7 +237,9 @@
                   <label class="label">تفضيلات التواصل</label>
                   <div class="bg-gray-100/75 rounded-xl px-3 py-3 sm:px-4 sm:py-3">
                     <label class="flex items-center gap-3 cursor-pointer select-none">
-                      <input type="checkbox" name="show_phone" class="w-5 h-5 accent-[var(--rukn-orange)]">
+                      <input type="checkbox" name="show_phone" class="w-5 h-5 accent-[var(--rukn-orange)]"
+                      {% if request.POST.show_phone or not request.POST %}checked{% endif %}>
+
                       <span class="font-semibold text-gray-800 text-sm">إظهار رقم الهاتف في الإعلان</span>
                     </label>
                     <p class="text-xs text-[var(--muted)] mt-1 pr-7 leading-relaxed">

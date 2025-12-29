@@ -76,7 +76,6 @@
 
               <!-- Category (Hierarchical like item_create) -->
               <div>
-                <label class="label">القسم</label>
 
                 <div id="category-levels" class="flex flex-col gap-3"></div>
 
@@ -228,7 +227,7 @@
                       <input type="checkbox"
                              name="show_phone"
                              class="w-5 h-5 accent-[var(--rukn-orange)]"
-                             {% if form.show_phone.value %}checked{% endif %}>
+                             {% if request.POST.show_phone or not request.POST %}checked{% endif %}>
                       <span class="font-semibold text-gray-800 text-sm">إظهار رقم الهاتف في الطلب</span>
                     </label>
                     <p class="text-xs text-[var(--muted)] mt-1 pr-7 leading-relaxed">
