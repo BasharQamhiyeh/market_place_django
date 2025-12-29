@@ -12,7 +12,7 @@ const toggleLoginPassword = document.getElementById("toggleLoginPassword");
 
 
 // ===== Password Icons =====
-const EYE_OPEN_ICON = `
+const LOGIN_EYE_OPEN_ICON = `
 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
   <path stroke-linecap="round" stroke-linejoin="round"
@@ -24,7 +24,7 @@ const EYE_OPEN_ICON = `
 </svg>
 `;
 
-const EYE_CLOSED_ICON = `
+const LOGIN_EYE_CLOSED_ICON = `
 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
      fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
   <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
@@ -80,8 +80,8 @@ if (loginPassword && toggleLoginPassword) {
 
     loginPassword.type = isHidden ? "text" : "password";
     toggleLoginPassword.innerHTML = isHidden
-      ? EYE_CLOSED_ICON
-      : EYE_OPEN_ICON;
+      ? LOGIN_EYE_CLOSED_ICON
+      : LOGIN_EYE_OPEN_ICON;
 
     toggleLoginPassword.setAttribute(
       "aria-label",
