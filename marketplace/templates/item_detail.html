@@ -515,12 +515,13 @@
                         <span id="sellerPhone"
                               data-masked="{{ seller_phone_masked|default:'•• •• ••• •07' }}"
                               data-full="{{ item.listing.user.phone|default:'' }}"
-                              data-revealed="false">
+                              data-revealed="false"
+                              data-allow="{% if allow_show_phone %}1{% else %}0{% endif %}">
                           {{ seller_phone_masked|default:"•• •• ••• •07" }}
                         </span>
                       </button>
 
-                      <div id="contactActions" class="flex items-center justify-start gap-2">
+                      <div id="contactActions" class="hidden flex items-center justify-start gap-2">
                         <a id="callBtn"
                            href="#"
                            title="اتصال مباشر"

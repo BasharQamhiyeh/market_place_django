@@ -131,7 +131,7 @@ window.copyAdNumber = function copyAdNumber() {
   });
 })();
 
-/* ========= Phone Reveal (WORKING) ========= */
+/* ========= Phone Reveal (WORKING + HIDE ICONS UNTIL REVEAL + ALLOW FLAG) ========= */
 (function initPhoneReveal() {
   const sellerPhoneEl = document.getElementById("sellerPhone");
   const revealPhoneBtn = document.getElementById("revealPhoneBtn");
@@ -141,19 +141,42 @@ window.copyAdNumber = function copyAdNumber() {
 
   if (!sellerPhoneEl || !revealPhoneBtn) return;
 
-  // init masked
-  const raw = (sellerPhoneEl.dataset.full || sellerPhoneEl.textContent || "").trim();
-  const normalized = normalizeJordanPhone(raw);
-  sellerPhoneEl.dataset.full = raw;          // keep original for display
-  sellerPhoneEl.dataset.normalized = normalized; // store normalized for links
-  sellerPhoneEl.dataset.revealed = "false";
-  sellerPhoneEl.textContent = maskPhone(normalized);
+  // helper: open message box (optional)
+  function openMessageBox() {
+    const msgBtn = document.getElementById("toggleMessageBox");
+    if (msgBtn) msgBtn.click();
+  }
 
-  // prevent '#' jump if user clicks icons before reveal
-  if (callBtn) callBtn.addEventListener("click", (e) => { if (callBtn.getAttribute("href") === "#") e.preventDefault(); });
-  if (whatsappBtn) whatsappBtn.addEventListener("click", (e) => { if (whatsappBtn.getAttribute("href") === "#") e.preventDefault(); });
+  // init masked (use template masked if present)
+  const raw = (sellerPhoneEl.dataset.full || "").trim();
+  const normalized = normalizeJordanPhone(raw);
+
+  sellerPhoneEl.dataset.full = raw;                 // keep original for display
+  sellerPhoneEl.dataset.normalized = normalized;    // store normalized for links
+  sellerPhoneEl.dataset.revealed = "false";
+
+  const maskedFromTpl = (sellerPhoneEl.dataset.masked || "").trim();
+  sellerPhoneEl.textContent = maskedFromTpl || maskPhone(normalized);
+
+  // ✅ hide icons until reveal
+  if (contactActions) {
+    contactActions.classList.add("hidden");
+    contactActions.classList.remove("flex");
+  }
+
+  // prevent '#' jump if user clicks icons before reveal (extra safety)
+  if (callBtn) callBtn.addEventListener("click", (e) => { if ((callBtn.getAttribute("href") || "#") === "#") e.preventDefault(); });
+  if (whatsappBtn) whatsappBtn.addEventListener("click", (e) => { if ((whatsappBtn.getAttribute("href") || "#") === "#") e.preventDefault(); });
 
   revealPhoneBtn.addEventListener("click", () => {
+    // ✅ check allow flag
+    const allow = (sellerPhoneEl.dataset.allow || "1") === "1";
+    if (!allow) {
+      showRuknAlert("⚠️ صاحب الطلب يفضّل التواصل عبر الرسائل");
+      openMessageBox(); // optional: opens message box
+      return;
+    }
+
     if (sellerPhoneEl.dataset.revealed === "true") return;
 
     const fullDisplay = (sellerPhoneEl.dataset.full || "").trim();
@@ -168,16 +191,22 @@ window.copyAdNumber = function copyAdNumber() {
     sellerPhoneEl.textContent = fullDisplay || norm;
     sellerPhoneEl.dataset.revealed = "true";
 
-    if (contactActions) contactActions.classList.remove("hidden");
+    // ✅ show icons only after reveal
+    if (contactActions) {
+      contactActions.classList.remove("hidden");
+      contactActions.classList.add("flex");
+    }
 
     // links
     if (callBtn) callBtn.href = "tel:" + (norm || fullDisplay);
+
     if (whatsappBtn) {
       const wa = norm || normalizeJordanPhone(fullDisplay);
       whatsappBtn.href = wa ? ("https://wa.me/" + wa) : "#";
     }
   });
 })();
+
 
 /* ========= Message Box (FALLBACK, so it ALWAYS opens) ========= */
 (function initMessageBoxFallback() {

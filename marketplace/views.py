@@ -497,6 +497,7 @@ def item_detail(request, item_id):
         "seller_is_verified_store": seller_is_verified_store,
         "store_reviews": reviews,
         "store": store,
+        "allow_show_phone": 1, # To be implemented
     })
 
 
@@ -545,7 +546,8 @@ def request_detail(request, request_id):
 
             # contact UI
             "requester_phone_masked": masked,
-            "requester_requests_count": requester_requests_count
+            "requester_requests_count": requester_requests_count,
+            "allow_show_phone": 1
         },
     )
 

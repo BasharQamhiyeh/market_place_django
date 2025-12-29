@@ -365,33 +365,65 @@ window.copyAdNumber = copyAdNumber;
   }
 
   function revealIfAllowed() {
-    if (!sellerPhoneEl) return false;
+      if (!sellerPhoneEl) return false;
 
-    if (isGuest()) {
-      console.log("📞 guest -> open login");
-      openLoginModalSafe();
-      return false;
+      // ✅ guest => login modal
+      if (isGuest()) {
+        console.log("📞 guest -> open login");
+        openLoginModalSafe();
+        return false;
+      }
+
+      // ✅ seller doesn't want to show phone
+      const allow = (sellerPhoneEl.dataset.allow || "1") === "1";
+      if (!allow) {
+        if (window.showRuknAlert) {
+          showRuknAlert("⚠️ البائع يفضّل التواصل عبر الرسائل");
+        }
+
+        // (اختياري) افتح صندوق الرسائل تلقائيًا
+        const msgBtn = document.getElementById("toggleMessageBox");
+        if (msgBtn) msgBtn.click();
+
+        return false;
+      }
+
+      // already revealed
+      if (sellerPhoneEl.dataset.revealed === "true") return true;
+
+      const full = sellerPhoneEl.dataset.full || "";
+      if (!full) {
+        console.log("⚠️ no full phone in data-full");
+        return false;
+      }
+
+      sellerPhoneEl.textContent = full;
+      sellerPhoneEl.dataset.revealed = "true";
+      enableLinks(full);
+
+      // ✅ show call/whatsapp only AFTER reveal
+      const actions = document.getElementById("contactActions");
+      if (actions) {
+        actions.classList.remove("hidden");
+        actions.classList.add("flex");
+      }
+
+      console.log("✅ phone revealed:", full);
+      return true;
     }
 
-    if (sellerPhoneEl.dataset.revealed === "true") return true;
-
-    const full = sellerPhoneEl.dataset.full || "";
-    if (!full) {
-      console.log("⚠️ no full phone in data-full");
-      return false;
-    }
-
-    sellerPhoneEl.textContent = full;
-    sellerPhoneEl.dataset.revealed = "true";
-    enableLinks(full);
-    console.log("✅ phone revealed:", full);
-    return true;
-  }
 
   // init
   setMasked();
   if (callBtn) callBtn.href = "#";
   if (whatsappBtn) whatsappBtn.href = "#";
+
+  const actions = document.getElementById("contactActions");
+  if (actions) {
+      actions.classList.add("hidden");
+      actions.classList.remove("flex");
+  }
+
 
   // click number
   if (revealPhoneBtn) {
