@@ -198,3 +198,30 @@ document.addEventListener("click", async (e) => {
     console.error("❌ fav failed:", err);
   }
 });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("form[data-single-submit]").forEach((form) => {
+    let locked = false;
+
+    form.addEventListener("submit", () => {
+      if (locked) return;           // extra safety
+      locked = true;
+
+      // disable all submit buttons in this form
+      const buttons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+      buttons.forEach((btn) => {
+        btn.disabled = true;
+        btn.classList.add("opacity-60", "cursor-not-allowed");
+        btn.setAttribute("aria-busy", "true");
+      });
+
+      // optional: update primary button text
+      const primary = form.querySelector("[data-submit-btn]");
+      if (primary) {
+        primary.dataset.originalText = primary.textContent;
+        primary.textContent = "جاري الإرسال...";
+      }
+    });
+  });
+});

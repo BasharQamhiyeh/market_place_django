@@ -46,7 +46,7 @@
             </div>
           {% endif %}
 
-          <form id="addAdForm" method="POST" enctype="multipart/form-data" class="space-y-3" data-redirect-url="{% url 'item_list' %}">
+          <form id="addAdForm" method="POST" enctype="multipart/form-data" class="space-y-3" data-redirect-url="{% url 'item_list' %}" data-single-submit>
             {% csrf_token %}
 
             <!-- SECTION 1 -->
@@ -304,7 +304,7 @@
 
             <!-- SUBMIT -->
             <div class="pt-4 text-center">
-              <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full sm:w-1/2">
+              <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full sm:w-1/2" data-submit-btn>
                 نشر الإعلان
               </button>
             </div>
@@ -366,5 +366,6 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{% static 'js/post-ad-django.js' %}"></script>
+  {{ block.super }}
+  <script src="{% static 'js/post-ad-django.js' %}"></script>
 {% endblock %}

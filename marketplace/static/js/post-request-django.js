@@ -35,6 +35,31 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Elements =====
   const form = document.getElementById("addRequestForm");
 
+  // ✅ NEW: double-submit protection (same as post-ad)
+  let isSubmitting = false;
+  const submitBtn = form?.querySelector('button[type="submit"], input[type="submit"]');
+  const submitBtnOriginalText = submitBtn?.tagName === "BUTTON" ? submitBtn.textContent : null;
+
+  function unlockSubmit() {
+    isSubmitting = false;
+    if (!submitBtn) return;
+    submitBtn.disabled = false;
+    submitBtn.classList.remove("opacity-60", "cursor-not-allowed");
+    submitBtn.removeAttribute("aria-busy");
+    if (submitBtn.tagName === "BUTTON" && submitBtnOriginalText != null) {
+      submitBtn.textContent = submitBtnOriginalText;
+    }
+  }
+
+  function lockSubmit() {
+    isSubmitting = true;
+    if (!submitBtn) return;
+    submitBtn.disabled = true;
+    submitBtn.classList.add("opacity-60", "cursor-not-allowed");
+    submitBtn.setAttribute("aria-busy", "true");
+    if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
+  }
+
   const titleInput = document.getElementById("requestTitle");
 
   // category
@@ -343,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("click", () => closeAllCategoryPanels(), { capture: true });
 
-    // preselect best-effort
     if (Array.isArray(selectedPath) && selectedPath.length) {
       const pathIds = selectedPath.map(x => (typeof x === "object" ? String(x.id ?? x.pk ?? x.value ?? "") : String(x)));
       let currentNodes = categoryTree;
@@ -414,58 +438,71 @@ document.addEventListener("DOMContentLoaded", () => {
   closePrivacyBtn?.addEventListener("click", () => closeOverlay(privacyPopup));
 
   document.addEventListener("click", (e) => {
-    // close city on outside click
     closeCity();
 
-    // close popups if click on background
     if (e.target === termsPopup) closeOverlay(termsPopup);
     if (e.target === privacyPopup) closeOverlay(privacyPopup);
   });
 
   // ===== Submit validation (keep normal submit to Django) =====
   form?.addEventListener("submit", (e) => {
+    // block second submit
+    if (isSubmitting) {
+      e.preventDefault();
+      return;
+    }
+
+    // make sure we're not stuck disabled from a previous blocked attempt
+    unlockSubmit();
+
     clearErrors();
 
     if (!titleInput.value.trim()) {
       e.preventDefault();
       showErrorAfter(titleInput, "الرجاء إدخال عنوان لطلب الشراء");
+      unlockSubmit();
       return;
     }
 
     if (!categoryIdInput.value) {
       e.preventDefault();
       showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
+      unlockSubmit();
       return;
     }
 
     if (!descField.value.trim()) {
       e.preventDefault();
       showErrorAfter(descField, "الرجاء كتابة وصف للمنتج المطلوب أو توليده بالذكاء الاصطناعي");
+      unlockSubmit();
       return;
     }
 
     if (!budgetField.value) {
       e.preventDefault();
       showErrorAfter(budgetField, "الرجاء إدخال الميزانية القصوى للمنتج المطلوب");
+      unlockSubmit();
       return;
     }
 
     if (!citySelect.value) {
       e.preventDefault();
       showErrorAfter(cityInput, "الرجاء اختيار المدينة");
+      unlockSubmit();
       return;
     }
 
     if (!acceptTerms?.checked) {
       e.preventDefault();
       showErrorBelow(termsBox, "الرجاء الموافقة على شروط نشر طلب الشراء قبل الإرسال");
+      unlockSubmit();
       return;
     }
 
-    // Success overlay then submit normally (no preventDefault)
+    // ✅ lock + show success overlay, then let the normal submit continue
+    lockSubmit();
     openOverlay(successPopup);
 
-    // Optional redirect after a bit (if you want it like mockup)
     const redirectUrl = form.getAttribute("data-redirect-url") || "";
     if (redirectUrl) {
       setTimeout(() => { window.location.href = redirectUrl; }, 12000);

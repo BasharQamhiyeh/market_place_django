@@ -35,6 +35,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Elements =====
   const form = document.getElementById("addAdForm");
 
+  let isSubmitting = false;
+  const submitBtn = form?.querySelector('button[type="submit"], input[type="submit"]');
+  const submitBtnOriginalText = submitBtn?.tagName === "BUTTON" ? submitBtn.textContent : null;
+
+  // ✅ NEW: helper to re-enable submit when we block submission
+  function unlockSubmit() {
+    isSubmitting = false;
+    if (!submitBtn) return;
+    submitBtn.disabled = false;
+    submitBtn.classList.remove("opacity-60", "cursor-not-allowed");
+    submitBtn.removeAttribute("aria-busy");
+    if (submitBtn.tagName === "BUTTON" && submitBtnOriginalText != null) {
+      submitBtn.textContent = submitBtnOriginalText;
+    }
+  }
+
   const titleInput = document.getElementById("adTitle");
 
   const imageDropzone = document.getElementById("imageDropzone");
@@ -169,19 +185,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   imageInput?.addEventListener("change", () => {
-      const files = Array.from(imageInput.files || []);
-      if (!files.length) return;
+    const files = Array.from(imageInput.files || []);
+    if (!files.length) return;
 
-      filesState = filesState.concat(files.filter(f => f && f.type && f.type.startsWith("image/")));
+    filesState = filesState.concat(files.filter(f => f && f.type && f.type.startsWith("image/")));
 
-      // ✅ keep the real input (this is what Django submits)
-      syncInputFiles();
-      renderPreviews();
-
-      // ❌ DO NOT clear imageInput.value here
-      // imageInput.value = "";
-    });
-
+    // ✅ keep the real input (this is what Django submits)
+    syncInputFiles();
+    renderPreviews();
+  });
 
   imageDropzone?.addEventListener("dragover", (e) => {
     e.preventDefault();
@@ -237,265 +249,239 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Categories hierarchical (parent -> sub -> sub) EXACT behavior =====
-    const categoryTree = safeJsonFromScript("category-tree-data") || [];
-    const selectedPath = safeJsonFromScript("selected-category-path") || [];
+  const categoryTree = safeJsonFromScript("category-tree-data") || [];
+  const selectedPath = safeJsonFromScript("selected-category-path") || [];
 
-    // (optional hint line) if you added: <p id="categoryDynamicHint" ...></p>
-    const categoryDynamicHint = document.getElementById("categoryDynamicHint");
+  const categoryDynamicHint = document.getElementById("categoryDynamicHint");
 
-    function nodeName(n) {
-      return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || "";
+  function nodeName(n) {
+    return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || "";
+  }
+  function nodeChildren(n) {
+    return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || [];
+  }
+  function nodeId(n) {
+    const v = (n && (n.id ?? n.pk ?? n.value)) ?? null;
+    return v == null ? null : String(v);
+  }
+  function nodeChildLabel(n) {
+    return (n && typeof n.child_label === "string") ? n.child_label.trim() : "";
+  }
+
+  function setHint(text) {
+    if (!categoryDynamicHint) return;
+    const t = (text || "").trim();
+    if (!t) {
+      categoryDynamicHint.textContent = "";
+      categoryDynamicHint.classList.add("hidden");
+      return;
     }
-    function nodeChildren(n) {
-      return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || [];
+    categoryDynamicHint.textContent = t;
+    categoryDynamicHint.classList.remove("hidden");
+  }
+
+  function closeAllCategoryPanels(exceptPanel = null) {
+    levelsRoot.querySelectorAll(".cat-panel").forEach(p => {
+      if (exceptPanel && p === exceptPanel) return;
+      p.classList.add("hidden");
+    });
+  }
+
+  function createSearchableLevel(levelIndex, nodes, labelText) {
+    const wrap = document.createElement("div");
+    wrap.className = "space-y-1";
+    wrap.dataset.levelWrap = String(levelIndex);
+
+    const lbl = document.createElement("label");
+    lbl.className = "label";
+    lbl.textContent = (labelText || "").trim() || (levelIndex === 0 ? "القسم" : "القسم الفرعي");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.readOnly = true;
+    input.className = "input-field cursor-pointer text-sm";
+    input.placeholder = levelIndex === 0 ? "اختر القسم الرئيسي" : (labelText ? `اختر ${labelText}` : "اختر القسم الفرعي");
+    input.dataset.level = String(levelIndex);
+
+    const panel = document.createElement("div");
+    panel.className = "cat-panel mt-2 w-full bg-white border border-orange-200 rounded-xl shadow-lg hidden";
+    panel.style.position = "relative";
+    panel.style.zIndex = "9999";
+
+    const searchBoxWrap = document.createElement("div");
+    searchBoxWrap.className = "p-2 border-b border-orange-100";
+
+    const search = document.createElement("input");
+    search.type = "text";
+    search.placeholder = "🔍 بحث...";
+    search.className = "w-full border border-orange-100 rounded-lg py-1.5 px-3 text-sm";
+    searchBoxWrap.appendChild(search);
+
+    const ul = document.createElement("ul");
+    ul.className = "max-h-52 overflow-y-auto text-sm";
+
+    const liNodes = nodes.map(n => {
+      const li = document.createElement("li");
+      li.className = "p-2 hover:bg-orange-50 cursor-pointer";
+      li.textContent = nodeName(n);
+      li.dataset.id = nodeId(n) || "";
+      li.dataset.hasChildren = nodeChildren(n).length ? "1" : "0";
+      ul.appendChild(li);
+      return { li, node: n };
+    });
+
+    function openPanel() {
+      closeAllCategoryPanels(panel);
+      panel.classList.remove("hidden");
+      search.value = "";
+      liNodes.forEach(({ li }) => { li.style.display = "block"; });
+      setTimeout(() => search.focus(), 0);
     }
-    function nodeId(n) {
-      const v = (n && (n.id ?? n.pk ?? n.value)) ?? null;
-      return v == null ? null : String(v);
-    }
-    function nodeChildLabel(n) {
-      return (n && typeof n.child_label === "string") ? n.child_label.trim() : "";
+    function closePanel() {
+      panel.classList.add("hidden");
     }
 
-    function setHint(text) {
-      if (!categoryDynamicHint) return;
-      const t = (text || "").trim();
-      if (!t) {
-        categoryDynamicHint.textContent = "";
-        categoryDynamicHint.classList.add("hidden");
-        return;
-      }
-      categoryDynamicHint.textContent = t;
-      categoryDynamicHint.classList.remove("hidden");
-    }
+    input.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openPanel();
+    });
 
+    panel.addEventListener("click", (e) => e.stopPropagation());
+    search.addEventListener("click", (e) => e.stopPropagation());
 
-
-    function closeAllCategoryPanels(exceptPanel = null) {
-      levelsRoot.querySelectorAll(".cat-panel").forEach(p => {
-        if (exceptPanel && p === exceptPanel) return;
-        p.classList.add("hidden");
+    search.addEventListener("input", () => {
+      const q = (search.value || "").toLowerCase();
+      liNodes.forEach(({ li }) => {
+        li.style.display = li.textContent.toLowerCase().includes(q) ? "block" : "none";
       });
-    }
+    });
 
-    function createSearchableLevel(levelIndex, nodes, labelText) {
-      const wrap = document.createElement("div");
-      wrap.className = "space-y-1";
-      wrap.dataset.levelWrap = String(levelIndex);
-
-      const lbl = document.createElement("label");
-      lbl.className = "label";
-      lbl.textContent = (labelText || "").trim() || (levelIndex === 0 ? "القسم" : "القسم الفرعي");
-
-      // input that opens panel
-      const input = document.createElement("input");
-      input.type = "text";
-      input.readOnly = true;
-      input.className = "input-field cursor-pointer text-sm";
-      input.placeholder = levelIndex === 0 ? "اختر القسم الرئيسي" : (labelText ? `اختر ${labelText}` : "اختر القسم الفرعي");
-      input.dataset.level = String(levelIndex);
-
-      // dropdown panel
-      const panel = document.createElement("div");
-      panel.className = "cat-panel mt-2 w-full bg-white border border-orange-200 rounded-xl shadow-lg hidden";
-      panel.style.position = "relative";
-      panel.style.zIndex = "9999";
-
-      const searchBoxWrap = document.createElement("div");
-      searchBoxWrap.className = "p-2 border-b border-orange-100";
-
-      const search = document.createElement("input");
-      search.type = "text";
-      search.placeholder = "🔍 بحث...";
-      search.className = "w-full border border-orange-100 rounded-lg py-1.5 px-3 text-sm";
-      searchBoxWrap.appendChild(search);
-
-      const ul = document.createElement("ul");
-      ul.className = "max-h-52 overflow-y-auto text-sm";
-
-      // render list items
-      const liNodes = nodes.map(n => {
-        const li = document.createElement("li");
-        li.className = "p-2 hover:bg-orange-50 cursor-pointer";
-        li.textContent = nodeName(n);
-        li.dataset.id = nodeId(n) || "";
-        li.dataset.hasChildren = nodeChildren(n).length ? "1" : "0";
-        ul.appendChild(li);
-        return { li, node: n };
-      });
-
-      function openPanel() {
-        closeAllCategoryPanels(panel);
-        panel.classList.remove("hidden");
-        search.value = "";
-        // show all
-        liNodes.forEach(({ li }) => { li.style.display = "block"; });
-        setTimeout(() => search.focus(), 0);
-      }
-      function closePanel() {
-        panel.classList.add("hidden");
-      }
-
-      input.addEventListener("click", (e) => {
+    liNodes.forEach(({ li, node }) => {
+      li.addEventListener("click", async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        openPanel();
-      });
 
-      panel.addEventListener("click", (e) => e.stopPropagation());
-      search.addEventListener("click", (e) => e.stopPropagation());
+        input.value = nodeName(node);
+        closePanel();
 
-      search.addEventListener("input", () => {
-        const q = (search.value || "").toLowerCase();
-        liNodes.forEach(({ li }) => {
-          li.style.display = li.textContent.toLowerCase().includes(q) ? "block" : "none";
-        });
-      });
+        Array.from(levelsRoot.querySelectorAll("[data-level-wrap]"))
+          .filter(w => Number(w.dataset.levelWrap) > levelIndex)
+          .forEach(w => w.remove());
 
-      liNodes.forEach(({ li, node }) => {
-        li.addEventListener("click", async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
+        const children = nodeChildren(node);
 
-          // select
-          input.value = nodeName(node);
-          closePanel();
-
-          // remove deeper levels
-          Array.from(levelsRoot.querySelectorAll("[data-level-wrap]"))
-            .filter(w => Number(w.dataset.levelWrap) > levelIndex)
-            .forEach(w => w.remove());
-
-          const children = nodeChildren(node);
-
-          if (children.length) {
-            categoryIdInput.value = "";
-            const nextLabel = nodeChildLabel(node) || "القسم الفرعي";
-            setHint(nodeChildLabel(node)); // optional hint line like mockup
-            createSearchableLevel(levelIndex + 1, children, nextLabel);
-            return;
-          }
-
-          // leaf
-          setHint("");
-          categoryIdInput.value = nodeId(node) || "";
-          if (categoryIdInput.value) await loadAttributesForCategory(categoryIdInput.value);
-        });
-      });
-
-      // ESC closes
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closePanel();
-      });
-      search.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closePanel();
-      });
-
-      panel.appendChild(searchBoxWrap);
-      panel.appendChild(ul);
-
-      wrap.appendChild(lbl);
-      wrap.appendChild(input);
-      wrap.appendChild(panel);
-      levelsRoot.appendChild(wrap);
-
-      return { wrap, input, panel };
-    }
-
-    if (levelsRoot && Array.isArray(categoryTree)) {
-      levelsRoot.innerHTML = "";
-      setHint("");
-      createSearchableLevel(0, categoryTree, "القسم");
-
-      // outside click closes panels
-      document.addEventListener("click", () => closeAllCategoryPanels(), { capture: true });
-
-      // preselect path if provided (best-effort)
-      if (Array.isArray(selectedPath) && selectedPath.length) {
-        const pathIds = selectedPath.map(x => (typeof x === "object" ? String(x.id ?? x.pk ?? x.value ?? "") : String(x)));
-        let currentNodes = categoryTree;
-
-        for (let level = 0; level < pathIds.length; level++) {
-          const id = pathIds[level];
-
-          // find wrap for this level
-          const wrap = levelsRoot.querySelector(`[data-level-wrap="${level}"]`);
-          if (!wrap) break;
-
-          const input = wrap.querySelector(`input[data-level="${level}"]`);
-          const li = wrap.querySelector(`li[data-id="${id}"]`);
-          if (!input || !li) break;
-
-          // simulate click selection on li
-          li.click();
-
-          // update currentNodes for next loop
-          const chosen = currentNodes.find(n => nodeId(n) === id);
-          if (!chosen) break;
-          currentNodes = nodeChildren(chosen);
+        if (children.length) {
+          categoryIdInput.value = "";
+          const nextLabel = nodeChildLabel(node) || "القسم الفرعي";
+          setHint(nodeChildLabel(node));
+          createSearchableLevel(levelIndex + 1, children, nextLabel);
+          return;
         }
+
+        setHint("");
+        categoryIdInput.value = nodeId(node) || "";
+        if (categoryIdInput.value) await loadAttributesForCategory(categoryIdInput.value);
+      });
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePanel();
+    });
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePanel();
+    });
+
+    panel.appendChild(searchBoxWrap);
+    panel.appendChild(ul);
+
+    wrap.appendChild(lbl);
+    wrap.appendChild(input);
+    wrap.appendChild(panel);
+    levelsRoot.appendChild(wrap);
+
+    return { wrap, input, panel };
+  }
+
+  if (levelsRoot && Array.isArray(categoryTree)) {
+    levelsRoot.innerHTML = "";
+    setHint("");
+    createSearchableLevel(0, categoryTree, "القسم");
+
+    document.addEventListener("click", () => closeAllCategoryPanels(), { capture: true });
+
+    if (Array.isArray(selectedPath) && selectedPath.length) {
+      const pathIds = selectedPath.map(x => (typeof x === "object" ? String(x.id ?? x.pk ?? x.value ?? "") : String(x)));
+      let currentNodes = categoryTree;
+
+      for (let level = 0; level < pathIds.length; level++) {
+        const id = pathIds[level];
+
+        const wrap = levelsRoot.querySelector(`[data-level-wrap="${level}"]`);
+        if (!wrap) break;
+
+        const input = wrap.querySelector(`input[data-level="${level}"]`);
+        const li = wrap.querySelector(`li[data-id="${id}"]`);
+        if (!input || !li) break;
+
+        li.click();
+
+        const chosen = currentNodes.find(n => nodeId(n) === id);
+        if (!chosen) break;
+        currentNodes = nodeChildren(chosen);
       }
     }
+  }
 
+  async function loadAttributesForCategory(categoryId) {
+    const tpl = attributeFields?.getAttribute("data-url-template");
+    if (!tpl || !categoryId) return;
 
-async function loadAttributesForCategory(categoryId) {
-  const tpl = attributeFields?.getAttribute("data-url-template");
-  if (!tpl || !categoryId) return;
+    const url = tpl.replace(/0\/?$/, `${categoryId}/`);
 
-  const url = tpl.replace(/0\/?$/, `${categoryId}/`);
+    try {
+      const resp = await fetch(url, { credentials: "same-origin" });
+      if (!resp.ok) return;
 
-  try {
-    const resp = await fetch(url, { credentials: "same-origin" });
-    if (!resp.ok) return;
+      attributeFields.innerHTML = await resp.text();
+      initAttributeOtherLogic(attributeFields);
+    } catch {}
+  }
 
-    attributeFields.innerHTML = await resp.text();
+  function initAttributeOtherLogic(root) {
+    const scope = root || document;
+    const attrsRoot = scope.querySelector("#attrsRoot");
+    if (!attrsRoot) return;
 
-    // ✅ after replacing the partial, toggle "Other" for anything already selected
-    initAttributeOtherLogic(attributeFields);
-  } catch {}
-}
+    function syncBlock(block) {
+      const otherWrap = block.querySelector(".other-wrapper");
+      if (!otherWrap) return;
 
-    function initAttributeOtherLogic(root) {
-      const scope = root || document;
-      const attrsRoot = scope.querySelector("#attrsRoot");
-      if (!attrsRoot) return;
+      const name = block.dataset.fieldName;
+      if (!name) return;
 
-      // 1) RADIO / CHECKBOX: show/hide the other-wrapper
-      function syncBlock(block) {
-        const otherWrap = block.querySelector(".other-wrapper");
-        if (!otherWrap) return;
+      const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
+      if (!inputs.length) return;
 
-        const name = block.dataset.fieldName;
-        if (!name) return;
-
-        const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
-
-        // ✅ if there are no inputs, it might be a <select> (dropdown) — ignore here
-        if (!inputs.length) return;
-
-        const show = inputs.some(i => i.checked && i.value === "__other__");
-        otherWrap.style.display = show ? "block" : "none";
-      }
-
-      attrsRoot.querySelectorAll(".attr-block").forEach(syncBlock);
-
-      // ✅ delegate change listener ONCE per load to handle clicks after render
-      // (avoid stacking listeners)
-      if (!attrsRoot.dataset.otherBound) {
-        attrsRoot.addEventListener("change", (e) => {
-          const t = e.target;
-          if (!t || t.tagName !== "INPUT") return;
-          const block = t.closest(".attr-block");
-          if (!block) return;
-          syncBlock(block);
-        });
-        attrsRoot.dataset.otherBound = "1";
-      }
+      const show = inputs.some(i => i.checked && i.value === "__other__");
+      otherWrap.style.display = show ? "block" : "none";
     }
 
-// ✅ ADD THIS ONE LINE once, RIGHT AFTER the function definitions above,
-// so "Other" works on initial GET render too (not only after category fetch):
-initAttributeOtherLogic(attributeFields);
+    attrsRoot.querySelectorAll(".attr-block").forEach(syncBlock);
+
+    if (!attrsRoot.dataset.otherBound) {
+      attrsRoot.addEventListener("change", (e) => {
+        const t = e.target;
+        if (!t || t.tagName !== "INPUT") return;
+        const block = t.closest(".attr-block");
+        if (!block) return;
+        syncBlock(block);
+      });
+      attrsRoot.dataset.otherBound = "1";
+    }
+  }
+
+  initAttributeOtherLogic(attributeFields);
 
   // ===== Close dropdowns on outside click =====
   document.addEventListener("click", () => {
@@ -524,54 +510,81 @@ initAttributeOtherLogic(attributeFields);
 
   // ===== Submit validation (keep normal submit to Django) =====
   form?.addEventListener("submit", (e) => {
+    // If already submitting, block second submit
+    if (isSubmitting) {
+      e.preventDefault();
+      return;
+    }
+
+    // Ensure unlocked at start of a validation attempt
+    unlockSubmit();
+
     clearErrors();
 
     if (!titleInput.value.trim()) {
       e.preventDefault();
       showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان");
+      unlockSubmit();
       return;
     }
 
     if (!filesState.length) {
       e.preventDefault();
       showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
+      unlockSubmit();
       return;
     }
 
     if (mainPhotoIndexInput.value === "") {
       e.preventDefault();
       showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
+      unlockSubmit();
       return;
     }
 
     if (!categoryIdInput.value) {
       e.preventDefault();
       showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
+      unlockSubmit();
       return;
     }
 
     if (!descField.value.trim()) {
       e.preventDefault();
       showErrorAfter(descField, "الرجاء كتابة وصف للمنتج");
+      unlockSubmit();
       return;
     }
 
     if (!priceInput.value) {
       e.preventDefault();
       showErrorAfter(priceInput, "الرجاء إدخال السعر");
+      unlockSubmit();
       return;
     }
 
     if (!citySelect.value) {
       e.preventDefault();
       showErrorAfter(cityInput, "الرجاء اختيار المدينة");
+      unlockSubmit();
       return;
     }
 
     if (!acceptTerms.checked) {
       e.preventDefault();
       showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
+      unlockSubmit();
       return;
+    }
+
+    // ✅ validation passed -> lock submit (prevent double submit)
+    isSubmitting = true;
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-60", "cursor-not-allowed");
+      submitBtn.setAttribute("aria-busy", "true");
+      if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
     }
   });
 });

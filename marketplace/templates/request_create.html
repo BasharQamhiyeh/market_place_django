@@ -51,7 +51,8 @@
           <form id="addRequestForm"
                 method="POST"
                 class="space-y-3"
-                data-redirect-url="{% url 'request_list' %}">
+                data-redirect-url="{% url 'request_list' %}"
+                data-single-submit>
             {% csrf_token %}
 
             <!-- SECTION 1 -->
@@ -312,7 +313,7 @@
 
             <!-- Submit -->
             <div class="pt-4 text-center">
-              <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full sm:w-1/2">
+              <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full sm:w-1/2" data-submit-btn>
                 إرسال الطلب
               </button>
             </div>
@@ -412,6 +413,8 @@
 </div>
 {% endblock %}
 
+
 {% block scripts %}
-<script src="{% static 'js/post-request-django.js' %}"></script>
+  {{ block.super }}
+  <script src="{% static 'js/post-request-django.js' %}"></script>
 {% endblock %}
