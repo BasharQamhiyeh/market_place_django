@@ -391,3 +391,37 @@ body {
     border-color: rgba(255,122,24,.55) !important;
     box-shadow: 0 0 0 3px rgba(255,122,24,.12);
 }
+
+
+
+/* ===== Report modal theme switching (shared) ===== */
+#reportModal {
+  --modal-accent: var(--rukn-orange);
+  --modal-accent-light: var(--rukn-orange-light, #fdba74);
+}
+
+#reportModal.theme-green {
+  --modal-accent: var(--rukn-green);
+  --modal-accent-light: var(--rukn-green-light, #86efac);
+}
+
+/* header icon background + icon color */
+#reportModal .w-10.h-10 {
+  background: color-mix(in srgb, var(--modal-accent) 18%, white);
+  color: var(--modal-accent);
+}
+
+/* the top gradient line */
+#reportModal .popup-box::before {
+  background: linear-gradient(90deg, var(--modal-accent), var(--modal-accent-light));
+}
+
+/* borders/backgrounds inside the modal that were orange */
+#reportModal .border-orange-200 { border-color: color-mix(in srgb, var(--modal-accent) 40%, white) !important; }
+#reportModal .bg-orange-50\/60 { background: color-mix(in srgb, var(--modal-accent) 10%, white) !important; }
+
+/* buttons/text that were orange */
+#reportModal .bg-\[var\(--rukn-orange\)\] { background: var(--modal-accent) !important; }
+#reportModal .text-\[var\(--rukn-orange\)\] { color: var(--modal-accent) !important; }
+#reportModal .focus\:border-orange-300:focus { border-color: var(--modal-accent) !important; }
+#reportModal .focus\:ring-orange-100:focus { --tw-ring-color: color-mix(in srgb, var(--modal-accent) 22%, white) !important; }

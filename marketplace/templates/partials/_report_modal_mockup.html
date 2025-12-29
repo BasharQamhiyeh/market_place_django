@@ -1,6 +1,9 @@
 {# marketplace/templates/partials/_report_modal_mockup.html #}
 
-<div id="reportModal" class="popup-bg hidden" aria-hidden="true">
+<div id="reportModal"
+     class="popup-bg hidden {% if report_kind == 'request' %}theme-green{% else %}theme-orange{% endif %}"
+     aria-hidden="true">
+
   <div class="popup-box" role="dialog" aria-modal="true">
 
     <!-- Header -->
@@ -21,7 +24,13 @@
       </div>
 
       <div class="text-right">
-        <h2 class="text-lg font-extrabold text-gray-900">الإبلاغ عن الإعلان</h2>
+        <h2 id="reportModalTitle" class="text-lg font-extrabold text-gray-900">
+          {% if report_kind == "request" %}
+            الإبلاغ عن الطلب
+          {% else %}
+            الإبلاغ عن الإعلان
+          {% endif %}
+        </h2>
         <p class="text-xs text-gray-500 mt-1">
           اختر السبب وأضف تفاصيل إن لزم — يساعدنا ذلك على المراجعة بسرعة
         </p>
