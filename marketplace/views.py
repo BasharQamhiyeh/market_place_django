@@ -377,7 +377,25 @@ def request_list(request):
 # ============================
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
-    attributes = item.attribute_values.all()
+    attributes = []
+    for av in item.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
+        attr = av.attribute
+
+        # Dropdown / select attribute → value is an option ID
+        if attr.input_type == "select" and av.value:
+            option = attr.options.filter(id=av.value).first()
+            if option:
+                value = option.value_ar
+            else:
+                value = av.value  # fallback (should not happen)
+        else:
+            # Free text / number
+            value = av.value
+
+        attributes.append({
+            "name": attr.name_ar,
+            "value": value,
+        })
 
 
     # ----------------------------
