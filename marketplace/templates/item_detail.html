@@ -47,11 +47,11 @@
               <div class="flex flex-col gap-3">
                 <div class="flex items-start justify-between gap-3">
                   <div class="flex-1">
-                    <p class="text-[11px] text-[var(--muted)] mb-1">
-                      {% if item.listing.category %}
-                        {% if LANGUAGE_CODE == "ar" %}{{ item.listing.category.name_ar }}{% else %}{{ item.listing.category.name_en }}{% endif %}
-                      {% endif %}
-                    </p>
+<!--                    <p class="text-[11px] text-[var(&#45;&#45;muted)] mb-1">-->
+<!--                      {% if item.listing.category %}-->
+<!--                        {% if LANGUAGE_CODE == "ar" %}{{ item.listing.category.name_ar }}{% else %}{{ item.listing.category.name_en }}{% endif %}-->
+<!--                      {% endif %}-->
+<!--                    </p>-->
                     <h2 class="text-lg md:text-xl font-extrabold text-slate-900 leading-snug">
                       {{ item.listing.title }}
                     </h2>
@@ -121,7 +121,15 @@
                         <path d="M10 2L5 11h4l-1 7 7-10h-4l3-6h-4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
                       </svg>
                     </span>
-                    <span>{{ item.condition }}</span>
+                    <span>
+                      {% if item.condition == "new" %}
+                        جديد
+                      {% elif item.condition == "used" %}
+                        مستعمل
+                      {% else %}
+                        {{ item.condition }}
+                      {% endif %}
+                    </span>
                   </span>
                   {% endif %}
 

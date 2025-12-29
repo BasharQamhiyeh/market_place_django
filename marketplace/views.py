@@ -1931,7 +1931,7 @@ def create_issue_report_ajax(request):
         return JsonResponse({"ok": False, "message": "Invalid report data."}, status=400)
 
     report.save()
-    return JsonResponse({"ok": True, "message": "✅ Thank you for reporting this issue."})
+    return JsonResponse({"ok": True, "message": "✔ تم استلام الإبلاغ وسيتم مراجعته من فريق ركن"})
 
 # from .forms import UserRegistrationForm
 
