@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== Elements =====
   const form = document.getElementById("addRequestForm");
 
-  // ✅ NEW: double-submit protection (same as post-ad)
+  // ✅ Double-submit protection (DOES NOT block retry after validation errors)
   let isSubmitting = false;
   const submitBtn = form?.querySelector('button[type="submit"], input[type="submit"]');
   const submitBtnOriginalText = submitBtn?.tagName === "BUTTON" ? submitBtn.textContent : null;
@@ -59,6 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.setAttribute("aria-busy", "true");
     if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
   }
+
+  // ✅ Safety: if user comes back with server-side errors, always allow submitting again
+  // (helps when Django re-renders the page with errors, or user navigates back)
+  unlockSubmit();
 
   const titleInput = document.getElementById("requestTitle");
 
@@ -444,6 +448,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.target === privacyPopup) closeOverlay(privacyPopup);
   });
 
+  // ✅ if user changes anything after an error, ensure submit is enabled again
+  // (doesn't affect normal successful submit)
+  form?.addEventListener("input", unlockSubmit, { capture: true });
+  form?.addEventListener("change", unlockSubmit, { capture: true });
+
   // ===== Submit validation (keep normal submit to Django) =====
   form?.addEventListener("submit", (e) => {
     // block second submit
@@ -451,9 +460,6 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       return;
     }
-
-    // make sure we're not stuck disabled from a previous blocked attempt
-    unlockSubmit();
 
     clearErrors();
 
