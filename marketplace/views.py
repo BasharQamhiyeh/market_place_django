@@ -371,8 +371,6 @@ def request_list(request):
     )
 
 
-
-
 # Item details
 # ============================
 #     ITEM DETAIL VIEW
