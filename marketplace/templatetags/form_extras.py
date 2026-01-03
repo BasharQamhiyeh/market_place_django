@@ -19,3 +19,10 @@ def getitem(form, name):
         return form[name]
     except Exception:
         return ""
+
+
+@register.filter(name="add_class")
+def add_class(field, css):
+    existing = field.field.widget.attrs.get("class", "")
+    field.field.widget.attrs["class"] = (existing + " " + css).strip()
+    return field

@@ -12,6 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".error-border").forEach(e => e.classList.remove("error-border"));
   }
 
+  function showErrorBelow(elem, message) {
+    clearErrors();
+    const p = document.createElement("p");
+    p.className = "field-error js-error";
+    p.textContent = "⚠️ " + message;
+    elem.insertAdjacentElement("afterend", p);
+    elem.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   function showErrorAfter(field, message) {
     clearErrors();
     field.classList.add("error-border");
@@ -23,39 +32,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof field.focus === "function") field.focus();
   }
 
-  function showErrorBelow(elem, message) {
-    clearErrors();
-    const p = document.createElement("p");
-    p.className = "field-error js-error";
-    p.textContent = "⚠️ " + message;
-    elem.insertAdjacentElement("afterend", p);
-    elem.scrollIntoView({ behavior: "smooth", block: "center" });
+  function clearFieldError(field) {
+    if (!field) return;
+    field.classList.remove("error-border");
+    const next = field.nextElementSibling;
+    if (next && next.classList.contains("field-error")) next.remove();
   }
 
-  function clearFieldError(field) {
-      if (!field) return;
+  function clearErrorAfterContainer(container) {
+    if (!container) return;
+    container.classList.remove("error-border");
+    const next = container.nextElementSibling;
+    if (next && next.classList.contains("field-error")) next.remove();
+  }
 
-      field.classList.remove("error-border");
-
-      // remove ONLY the error message right after this field (if any)
-      const next = field.nextElementSibling;
-      if (next && next.classList.contains("field-error")) {
-        next.remove();
-      }
+  function setBlockInvalid(block, on) {
+    if (!block) return;
+    if (on) {
+      block.classList.add("error-border");
+    } else {
+      block.classList.remove("error-border");
+      const next = block.nextElementSibling;
+      if (next && next.classList.contains("field-error")) next.remove();
     }
-
-    // For wrappers where the error is placed after a container
-    function clearErrorAfterContainer(container) {
-      if (!container) return;
-
-      container.classList.remove("error-border");
-
-      const next = container.nextElementSibling;
-      if (next && next.classList.contains("field-error")) {
-        next.remove();
-      }
-    }
-
+  }
 
   // ===== Elements =====
   const form = document.getElementById("addAdForm");
@@ -64,7 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitBtn = form?.querySelector('button[type="submit"], input[type="submit"]');
   const submitBtnOriginalText = submitBtn?.tagName === "BUTTON" ? submitBtn.textContent : null;
 
-  // ✅ NEW: helper to re-enable submit when we block submission
   function unlockSubmit() {
     isSubmitting = false;
     if (!submitBtn) return;
@@ -75,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.textContent = submitBtnOriginalText;
     }
   }
+  unlockSubmit();
 
   const titleInput = document.getElementById("adTitle");
 
@@ -103,39 +103,105 @@ document.addEventListener("DOMContentLoaded", () => {
   const acceptTerms = document.getElementById("acceptTerms");
   const termsBox = document.getElementById("termsBox");
 
+  // ===== Clear errors as user fixes inputs =====
+  document.querySelectorAll("#addAdForm input, #addAdForm textarea, #addAdForm select").forEach(field => {
+    field.addEventListener("input", () => clearFieldError(field));
+    field.addEventListener("change", () => clearFieldError(field));
+  });
 
+  imageInput?.addEventListener("change", () => clearFieldError(imageDropzone));
+  previewContainer?.addEventListener("click", () => clearFieldError(previewContainer));
+  levelsRoot?.addEventListener("click", () => clearErrorAfterContainer(levelsRoot));
 
-    // 1) Standard fields: remove error immediately on input/change
-    document.querySelectorAll("#addAdForm input, #addAdForm textarea, #addAdForm select").forEach(field => {
-      field.addEventListener("input", () => clearFieldError(field));
-      field.addEventListener("change", () => clearFieldError(field));
+  cityList?.querySelectorAll("#cityOptions li")?.forEach(li => {
+    li.addEventListener("click", () => clearFieldError(cityInput));
+  });
+
+  acceptTerms?.addEventListener("change", () => clearErrorAfterContainer(termsBox));
+
+  form?.addEventListener("input", unlockSubmit, { capture: true });
+  form?.addEventListener("change", unlockSubmit, { capture: true });
+
+  // ===== REQUIRED ATTRIBUTES (RADIOS/CHECKBOX) VALIDATION =====
+  function initAttributeRequiredValidation(root) {
+    const scope = root || document;
+
+    scope.querySelectorAll(".attr-block").forEach(block => {
+      if (block.dataset.reqBound === "1") return;
+
+      block.addEventListener("change", (e) => {
+        const t = e.target;
+        if (!t) return;
+        if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
+          setBlockInvalid(block, false);
+        }
+      });
+
+      block.addEventListener("input", (e) => {
+        const t = e.target;
+        if (!t) return;
+        if (t.matches('input[type="text"], input[type="number"], textarea')) {
+          setBlockInvalid(block, false);
+        }
+      });
+
+      block.dataset.reqBound = "1";
     });
+  }
 
-    // 2) Images: selecting images clears dropzone error
-    imageInput?.addEventListener("change", () => {
-      clearFieldError(imageDropzone);
-    });
+  function validateRequiredAttributes() {
+    const blocks = attributeFields?.querySelectorAll(".attr-block[data-required='1']") || [];
 
-    // clicking previews clears previewContainer error (main selection error)
-    previewContainer?.addEventListener("click", () => {
-      clearFieldError(previewContainer);
-    });
+    for (const block of blocks) {
+      const labelEl = block.querySelector(".label");
+      const labelText = labelEl ? labelEl.textContent.trim() : "القيمة";
 
-    // 3) Category: clicking inside the category widget should clear the error shown under levelsRoot
-    levelsRoot?.addEventListener("click", () => {
-      clearErrorAfterContainer(levelsRoot);
-    });
+      // RADIO
+      const radios = block.querySelectorAll("input[type='radio']");
+      if (radios.length) {
+        const checked = Array.from(radios).some(r => r.checked);
+        if (!checked) {
+          setBlockInvalid(block, true);
+          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
+          return false;
+        }
+      }
 
-    // 4) City: choosing a city clears the cityInput error
-    cityList?.querySelectorAll("#cityOptions li")?.forEach(li => {
-      li.addEventListener("click", () => clearFieldError(cityInput));
-    });
+      // CHECKBOX (multi)
+      const checkboxes = block.querySelectorAll("input[type='checkbox']");
+      if (checkboxes.length) {
+        const checked = Array.from(checkboxes).some(c => c.checked);
+        if (!checked) {
+          setBlockInvalid(block, true);
+          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
+          return false;
+        }
+      }
 
-    // 5) Accept terms: checking clears the error under termsBox
-    acceptTerms?.addEventListener("change", () => {
-      clearErrorAfterContainer(termsBox);
-    });
+      // SELECT
+      const selects = block.querySelectorAll("select");
+      if (selects.length) {
+        const ok = Array.from(selects).every(s => (s.value || "").trim() !== "");
+        if (!ok) {
+          setBlockInvalid(block, true);
+          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
+          return false;
+        }
+      }
 
+      // TEXT/NUMBER/TEXTAREA
+      const txt = block.querySelector("input[type='text'], input[type='number'], textarea");
+      if (txt && (txt.value || "").trim() === "") {
+        setBlockInvalid(block, true);
+        showErrorBelow(block, `الرجاء إدخال ${labelText}`);
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  initAttributeRequiredValidation(attributeFields);
 
   // ===== Tabs =====
   const termsNav = document.getElementById("termsNav");
@@ -143,7 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (termsNav && termsScroll) {
     const navLinks = termsNav.querySelectorAll(".nav-link");
     const panels = termsScroll.querySelectorAll(".term-panel");
-
     navLinks.forEach(link => {
       link.addEventListener("click", () => {
         const tab = link.getAttribute("data-tab");
@@ -183,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
   newBtn?.addEventListener("click", () => paintCondition("new"));
   usedBtn?.addEventListener("click", () => paintCondition("used"));
 
-  // ===== Images (real input sync + main selection) =====
+  // ===== Images =====
   let filesState = [];
 
   function syncInputFiles() {
@@ -193,11 +258,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setMainIndex(idxOrNull) {
-    if (idxOrNull === null || idxOrNull === undefined) {
-      mainPhotoIndexInput.value = "";
-    } else {
-      mainPhotoIndexInput.value = String(idxOrNull);
-    }
+    if (idxOrNull === null || idxOrNull === undefined) mainPhotoIndexInput.value = "";
+    else mainPhotoIndexInput.value = String(idxOrNull);
   }
 
   function renderPreviews() {
@@ -216,13 +278,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-
         const curMain = mainPhotoIndexInput.value === "" ? null : Number(mainPhotoIndexInput.value);
         filesState.splice(idx, 1);
-
         if (curMain === idx) setMainIndex(null);
         else if (curMain !== null && curMain > idx) setMainIndex(curMain - 1);
-
         syncInputFiles();
         renderPreviews();
       });
@@ -246,10 +305,7 @@ document.addEventListener("DOMContentLoaded", () => {
   imageInput?.addEventListener("change", () => {
     const files = Array.from(imageInput.files || []);
     if (!files.length) return;
-
     filesState = filesState.concat(files.filter(f => f && f.type && f.type.startsWith("image/")));
-
-    // ✅ keep the real input (this is what Django submits)
     syncInputFiles();
     renderPreviews();
   });
@@ -272,29 +328,17 @@ document.addEventListener("DOMContentLoaded", () => {
     renderPreviews();
   });
 
-  // ===== City dropdown (mockup behavior) =====
-  function openCity() {
-    cityList.classList.remove("hidden");
-    citySearch.focus();
-  }
-  function closeCity() {
-    cityList.classList.add("hidden");
-  }
+  // ===== City dropdown =====
+  function openCity() { cityList.classList.remove("hidden"); citySearch.focus(); }
+  function closeCity() { cityList.classList.add("hidden"); }
 
-  cityInput?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openCity();
-  });
-
+  cityInput?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); openCity(); });
   citySearch?.addEventListener("click", (e) => e.stopPropagation());
 
   citySearch?.addEventListener("input", () => {
     const val = (citySearch.value || "").toLowerCase();
     const items = cityList.querySelectorAll("#cityOptions li");
-    items.forEach(li => {
-      li.style.display = li.textContent.toLowerCase().includes(val) ? "block" : "none";
-    });
+    items.forEach(li => { li.style.display = li.textContent.toLowerCase().includes(val) ? "block" : "none"; });
   });
 
   cityList?.querySelectorAll("#cityOptions li")?.forEach(li => {
@@ -307,34 +351,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ===== Categories hierarchical (parent -> sub -> sub) EXACT behavior =====
+  // ===== Categories hierarchical + attributes reload (FIX: clear old attrs + cancel old fetch) =====
   const categoryTree = safeJsonFromScript("category-tree-data") || [];
   const selectedPath = safeJsonFromScript("selected-category-path") || [];
-
   const categoryDynamicHint = document.getElementById("categoryDynamicHint");
 
-  function nodeName(n) {
-    return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || "";
-  }
-  function nodeChildren(n) {
-    return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || [];
-  }
-  function nodeId(n) {
-    const v = (n && (n.id ?? n.pk ?? n.value)) ?? null;
-    return v == null ? null : String(v);
-  }
-  function nodeChildLabel(n) {
-    return (n && typeof n.child_label === "string") ? n.child_label.trim() : "";
-  }
+  function nodeName(n) { return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || ""; }
+  function nodeChildren(n) { return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || []; }
+  function nodeId(n) { const v = (n && (n.id ?? n.pk ?? n.value)) ?? null; return v == null ? null : String(v); }
+  function nodeChildLabel(n) { return (n && typeof n.child_label === "string") ? n.child_label.trim() : ""; }
 
   function setHint(text) {
     if (!categoryDynamicHint) return;
     const t = (text || "").trim();
-    if (!t) {
-      categoryDynamicHint.textContent = "";
-      categoryDynamicHint.classList.add("hidden");
-      return;
-    }
+    if (!t) { categoryDynamicHint.textContent = ""; categoryDynamicHint.classList.add("hidden"); return; }
     categoryDynamicHint.textContent = t;
     categoryDynamicHint.classList.remove("hidden");
   }
@@ -344,6 +374,40 @@ document.addEventListener("DOMContentLoaded", () => {
       if (exceptPanel && p === exceptPanel) return;
       p.classList.add("hidden");
     });
+  }
+
+  // ✅ cancel old requests so old attrs can’t come back
+  let attrsFetchController = null;
+
+  async function loadAttributesForCategory(categoryId) {
+    const tpl = attributeFields?.getAttribute("data-url-template");
+    if (!tpl || !attributeFields || !categoryId) return;
+
+    // ✅ remove old attrs immediately
+    attributeFields.innerHTML = "";
+
+    // ✅ abort previous fetch
+    if (attrsFetchController) attrsFetchController.abort();
+    attrsFetchController = new AbortController();
+
+    const url = tpl.replace(/0\/?$/, `${categoryId}/`);
+
+    try {
+      const resp = await fetch(url, {
+        credentials: "same-origin",
+        signal: attrsFetchController.signal,
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      if (!resp.ok) return;
+
+      attributeFields.innerHTML = await resp.text();
+
+      // re-bind after inject
+      initAttributeRequiredValidation(attributeFields);
+      initAttributeOtherLogic(attributeFields);
+    } catch (err) {
+      if (err && err.name === "AbortError") return;
+    }
   }
 
   function createSearchableLevel(levelIndex, nodes, labelText) {
@@ -384,9 +448,8 @@ document.addEventListener("DOMContentLoaded", () => {
       li.className = "p-2 hover:bg-orange-50 cursor-pointer";
       li.textContent = nodeName(n);
       li.dataset.id = nodeId(n) || "";
-      li.dataset.hasChildren = nodeChildren(n).length ? "1" : "0";
       ul.appendChild(li);
-      return { li, node: n };
+      return { li, node: n, inputRef: input };
     });
 
     function openPanel() {
@@ -396,32 +459,25 @@ document.addEventListener("DOMContentLoaded", () => {
       liNodes.forEach(({ li }) => { li.style.display = "block"; });
       setTimeout(() => search.focus(), 0);
     }
-    function closePanel() {
-      panel.classList.add("hidden");
-    }
+    function closePanel() { panel.classList.add("hidden"); }
 
-    input.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openPanel();
-    });
-
+    input.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); openPanel(); });
     panel.addEventListener("click", (e) => e.stopPropagation());
     search.addEventListener("click", (e) => e.stopPropagation());
 
     search.addEventListener("input", () => {
       const q = (search.value || "").toLowerCase();
-      liNodes.forEach(({ li }) => {
-        li.style.display = li.textContent.toLowerCase().includes(q) ? "block" : "none";
-      });
+      liNodes.forEach(({ li }) => { li.style.display = li.textContent.toLowerCase().includes(q) ? "block" : "none"; });
     });
 
-    liNodes.forEach(({ li, node }) => {
+    liNodes.forEach(({ li, node, inputRef }) => {
       li.addEventListener("click", async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        input.value = nodeName(node);
+        clearErrorAfterContainer(levelsRoot);
+
+        inputRef.value = nodeName(node);
         closePanel();
 
         Array.from(levelsRoot.querySelectorAll("[data-level-wrap]"))
@@ -430,8 +486,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const children = nodeChildren(node);
 
+        // ✅ if still not final level -> clear attrs now + abort old fetch
         if (children.length) {
           categoryIdInput.value = "";
+          if (attributeFields) attributeFields.innerHTML = "";
+          if (attrsFetchController) attrsFetchController.abort();
+
           const nextLabel = nodeChildLabel(node) || "القسم الفرعي";
           setHint(nodeChildLabel(node));
           createSearchableLevel(levelIndex + 1, children, nextLabel);
@@ -444,29 +504,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closePanel();
-    });
-    search.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closePanel();
-    });
-
     panel.appendChild(searchBoxWrap);
     panel.appendChild(ul);
-
     wrap.appendChild(lbl);
     wrap.appendChild(input);
     wrap.appendChild(panel);
     levelsRoot.appendChild(wrap);
-
-    return { wrap, input, panel };
   }
 
   if (levelsRoot && Array.isArray(categoryTree)) {
     levelsRoot.innerHTML = "";
     setHint("");
     createSearchableLevel(0, categoryTree, "القسم");
-
     document.addEventListener("click", () => closeAllCategoryPanels(), { capture: true });
 
     if (Array.isArray(selectedPath) && selectedPath.length) {
@@ -475,36 +524,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       for (let level = 0; level < pathIds.length; level++) {
         const id = pathIds[level];
-
         const wrap = levelsRoot.querySelector(`[data-level-wrap="${level}"]`);
         if (!wrap) break;
-
-        const input = wrap.querySelector(`input[data-level="${level}"]`);
         const li = wrap.querySelector(`li[data-id="${id}"]`);
-        if (!input || !li) break;
-
+        if (!li) break;
         li.click();
-
         const chosen = currentNodes.find(n => nodeId(n) === id);
         if (!chosen) break;
         currentNodes = nodeChildren(chosen);
       }
     }
-  }
-
-  async function loadAttributesForCategory(categoryId) {
-    const tpl = attributeFields?.getAttribute("data-url-template");
-    if (!tpl || !categoryId) return;
-
-    const url = tpl.replace(/0\/?$/, `${categoryId}/`);
-
-    try {
-      const resp = await fetch(url, { credentials: "same-origin" });
-      if (!resp.ok) return;
-
-      attributeFields.innerHTML = await resp.text();
-      initAttributeOtherLogic(attributeFields);
-    } catch {}
   }
 
   function initAttributeOtherLogic(root) {
@@ -515,7 +544,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function syncBlock(block) {
       const otherWrap = block.querySelector(".other-wrapper");
       if (!otherWrap) return;
-
       const name = block.dataset.fieldName;
       if (!name) return;
 
@@ -542,10 +570,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initAttributeOtherLogic(attributeFields);
 
-  // ===== Close dropdowns on outside click =====
-  document.addEventListener("click", () => {
-    closeCity();
-  });
+  document.addEventListener("click", () => closeCity());
 
   // ===== AI =====
   aiBtn?.addEventListener("click", () => {
@@ -567,89 +592,94 @@ document.addEventListener("DOMContentLoaded", () => {
       `✅ تواصل للشراء أو الاستفسار.`;
   });
 
-  // ===== Submit validation (keep normal submit to Django) =====
-    form?.addEventListener("submit", (e) => {
-      if (isSubmitting) {
-        e.preventDefault();
-        return;
-      }
+  // ===== Submit validation =====
+  form?.addEventListener("submit", (e) => {
+    if (isSubmitting) {
+      e.preventDefault();
+      return;
+    }
 
+    unlockSubmit();
+    clearErrors();
+
+    // 1 — Title
+    if (!titleInput.value.trim()) {
+      e.preventDefault();
+      showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان");
       unlockSubmit();
-      clearErrors();
+      return;
+    }
 
-      // 1 — Title
-      if (!titleInput.value.trim()) {
-        e.preventDefault();
-        showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان");
-        unlockSubmit();
-        return;
-      }
+    // 2 — Category
+    if (!categoryIdInput.value) {
+      e.preventDefault();
+      showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
+      unlockSubmit();
+      return;
+    }
 
-      // 2 — Category (BEFORE images)
-      if (!categoryIdInput.value) {
-        e.preventDefault();
-        showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
-        unlockSubmit();
-        return;
-      }
+    // 3 — Attributes (RIGHT AFTER CATEGORY)
+    if (!validateRequiredAttributes()) {
+      e.preventDefault();
+      unlockSubmit();
+      return;
+    }
 
-      // 3 — Images
-      if (!filesState.length) {
-        e.preventDefault();
-        showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
-        unlockSubmit();
-        return;
-      }
+    // 4 — Images
+    if (!filesState.length) {
+      e.preventDefault();
+      showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
+      unlockSubmit();
+      return;
+    }
 
-      // 4 — Main image
-      if (mainPhotoIndexInput.value === "") {
-        e.preventDefault();
-        showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
-        unlockSubmit();
-        return;
-      }
+    // 5 — Main image
+    if (mainPhotoIndexInput.value === "") {
+      e.preventDefault();
+      showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
+      unlockSubmit();
+      return;
+    }
 
-      // 5 — Description
-      if (!descField.value.trim()) {
-        e.preventDefault();
-        showErrorAfter(descField, "الرجاء كتابة وصف للمنتج");
-        unlockSubmit();
-        return;
-      }
+    // 6 — Description
+    if (!descField.value.trim()) {
+      e.preventDefault();
+      showErrorAfter(descField, "الرجاء كتابة وصف للمنتج");
+      unlockSubmit();
+      return;
+    }
 
-      // 6 — Price
-      if (!priceInput.value) {
-        e.preventDefault();
-        showErrorAfter(priceInput, "الرجاء إدخال السعر");
-        unlockSubmit();
-        return;
-      }
+    // 7 — Price
+    if (!priceInput.value) {
+      e.preventDefault();
+      showErrorAfter(priceInput, "الرجاء إدخال السعر");
+      unlockSubmit();
+      return;
+    }
 
-      // 7 — City
-      if (!citySelect.value) {
-        e.preventDefault();
-        showErrorAfter(cityInput, "الرجاء اختيار المدينة");
-        unlockSubmit();
-        return;
-      }
+    // 8 — City
+    if (!citySelect.value) {
+      e.preventDefault();
+      showErrorAfter(cityInput, "الرجاء اختيار المدينة");
+      unlockSubmit();
+      return;
+    }
 
-      // 8 — Terms
-      if (!acceptTerms.checked) {
-        e.preventDefault();
-        showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
-        unlockSubmit();
-        return;
-      }
+    // 9 — Terms
+    if (!acceptTerms.checked) {
+      e.preventDefault();
+      showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
+      unlockSubmit();
+      return;
+    }
 
-      // Passed -> lock submit
-      isSubmitting = true;
+    isSubmitting = true;
 
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.classList.add("opacity-60", "cursor-not-allowed");
-        submitBtn.setAttribute("aria-busy", "true");
-        if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
-      }
-    });
-
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-60", "cursor-not-allowed");
+      submitBtn.setAttribute("aria-busy", "true");
+      if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
+    }
+  });
 });

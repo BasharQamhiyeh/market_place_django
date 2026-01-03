@@ -74,7 +74,7 @@
                        placeholder="مثلاً: أحتاج لابتوب HP جديد أو سيارة تويوتا كورولا"
                        class="input-field"
                        value="{{ form.title.value|default_if_none:'' }}">
-                {% if form.title.errors %}<p class="field-error">{{ form.title.errors }}</p>{% endif %}
+                {% if form.title.errors %}<p class="field-error js-error">{{ form.title.errors }}</p>{% endif %}
               </div>
 
               <!-- Category (Hierarchical like item_create) -->
@@ -86,7 +86,7 @@
                        name="category"
                        id="categoryIdInput"
                        value="{% if selected_category %}{{ selected_category.id }}{% else %}{{ form.category.value|default_if_none:'' }}{% endif %}">
-                {% if form.category.errors %}<p class="field-error">{{ form.category.errors }}</p>{% endif %}
+                {% if form.category.errors %}<p class="field-error js-error">{{ form.category.errors }}</p>{% endif %}
               </div>
 
               <script id="category-tree-data" type="application/json">
@@ -103,7 +103,7 @@
                     <div class="mt-3">
                       <label class="label">{{ field.label }}</label>
                       {{ field }}
-                      {% if field.errors %}<p class="field-error">{{ field.errors }}</p>{% endif %}
+                      {% if field.errors %}<p class="field-error js-error">{{ field.errors }}</p>{% endif %}
 
                       {% with other_name=field.name|add:"_other" %}
                         {% if other_name in form.fields %}
@@ -111,7 +111,7 @@
                             <div class="mt-3">
                               <label class="label">{{ other_field.label }}</label>
                               {{ other_field }}
-                              {% if other_field.errors %}<p class="field-error">{{ other_field.errors }}</p>{% endif %}
+                              {% if other_field.errors %}<p class="field-error js-error">{{ other_field.errors }}</p>{% endif %}
                             </div>
                           {% endwith %}
                         {% endif %}
@@ -146,7 +146,7 @@
                          id="conditionValue"
                          name="condition_preference"
                          value="{% if form.condition_preference.value %}{{ form.condition_preference.value }}{% else %}any{% endif %}">
-                  {% if form.condition_preference.errors %}<p class="field-error">{{ form.condition_preference.errors }}</p>{% endif %}
+                  {% if form.condition_preference.errors %}<p class="field-error js-error">{{ form.condition_preference.errors }}</p>{% endif %}
                 </div>
 
                 <!-- Description -->
@@ -157,7 +157,7 @@
                             rows="4"
                             placeholder="اشرح المواصفات التي تبحث عنها، مثل الحجم، اللون، الموديل، سنة الصنع، أو أي تفاصيل مهمة أخرى"
                             class="input-field text-sm">{{ form.description.value|default_if_none:'' }}</textarea>
-                  {% if form.description.errors %}<p class="field-error">{{ form.description.errors }}</p>{% endif %}
+                  {% if form.description.errors %}<p class="field-error js-error">{{ form.description.errors }}</p>{% endif %}
 
                   <button type="button" id="aiBtn"
                           class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 w-full sm:w-auto justify-center text-sm">
@@ -174,7 +174,7 @@
                          placeholder="مثلاً: 150"
                          class="input-field text-sm"
                          value="{{ form.budget.value|default_if_none:'' }}">
-                  {% if form.budget.errors %}<p class="field-error">{{ form.budget.errors }}</p>{% endif %}
+                  {% if form.budget.errors %}<p class="field-error js-error">{{ form.budget.errors }}</p>{% endif %}
                 </div>
 
               </div>
@@ -219,7 +219,7 @@
                     </ul>
                   </div>
 
-                  {% if form.city.errors %}<p class="field-error">{{ form.city.errors }}</p>{% endif %}
+                  {% if form.city.errors %}<p class="field-error js-error">{{ form.city.errors }}</p>{% endif %}
                 </div>
 
                 <!-- Show phone -->
@@ -297,7 +297,7 @@
 
                 <div class="pt-3 mt-2 border-t border-gray-200 space-y-2">
                   <label class="flex items-start gap-3 cursor-pointer select-none">
-                    <input type="checkbox" id="acceptTerms" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
+                    <input type="checkbox" id="acceptTerms" name="accept_terms" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
                     <span class="text-gray-700 leading-relaxed text-xs sm:text-sm">
                       أؤكد أنني قرأت وفهمت شروط نشر طلب الشراء أعلاه، وأوافق على الالتزام بها.
                     </span>

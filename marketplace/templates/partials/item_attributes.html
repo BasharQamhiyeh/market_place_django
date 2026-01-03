@@ -1,11 +1,14 @@
-{# ✅ COPY-PASTE REPLACE: templates/partials/item_attributes.html #}
+{# templates/partials/item_attributes.html #}
 {% load form_extras %}
 
 <div id="attrsRoot" class="space-y-4">
   {% for field in form %}
     {% if field.name|slice:":5" == "attr_" and field.name|slice:"-6:" != "_other" %}
 
-      <div class="attr-block mb-3" data-field-name="{{ field.html_name }}">
+      {# ✅ REQUIRED FLAG: JS will validate only blocks with data-required="1" #}
+      <div class="attr-block mb-3"
+           data-field-name="{{ field.html_name }}"
+           {% if field.field.required %}data-required="1"{% endif %}>
 
         <label class="label">{{ field.label }}</label>
 
@@ -18,7 +21,6 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {% for value,label in field.field.choices %}
               {% if value %}
-                {# ✅ IMPORTANT: removed border-gray-200 so .elect-card:has(input:checked) wins #}
                 <label class="elect-card flex items-center gap-2 border border-orange-200 rounded-xl p-3 cursor-pointer bg-white">
                   <input type="radio"
                          name="{{ field.html_name }}"
@@ -35,8 +37,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {% for value,label in field.field.choices %}
               {% if value %}
-                {# ✅ IMPORTANT: removed border-gray-200 so .elect-card:has(input:checked) wins #}
-                <label class="elect-card flex items-center gap-2 border rounded-xl p-3 cursor-pointer bg-white">
+                <label class="elect-card flex items-center gap-2 border border-orange-200 rounded-xl p-3 cursor-pointer bg-white">
                   <input type="checkbox"
                          name="{{ field.html_name }}"
                          value="{{ value }}"
@@ -55,17 +56,18 @@
           {{ field }}
         {% endif %}
 
+        {# keep server errors #}
         {% if field.errors %}
-          <p class="field-error">{{ field.errors }}</p>
+          <p class="field-error js-error">{{ field.errors }}</p>
         {% endif %}
 
-        {# ================= OTHER FIELD (ALWAYS RENDERED, HIDDEN) ================= #}
+        {# ================= OTHER FIELD (HIDDEN) ================= #}
         {% with other_name=field.name|add:"_other" %}
           {% if other_name in form.fields %}
             {% with other_field=form|getitem:other_name %}
               <div class="other-wrapper mt-2" style="display:none;">
                 <label class="label">{{ other_field.label }}</label>
-                {{ other_field }}
+                {{ other_field|add_class:"input-field text-sm" }}
               </div>
             {% endwith %}
           {% endif %}

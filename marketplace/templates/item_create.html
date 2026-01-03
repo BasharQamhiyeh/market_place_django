@@ -92,7 +92,9 @@
                 <div id="attribute-fields" data-url-template="{% url 'item_attributes_partial' 0 %}">
                   {% for field in form %}
                     {% if field.name|slice:":5" == "attr_" %}
-                      <div class="mt-3">
+                      <div class="mt-3 attr-block"
+                           data-field-name="{{ field.name }}"
+                           data-required="{% if field.field.required %}1{% else %}0{% endif %}">
                         <label class="label">{{ field.label }}</label>
                         {{ field }}
                         {% if field.errors %}<p class="field-error js-error">{{ field.errors }}</p>{% endif %}
@@ -100,7 +102,7 @@
                         {% with other_name=field.name|add:"_other" %}
                           {% if other_name in form.fields %}
                             {% with other_field=form|getitem:other_name %}
-                              <div class="mt-3">
+                              <div class="mt-3 other-wrapper" style="display:none;">
                                 <label class="label">{{ other_field.label }}</label>
                                 {{ other_field }}
                                 {% if other_field.errors %}<p class="field-error js-error">{{ other_field.errors }}</p>{% endif %}
