@@ -73,7 +73,7 @@ if (loginPhone) {
 // ===== Toggle password show/hide =====
 if (loginPassword && toggleLoginPassword) {
   // default state: password hidden → show "eye"
-  toggleLoginPassword.innerHTML = EYE_OPEN_ICON;
+  toggleLoginPassword.innerHTML = LOGIN_EYE_OPEN_ICON;
 
   toggleLoginPassword.addEventListener("click", () => {
     const isHidden = loginPassword.type === "password";
@@ -132,7 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // add button
     addAdBtn.textContent           = btnText;
     addAdBtn.style.backgroundColor = color;
-    addAdBtn.href = isBuy ? '/request/create/' : '/item/create/';
+    const url = isBuy ? '/request/create/' : '/item/create/';
+    addAdBtn.dataset.targetUrl = url;
+    addAdBtn.setAttribute("href", url);
 
     // search field and btn color
     searchInput.style.borderColor   = color;
@@ -217,3 +219,31 @@ function toggleFavorite(e, itemId, formElement) {
 
     .catch(err => console.error(err));
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const addAdBtn = document.getElementById("addAdBtn");
+  const loginModal = document.getElementById("loginModal");
+  const loginNext = document.getElementById("loginNext");
+
+  // If any element is missing, do nothing
+  if (!addAdBtn || !loginModal) return;
+
+  addAdBtn.addEventListener("click", function (e) {
+    // user is NOT logged in → modal exists
+    e.preventDefault(); // ⛔ stop page refresh
+
+    // remember where user wanted to go
+    const targetUrl = addAdBtn.dataset.targetUrl || addAdBtn.getAttribute("data-target-url");
+
+
+    if (loginNext && targetUrl) {
+      loginNext.value = targetUrl;
+    }
+
+    // show login modal
+    loginModal.classList.remove("hidden");
+  });
+
+});
+

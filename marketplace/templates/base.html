@@ -390,6 +390,8 @@
           action="{% url 'login' %}">
       {% csrf_token %}
 
+      <input type="hidden" name="next" id="loginNext">
+
       <!-- PHONE ONLY -->
       <input id="loginPhone"
        name="username"
@@ -502,10 +504,11 @@
 
           <!-- Add Ad button -->
           <a id="addAdBtn"
-             href="{% url 'create_item' %}"
-             class="text-center text-sm font-extrabold text-white bg-[var(--rukn-orange)]
-                    px-4 py-4 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300
-                    w-full sm:w-auto">
+           href="#"
+           data-target-url="{% url 'create_item' %}"
+           class="text-center text-sm font-extrabold text-white bg-[var(--rukn-orange)]
+                  px-4 py-4 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300
+                  w-full sm:w-auto">
             أضف إعلانك
           </a>
 

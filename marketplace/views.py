@@ -92,6 +92,8 @@ from .models import User
 import uuid
 from django.http import HttpResponseBadRequest
 
+from django.shortcuts import redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 
 try:
     from django.contrib.postgres.search import TrigramSimilarity
@@ -2336,6 +2338,14 @@ def user_login(request):
     raw = (request.POST.get("username") or "").strip()
     password = request.POST.get("password") or ""
     referer = request.META.get("HTTP_REFERER", "/")
+    next_url = (request.POST.get("next") or request.GET.get("next") or "").strip()
+
+    def redirect_login_error():
+        # keep next so after user fixes password, we still go to create page
+        suffix = "?login_error=1"
+        if next_url:
+            suffix += f"&next={next_url}"
+        return redirect(f"{referer}{suffix}")
 
     print("\n=== LOGIN ATTEMPT ===")
     print("raw:", repr(raw))
@@ -2345,7 +2355,7 @@ def user_login(request):
 
     if not candidates:
         print("INVALID INPUT FORMAT")
-        return redirect(f"{referer}?login_error=1")
+        return redirect_login_error()
 
     # Show exactly which phone value matched in DB
     matches = list(User.objects.filter(phone__in=candidates).values("pk", "phone")[:5])
@@ -2354,7 +2364,7 @@ def user_login(request):
     u = User.objects.filter(phone__in=candidates).first()
     if not u:
         print("NO USER FOUND")
-        return redirect(f"{referer}?login_error=1")
+        return redirect_login_error()
 
     print("found pk:", u.pk)
     print("stored phone repr:", repr(getattr(u, "phone", None)))
@@ -2371,12 +2381,17 @@ def user_login(request):
 
     if not user:
         print("AUTH FAILED (backend/USERNAME_FIELD mismatch, unusable password, or user created differently)")
-        return redirect(f"{referer}?login_error=1")
+        return redirect_login_error()
 
     login(request, user)
     print("LOGIN SUCCESS")
-    return redirect(referer)
 
+    # ✅ redirect to next (create item/request) if provided and safe
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
+
+    # fallback
+    return redirect(referer)
 
 
 # Logout
