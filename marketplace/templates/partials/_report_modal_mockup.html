@@ -3,7 +3,9 @@
 <div id="reportModal"
      class="popup-bg hidden {% if report_kind == 'request' %}theme-green{% else %}theme-orange{% endif %}"
      aria-hidden="true"
-     data-reported-already="{% if reported_already %}1{% else %}0{% endif %}">
+     data-reported-already="{% if reported_already %}1{% else %}0{% endif %}"
+     data-own-listing="{% if is_own_listing %}1{% else %}0{% endif %}"
+     data-report-kind="{{ report_kind }}">
 
   <div class="popup-box" role="dialog" aria-modal="true">
 

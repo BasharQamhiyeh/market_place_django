@@ -81,13 +81,23 @@
   </div>
 </div>
 
+<p id="reportFormError" class="text-xs text-red-600 font-bold mt-3 mb-2 hidden">
+  ⚠️ حدث خطأ
+</p>
+
 <form id="reportForm"
       method="post"
+      action="{% url 'create_issue_report_ajax' %}"
       class="space-y-3 text-right px-4 sm:px-5"
       data-target-kind="listing"
       data-target-id="{{ listing.id }}"
       data-listing-type="{{ listing_type }}">
   {% csrf_token %}
+
+  <!-- ✅ REQUIRED hidden fields for backend -->
+  <input type="hidden" name="target_kind" id="reportTargetKind" value="">
+  <input type="hidden" name="target_id" id="reportTargetId" value="">
+  <input type="hidden" name="listing_type" id="reportListingType" value="">
 
   <div class="mt-5">
     <label class="popup-label">سبب الإبلاغ <span class="text-[var(--rukn-orange)]">*</span></label>

@@ -523,6 +523,9 @@ def item_detail(request, item_id):
             listing_type="item",
         ).exists()
 
+    is_own_listing = False
+    if request.user.is_authenticated:
+        is_own_listing = (item.listing.user_id == request.user.user_id)
 
     # ----------------------------
     # Final render
@@ -542,6 +545,7 @@ def item_detail(request, item_id):
         "report_kind": "item",
         "reported_already": reported_already,
         "breadcrumb_categories": breadcrumb_categories,
+        "is_own_listing": is_own_listing,
     })
 
 
@@ -617,6 +621,10 @@ def request_detail(request, request_id):
             listing_type="request",
         ).exists()
 
+    is_own_listing = False
+    if request.user.is_authenticated:
+        is_own_listing = (request_obj.listing.user_id == request.user.user_id)
+
     return render(
         request,
         "request_detail.html",
@@ -632,6 +640,7 @@ def request_detail(request, request_id):
             "report_kind": "request",
             "reported_already": reported_already,
             "breadcrumb_categories": breadcrumb_categories,
+            "is_own_listing": is_own_listing,
         },
     )
 
@@ -2018,6 +2027,13 @@ def create_issue_report_ajax(request):
             return JsonResponse({"ok": False, "message": "Invalid listing_type."}, status=400)
 
         listing = get_object_or_404(Listing, id=target_id_int)
+
+        # ✅ NEW: prevent reporting your own listing
+        if listing.user_id == request.user.user_id:
+            return JsonResponse(
+                {"ok": False, "message": "لا يمكنك الإبلاغ عن إعلان/طلب قمت بإنشائه."},
+                status=400
+            )
 
         # ✅ BLOCK DUPLICATE REPORTS (same user + same listing + same listing_type)
         already = IssuesReport.objects.filter(
