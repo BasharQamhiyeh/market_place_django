@@ -20,18 +20,21 @@
           <a href="{% url 'home' %}" class="hover:text-[var(--rukn-green)]">الرئيسية</a> /
           <a href="{% url 'request_list' %}" class="hover:text-[var(--rukn-green)]">الطلبات</a> /
 
-          {% if request_obj.listing.category %}
-            <a href="{% url 'request_list' %}?categories={{ request_obj.listing.category.id }}"
-               class="hover:text-[var(--rukn-green)]">
-              {% if LANGUAGE_CODE == "ar" %}
-                {{ request_obj.listing.category.name_ar }}
-              {% else %}
-                {{ request_obj.listing.category.name_en }}
-              {% endif %}
-            </a> /
+          {% if breadcrumb_categories %}
+            {% for cat in breadcrumb_categories %}
+              <a href="{% url 'request_list' %}?categories={{ cat.id }}" class="hover:text-[var(--rukn-green)]">
+                <bdi dir="auto">
+                  {% if LANGUAGE_CODE == "ar" %}{{ cat.name_ar }}{% else %}{{ cat.name_en }}{% endif %}
+                </bdi>
+              </a>
+              /
+            {% endfor %}
           {% endif %}
 
-          <span class="text-gray-600">{{ request_obj.listing.title }}</span>
+          <span class="text-gray-600">
+            <bdi dir="auto">{{ request_obj.listing.title }}</bdi>
+          </span>
+
         </nav>
       </div>
     </header>

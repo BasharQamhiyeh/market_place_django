@@ -21,13 +21,20 @@
           <a href="{% url 'home' %}" class="hover:text-[var(--rukn-orange)]">الرئيسية</a> /
           <a href="{% url 'item_list' %}" class="hover:text-[var(--rukn-orange)]">الإعلانات</a> /
 
-          {% if item.listing.category %}
-            <a href="{% url 'item_list' %}?categories={{ item.listing.category.id }}" class="hover:text-[var(--rukn-orange)]">
-              {% if LANGUAGE_CODE == "ar" %}{{ item.listing.category.name_ar }}{% else %}{{ item.listing.category.name_en }}{% endif %}
-            </a> /
+          {% if breadcrumb_categories %}
+            {% for cat in breadcrumb_categories %}
+              <a href="{% url 'item_list' %}?categories={{ cat.id }}" class="hover:text-[var(--rukn-orange)]">
+                <bdi dir="auto">
+                  {% if LANGUAGE_CODE == "ar" %}{{ cat.name_ar }}{% else %}{{ cat.name_en }}{% endif %}
+                </bdi>
+              </a>
+              /
+            {% endfor %}
           {% endif %}
 
-          <span class="text-gray-600">{{ item.listing.title }}</span>
+          <span class="text-gray-600">
+            <bdi dir="auto">{{ item.listing.title }}</bdi>
+          </span>
         </nav>
       </div>
     </header>

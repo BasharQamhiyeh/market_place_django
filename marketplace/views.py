@@ -379,6 +379,17 @@ def request_list(request):
 # ============================
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
+
+    breadcrumb_categories = []
+    cat = getattr(item.listing, "category", None)
+
+    # Walk up to the root
+    while cat:
+        breadcrumb_categories.append(cat)
+        cat = cat.parent
+
+    breadcrumb_categories.reverse()  # root -> leaf
+
     attributes = []
     for av in item.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
         attr = av.attribute
@@ -530,11 +541,21 @@ def item_detail(request, item_id):
         "allow_show_phone": item.listing.show_phone,
         "report_kind": "item",
         "reported_already": reported_already,
+        "breadcrumb_categories": breadcrumb_categories,
     })
 
 
 def request_detail(request, request_id):
     request_obj = get_object_or_404(Request, id=request_id)
+
+    breadcrumb_categories = []
+    cat = getattr(request_obj.listing, "category", None)
+
+    while cat:
+        breadcrumb_categories.append(cat)
+        cat = cat.parent
+
+    breadcrumb_categories.reverse()
 
     # SECURITY
     if not request_obj.listing.is_approved and request.user != request_obj.listing.user:
@@ -610,6 +631,7 @@ def request_detail(request, request_id):
             "allow_show_phone": request_obj.listing.show_phone,
             "report_kind": "request",
             "reported_already": reported_already,
+            "breadcrumb_categories": breadcrumb_categories,
         },
     )
 
