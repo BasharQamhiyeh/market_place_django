@@ -60,6 +60,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ✅ IMPORTANT: stop Chrome "Please fill out this field" ONLY for dynamic attributes
+  // (no form novalidate needed)
+  function stripRequiredFromAttributeFields() {
+    if (!attributeFields) return;
+    attributeFields
+      .querySelectorAll("input[required], select[required], textarea[required]")
+      .forEach(el => el.removeAttribute("required"));
+  }
+
   // ===== Elements =====
   const form = document.getElementById("addAdForm");
 
@@ -131,7 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (otherWrap.classList.contains("hidden")) return false;
     const ds = (otherWrap.style && otherWrap.style.display) || "";
     if (ds && ds.toLowerCase() === "none") return false;
-    // if no inline style, rely on layout:
     return otherWrap.offsetParent !== null;
   }
 
@@ -158,7 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
         show = mainSelects.some(s => (s.value || "") === "__other__");
       }
 
-      // works with your inline style or "hidden"
       otherWrap.style.display = show ? "block" : "none";
       otherWrap.classList.toggle("hidden", !show);
 
@@ -170,15 +177,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // clear attr errors when user changes anything in the block
     attrsRoot.querySelectorAll(".attr-block").forEach(block => {
       if (block.dataset.bound === "1") return;
 
       block.addEventListener("input", (e) => {
         const t = e.target;
         if (!t) return;
-        clearFieldError(t);     // clears red border/message on inputs
-        setBlockInvalid(block, false); // clears block border/message for radios/checkbox
+        clearFieldError(t);
+        setBlockInvalid(block, false);
       }, true);
 
       block.addEventListener("change", (e) => {
@@ -195,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
       syncOtherForBlock(block);
     });
 
-    // delegation (for injected blocks)
     if (!attrsRoot.dataset.otherBound) {
       attrsRoot.addEventListener("change", (e) => {
         const t = e.target;
@@ -210,23 +215,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ✅ FIX 1: correct order (DOM order) + ignore hidden "other" field
-  // ✅ FIX 2: same red style for text/select (like title)
   function validateRequiredAttributes() {
     const blocks = Array.from(attributeFields?.querySelectorAll(".attr-block[data-required='1']") || []);
 
-    // validate in DOM order exactly
     for (const block of blocks) {
       const labelEl = block.querySelector(".label");
       const labelText = labelEl ? labelEl.textContent.trim() : "القيمة";
 
-      // MAIN controls ONLY (exclude other-wrapper)
       const mainRadios = Array.from(block.querySelectorAll(":scope input[type='radio']:not(.other-wrapper input)"));
       const mainCheckboxes = Array.from(block.querySelectorAll(":scope input[type='checkbox']:not(.other-wrapper input)"));
       const mainSelect = block.querySelector(":scope select:not(.other-wrapper select)");
       const mainText = block.querySelector(":scope input[type='text']:not(.other-wrapper input), :scope input[type='number']:not(.other-wrapper input), :scope textarea:not(.other-wrapper textarea)");
 
-      // 1) radio
       if (mainRadios.length) {
         const ok = mainRadios.some(r => r.checked);
         if (!ok) {
@@ -234,41 +234,29 @@ document.addEventListener("DOMContentLoaded", () => {
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
           return false;
         }
-      }
-
-      // 2) checkbox
-      else if (mainCheckboxes.length) {
+      } else if (mainCheckboxes.length) {
         const ok = mainCheckboxes.some(c => c.checked);
         if (!ok) {
           setBlockInvalid(block, true);
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
           return false;
         }
-      }
-
-      // 3) select
-      else if (mainSelect) {
+      } else if (mainSelect) {
         if (!(mainSelect.value || "").trim()) {
-          // ✅ same style as title: border + message after the select
           showErrorAfter(mainSelect, `الرجاء اختيار ${labelText}`);
           return false;
         }
-      }
-
-      // 4) text/number/textarea
-      else if (mainText) {
+      } else if (mainText) {
         if (!((mainText.value || "").trim())) {
           showErrorAfter(mainText, `الرجاء إدخال ${labelText}`);
           return false;
         }
       }
 
-      // If "__other__" selected, validate the OTHER input (visible only)
       const otherWrap = block.querySelector(".other-wrapper");
       if (otherWrap && isOtherWrapperVisible(otherWrap)) {
         const otherInput = otherWrap.querySelector("input[type='text'], input[type='number'], textarea");
         if (otherInput && !((otherInput.value || "").trim())) {
-          // ✅ same style as title
           showErrorAfter(otherInput, `الرجاء إدخال ${labelText}`);
           return false;
         }
@@ -279,6 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // init once on first render
+  stripRequiredFromAttributeFields();      // ✅ add
   initAttributeLogic(attributeFields);
 
   // ===== Tabs =====
@@ -477,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       attributeFields.innerHTML = await resp.text();
 
-      // IMPORTANT: re-bind logic after inject
+      stripRequiredFromAttributeFields();   // ✅ add (prevents Chrome popup)
       initAttributeLogic(attributeFields);
     } catch (err) {
       if (err && err.name === "AbortError") return;
@@ -655,7 +644,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ attributes validated in correct order + correct style
     if (!validateRequiredAttributes()) {
       e.preventDefault();
       unlockSubmit();

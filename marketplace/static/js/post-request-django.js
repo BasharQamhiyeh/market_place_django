@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".error-border").forEach(e => e.classList.remove("error-border"));
   }
 
-  // ✅ mockup-style error (after block, not weird radio styling)
+  // ✅ mockup-style error (after block)
   function showErrorBelow(elem, message) {
     clearErrors();
     const p = document.createElement("p");
@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     elem.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  // ✅ title-style error (red border + message after the control)
   function showErrorAfter(field, message) {
     clearErrors();
     field.classList.add("error-border");
@@ -87,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
   }
 
-  // ✅ Safety: always allow submitting again when page renders
   unlockSubmit();
 
   const titleInput = document.getElementById("requestTitle");
@@ -127,28 +127,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeTermsBtn = document.getElementById("closeTerms");
   const closePrivacyBtn = document.getElementById("closePrivacy");
 
+  // ✅ IMPORTANT: stop Chrome "Please fill out this field" ONLY for dynamic attributes
+  // (no form novalidate needed)
+  function stripRequiredFromAttributeFields() {
+    if (!attributeFields) return;
+    attributeFields
+      .querySelectorAll("input[required], select[required], textarea[required]")
+      .forEach(el => el.removeAttribute("required"));
+  }
+
   // ===== Clear errors as user fixes inputs =====
   document.querySelectorAll("#addRequestForm input, #addRequestForm textarea, #addRequestForm select").forEach(field => {
     field.addEventListener("input", () => clearFieldError(field));
     field.addEventListener("change", () => clearFieldError(field));
   });
 
-  // category widget click clears category error
   levelsRoot?.addEventListener("click", () => clearErrorAfterContainer(levelsRoot));
 
-  // city click clears
   cityList?.querySelectorAll("#cityOptions li")?.forEach(li => {
     li.addEventListener("click", () => clearFieldError(cityInput));
   });
 
-  // terms clears
   acceptTerms?.addEventListener("change", () => clearErrorAfterContainer(termsBox));
 
-  // condition clears (if you ever show it there)
   const conditionBox = document.getElementById("conditionBox");
   conditionBox?.addEventListener("click", () => clearErrorAfterContainer(conditionBox));
 
-  // ✅ If user changes anything after an error, re-enable submit
   form?.addEventListener("input", unlockSubmit, { capture: true });
   form?.addEventListener("change", unlockSubmit, { capture: true });
 
@@ -176,7 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
         show = selects.some(s => (s.value || "") === "__other__");
       }
 
-      // ✅ your updated partial uses Tailwind hidden (recommended)
       otherWrap.classList.toggle("hidden", !show);
 
       if (show) {
@@ -195,7 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
       block.addEventListener("change", (e) => {
         const t = e.target;
         if (!t) return;
-
         if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
           clear();
           syncOtherForBlock(block);
@@ -205,7 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
       block.addEventListener("input", (e) => {
         const t = e.target;
         if (!t) return;
-
         if (t.matches('input[type="text"], input[type="number"], textarea')) {
           clear();
         }
@@ -216,17 +217,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     attrsRoot.querySelectorAll(".attr-block").forEach(block => {
       bindRequiredClear(block);
-      syncOtherForBlock(block); // initial state
+      syncOtherForBlock(block);
     });
 
-    // delegation for injected blocks
     if (!attrsRoot.dataset.otherBound) {
       attrsRoot.addEventListener("change", (e) => {
         const t = e.target;
         if (!t) return;
         const block = t.closest(".attr-block");
         if (!block) return;
-
         if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
           syncOtherForBlock(block);
         }
@@ -236,16 +235,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ✅ validate attributes, but show errors like TITLE:
+  // - radio/checkbox: red border on block + message under block
+  // - select/text/textarea: red border on the actual control + message after it
   function validateRequiredAttributes() {
-    const blocks = attributeFields?.querySelectorAll(".attr-block[data-required='1']") || [];
+    const blocks = Array.from(attributeFields?.querySelectorAll(".attr-block[data-required='1']") || []);
 
     for (const block of blocks) {
       const labelEl = block.querySelector(".label");
       const labelText = labelEl ? labelEl.textContent.trim() : "القيمة";
 
-      const radios = block.querySelectorAll("input[type='radio']");
+      // 1) radio group
+      const radios = Array.from(block.querySelectorAll("input[type='radio']"));
       if (radios.length) {
-        const checked = Array.from(radios).some(r => r.checked);
+        const checked = radios.some(r => r.checked);
         if (!checked) {
           setBlockInvalid(block, true);
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
@@ -253,9 +256,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      const checkboxes = block.querySelectorAll("input[type='checkbox']");
+      // 2) checkbox group
+      const checkboxes = Array.from(block.querySelectorAll("input[type='checkbox']"));
       if (checkboxes.length) {
-        const checked = Array.from(checkboxes).some(c => c.checked);
+        const checked = checkboxes.some(c => c.checked);
         if (!checked) {
           setBlockInvalid(block, true);
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
@@ -263,21 +267,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      const selects = block.querySelectorAll("select");
-      if (selects.length) {
-        const ok = Array.from(selects).every(s => (s.value || "").trim() !== "");
-        if (!ok) {
-          setBlockInvalid(block, true);
-          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
+      // 3) select (use title-style)
+      const select = block.querySelector("select");
+      if (select) {
+        if (!((select.value || "").trim())) {
+          showErrorAfter(select, `الرجاء اختيار ${labelText}`);
           return false;
         }
       }
 
+      // 4) text/number/textarea (use title-style)
       const txt = block.querySelector("input[type='text'], input[type='number'], textarea");
       if (txt && (txt.value || "").trim() === "") {
-        setBlockInvalid(block, true);
-        showErrorBelow(block, `الرجاء إدخال ${labelText}`);
+        showErrorAfter(txt, `الرجاء إدخال ${labelText}`);
         return false;
+      }
+
+      // 5) if other-wrapper exists and is visible, validate its input with title-style
+      const otherWrap = block.querySelector(".other-wrapper");
+      if (otherWrap && !otherWrap.classList.contains("hidden")) {
+        const otherInput = otherWrap.querySelector("input[type='text'], input[type='number'], textarea");
+        if (otherInput && !((otherInput.value || "").trim())) {
+          showErrorAfter(otherInput, `الرجاء إدخال ${labelText}`);
+          return false;
+        }
       }
     }
 
@@ -285,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // init once on first render
+  stripRequiredFromAttributeFields();   // ✅ add
   initAttributeLogic(attributeFields);
 
   // ===== Tabs =====
@@ -361,23 +375,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ===== Categories hierarchical + attributes reload (clear old attrs + cancel old fetch) =====
+  // ===== Categories hierarchical + attributes reload =====
   const categoryTree = safeJsonFromScript("category-tree-data") || [];
   const selectedPath = safeJsonFromScript("selected-category-path") || [];
 
-  function nodeName(n) {
-    return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || "";
-  }
-  function nodeChildren(n) {
-    return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || [];
-  }
-  function nodeId(n) {
-    const v = (n && (n.id ?? n.pk ?? n.value)) ?? null;
-    return v == null ? null : String(v);
-  }
-  function nodeChildLabel(n) {
-    return (n && typeof n.child_label === "string") ? n.child_label.trim() : "";
-  }
+  function nodeName(n) { return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || ""; }
+  function nodeChildren(n) { return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || []; }
+  function nodeId(n) { const v = (n && (n.id ?? n.pk ?? n.value)) ?? null; return v == null ? null : String(v); }
+  function nodeChildLabel(n) { return (n && typeof n.child_label === "string") ? n.child_label.trim() : ""; }
 
   function closeAllCategoryPanels(exceptPanel = null) {
     levelsRoot?.querySelectorAll(".cat-panel").forEach(p => {
@@ -392,10 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const tpl = attributeFields?.getAttribute("data-url-template");
     if (!tpl || !attributeFields || !categoryId) return;
 
-    // ✅ remove old attrs immediately
     attributeFields.innerHTML = "";
 
-    // ✅ abort previous fetch
     if (attrsFetchController) attrsFetchController.abort();
     attrsFetchController = new AbortController();
 
@@ -411,7 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       attributeFields.innerHTML = await resp.text();
 
-      // ✅ important: bind required validation + OTHER toggle after inject
+      stripRequiredFromAttributeFields(); // ✅ add (prevents Chrome popup)
       initAttributeLogic(attributeFields);
     } catch (err) {
       if (err && err.name === "AbortError") return;
@@ -456,7 +459,6 @@ document.addEventListener("DOMContentLoaded", () => {
       li.className = "p-2 hover:bg-orange-50 cursor-pointer";
       li.textContent = nodeName(n);
       li.dataset.id = nodeId(n) || "";
-      li.dataset.hasChildren = nodeChildren(n).length ? "1" : "0";
       ul.appendChild(li);
       return { li, node: n, inputRef: input };
     });
@@ -468,24 +470,15 @@ document.addEventListener("DOMContentLoaded", () => {
       liNodes.forEach(({ li }) => { li.style.display = "block"; });
       setTimeout(() => search.focus(), 0);
     }
-    function closePanel() {
-      panel.classList.add("hidden");
-    }
+    function closePanel() { panel.classList.add("hidden"); }
 
-    input.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openPanel();
-    });
-
+    input.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); openPanel(); });
     panel.addEventListener("click", (e) => e.stopPropagation());
     search.addEventListener("click", (e) => e.stopPropagation());
 
     search.addEventListener("input", () => {
       const q = (search.value || "").toLowerCase();
-      liNodes.forEach(({ li }) => {
-        li.style.display = li.textContent.toLowerCase().includes(q) ? "block" : "none";
-      });
+      liNodes.forEach(({ li }) => { li.style.display = li.textContent.toLowerCase().includes(q) ? "block" : "none"; });
     });
 
     liNodes.forEach(({ li, node, inputRef }) => {
@@ -504,7 +497,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const children = nodeChildren(node);
 
-        // ✅ not final level -> clear attrs + abort old fetch
         if (children.length) {
           categoryIdInput.value = "";
           if (attributeFields) attributeFields.innerHTML = "";
@@ -519,9 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (categoryIdInput.value) await loadAttributesForCategory(categoryIdInput.value);
       });
     });
-
-    input.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
-    search.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
 
     panel.appendChild(searchBoxWrap);
     panel.appendChild(ul);
@@ -558,7 +547,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ===== AI (template) =====
+  // ===== AI =====
   aiBtn?.addEventListener("click", () => {
     const title = (titleInput?.value || "").trim();
     if (!title) {
@@ -619,7 +608,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     clearErrors();
 
-    // 1 — Title
     if (!titleInput.value.trim()) {
       e.preventDefault();
       showErrorAfter(titleInput, "الرجاء إدخال عنوان لطلب الشراء");
@@ -627,7 +615,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 2 — Category
     if (!categoryIdInput.value) {
       e.preventDefault();
       showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
@@ -635,14 +622,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ 3 — Attributes (RIGHT AFTER CATEGORY)
     if (!validateRequiredAttributes()) {
       e.preventDefault();
       unlockSubmit();
       return;
     }
 
-    // 4 — Description
     if (!descField.value.trim()) {
       e.preventDefault();
       showErrorAfter(descField, "الرجاء كتابة وصف للمنتج المطلوب أو توليده بالذكاء الاصطناعي");
@@ -650,7 +635,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 5 — Budget
     if (!budgetField.value) {
       e.preventDefault();
       showErrorAfter(budgetField, "الرجاء إدخال الميزانية القصوى للمنتج المطلوب");
@@ -658,7 +642,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 6 — City
     if (!citySelect.value) {
       e.preventDefault();
       showErrorAfter(cityInput, "الرجاء اختيار المدينة");
@@ -666,7 +649,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 7 — Terms
     if (!acceptTerms?.checked) {
       e.preventDefault();
       showErrorBelow(termsBox, "الرجاء الموافقة على شروط نشر طلب الشراء قبل الإرسال");
@@ -674,7 +656,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Passed
     lockSubmit();
     openOverlay(successPopup);
 
