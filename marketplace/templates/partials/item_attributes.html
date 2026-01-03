@@ -66,7 +66,6 @@
           {% if other_name in form.fields %}
             {% with other_field=form|getitem:other_name %}
               <div class="other-wrapper mt-2" style="display:none;">
-                <label class="label">{{ other_field.label }}</label>
                 {{ other_field|add_class:"input-field text-sm" }}
               </div>
             {% endwith %}
