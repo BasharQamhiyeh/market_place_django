@@ -5,16 +5,18 @@
   {% for field in form %}
     {% if field.name|slice:":5" == "attr_" and field.name|slice:"-6:" != "_other" %}
 
-      {# ✅ REQUIRED FLAG: JS will validate only blocks with data-required="1" #}
       <div class="attr-block mb-3"
            data-field-name="{{ field.html_name }}"
            {% if field.field.required %}data-required="1"{% endif %}>
 
         <label class="label">{{ field.label }}</label>
 
-        {# ================= TEXT / NUMBER ================= #}
+        {# ================= TEXT / NUMBER / TEXTAREA ================= #}
         {% if field.field.widget.input_type == "text" or field.field.widget.input_type == "number" %}
-          {{ field }}
+          {{ field|add_class:"input-field text-sm" }}
+
+        {% elif field.field.widget.input_type == "textarea" %}
+          {{ field|add_class:"input-field text-sm" }}
 
         {# ================= RADIO (MOCKUP STYLE) ================= #}
         {% elif field.field.widget.input_type == "radio" %}
@@ -32,7 +34,7 @@
             {% endfor %}
           </div>
 
-        {# ================= CHECKBOX LIST ================= #}
+        {# ================= CHECKBOX LIST (MOCKUP STYLE) ================= #}
         {% elif field.field.widget.input_type == "checkbox" and field.field.widget.allow_multiple_selected %}
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
             {% for value,label in field.field.choices %}
@@ -48,12 +50,13 @@
             {% endfor %}
           </div>
 
-        {# ================= DROPDOWN ================= #}
+        {# ================= SELECT (DROPDOWN) ================= #}
         {% elif field.field.widget.input_type == "select" %}
-          {{ field }}
+          {{ field|add_class:"input-field text-sm" }}
 
+        {# ================= FALLBACK ================= #}
         {% else %}
-          {{ field }}
+          {{ field|add_class:"input-field text-sm" }}
         {% endif %}
 
         {# keep server errors #}
@@ -65,15 +68,17 @@
         {% with other_name=field.name|add:"_other" %}
           {% if other_name in form.fields %}
             {% with other_field=form|getitem:other_name %}
-              <div class="other-wrapper mt-2" style="display:none;">
+              <div class="other-wrapper mt-2 hidden">
                 {{ other_field|add_class:"input-field text-sm" }}
+                {% if other_field.errors %}
+                  <p class="field-error js-error">{{ other_field.errors }}</p>
+                {% endif %}
               </div>
             {% endwith %}
           {% endif %}
         {% endwith %}
 
       </div>
-
     {% endif %}
   {% endfor %}
 </div>

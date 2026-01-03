@@ -152,31 +152,88 @@ document.addEventListener("DOMContentLoaded", () => {
   form?.addEventListener("input", unlockSubmit, { capture: true });
   form?.addEventListener("change", unlockSubmit, { capture: true });
 
-  // ===== REQUIRED ATTRIBUTES VALIDATION (EARLY + MOCKUP STYLE) =====
-  function initAttributeRequiredValidation(root) {
+  // ===== Dynamic attributes: REQUIRED validation + OTHER toggle (radio/checkbox/select) =====
+  function initAttributeLogic(root) {
     const scope = root || document;
+    const attrsRoot = scope.querySelector("#attrsRoot");
+    if (!attrsRoot) return;
 
-    scope.querySelectorAll(".attr-block").forEach(block => {
+    function syncOtherForBlock(block) {
+      const otherWrap = block.querySelector(".other-wrapper");
+      if (!otherWrap) return;
+
+      const name = block.dataset.fieldName;
+      if (!name) return;
+
+      const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
+      const selects = Array.from(block.querySelectorAll(`select[name="${CSS.escape(name)}"]`));
+
+      let show = false;
+
+      if (inputs.length) {
+        show = inputs.some(i => i.checked && i.value === "__other__");
+      } else if (selects.length) {
+        show = selects.some(s => (s.value || "") === "__other__");
+      }
+
+      // ✅ your updated partial uses Tailwind hidden (recommended)
+      otherWrap.classList.toggle("hidden", !show);
+
+      if (show) {
+        const otherInput = otherWrap.querySelector("input, textarea, select");
+        if (otherInput && typeof otherInput.focus === "function") {
+          setTimeout(() => otherInput.focus(), 0);
+        }
+      }
+    }
+
+    function bindRequiredClear(block) {
       if (block.dataset.reqBound === "1") return;
+
+      const clear = () => setBlockInvalid(block, false);
 
       block.addEventListener("change", (e) => {
         const t = e.target;
         if (!t) return;
+
         if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
-          setBlockInvalid(block, false);
+          clear();
+          syncOtherForBlock(block);
         }
       });
 
       block.addEventListener("input", (e) => {
         const t = e.target;
         if (!t) return;
+
         if (t.matches('input[type="text"], input[type="number"], textarea')) {
-          setBlockInvalid(block, false);
+          clear();
         }
       });
 
       block.dataset.reqBound = "1";
+    }
+
+    attrsRoot.querySelectorAll(".attr-block").forEach(block => {
+      bindRequiredClear(block);
+      syncOtherForBlock(block); // initial state
     });
+
+    // delegation for injected blocks
+    if (!attrsRoot.dataset.otherBound) {
+      attrsRoot.addEventListener("change", (e) => {
+        const t = e.target;
+        if (!t) return;
+        const block = t.closest(".attr-block");
+        if (!block) return;
+
+        if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
+          syncOtherForBlock(block);
+        }
+      });
+
+      attrsRoot.dataset.otherBound = "1";
+    }
   }
 
   function validateRequiredAttributes() {
@@ -227,7 +284,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return true;
   }
 
-  initAttributeRequiredValidation(attributeFields);
+  // init once on first render
+  initAttributeLogic(attributeFields);
 
   // ===== Tabs =====
   const termsNav = document.getElementById("termsNav");
@@ -303,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ===== Categories hierarchical + attributes reload (FIX: clear old attrs + cancel old fetch) =====
+  // ===== Categories hierarchical + attributes reload (clear old attrs + cancel old fetch) =====
   const categoryTree = safeJsonFromScript("category-tree-data") || [];
   const selectedPath = safeJsonFromScript("selected-category-path") || [];
 
@@ -328,7 +386,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ cancel old requests so old attrs can’t come back
   let attrsFetchController = null;
 
   async function loadAttributesForCategory(categoryId) {
@@ -354,9 +411,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       attributeFields.innerHTML = await resp.text();
 
-      // re-bind after inject
-      initAttributeRequiredValidation(attributeFields);
-      initAttributeOtherLogic(attributeFields);
+      // ✅ important: bind required validation + OTHER toggle after inject
+      initAttributeLogic(attributeFields);
     } catch (err) {
       if (err && err.name === "AbortError") return;
     }
@@ -501,40 +557,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
-
-  function initAttributeOtherLogic(root) {
-    const scope = root || document;
-    const attrsRoot = scope.querySelector("#attrsRoot");
-    if (!attrsRoot) return;
-
-    function syncBlock(block) {
-      const otherWrap = block.querySelector(".other-wrapper");
-      if (!otherWrap) return;
-      const name = block.dataset.fieldName;
-      if (!name) return;
-
-      const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
-      if (!inputs.length) return;
-
-      const show = inputs.some(i => i.checked && i.value === "__other__");
-      otherWrap.style.display = show ? "block" : "none";
-    }
-
-    attrsRoot.querySelectorAll(".attr-block").forEach(syncBlock);
-
-    if (!attrsRoot.dataset.otherBound) {
-      attrsRoot.addEventListener("change", (e) => {
-        const t = e.target;
-        if (!t || t.tagName !== "INPUT") return;
-        const block = t.closest(".attr-block");
-        if (!block) return;
-        syncBlock(block);
-      });
-      attrsRoot.dataset.otherBound = "1";
-    }
-  }
-
-  initAttributeOtherLogic(attributeFields);
 
   // ===== AI (template) =====
   aiBtn?.addEventListener("click", () => {

@@ -12,15 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".error-border").forEach(e => e.classList.remove("error-border"));
   }
 
-  function showErrorBelow(elem, message) {
-    clearErrors();
-    const p = document.createElement("p");
-    p.className = "field-error js-error";
-    p.textContent = "⚠️ " + message;
-    elem.insertAdjacentElement("afterend", p);
-    elem.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
+  // Same style as title: red border + message after the control
   function showErrorAfter(field, message) {
     clearErrors();
     field.classList.add("error-border");
@@ -30,6 +22,16 @@ document.addEventListener("DOMContentLoaded", () => {
     field.insertAdjacentElement("afterend", p);
     field.scrollIntoView({ behavior: "smooth", block: "center" });
     if (typeof field.focus === "function") field.focus();
+  }
+
+  // Same style as category container: message after block/container
+  function showErrorBelow(elem, message) {
+    clearErrors();
+    const p = document.createElement("p");
+    p.className = "field-error js-error";
+    p.textContent = "⚠️ " + message;
+    elem.insertAdjacentElement("afterend", p);
+    elem.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function clearFieldError(field) {
@@ -46,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (next && next.classList.contains("field-error")) next.remove();
   }
 
+  // for radio/checkbox blocks
   function setBlockInvalid(block, on) {
     if (!block) return;
     if (on) {
@@ -53,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       block.classList.remove("error-border");
       const next = block.nextElementSibling;
-      if (next && next.classList.contains("field-error")) next.remove();
+      if (next && next.classList.contains("field-error") && next.classList.contains("js-error")) next.remove();
     }
   }
 
@@ -122,66 +125,110 @@ document.addEventListener("DOMContentLoaded", () => {
   form?.addEventListener("input", unlockSubmit, { capture: true });
   form?.addEventListener("change", unlockSubmit, { capture: true });
 
-  // ===== REQUIRED ATTRIBUTES (RADIOS/CHECKBOX) VALIDATION =====
-  function initAttributeRequiredValidation(root) {
+  // ===== Dynamic attributes: OTHER toggle + clear its errors =====
+  function isOtherWrapperVisible(otherWrap) {
+    if (!otherWrap) return false;
+    if (otherWrap.classList.contains("hidden")) return false;
+    const ds = (otherWrap.style && otherWrap.style.display) || "";
+    if (ds && ds.toLowerCase() === "none") return false;
+    // if no inline style, rely on layout:
+    return otherWrap.offsetParent !== null;
+  }
+
+  function initAttributeLogic(root) {
     const scope = root || document;
+    const attrsRoot = scope.querySelector("#attrsRoot");
+    if (!attrsRoot) return;
 
-    scope.querySelectorAll(".attr-block").forEach(block => {
-      if (block.dataset.reqBound === "1") return;
+    function syncOtherForBlock(block) {
+      const otherWrap = block.querySelector(".other-wrapper");
+      if (!otherWrap) return;
 
-      block.addEventListener("change", (e) => {
-        const t = e.target;
-        if (!t) return;
-        if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
-          setBlockInvalid(block, false);
+      const name = block.dataset.fieldName;
+      if (!name) return;
+
+      const mainInputs = Array.from(block.querySelectorAll(`:scope > * input[name="${CSS.escape(name)}"]`));
+      const mainSelects = Array.from(block.querySelectorAll(`:scope > * select[name="${CSS.escape(name)}"]`));
+
+      let show = false;
+
+      if (mainInputs.length) {
+        show = mainInputs.some(i => i.checked && i.value === "__other__");
+      } else if (mainSelects.length) {
+        show = mainSelects.some(s => (s.value || "") === "__other__");
+      }
+
+      // works with your inline style or "hidden"
+      otherWrap.style.display = show ? "block" : "none";
+      otherWrap.classList.toggle("hidden", !show);
+
+      if (show) {
+        const otherInput = otherWrap.querySelector("input, textarea");
+        if (otherInput && typeof otherInput.focus === "function") {
+          setTimeout(() => otherInput.focus(), 0);
         }
-      });
+      }
+    }
+
+    // clear attr errors when user changes anything in the block
+    attrsRoot.querySelectorAll(".attr-block").forEach(block => {
+      if (block.dataset.bound === "1") return;
 
       block.addEventListener("input", (e) => {
         const t = e.target;
         if (!t) return;
-        if (t.matches('input[type="text"], input[type="number"], textarea')) {
-          setBlockInvalid(block, false);
-        }
-      });
+        clearFieldError(t);     // clears red border/message on inputs
+        setBlockInvalid(block, false); // clears block border/message for radios/checkbox
+      }, true);
 
-      block.dataset.reqBound = "1";
+      block.addEventListener("change", (e) => {
+        const t = e.target;
+        if (!t) return;
+        clearFieldError(t);
+        setBlockInvalid(block, false);
+        if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
+          syncOtherForBlock(block);
+        }
+      }, true);
+
+      block.dataset.bound = "1";
+      syncOtherForBlock(block);
     });
+
+    // delegation (for injected blocks)
+    if (!attrsRoot.dataset.otherBound) {
+      attrsRoot.addEventListener("change", (e) => {
+        const t = e.target;
+        if (!t) return;
+        const block = t.closest(".attr-block");
+        if (!block) return;
+        if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
+          syncOtherForBlock(block);
+        }
+      }, true);
+      attrsRoot.dataset.otherBound = "1";
+    }
   }
 
+  // ✅ FIX 1: correct order (DOM order) + ignore hidden "other" field
+  // ✅ FIX 2: same red style for text/select (like title)
   function validateRequiredAttributes() {
-    const blocks = attributeFields?.querySelectorAll(".attr-block[data-required='1']") || [];
+    const blocks = Array.from(attributeFields?.querySelectorAll(".attr-block[data-required='1']") || []);
 
+    // validate in DOM order exactly
     for (const block of blocks) {
       const labelEl = block.querySelector(".label");
       const labelText = labelEl ? labelEl.textContent.trim() : "القيمة";
 
-      // RADIO
-      const radios = block.querySelectorAll("input[type='radio']");
-      if (radios.length) {
-        const checked = Array.from(radios).some(r => r.checked);
-        if (!checked) {
-          setBlockInvalid(block, true);
-          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
-          return false;
-        }
-      }
+      // MAIN controls ONLY (exclude other-wrapper)
+      const mainRadios = Array.from(block.querySelectorAll(":scope input[type='radio']:not(.other-wrapper input)"));
+      const mainCheckboxes = Array.from(block.querySelectorAll(":scope input[type='checkbox']:not(.other-wrapper input)"));
+      const mainSelect = block.querySelector(":scope select:not(.other-wrapper select)");
+      const mainText = block.querySelector(":scope input[type='text']:not(.other-wrapper input), :scope input[type='number']:not(.other-wrapper input), :scope textarea:not(.other-wrapper textarea)");
 
-      // CHECKBOX (multi)
-      const checkboxes = block.querySelectorAll("input[type='checkbox']");
-      if (checkboxes.length) {
-        const checked = Array.from(checkboxes).some(c => c.checked);
-        if (!checked) {
-          setBlockInvalid(block, true);
-          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
-          return false;
-        }
-      }
-
-      // SELECT
-      const selects = block.querySelectorAll("select");
-      if (selects.length) {
-        const ok = Array.from(selects).every(s => (s.value || "").trim() !== "");
+      // 1) radio
+      if (mainRadios.length) {
+        const ok = mainRadios.some(r => r.checked);
         if (!ok) {
           setBlockInvalid(block, true);
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
@@ -189,19 +236,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // TEXT/NUMBER/TEXTAREA
-      const txt = block.querySelector("input[type='text'], input[type='number'], textarea");
-      if (txt && (txt.value || "").trim() === "") {
-        setBlockInvalid(block, true);
-        showErrorBelow(block, `الرجاء إدخال ${labelText}`);
-        return false;
+      // 2) checkbox
+      else if (mainCheckboxes.length) {
+        const ok = mainCheckboxes.some(c => c.checked);
+        if (!ok) {
+          setBlockInvalid(block, true);
+          showErrorBelow(block, `الرجاء اختيار ${labelText}`);
+          return false;
+        }
+      }
+
+      // 3) select
+      else if (mainSelect) {
+        if (!(mainSelect.value || "").trim()) {
+          // ✅ same style as title: border + message after the select
+          showErrorAfter(mainSelect, `الرجاء اختيار ${labelText}`);
+          return false;
+        }
+      }
+
+      // 4) text/number/textarea
+      else if (mainText) {
+        if (!((mainText.value || "").trim())) {
+          showErrorAfter(mainText, `الرجاء إدخال ${labelText}`);
+          return false;
+        }
+      }
+
+      // If "__other__" selected, validate the OTHER input (visible only)
+      const otherWrap = block.querySelector(".other-wrapper");
+      if (otherWrap && isOtherWrapperVisible(otherWrap)) {
+        const otherInput = otherWrap.querySelector("input[type='text'], input[type='number'], textarea");
+        if (otherInput && !((otherInput.value || "").trim())) {
+          // ✅ same style as title
+          showErrorAfter(otherInput, `الرجاء إدخال ${labelText}`);
+          return false;
+        }
       }
     }
 
     return true;
   }
 
-  initAttributeRequiredValidation(attributeFields);
+  // init once on first render
+  initAttributeLogic(attributeFields);
 
   // ===== Tabs =====
   const termsNav = document.getElementById("termsNav");
@@ -351,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ===== Categories hierarchical + attributes reload (FIX: clear old attrs + cancel old fetch) =====
+  // ===== Categories hierarchical + attributes reload =====
   const categoryTree = safeJsonFromScript("category-tree-data") || [];
   const selectedPath = safeJsonFromScript("selected-category-path") || [];
   const categoryDynamicHint = document.getElementById("categoryDynamicHint");
@@ -376,17 +454,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ cancel old requests so old attrs can’t come back
   let attrsFetchController = null;
 
   async function loadAttributesForCategory(categoryId) {
     const tpl = attributeFields?.getAttribute("data-url-template");
     if (!tpl || !attributeFields || !categoryId) return;
 
-    // ✅ remove old attrs immediately
     attributeFields.innerHTML = "";
 
-    // ✅ abort previous fetch
     if (attrsFetchController) attrsFetchController.abort();
     attrsFetchController = new AbortController();
 
@@ -402,9 +477,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       attributeFields.innerHTML = await resp.text();
 
-      // re-bind after inject
-      initAttributeRequiredValidation(attributeFields);
-      initAttributeOtherLogic(attributeFields);
+      // IMPORTANT: re-bind logic after inject
+      initAttributeLogic(attributeFields);
     } catch (err) {
       if (err && err.name === "AbortError") return;
     }
@@ -486,7 +560,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const children = nodeChildren(node);
 
-        // ✅ if still not final level -> clear attrs now + abort old fetch
         if (children.length) {
           categoryIdInput.value = "";
           if (attributeFields) attributeFields.innerHTML = "";
@@ -536,40 +609,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function initAttributeOtherLogic(root) {
-    const scope = root || document;
-    const attrsRoot = scope.querySelector("#attrsRoot");
-    if (!attrsRoot) return;
-
-    function syncBlock(block) {
-      const otherWrap = block.querySelector(".other-wrapper");
-      if (!otherWrap) return;
-      const name = block.dataset.fieldName;
-      if (!name) return;
-
-      const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
-      if (!inputs.length) return;
-
-      const show = inputs.some(i => i.checked && i.value === "__other__");
-      otherWrap.style.display = show ? "block" : "none";
-    }
-
-    attrsRoot.querySelectorAll(".attr-block").forEach(syncBlock);
-
-    if (!attrsRoot.dataset.otherBound) {
-      attrsRoot.addEventListener("change", (e) => {
-        const t = e.target;
-        if (!t || t.tagName !== "INPUT") return;
-        const block = t.closest(".attr-block");
-        if (!block) return;
-        syncBlock(block);
-      });
-      attrsRoot.dataset.otherBound = "1";
-    }
-  }
-
-  initAttributeOtherLogic(attributeFields);
-
   document.addEventListener("click", () => closeCity());
 
   // ===== AI =====
@@ -602,7 +641,6 @@ document.addEventListener("DOMContentLoaded", () => {
     unlockSubmit();
     clearErrors();
 
-    // 1 — Title
     if (!titleInput.value.trim()) {
       e.preventDefault();
       showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان");
@@ -610,7 +648,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 2 — Category
     if (!categoryIdInput.value) {
       e.preventDefault();
       showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
@@ -618,14 +655,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 3 — Attributes (RIGHT AFTER CATEGORY)
+    // ✅ attributes validated in correct order + correct style
     if (!validateRequiredAttributes()) {
       e.preventDefault();
       unlockSubmit();
       return;
     }
 
-    // 4 — Images
     if (!filesState.length) {
       e.preventDefault();
       showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
@@ -633,7 +669,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 5 — Main image
     if (mainPhotoIndexInput.value === "") {
       e.preventDefault();
       showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
@@ -641,7 +676,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 6 — Description
     if (!descField.value.trim()) {
       e.preventDefault();
       showErrorAfter(descField, "الرجاء كتابة وصف للمنتج");
@@ -649,7 +683,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 7 — Price
     if (!priceInput.value) {
       e.preventDefault();
       showErrorAfter(priceInput, "الرجاء إدخال السعر");
@@ -657,7 +690,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 8 — City
     if (!citySelect.value) {
       e.preventDefault();
       showErrorAfter(cityInput, "الرجاء اختيار المدينة");
@@ -665,7 +697,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 9 — Terms
     if (!acceptTerms.checked) {
       e.preventDefault();
       showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
