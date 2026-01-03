@@ -309,13 +309,13 @@
              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 
           {% if latest_requests %}
-              {% for req in latest_requests %}
-                  {% include "partials/_request_card.html" with request=req %}
-              {% endfor %}
+            {% for req in latest_requests %}
+                {% include "partials/_request_card.html" with req=req %}
+            {% endfor %}
           {% else %}
-              <p class="col-span-full text-center text-gray-500 py-6">
-                  لا توجد طلبات حالياً.
-              </p>
+            <p class="col-span-full text-center text-gray-500 py-6">
+              لا توجد طلبات حالياً.
+            </p>
           {% endif %}
 
 

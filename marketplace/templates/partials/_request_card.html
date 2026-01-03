@@ -1,117 +1,105 @@
-{# inside: {% if latest_requests %} ... {% endif %} #}
+<a href="{% url 'request_detail' req.id %}" class="block">
+  <article class="bg-white rounded-xl overflow-hidden
+                 border border-green-200
+                 transition-all duration-300
+                 shadow-[0_4px_14px_rgba(0,0,0,0.08)]
+                 hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)]
+                 hover:border-green-400
+                 hover:-translate-y-2 hover:scale-[1.015]">
 
-{% if latest_requests %}
-  {% for req in latest_requests %}
-    <a href="{% url 'request_detail' req.id %}" class="block">
-      <article class="bg-white rounded-xl overflow-hidden
-                     border border-green-200
-                     transition-all duration-300
-                     shadow-[0_4px_14px_rgba(0,0,0,0.08)]
-                     hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)]
-                     hover:border-green-400
-                     hover:-translate-y-2 hover:scale-[1.015]">
+    <!-- TOP: CATEGORY BADGE + TITLE + CITY/TIME -->
+    <div class="p-4 pb-2">
 
-        <!-- TOP: CATEGORY BADGE + TITLE + CITY/TIME -->
-        <div class="p-4 pb-2">
-
-          {# NEW: Category badge, same idea as items but inline, not absolute #}
-          {% if req.listing.category %}
-            <div class="mb-2 flex justify-start">
-              <span class="bg-white/90
-                           text-gray-800
-                           text-xs font-semibold
-                           px-3 py-1
-                           rounded-full
-                           shadow-sm
-                           flex items-center gap-1
-                           border border-green-300">
-                {% if req.listing.category.icon %}
-                  {{ req.listing.category.icon }}
-                {% else %}
-                  🏷️
-                {% endif %}
-
-                {% if LANGUAGE_CODE == "ar" %}
-                  {{ req.listing.category.name_ar }}
-                {% else %}
-                  {{ req.listing.category.name_en }}
-                {% endif %}
-              </span>
-            </div>
-          {% endif %}
-
-          <h3 class="font-semibold text-lg text-rukn-green line-clamp-2 min-h-[55px]">
-            {{ req.listing.title }}
-          </h3>
-
-          {# REMOVED: this was adding extra space inside the card #}
-          {# <div class="h-3"></div> #}
-
-          <div class="text-sm text-[var(--muted)] flex items-center justify-between pb-3 mb-2 border-b border-gray-100/80">
-            <span>
-              📍
-              {% if req.listing.city %}
-                {{ req.listing.city }}
-              {% else %}
-                —
-              {% endif %}
-            </span>
-            <span>
-              ⏱️
-              {% if req.listing.created_at %}
-                {{ req.listing.created_at|timesince }}
-              {% endif %}
-            </span>
-          </div>
-        </div>
-
-        <!-- BOTTOM: REQUESTER + BUDGET PILL -->
-        <div class="flex items-center justify-between p-4 pt-2">
-          <!-- Requester (avatar-style circle) -->
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center
-                        text-xs font-bold text-gray-700 border">
-              {% with fn=req.listing.user.first_name|default:"" un=req.listing.user.username|default:"" %}
-                {% if fn %}
-                  {{ fn|slice:":1"|upper }}
-                {% elif un %}
-                  {{ un|slice:":1"|upper }}
-                {% else %}
-                  ?
-                {% endif %}
-              {% endwith %}
-
-            </div>
-            <span class="text-sm font-medium text-gray-800">
-              {{ req.listing.user.first_name }}
-            </span>
-          </div>
-
-          <!-- Budget pill -->
-          <div class="bg-[var(--rukn-green)] text-white rounded-3xl shadow text-center min-w-[100px] py-2 px-4 hover:bg-[var(--rukn-green-700)] transition">
-            {% if req.budget %}
-              <div class="text-xs text-green-100 font-medium leading-tight">
-                حتى
-              </div>
-              <div class="text-base font-bold">
-                {{ req.budget|floatformat:0 }} د.أ
-              </div>
+      {% if req.listing.category %}
+        <div class="mb-2 flex justify-start">
+          <span class="bg-white/90
+                       text-gray-800
+                       text-xs font-semibold
+                       px-3 py-1
+                       rounded-full
+                       shadow-sm
+                       flex items-center gap-1
+                       border border-green-300">
+            {% if req.listing.category.icon %}
+              {{ req.listing.category.icon }}
             {% else %}
-              <div class="text-xs text-green-100 font-medium leading-tight">
-                بدون ميزانية
-              </div>
-              <div class="text-base font-bold">
-                —
-              </div>
+              🏷️
             {% endif %}
-          </div>
-        </div>
 
-      </article>
-    </a>
-  {% endfor %}
-{% else %}
-  <p class="col-span-full text-center text-gray-500 py-6">
-    لا توجد طلبات حالياً.
-  </p>
-{% endif %}
+            {% if LANGUAGE_CODE == "ar" %}
+              {{ req.listing.category.name_ar }}
+            {% else %}
+              {{ req.listing.category.name_en }}
+            {% endif %}
+          </span>
+        </div>
+      {% endif %}
+
+      <h3 class="font-semibold text-lg text-rukn-green line-clamp-2 min-h-[55px]">
+        {{ req.listing.title }}
+      </h3>
+
+      <div class="text-sm text-[var(--muted)] flex items-center justify-between pb-3 mb-2 border-b border-gray-100/80">
+        <span>
+          📍
+          {% if req.listing.city %}
+            {{ req.listing.city }}
+          {% else %}
+            —
+          {% endif %}
+        </span>
+        <span>
+          ⏱️
+          {% if req.listing.created_at %}
+            {{ req.listing.created_at|timesince }}
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <!-- BOTTOM: REQUESTER + BUDGET -->
+    <div class="flex items-center justify-between p-4 pt-2">
+
+      <!-- Requester -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center
+                    text-xs font-bold text-gray-700 border">
+          {% with fn=req.listing.user.first_name|default:"" un=req.listing.user.username|default:"" %}
+            {% if fn %}
+              {{ fn|slice:":1"|upper }}
+            {% elif un %}
+              {{ un|slice:":1"|upper }}
+            {% else %}
+              ?
+            {% endif %}
+          {% endwith %}
+        </div>
+        <span class="text-sm font-medium text-gray-800">
+          {{ req.listing.user.first_name }}
+        </span>
+      </div>
+
+      <!-- Budget -->
+      <div class="bg-[var(--rukn-green)] text-white rounded-3xl shadow
+                  text-center min-w-[100px] py-2 px-4
+                  hover:bg-[var(--rukn-green-700)] transition">
+        {% if req.budget %}
+          <div class="text-xs text-green-100 font-medium leading-tight">
+            حتى
+          </div>
+          <div class="text-base font-bold">
+            {{ req.budget|floatformat:0 }} د.أ
+          </div>
+        {% else %}
+          <div class="text-xs text-green-100 font-medium leading-tight">
+            بدون ميزانية
+          </div>
+          <div class="text-base font-bold">
+            —
+          </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </article>
+</a>
