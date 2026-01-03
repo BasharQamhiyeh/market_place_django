@@ -57,10 +57,11 @@ function normalizeJordanPhone(raw) {
 
 function maskPhone(raw) {
   const digits = (raw || "").replace(/\D/g, "");
-  if (!digits) return "•• •• ••• •07";
-  const last2 = digits.slice(-2);
-  return "•• •• ••• •" + last2;
+  if (!digits) return "07•• ••• •••";
+  const first2 = digits.slice(0, 2);
+  return first2 + "•• ••• •••";
 }
+
 
 /* ========= Copy Number ========= */
 window.copyAdNumber = function copyAdNumber() {
@@ -155,8 +156,8 @@ window.copyAdNumber = function copyAdNumber() {
   sellerPhoneEl.dataset.normalized = normalized;    // store normalized for links
   sellerPhoneEl.dataset.revealed = "false";
 
-  const maskedFromTpl = (sellerPhoneEl.dataset.masked || "").trim();
-  sellerPhoneEl.textContent = maskedFromTpl || maskPhone(normalized);
+  sellerPhoneEl.textContent = (sellerPhoneEl.dataset.masked || sellerPhoneEl.textContent || "").trim();
+
 
   // ✅ hide icons until reveal
   if (contactActions) {

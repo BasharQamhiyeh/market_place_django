@@ -32,6 +32,31 @@ document.addEventListener("DOMContentLoaded", () => {
     elem.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  function clearFieldError(field) {
+      if (!field) return;
+
+      field.classList.remove("error-border");
+
+      // remove ONLY the error message right after this field (if any)
+      const next = field.nextElementSibling;
+      if (next && next.classList.contains("field-error")) {
+        next.remove();
+      }
+    }
+
+    // For wrappers where the error is placed after a container
+    function clearErrorAfterContainer(container) {
+      if (!container) return;
+
+      container.classList.remove("error-border");
+
+      const next = container.nextElementSibling;
+      if (next && next.classList.contains("field-error")) {
+        next.remove();
+      }
+    }
+
+
   // ===== Elements =====
   const form = document.getElementById("addAdForm");
 
@@ -77,6 +102,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const acceptTerms = document.getElementById("acceptTerms");
   const termsBox = document.getElementById("termsBox");
+
+
+
+    // 1) Standard fields: remove error immediately on input/change
+    document.querySelectorAll("#addAdForm input, #addAdForm textarea, #addAdForm select").forEach(field => {
+      field.addEventListener("input", () => clearFieldError(field));
+      field.addEventListener("change", () => clearFieldError(field));
+    });
+
+    // 2) Images: selecting images clears dropzone error
+    imageInput?.addEventListener("change", () => {
+      clearFieldError(imageDropzone);
+    });
+
+    // clicking previews clears previewContainer error (main selection error)
+    previewContainer?.addEventListener("click", () => {
+      clearFieldError(previewContainer);
+    });
+
+    // 3) Category: clicking inside the category widget should clear the error shown under levelsRoot
+    levelsRoot?.addEventListener("click", () => {
+      clearErrorAfterContainer(levelsRoot);
+    });
+
+    // 4) City: choosing a city clears the cityInput error
+    cityList?.querySelectorAll("#cityOptions li")?.forEach(li => {
+      li.addEventListener("click", () => clearFieldError(cityInput));
+    });
+
+    // 5) Accept terms: checking clears the error under termsBox
+    acceptTerms?.addEventListener("change", () => {
+      clearErrorAfterContainer(termsBox);
+    });
+
 
   // ===== Tabs =====
   const termsNav = document.getElementById("termsNav");
@@ -509,82 +568,88 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ===== Submit validation (keep normal submit to Django) =====
-  form?.addEventListener("submit", (e) => {
-    // If already submitting, block second submit
-    if (isSubmitting) {
-      e.preventDefault();
-      return;
-    }
+    form?.addEventListener("submit", (e) => {
+      if (isSubmitting) {
+        e.preventDefault();
+        return;
+      }
 
-    // Ensure unlocked at start of a validation attempt
-    unlockSubmit();
-
-    clearErrors();
-
-    if (!titleInput.value.trim()) {
-      e.preventDefault();
-      showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان");
       unlockSubmit();
-      return;
-    }
+      clearErrors();
 
-    if (!filesState.length) {
-      e.preventDefault();
-      showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
-      unlockSubmit();
-      return;
-    }
+      // 1 — Title
+      if (!titleInput.value.trim()) {
+        e.preventDefault();
+        showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان");
+        unlockSubmit();
+        return;
+      }
 
-    if (mainPhotoIndexInput.value === "") {
-      e.preventDefault();
-      showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
-      unlockSubmit();
-      return;
-    }
+      // 2 — Category (BEFORE images)
+      if (!categoryIdInput.value) {
+        e.preventDefault();
+        showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
+        unlockSubmit();
+        return;
+      }
 
-    if (!categoryIdInput.value) {
-      e.preventDefault();
-      showErrorBelow(levelsRoot, "الرجاء اختيار القسم حتى آخر مستوى");
-      unlockSubmit();
-      return;
-    }
+      // 3 — Images
+      if (!filesState.length) {
+        e.preventDefault();
+        showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
+        unlockSubmit();
+        return;
+      }
 
-    if (!descField.value.trim()) {
-      e.preventDefault();
-      showErrorAfter(descField, "الرجاء كتابة وصف للمنتج");
-      unlockSubmit();
-      return;
-    }
+      // 4 — Main image
+      if (mainPhotoIndexInput.value === "") {
+        e.preventDefault();
+        showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
+        unlockSubmit();
+        return;
+      }
 
-    if (!priceInput.value) {
-      e.preventDefault();
-      showErrorAfter(priceInput, "الرجاء إدخال السعر");
-      unlockSubmit();
-      return;
-    }
+      // 5 — Description
+      if (!descField.value.trim()) {
+        e.preventDefault();
+        showErrorAfter(descField, "الرجاء كتابة وصف للمنتج");
+        unlockSubmit();
+        return;
+      }
 
-    if (!citySelect.value) {
-      e.preventDefault();
-      showErrorAfter(cityInput, "الرجاء اختيار المدينة");
-      unlockSubmit();
-      return;
-    }
+      // 6 — Price
+      if (!priceInput.value) {
+        e.preventDefault();
+        showErrorAfter(priceInput, "الرجاء إدخال السعر");
+        unlockSubmit();
+        return;
+      }
 
-    if (!acceptTerms.checked) {
-      e.preventDefault();
-      showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
-      unlockSubmit();
-      return;
-    }
+      // 7 — City
+      if (!citySelect.value) {
+        e.preventDefault();
+        showErrorAfter(cityInput, "الرجاء اختيار المدينة");
+        unlockSubmit();
+        return;
+      }
 
-    // ✅ validation passed -> lock submit (prevent double submit)
-    isSubmitting = true;
+      // 8 — Terms
+      if (!acceptTerms.checked) {
+        e.preventDefault();
+        showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
+        unlockSubmit();
+        return;
+      }
 
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.classList.add("opacity-60", "cursor-not-allowed");
-      submitBtn.setAttribute("aria-busy", "true");
-      if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
-    }
-  });
+      // Passed -> lock submit
+      isSubmitting = true;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add("opacity-60", "cursor-not-allowed");
+        submitBtn.setAttribute("aria-busy", "true");
+        if (submitBtn.tagName === "BUTTON") submitBtn.textContent = "جاري الإرسال...";
+      }
+    });
+
 });

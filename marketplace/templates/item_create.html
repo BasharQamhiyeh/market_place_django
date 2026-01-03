@@ -67,7 +67,7 @@
                        placeholder="مثلاً: لابتوب HP جديد"
                        class="input-field"
                        value="{{ form.title.value|default_if_none:'' }}">
-                {% if form.title.errors %}<p class="field-error">{{ form.title.errors }}</p>{% endif %}
+                {% if form.title.errors %}<p class="field-error js-error">{{ form.title.errors }}</p>{% endif %}
               </div>
 
               <!-- CATEGORY (Hierarchical like mockup: parent -> sub -> sub) -->
@@ -78,7 +78,7 @@
                        name="category"
                        id="categoryIdInput"
                        value="{% if selected_category %}{{ selected_category.id }}{% endif %}">
-                {% if form.category.errors %}<p class="field-error">{{ form.category.errors }}</p>{% endif %}
+                {% if form.category.errors %}<p class="field-error js-error">{{ form.category.errors }}</p>{% endif %}
               </div>
 
               <script id="category-tree-data" type="application/json">
@@ -95,7 +95,7 @@
                       <div class="mt-3">
                         <label class="label">{{ field.label }}</label>
                         {{ field }}
-                        {% if field.errors %}<p class="field-error">{{ field.errors }}</p>{% endif %}
+                        {% if field.errors %}<p class="field-error js-error">{{ field.errors }}</p>{% endif %}
 
                         {% with other_name=field.name|add:"_other" %}
                           {% if other_name in form.fields %}
@@ -103,7 +103,7 @@
                               <div class="mt-3">
                                 <label class="label">{{ other_field.label }}</label>
                                 {{ other_field }}
-                                {% if other_field.errors %}<p class="field-error">{{ other_field.errors }}</p>{% endif %}
+                                {% if other_field.errors %}<p class="field-error js-error">{{ other_field.errors }}</p>{% endif %}
                               </div>
                             {% endwith %}
                           {% endif %}
@@ -133,7 +133,7 @@
 
                 <div id="previewContainer" class="flex flex-wrap gap-3 mt-3"></div>
 
-                {% if form.images.errors %}<p class="field-error">{{ form.images.errors }}</p>{% endif %}
+                {% if form.images.errors %}<p class="field-error js-error">{{ form.images.errors }}</p>{% endif %}
               </div>
             </div>
 
@@ -157,7 +157,7 @@
                   </div>
 
                   <input type="hidden" id="conditionValue" name="condition" value="{% if form.condition.value %}{{ form.condition.value }}{% else %}new{% endif %}">
-                  {% if form.condition.errors %}<p class="field-error">{{ form.condition.errors }}</p>{% endif %}
+                  {% if form.condition.errors %}<p class="field-error js-error">{{ form.condition.errors }}</p>{% endif %}
                 </div>
 
                 <!-- DESCRIPTION -->
@@ -168,7 +168,7 @@
                             rows="4"
                             placeholder="اكتب وصفاً موجزاً وواضحاً للمنتج"
                             class="input-field text-sm">{{ form.description.value|default_if_none:'' }}</textarea>
-                  {% if form.description.errors %}<p class="field-error">{{ form.description.errors }}</p>{% endif %}
+                  {% if form.description.errors %}<p class="field-error js-error">{{ form.description.errors }}</p>{% endif %}
 
                   <button type="button" id="aiBtn"
                           class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 w-full sm:w-auto justify-center text-sm">
@@ -185,7 +185,7 @@
                          placeholder="مثلاً: 150"
                          class="input-field text-sm"
                          value="{{ form.price.value|default_if_none:'' }}">
-                  {% if form.price.errors %}<p class="field-error">{{ form.price.errors }}</p>{% endif %}
+                  {% if form.price.errors %}<p class="field-error js-error">{{ form.price.errors }}</p>{% endif %}
                 </div>
 
               </div>
@@ -230,7 +230,7 @@
                     </ul>
                   </div>
 
-                  {% if form.city.errors %}<p class="field-error">{{ form.city.errors }}</p>{% endif %}
+                  {% if form.city.errors %}<p class="field-error js-error">{{ form.city.errors }}</p>{% endif %}
                 </div>
 
                 <!-- SHOW PHONE -->
@@ -239,7 +239,7 @@
                   <div class="bg-gray-100/75 rounded-xl px-3 py-3 sm:px-4 sm:py-3">
                     <label class="flex items-center gap-3 cursor-pointer select-none">
                       <input type="checkbox" name="show_phone" class="w-5 h-5 accent-[var(--rukn-orange)]"
-                      {% if request.POST.show_phone or not request.POST %}checked{% endif %}>
+                      {% if request.POST.show_phone %}checked{% endif %}>
 
                       <span class="font-semibold text-gray-800 text-sm">إظهار رقم الهاتف في الإعلان</span>
                     </label>
@@ -291,7 +291,7 @@
                 </div>
 
                 <label class="flex items-start gap-3 cursor-pointer select-none pt-3 mt-2 border-t border-gray-200">
-                  <input type="checkbox" id="acceptTerms" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
+                  <input type="checkbox" id="acceptTerms" name="accept_terms" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
                   <span class="text-gray-700 leading-relaxed text-xs sm:text-sm">
                     أؤكد أنني قرأت وفهمت شروط نشر الإعلان أعلاه، وأوافق على الالتزام بها.
                   </span>

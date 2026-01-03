@@ -4,6 +4,8 @@ console.log("✅ report-modal.js loaded");
   const modal = document.getElementById("reportModal");
   if (!modal) return;
 
+  const alreadyReported = modal.dataset.reportedAlready === "1";
+
   const openBtn = document.getElementById("openReportModalBtn");
   const closeBtn = document.getElementById("closeReportModal");
   const form = document.getElementById("reportForm");
@@ -15,9 +17,6 @@ console.log("✅ report-modal.js loaded");
   const reasonChevron = document.getElementById("reportReasonChevron");
   const reasonError = document.getElementById("reportReasonError");
 
-  /* =========================
-     Helpers
-  ========================= */
   function openModal() {
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
@@ -46,7 +45,6 @@ console.log("✅ report-modal.js loaded");
     if (reasonError) reasonError.classList.add("invisible");
   }
 
-  // ✅ added (minimal)
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -54,19 +52,22 @@ console.log("✅ report-modal.js loaded");
     return "";
   }
 
-  /* =========================
-     Open / Close modal
-  ========================= */
+  // ✅ Open / Close modal
   if (openBtn) {
     openBtn.addEventListener("click", (e) => {
       e.preventDefault();
+
+      // ✅ prevent opening if already reported
+      if (alreadyReported) {
+        if (window.showRuknAlert) showRuknAlert("سبق أن قمت بالإبلاغ عن هذا المحتوى.");
+        return;
+      }
+
       openModal();
     });
   }
 
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closeModal);
-  }
+  if (closeBtn) closeBtn.addEventListener("click", closeModal);
 
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
@@ -76,16 +77,11 @@ console.log("✅ report-modal.js loaded");
     if (e.key === "Escape") closeModal();
   });
 
-  /* =========================
-     Reason dropdown
-  ========================= */
+  // ✅ dropdown
   if (reasonBtn) {
     reasonBtn.addEventListener("click", () => {
-      if (reasonMenu.classList.contains("hidden")) {
-        openReasonMenu();
-      } else {
-        closeReasonMenu();
-      }
+      if (reasonMenu.classList.contains("hidden")) openReasonMenu();
+      else closeReasonMenu();
     });
   }
 
@@ -104,14 +100,12 @@ console.log("✅ report-modal.js loaded");
   }
 
   document.addEventListener("click", (e) => {
-    if (!reasonBtn.contains(e.target) && !reasonMenu.contains(e.target)) {
+    if (reasonBtn && reasonMenu && !reasonBtn.contains(e.target) && !reasonMenu.contains(e.target)) {
       closeReasonMenu();
     }
   });
 
-  /* =========================
-     Submit (AJAX -> backend)
-  ========================= */
+  // ✅ Submit AJAX
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -123,8 +117,6 @@ console.log("✅ report-modal.js loaded");
 
       const details = document.getElementById("reportDetails")?.value || "";
 
-
-      // from <form data-...>
       const targetKind = form.dataset.targetKind || "listing";
       const targetId = form.dataset.targetId || "";
       const listingType = form.dataset.listingType || "";
@@ -133,7 +125,6 @@ console.log("✅ report-modal.js loaded");
       fd.append("target_kind", targetKind);
       fd.append("target_id", targetId);
       if (targetKind === "listing") fd.append("listing_type", listingType);
-
       fd.append("reason", reasonInput.value);
       fd.append("message", details);
 
@@ -152,12 +143,10 @@ console.log("✅ report-modal.js loaded");
         if (!res.ok || !data || data.ok !== true) {
           const msg = (data && data.message) ? data.message : "حدث خطأ أثناء إرسال البلاغ";
           if (window.showRuknAlert) showRuknAlert(msg);
-          return; // keep modal open on error (no UX change)
+          return;
         }
 
-        if (window.showRuknAlert) {
-          showRuknAlert(data.message || "✔ تم إرسال البلاغ بنجاح");
-        }
+        if (window.showRuknAlert) showRuknAlert(data.message || "✔ تم إرسال البلاغ بنجاح");
 
         closeModal();
       } catch (err) {

@@ -1,0 +1,156 @@
+{# marketplace/templates/partials/_report_modal_body.html #}
+
+<!-- Header -->
+<div class="flex items-center justify-start gap-3 mb-4">
+  <div class="w-10 h-10 rounded-2xl bg-orange-100 flex items-center justify-center text-[var(--rukn-orange)]">
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="w-5 h-5"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+      <path d="M10.3 3.3 2.4 18a1.7 1.7 0 0 0 1.5 2.5h16.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.3a1.7 1.7 0 0 0-3.4 0Z" />
+    </svg>
+  </div>
+
+  <div class="text-right">
+    <h2 id="reportModalTitle" class="text-lg font-extrabold text-gray-900">{{ modal_title }}</h2>
+    <p class="text-xs text-gray-500 mt-1">
+      اختر السبب وأضف تفاصيل إن لزم — يساعدنا ذلك على المراجعة بسرعة
+    </p>
+  </div>
+</div>
+
+<div class="px-4 sm:px-5 text-right">
+  <div class="grid grid-cols-1 gap-3 rounded-2xl border border-orange-200 bg-orange-50/60 p-4 sm:p-5">
+
+    <!-- Title -->
+    <div class="flex items-start gap-3">
+      <span class="mt-0.5 w-8 h-8 rounded-xl bg-white border border-orange-200 flex items-center justify-center text-[var(--rukn-orange)]">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+          <path d="M20 13l-7 7-11-11V2h7L20 13z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+          <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" />
+        </svg>
+      </span>
+
+      <div class="flex-1">
+        <div class="text-[11px] text-gray-500 font-semibold">{{ title_label }}</div>
+        <div class="text-sm sm:text-base font-extrabold text-gray-900 leading-snug">
+          {{ listing.title|default:"—" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="h-px bg-orange-200/60"></div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+      <div class="flex items-center gap-3 rounded-xl bg-white/80 border border-orange-100 px-3 py-2.5">
+        <span class="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[var(--rukn-orange)]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </span>
+        <div class="flex-1">
+          <div class="text-[11px] text-gray-500 font-semibold">{{ id_label }}</div>
+          <div class="text-sm font-extrabold text-gray-900 tracking-wide">{{ display_id }}</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 rounded-xl bg-white/80 border border-orange-100 px-3 py-2.5">
+        <span class="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center text-[var(--rukn-orange)]">
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+            <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z"
+                  stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+            <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+        </span>
+
+        <div class="flex-1">
+          <div class="text-[11px] text-gray-500 font-semibold">الموقع</div>
+          <div class="text-sm font-extrabold text-gray-900">{{ listing.city|default:"—" }}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<form id="reportForm"
+      method="post"
+      class="space-y-3 text-right px-4 sm:px-5"
+      data-target-kind="listing"
+      data-target-id="{{ listing.id }}"
+      data-listing-type="{{ listing_type }}">
+  {% csrf_token %}
+
+  <div class="mt-5">
+    <label class="popup-label">سبب الإبلاغ <span class="text-[var(--rukn-orange)]">*</span></label>
+
+    <div class="mt-2 relative">
+      <button type="button" id="reportReasonBtn"
+              class="w-full rounded-2xl bg-gray-50 border border-gray-200 p-3 text-sm text-gray-900
+                     flex items-center justify-between focus:outline-none focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 transition">
+        <span class="flex items-center gap-2">
+          <span class="text-[var(--rukn-orange)]">
+            <svg class="w-4 h-4" viewBox="0 0 20 20" fill="none">
+              <path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span id="reportReasonText" class="text-gray-500">اختر سبب الإبلاغ</span>
+        </span>
+
+        <span class="text-gray-400">
+          <svg id="reportReasonChevron" class="w-4 h-4 transition-transform" viewBox="0 0 20 20" fill="none">
+            <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
+      </button>
+
+      <div id="reportReasonMenu"
+           class="hidden absolute mt-2 w-full rounded-2xl bg-white border border-gray-200 shadow-xl overflow-hidden z-[100000]">
+        <button type="button" class="w-full text-right px-4 py-3 text-sm hover:bg-orange-50 transition" data-value="محتوى غير لائق">محتوى غير لائق</button>
+        <button type="button" class="w-full text-right px-4 py-3 text-sm hover:bg-orange-50 transition" data-value="سعر غير منطقي">سعر غير منطقي</button>
+        <button type="button" class="w-full text-right px-4 py-3 text-sm hover:bg-orange-50 transition" data-value="معلومات كاذبة">معلومات كاذبة</button>
+        <button type="button" class="w-full text-right px-4 py-3 text-sm hover:bg-orange-50 transition" data-value="احتيال / نصب">احتيال / نصب</button>
+        <button type="button" class="w-full text-right px-4 py-3 text-sm hover:bg-orange-50 transition" data-value="أخرى">أخرى</button>
+      </div>
+
+      <input type="hidden" id="reportReason" name="reason" value="">
+    </div>
+
+    <p id="reportReasonError" class="text-xs text-red-600 font-bold mt-2 invisible min-h-[18px]">
+      ⚠️ يرجى اختيار سبب الإبلاغ
+    </p>
+  </div>
+
+  <div class="mt-1 pb-4">
+    <label class="popup-label" for="reportDetails">تفاصيل إضافية (اختياري)</label>
+
+    <textarea id="reportDetails"
+              name="details"
+              rows="3"
+              class="w-full border border-gray-200 rounded-xl p-3 mt-2 text-sm bg-gray-50
+                     focus:bg-white focus:border-gray-300 focus:outline-none"
+              placeholder="اكتب تفاصيل إضافية (اختياري)"></textarea>
+
+    <p class="popup-hint">لا تكتب بيانات حساسة (كلمات مرور، أرقام بطاقات...).</p>
+  </div>
+
+  <div class="flex gap-3 mt-5">
+    <button type="submit"
+            class="flex-1 py-3 rounded-xl font-bold bg-[var(--rukn-orange)] text-white hover:bg-[#e56a00] transition duration-200 shadow-md">
+      إرسال الإبلاغ
+    </button>
+
+    <button type="button" id="closeReportModal"
+            class="flex-1 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200 transition duration-200">
+      إلغاء
+    </button>
+  </div>
+</form>

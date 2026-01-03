@@ -501,6 +501,16 @@ def item_detail(request, item_id):
         is_approved=True,
     ).count()
 
+    reported_already = False
+    if request.user.is_authenticated:
+        reported_already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="listing",
+            listing=item.listing,
+            listing_type="item",
+        ).exists()
+
+
     # ----------------------------
     # Final render
     # ----------------------------
@@ -515,7 +525,9 @@ def item_detail(request, item_id):
         "seller_is_verified_store": seller_is_verified_store,
         "store_reviews": reviews,
         "store": store,
-        "allow_show_phone": item.listing.show_phone, # To be implemented
+        "allow_show_phone": item.listing.show_phone,
+        "report_kind": "item",
+        "reported_already": reported_already,
     })
 
 
@@ -561,16 +573,26 @@ def request_detail(request, request_id):
 
     requester = request_obj.listing.user
 
-    # Mask phone (simple)
+    # Mask phone (show FIRST 2 digits)
     raw_phone = (requester.phone or "").strip()
-    masked = "•• •• ••• •07"
+
+    masked = "07•• ••• •••"  # fallback if empty (adjust if you prefer)
     if raw_phone:
-        last = raw_phone[-4:] if len(raw_phone) >= 4 else raw_phone
-        masked = f"•• •• ••• •{last}"
+        first2 = raw_phone[:2] if len(raw_phone) >= 2 else raw_phone
+        masked = f"{first2}•• ••• •••"
 
     u = request_obj.listing.user
 
     requester_requests_count = Request.objects.filter(listing__user=u).count()
+
+    reported_already = False
+    if request.user.is_authenticated:
+        reported_already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="listing",
+            listing=request_obj.listing,
+            listing_type="request",
+        ).exists()
 
     return render(
         request,
@@ -583,7 +605,9 @@ def request_detail(request, request_id):
             # contact UI
             "requester_phone_masked": masked,
             "requester_requests_count": requester_requests_count,
-            "allow_show_phone": request_obj.listing.show_phone
+            "allow_show_phone": request_obj.listing.show_phone,
+            "report_kind": "request",
+            "reported_already": reported_already,
         },
     )
 
@@ -1932,14 +1956,11 @@ def contact(request):
 @require_POST
 @csrf_protect
 def create_issue_report_ajax(request):
-    target_kind = (request.POST.get("target_kind") or "").strip()     # "listing" | "user" | "store"
-    target_id = (request.POST.get("target_id") or "").strip()         # numeric
-    listing_type = (request.POST.get("listing_type") or "").strip()   # "item" | "request" (only for listing)
+    target_kind = (request.POST.get("target_kind") or "").strip()
+    target_id = (request.POST.get("target_id") or "").strip()
+    listing_type = (request.POST.get("listing_type") or "").strip()
 
-    # ✅ new: reason separated
     reason = (request.POST.get("reason") or "").strip()
-
-    # "message" is now DETAILS (optional)
     details = (request.POST.get("message") or "").strip()
 
     if target_kind not in ("listing", "user", "store"):
@@ -1948,11 +1969,9 @@ def create_issue_report_ajax(request):
     if not target_id.isdigit():
         return JsonResponse({"ok": False, "message": "Invalid target_id."}, status=400)
 
-    # ✅ reason is required (matches your modal)
     if not reason:
         return JsonResponse({"ok": False, "message": "Please choose a reason."}, status=400)
 
-    # validate both fields if validator exists
     if validate_no_links_or_html:
         try:
             validate_no_links_or_html(reason)
@@ -1963,12 +1982,11 @@ def create_issue_report_ajax(request):
 
     target_id_int = int(target_id)
 
-    # NOTE: your model must have: user, target_kind, reason, message (details)
     report = IssuesReport(
         user=request.user,
         target_kind=target_kind,
         reason=reason,
-        message=details,   # optional details
+        message=details,
     )
 
     if target_kind == "listing":
@@ -1976,6 +1994,20 @@ def create_issue_report_ajax(request):
             return JsonResponse({"ok": False, "message": "Invalid listing_type."}, status=400)
 
         listing = get_object_or_404(Listing, id=target_id_int)
+
+        # ✅ BLOCK DUPLICATE REPORTS (same user + same listing + same listing_type)
+        already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="listing",
+            listing=listing,
+            listing_type=listing_type,
+        ).exists()
+        if already:
+            return JsonResponse(
+                {"ok": False, "message": "سبق أن قمت بالإبلاغ عن هذا المحتوى."},
+                status=400
+            )
+
         report.listing = listing
         report.listing_type = listing_type
 
@@ -1983,10 +2015,16 @@ def create_issue_report_ajax(request):
         reported = get_object_or_404(User, id=target_id_int)
         report.reported_user = reported
 
+        # optional: prevent reporting same user twice
+        already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="user",
+            reported_user=reported,
+        ).exists()
+        if already:
+            return JsonResponse({"ok": False, "message": "سبق أن قمت بالإبلاغ عن هذا المستخدم."}, status=400)
+
     else:  # store
-        # uncomment when you enable store reports
-        # store = get_object_or_404(Store, id=target_id_int)
-        # report.store = store
         return JsonResponse({"ok": False, "message": "Store reporting not enabled yet."}, status=400)
 
     try:
