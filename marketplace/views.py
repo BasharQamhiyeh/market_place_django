@@ -393,17 +393,19 @@ def item_detail(request, item_id):
     attributes = []
     for av in item.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
         attr = av.attribute
+        value = av.value
 
-        # Dropdown / select attribute → value is an option ID
-        if attr.input_type == "select" and av.value:
-            option = attr.options.filter(id=av.value).first()
+        if attr.input_type == "select" and value:
+            option = None
+            try:
+                option_id = int(value)  # ✅ only if it's a real option id
+                option = attr.options.filter(id=option_id).first()
+            except (TypeError, ValueError):
+                option = None  # ✅ "Other" text
+
             if option:
-                value = option.value_ar
-            else:
-                value = av.value  # fallback (should not happen)
-        else:
-            # Free text / number
-            value = av.value
+                value = option.value_ar  # or value_en depending on language
+            # else: keep typed text as-is
 
         attributes.append({
             "name": attr.name_ar,
@@ -569,17 +571,20 @@ def request_detail(request, request_id):
     attributes = []
     for av in request_obj.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
         attr = av.attribute
+        value = av.value
 
-        # Dropdown / select attribute → value is an option ID
-        if attr.input_type == "select" and av.value:
-            option = attr.options.filter(id=av.value).first()
+        # Dropdown / select attribute → normally value is an option ID
+        if attr.input_type == "select" and value:
+            option = None
+            try:
+                option_id = int(value)  # ✅ only works if it's a real option id
+                option = attr.options.filter(id=option_id).first()
+            except (TypeError, ValueError):
+                option = None  # ✅ means it's "Other" text like "Test other"
+
             if option:
-                value = option.value_ar
-            else:
-                value = av.value  # fallback (should not happen)
-        else:
-            # Free text / number
-            value = av.value
+                value = option.value_ar  # or value_en if you want based on language
+            # else: keep value as-is (the typed "Other" text)
 
         attributes.append({
             "name": attr.name_ar,
