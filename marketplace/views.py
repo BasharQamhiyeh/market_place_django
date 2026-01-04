@@ -2010,13 +2010,26 @@ def create_issue_report_ajax(request):
     if not reason:
         return JsonResponse({"ok": False, "message": "Please choose a reason."}, status=400)
 
-    if validate_no_links_or_html:
+    print(reason)
+    print(details)
+    # reason is REQUIRED → always validate
+    try:
+        validate_no_links_or_html(reason)
+    except ValidationError:
+        return JsonResponse(
+            {"ok": False, "message": "Links or HTML are not allowed."},
+            status=400
+        )
+
+    # details is OPTIONAL → validate ONLY if provided
+    if details:
         try:
-            validate_no_links_or_html(reason)
-            if details:
-                validate_no_links_or_html(details)
+            validate_no_links_or_html(details)
         except ValidationError:
-            return JsonResponse({"ok": False, "message": "Links or HTML are not allowed."}, status=400)
+            return JsonResponse(
+                {"ok": False, "message": "Links or HTML are not allowed."},
+                status=400
+            )
 
     target_id_int = int(target_id)
 

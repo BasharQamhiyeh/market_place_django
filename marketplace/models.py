@@ -493,7 +493,7 @@ class IssuesReport(models.Model):
     listing_type = models.CharField(max_length=10, choices=LISTING_TYPES, null=True, blank=True, db_index=True)
 
     reason = models.CharField(max_length=100, blank=True, db_index=True)
-    message = models.TextField()
+    message = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=20,
         choices=[("open", "Open"), ("resolved", "Resolved")],
