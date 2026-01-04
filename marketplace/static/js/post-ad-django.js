@@ -155,27 +155,30 @@ document.addEventListener("DOMContentLoaded", () => {
       const name = block.dataset.fieldName;
       if (!name) return;
 
-      const mainInputs = Array.from(block.querySelectorAll(`:scope > * input[name="${CSS.escape(name)}"]`));
-      const mainSelects = Array.from(block.querySelectorAll(`:scope > * select[name="${CSS.escape(name)}"]`));
+      // ✅ لا تستخدم :scope > * … خليها تبحث داخل البلوك كله
+      const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
+      const selects = Array.from(block.querySelectorAll(`select[name="${CSS.escape(name)}"]`));
 
       let show = false;
 
-      if (mainInputs.length) {
-        show = mainInputs.some(i => i.checked && i.value === "__other__");
-      } else if (mainSelects.length) {
-        show = mainSelects.some(s => (s.value || "") === "__other__");
+      if (inputs.length) {
+        show = inputs.some(i => i.checked && i.value === "__other__");
+      } else if (selects.length) {
+        show = selects.some(s => (s.value || "") === "__other__");
       }
 
+      // ✅ نفس سلوك الـ item الحالي (يدعم style=display:none)
       otherWrap.style.display = show ? "block" : "none";
       otherWrap.classList.toggle("hidden", !show);
 
       if (show) {
-        const otherInput = otherWrap.querySelector("input, textarea");
+        const otherInput = otherWrap.querySelector("input, textarea, select");
         if (otherInput && typeof otherInput.focus === "function") {
           setTimeout(() => otherInput.focus(), 0);
         }
       }
     }
+
 
     attrsRoot.querySelectorAll(".attr-block").forEach(block => {
       if (block.dataset.bound === "1") return;
