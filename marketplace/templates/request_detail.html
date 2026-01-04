@@ -247,46 +247,80 @@
               <div class="relative z-10">
 
                 {% with u=request_obj.listing.user %}
-                <div class="relative group cursor-pointer mt-1 p-5 sm:p-6 border-b-2 border-gray-200"
-                     onclick="window.location.href='{% url 'user_profile' u.user_id %}'">
-                  <div class="absolute inset-0 group-hover:bg-green-100/70 transition-all duration-200"></div>
+                  <div class="relative group cursor-pointer mt-1 p-5 sm:p-6 border-b-2 border-gray-200"
+                       onclick="window.location.href='{% url 'user_profile' u.user_id %}'">
 
-                  <div class="relative flex items-center justify-start gap-4 px-2 pb-2">
-                    {% if u.photo %}
-                      <img src="{{ u.photo.url }}"
-                           class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0 object-cover"
-                           alt="requester avatar">
-                    {% else %}
-                      <div class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0
-                                  bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
-                        {{ u.first_name|default:u.username|default:"م"|first|upper }}
+                    <div class="absolute inset-0 group-hover:bg-green-100/70 transition-all duration-200"></div>
+
+                    <div class="absolute top-1/2 -translate-y-1/2 left-3 flex items-center gap-1 pointer-events-none">
+                      <div class="flex flex-col text-[11px] font-extrabold text-[var(--rukn-green)] opacity-0 group-hover:opacity-100 transition leading-tight text-center">
+                        <span>عرض ملف</span>
+                        <span>العضو</span>
                       </div>
-                    {% endif %}
+                      <span class="text-3xl sm:text-4xl text-gray-300 group-hover:text-[var(--rukn-green)] transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+                        </svg>
+                      </span>
+                    </div>
 
-                    <div class="flex flex-col items-start text-right">
-                      <div class="flex items-center gap-2 justify-end">
-                        <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
-                          {{ u.first_name }} {{ u.last_name }}
-                        </h4>
+                    <div class="relative flex items-center justify-start gap-4 px-2 pb-2">
+                      {% if u.photo %}
+                        <img src="{{ u.photo.url }}"
+                             class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0 object-cover"
+                             alt="requester avatar">
+                      {% else %}
+                        <div class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0
+                                    bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
+                          {{ u.first_name|default:u.username|default:"م"|first|upper }}
+                        </div>
+                      {% endif %}
+
+                      <div class="flex flex-col items-center text-right">
+                        <div class="flex items-center gap-2 justify-end">
+                          <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
+                            {{ u.first_name }} {{ u.last_name }}
+                          </h4>
+
+                          {% if u.is_verified or u.is_phone_verified or u.is_verified_user %}
+                            <span class="text-[11px] font-extrabold text-[var(--rukn-green)] bg-green-100 px-2 py-0.5 rounded-full">
+                              عضو موثّق
+                            </span>
+                          {% endif %}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div class="flex gap-2 mt-4 text-[11px] text-gray-700 justify-start px-2">
+                    <div class="flex gap-2 mt-4 text-[11px] text-gray-700 justify-start px-2">
                       <span class="meta-pill">
-                          <span class="meta-icon text-green-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" /><path d="m9 10 2 2 4-4" /></svg>
-                          </span>{{ requester_requests_count|default:0 }} طلب
+                        <span class="meta-icon text-green-600">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z" />
+                            <path d="m9 10 2 2 4-4" />
+                          </svg>
+                        </span>
+                        {{ requester_requests_count|default:0 }} طلب
                       </span>
+
                       <span class="meta-pill">
-                          <span class="meta-icon text-green-600">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14" /><path d="M5 2h14" /><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" /><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" /></svg>
-                          </span>
-                          عضو منذ {{ u.date_joined|timesince }}
+                        <span class="meta-icon text-green-600">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                               fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 22h14" />
+                            <path d="M5 2h14" />
+                            <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                            <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                          </svg>
+                        </span>
+                        عضو منذ {{ u.date_joined|timesince }}
                       </span>
+                    </div>
                   </div>
-                </div>
-                {% endwith %}
+                  {% endwith %}
+
 
                 <!-- Quick actions -->
                 <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
