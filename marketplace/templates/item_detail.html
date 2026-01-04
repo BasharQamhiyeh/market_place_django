@@ -515,13 +515,14 @@
 
                     <div class="flex items-center justify-start gap-5">
                       <button type="button"
-                              id="revealPhoneBtn"
-                              {% if not request.user.is_authenticated %}data-guest="1"{% endif %}
-                              class="flex text-right text-lg font-extrabold text-gray-900
-                                     underline-offset-2 hover:text-[var(--rukn-orange)] hover:underline transition">
+                        id="revealPhoneBtn"
+                        data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                        data-login-modal="loginModal"
+                        class="flex text-right text-lg font-extrabold text-gray-900
+                               underline-offset-2 hover:text-[var(--rukn-orange)] hover:underline transition">
                         <span id="sellerPhone"
                               data-masked="{{ seller_phone_masked|default:'•• •• ••• •07' }}"
-                              data-full="{{ item.listing.user.phone|default:'' }}"
+                              data-full="{{ seller_phone_full|default:'' }}"
                               data-revealed="false"
                               data-allow="{% if allow_show_phone %}1{% else %}0{% endif %}">
                           {{ seller_phone_masked|default:"•• •• ••• •07" }}

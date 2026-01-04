@@ -406,17 +406,20 @@
 
                     <div class="flex items-center justify-start gap-5">
                       <button type="button"
-                              id="revealPhoneBtn"
-                              class="flex text-right text-lg font-extrabold text-gray-900 underline-offset-2 hover:text-[var(--rukn-green)] hover:underline transition">
-                        <span id="sellerPhone"
-                                    dir="ltr"
+                            id="revealPhoneBtn"
+                            data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                            data-login-modal="loginModal"
+                            class="flex text-right text-lg font-extrabold text-gray-900 underline-offset-2 hover:text-[var(--rukn-green)] hover:underline transition">
+                      <span id="sellerPhone"
+                            dir="ltr"
                             data-masked="{{ requester_phone_masked|default:'07•• ••• •••' }}"
-                            data-full="{{ request_obj.listing.user.phone|default:'' }}"
+                            data-full="{{ requester_phone_full|default:'' }}"
                             data-revealed="false"
                             data-allow="{% if allow_show_phone %}1{% else %}0{% endif %}">
                         {{ requester_phone_masked|default:"07•• ••• •••" }}
                       </span>
-                      </button>
+                    </button>
+
 
                       <div id="contactActions" class="hidden flex items-center justify-start gap-2">
                         <a id="callBtn" href="#"

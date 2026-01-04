@@ -133,6 +133,7 @@ window.copyAdNumber = function copyAdNumber() {
 })();
 
 /* ========= Phone Reveal (WORKING + HIDE ICONS UNTIL REVEAL + ALLOW FLAG) ========= */
+/* ========= Phone Reveal (AUTH + HIDE ICONS UNTIL REVEAL + ALLOW FLAG) ========= */
 (function initPhoneReveal() {
   const sellerPhoneEl = document.getElementById("sellerPhone");
   const revealPhoneBtn = document.getElementById("revealPhoneBtn");
@@ -142,39 +143,52 @@ window.copyAdNumber = function copyAdNumber() {
 
   if (!sellerPhoneEl || !revealPhoneBtn) return;
 
-  // helper: open message box (optional)
+  function openLoginModal() {
+    const modalId = revealPhoneBtn.dataset.loginModal || "loginModal";
+    const m = document.getElementById(modalId);
+    if (m) m.classList.remove("hidden");
+  }
+
   function openMessageBox() {
     const msgBtn = document.getElementById("toggleMessageBox");
     if (msgBtn) msgBtn.click();
   }
 
-  // init masked (use template masked if present)
   const raw = (sellerPhoneEl.dataset.full || "").trim();
   const normalized = normalizeJordanPhone(raw);
 
-  sellerPhoneEl.dataset.full = raw;                 // keep original for display
-  sellerPhoneEl.dataset.normalized = normalized;    // store normalized for links
+  sellerPhoneEl.dataset.full = raw;
+  sellerPhoneEl.dataset.normalized = normalized;
   sellerPhoneEl.dataset.revealed = "false";
 
   sellerPhoneEl.textContent = (sellerPhoneEl.dataset.masked || sellerPhoneEl.textContent || "").trim();
 
-
-  // ✅ hide icons until reveal
+  // hide icons until reveal
   if (contactActions) {
     contactActions.classList.add("hidden");
     contactActions.classList.remove("flex");
   }
 
-  // prevent '#' jump if user clicks icons before reveal (extra safety)
+  if (callBtn) callBtn.href = "#";
+  if (whatsappBtn) whatsappBtn.href = "#";
+
+  // prevent '#' jump
   if (callBtn) callBtn.addEventListener("click", (e) => { if ((callBtn.getAttribute("href") || "#") === "#") e.preventDefault(); });
   if (whatsappBtn) whatsappBtn.addEventListener("click", (e) => { if ((whatsappBtn.getAttribute("href") || "#") === "#") e.preventDefault(); });
 
   revealPhoneBtn.addEventListener("click", () => {
+    // ✅ auth gate
+    const auth = (revealPhoneBtn.dataset.auth || "0") === "1";
+    if (!auth) {
+      openLoginModal();
+      return;
+    }
+
     // ✅ check allow flag
     const allow = (sellerPhoneEl.dataset.allow || "1") === "1";
     if (!allow) {
       showRuknAlert("⚠️ صاحب الطلب يفضّل التواصل عبر الرسائل");
-      openMessageBox(); // optional: opens message box
+      openMessageBox();
       return;
     }
 
@@ -184,21 +198,19 @@ window.copyAdNumber = function copyAdNumber() {
     const norm = (sellerPhoneEl.dataset.normalized || "").trim();
 
     if (!fullDisplay && !norm) {
-      showRuknAlert("⚠️ رقم غير متوفر");
+      showRuknAlert("⚠️ سجّل الدخول لعرض الرقم");
+      openLoginModal();
       return;
     }
 
-    // show original as saved (user-friendly)
     sellerPhoneEl.textContent = fullDisplay || norm;
     sellerPhoneEl.dataset.revealed = "true";
 
-    // ✅ show icons only after reveal
     if (contactActions) {
       contactActions.classList.remove("hidden");
       contactActions.classList.add("flex");
     }
 
-    // links
     if (callBtn) callBtn.href = "tel:" + (norm || fullDisplay);
 
     if (whatsappBtn) {
@@ -207,6 +219,7 @@ window.copyAdNumber = function copyAdNumber() {
     }
   });
 })();
+
 
 
 /* ========= Message Box (FALLBACK, so it ALWAYS opens) ========= */
@@ -220,19 +233,30 @@ window.copyAdNumber = function copyAdNumber() {
 
   // if shared script already bound, don't double-bind
   if (toggleBtn.dataset.bound === "1") return;
-  toggleBtn.dataset.bound = "1";
+      toggleBtn.dataset.bound = "1";
 
-  toggleBtn.addEventListener("click", () => {
-    const isHidden = box.classList.contains("hidden");
-    if (isHidden) {
-      box.classList.remove("hidden");
-      if (chevron) chevron.classList.add("rotate-180");
-      setTimeout(() => input && input.focus(), 80);
-    } else {
-      box.classList.add("hidden");
-      if (chevron) chevron.classList.remove("rotate-180");
-    }
-  });
+      toggleBtn.addEventListener("click", () => {
+      // ✅ auth gate
+      const isAuth = (toggleBtn.dataset.auth || "0") === "1";
+      if (!isAuth) {
+        const modalId = toggleBtn.dataset.loginModal || "loginModal";
+        const m = document.getElementById(modalId);
+        if (m) m.classList.remove("hidden");
+        return;
+      }
+
+      const isHidden = box.classList.contains("hidden");
+      if (isHidden) {
+        box.classList.remove("hidden");
+        if (chevron) chevron.classList.add("rotate-180");
+        setTimeout(() => input && input.focus(), 80);
+      } else {
+        box.classList.add("hidden");
+        if (chevron) chevron.classList.remove("rotate-180");
+      }
+    });
+
+
 })();
 
 /* ========= Similar Requests Load More ========= */

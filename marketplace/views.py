@@ -483,13 +483,23 @@ def item_detail(request, item_id):
     if request.user.is_authenticated:
         is_favorited = Favorite.objects.filter(user=request.user, listing=item.listing).exists()
 
-    # ----------------------------
-    # Seller stats (✅ NEW)
-    # ----------------------------
-    # ----------------------------
-    # Seller / Store stats
-    # ----------------------------
+
     seller = item.listing.user
+
+    # ✅ CONTACT PRIVACY (NO PHONE LEAK)
+    raw_phone = (seller.phone or "").strip()
+
+    # masked (first 2 digits)
+    seller_phone_masked = "07•• ••• •••"
+    if raw_phone:
+        first2 = raw_phone[:2] if len(raw_phone) >= 2 else raw_phone
+        seller_phone_masked = f"{first2}•• ••• •••"
+
+    # only send full phone if:
+    # - seller allows showing phone
+    # - viewer is authenticated
+    can_send_full_phone = bool(item.listing.show_phone) and request.user.is_authenticated
+    seller_phone_full = raw_phone if can_send_full_phone else ""
 
     # True if the seller has a Store row (OneToOne)
     seller_is_store = hasattr(seller, "store") and seller.store is not None
@@ -544,6 +554,8 @@ def item_detail(request, item_id):
         "store_reviews": reviews,
         "store": store,
         "allow_show_phone": item.listing.show_phone,
+        "seller_phone_masked": seller_phone_masked,
+        "seller_phone_full": seller_phone_full,
         "report_kind": "item",
         "reported_already": reported_already,
         "breadcrumb_categories": breadcrumb_categories,
@@ -605,6 +617,10 @@ def request_detail(request, request_id):
 
     requester = request_obj.listing.user
 
+    # ✅ Only send full phone if allowed
+    can_send_full_phone = bool(request_obj.listing.show_phone) and request.user.is_authenticated
+    requester_phone_full = (requester.phone or "").strip() if can_send_full_phone else ""
+
     # Mask phone (show FIRST 2 digits)
     raw_phone = (requester.phone or "").strip()
 
@@ -640,8 +656,10 @@ def request_detail(request, request_id):
 
             # contact UI
             "requester_phone_masked": masked,
+            "requester_phone_full": requester_phone_full,   # ✅ NEW (safe)
             "requester_requests_count": requester_requests_count,
             "allow_show_phone": request_obj.listing.show_phone,
+
             "report_kind": "request",
             "reported_already": reported_already,
             "breadcrumb_categories": breadcrumb_categories,
