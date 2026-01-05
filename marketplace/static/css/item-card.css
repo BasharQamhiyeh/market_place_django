@@ -1,6 +1,7 @@
 /* ======================================================================
-   item-card.css (HARD-ISOLATED / FIXES "lower part disappears")
-   - Forces correct flex layout even if other global CSS overrides it
+   item-card.css (HARD-ISOLATED / FIXES "lower part disappears" + TITLE HIDDEN)
+   - Keeps your current layout exactly
+   - Adds HARD anti-override rules so title/body can’t be hidden by globals
    ====================================================================== */
 
 :root{
@@ -137,15 +138,18 @@
 /* =========================
    LOWER STACK (body + footer)
    ✅ HARD: must exist and take remaining height
+   + HARD stacking isolation so overlay never hides title
    ========================= */
 .ad-lower{
-  position: relative;
+  position: relative !important;
   flex: 1 1 auto !important;
   min-height: 0 !important;
 
   display:flex !important;
   flex-direction:column !important;
   align-items:stretch !important;
+
+  isolation: isolate !important; /* ✅ HARD: create stacking context */
 }
 
 /* Hover overlay ONLY over lower area */
@@ -153,7 +157,7 @@
   position:absolute;
   inset:0;
   pointer-events:none;
-  z-index:10;
+  z-index: 1 !important; /* ✅ HARD: always behind body/footer */
 }
 
 .ad-hover-layer::before{
@@ -204,8 +208,8 @@
    ✅ HARD: force display + z-index above overlay
    ========================= */
 .ad-body{
-  position: relative;
-  z-index: 11;
+  position: relative !important;
+  z-index: 5 !important; /* ✅ HARD: above overlay */
 
   display:flex !important;
   flex-direction:column !important;
@@ -217,19 +221,33 @@
   gap: 10px;
 }
 
+/* ✅ HARD: prevent globals from hiding/zeroing the title */
 .ad-title{
+  display:block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+
   font-weight:700;
-  font-size:14px;
-  color:#111827;
-  line-height:1.25;
+  font-size:14px !important;
+  line-height:1.25 !important;
+
+  color:#111827 !important;
+  -webkit-text-fill-color:#111827 !important; /* protects against weird clamp/theme rules */
+
   min-height:48px;
   padding: 4px 0;
   border-radius:10px;
+
+  /* keep your blur, but ensure it doesn't break text */
   backdrop-filter: blur(6px);
+
   transition: color .2s ease;
 }
 
-.ad-card:hover .ad-title{ color: var(--ad-orange); }
+.ad-card:hover .ad-title{
+  color: var(--ad-orange) !important;
+  -webkit-text-fill-color: var(--ad-orange) !important;
+}
 
 .ad-meta{
   display:flex !important;
@@ -258,8 +276,8 @@
    ✅ HARD: force display + fixed height
    ========================= */
 .ad-footer{
-  position: relative;
-  z-index: 11;
+  position: relative !important;
+  z-index: 5 !important; /* ✅ HARD: above overlay */
 
   display:flex !important;
   align-items:center;
@@ -320,7 +338,6 @@
   font-size:13px;
   box-shadow: 0 4px 10px rgba(15,23,42,.10);
 }
-
 
 /* ✅ HARD RULE: never show favorite on owner cards */
 .ad-fav-btn[data-is-owner="1"]{

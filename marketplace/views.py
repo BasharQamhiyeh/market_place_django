@@ -260,7 +260,7 @@ def item_list(request):
         base_qs = base_qs.filter(price__lte=max_price)
 
     if condition:
-        base_qs = base_qs.filter(listing__condition=condition)
+        base_qs = base_qs.filter(condition=condition)
 
     if seller_type:
         if Store is not None:
