@@ -60,6 +60,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ✅ used to detect visible "other" wrapper reliably (supports class hidden + style display:none)
+  function isOtherWrapperVisible(otherWrap) {
+    if (!otherWrap) return false;
+    if (otherWrap.classList.contains("hidden")) return false;
+    const ds = (otherWrap.style && otherWrap.style.display) || "";
+    if (ds && ds.toLowerCase() === "none") return false;
+    return otherWrap.offsetParent !== null;
+  }
+
   // ===== Elements =====
   const form = document.getElementById("addRequestForm");
 
@@ -137,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== Clear errors as user fixes inputs =====
+  // (Static inputs only; dynamic attribute inputs are handled via delegation inside initAttributeLogic)
   document.querySelectorAll("#addRequestForm input, #addRequestForm textarea, #addRequestForm select").forEach(field => {
     field.addEventListener("input", () => clearFieldError(field));
     field.addEventListener("change", () => clearFieldError(field));
@@ -180,6 +190,8 @@ document.addEventListener("DOMContentLoaded", () => {
         show = selects.some(s => (s.value || "") === "__other__");
       }
 
+      // ✅ match post-ad behavior (supports hidden + style=display:none)
+      otherWrap.style.display = show ? "block" : "none";
       otherWrap.classList.toggle("hidden", !show);
 
       if (show) {
@@ -188,6 +200,31 @@ document.addEventListener("DOMContentLoaded", () => {
           setTimeout(() => otherInput.focus(), 0);
         }
       }
+    }
+
+    // ✅ Event delegation for dynamic fields (fixes "other" input error not clearing on typing)
+    if (!attrsRoot.dataset.reqDelegated) {
+      attrsRoot.addEventListener("input", (e) => {
+        const t = e.target;
+        if (!t) return;
+        clearFieldError(t);
+        const block = t.closest(".attr-block");
+        if (block) setBlockInvalid(block, false);
+      }, true);
+
+      attrsRoot.addEventListener("change", (e) => {
+        const t = e.target;
+        if (!t) return;
+        clearFieldError(t);
+        const block = t.closest(".attr-block");
+        if (!block) return;
+        setBlockInvalid(block, false);
+        if (t.matches('input[type="radio"], input[type="checkbox"], select')) {
+          syncOtherForBlock(block);
+        }
+      }, true);
+
+      attrsRoot.dataset.reqDelegated = "1";
     }
 
     function bindRequiredClear(block) {
@@ -238,6 +275,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ✅ validate attributes, but show errors like TITLE:
   // - radio/checkbox: red border on block + message under block
   // - select/text/textarea: red border on the actual control + message after it
+  //
+  // Fixes:
+  // - don't accidentally validate hidden "other" controls
+  // - validate other only when visible
   function validateRequiredAttributes() {
     const blocks = Array.from(attributeFields?.querySelectorAll(".attr-block[data-required='1']") || []);
 
@@ -245,48 +286,43 @@ document.addEventListener("DOMContentLoaded", () => {
       const labelEl = block.querySelector(".label");
       const labelText = labelEl ? labelEl.textContent.trim() : "القيمة";
 
-      // 1) radio group
-      const radios = Array.from(block.querySelectorAll("input[type='radio']"));
-      if (radios.length) {
-        const checked = radios.some(r => r.checked);
+      // MAIN controls = not inside .other-wrapper
+      const mainRadios = Array.from(block.querySelectorAll('input[type="radio"]')).filter(el => !el.closest(".other-wrapper"));
+      const mainCheckboxes = Array.from(block.querySelectorAll('input[type="checkbox"]')).filter(el => !el.closest(".other-wrapper"));
+      const mainSelect = Array.from(block.querySelectorAll("select")).find(el => !el.closest(".other-wrapper"));
+      const mainText = Array.from(block.querySelectorAll("input[type='text'], input[type='number'], textarea"))
+        .find(el => !el.closest(".other-wrapper"));
+
+      if (mainRadios.length) {
+        const checked = mainRadios.some(r => r.checked);
         if (!checked) {
           setBlockInvalid(block, true);
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
           return false;
         }
-      }
-
-      // 2) checkbox group
-      const checkboxes = Array.from(block.querySelectorAll("input[type='checkbox']"));
-      if (checkboxes.length) {
-        const checked = checkboxes.some(c => c.checked);
+      } else if (mainCheckboxes.length) {
+        const checked = mainCheckboxes.some(c => c.checked);
         if (!checked) {
           setBlockInvalid(block, true);
           showErrorBelow(block, `الرجاء اختيار ${labelText}`);
           return false;
         }
-      }
-
-      // 3) select (use title-style)
-      const select = block.querySelector("select");
-      if (select) {
-        if (!((select.value || "").trim())) {
-          showErrorAfter(select, `الرجاء اختيار ${labelText}`);
+      } else if (mainSelect) {
+        if (!((mainSelect.value || "").trim())) {
+          showErrorAfter(mainSelect, `الرجاء اختيار ${labelText}`);
+          return false;
+        }
+      } else if (mainText) {
+        if (!((mainText.value || "").trim())) {
+          showErrorAfter(mainText, `الرجاء إدخال ${labelText}`);
           return false;
         }
       }
 
-      // 4) text/number/textarea (use title-style)
-      const txt = block.querySelector("input[type='text'], input[type='number'], textarea");
-      if (txt && (txt.value || "").trim() === "") {
-        showErrorAfter(txt, `الرجاء إدخال ${labelText}`);
-        return false;
-      }
-
-      // 5) if other-wrapper exists and is visible, validate its input with title-style
+      // OTHER validation only if visible
       const otherWrap = block.querySelector(".other-wrapper");
-      if (otherWrap && !otherWrap.classList.contains("hidden")) {
-        const otherInput = otherWrap.querySelector("input[type='text'], input[type='number'], textarea");
+      if (otherWrap && isOtherWrapperVisible(otherWrap)) {
+        const otherInput = otherWrap.querySelector("input[type='text'], input[type='number'], textarea, select");
         if (otherInput && !((otherInput.value || "").trim())) {
           showErrorAfter(otherInput, `الرجاء إدخال ${labelText}`);
           return false;
