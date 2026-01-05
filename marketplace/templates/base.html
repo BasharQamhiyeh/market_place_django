@@ -26,11 +26,13 @@
   <!-- Mockup CSS -->
   <link rel="stylesheet" href="{% static 'css/header.css' %}">
   <link rel="stylesheet" href="{% static 'css/footer.css' %}">
-  <link rel="stylesheet" href="{% static 'css/home.css' %}">
   <!-- Small overrides for search behaviour/dropdown -->
   <link rel="stylesheet" href="{% static 'css/search.css' %}">
-
   {% block base_css %}{% endblock %}
+  {% block page_css %}{% endblock %}
+
+  <link rel="stylesheet" href="{% static 'css/item-card.css' %}">
+
 </head>
 
 <body class="font-[Cairo] bg-white text-gray-900">
@@ -583,9 +585,11 @@
 </footer>
 
 <!-- =================== JS =================== -->
+
 <script>
     const CSRF_TOKEN = "{{ csrf_token }}";
 </script>
+
 <!-- HTMX (used by your old search) -->
 <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
@@ -594,10 +598,10 @@
 
 {% block scripts %}
   <!-- All navbar + search + categories + referral JS moved here -->
-  <script src="{% static 'js/main.js' %}"></script>
   <script src="{% static 'js/swiper-init.js' %}"></script>
   <script src="{% static 'js/search.js' %}"></script>
   <script src="{% static 'js/header.js' %}"></script>
+  <script src="{% static 'js/item-card.js' %}"></script>
 
 {% endblock %}
 
@@ -620,6 +624,7 @@
 
 
 </body>
+
 </html>
 
 

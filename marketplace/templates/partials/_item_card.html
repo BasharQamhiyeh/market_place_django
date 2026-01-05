@@ -1,69 +1,113 @@
 {# templates/partials/_item_card.html #}
 {% load i18n %}
 
-<article class="bg-white rounded-xl overflow-hidden
-               border border-orange-200
-               transition-all duration-300
-               shadow-[0_4px_14px_rgba(0,0,0,0.08)]
-               hover:shadow-[0_12px_32px_rgba(0,0,0,0.18)]
-               hover:border-orange-400
-               hover:-translate-y-2 hover:scale-[1.015]
-               relative">
 
-  <!-- IMAGE + HEART + CATEGORY BADGE -->
+{% with HIDE_OWNER_FAV=0 %}
+
+<article
+  class="ad-card group{% if featured_card %} featured-card vip-card{% endif %}"
+  data-href="{% url 'item_detail' item.id %}"
+  aria-label="{{ item.listing.title }}"
+>
+
+  <!-- IMAGE + CONTROLS -->
   <div class="relative">
-
-    {% with p=item.main_photo %}
-      {% if p %}
-        {% if p.thumbnail %}
-          <img src="{{ p.thumbnail.url }}"
-               alt="{{ item.listing.title }}"
-               class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
+    <div class="ad-imgwrap">
+      {% with p=item.main_photo %}
+        {% if p %}
+          {% if p.thumbnail %}
+            <img src="{{ p.thumbnail.url }}" alt="{{ item.listing.title }}">
+          {% else %}
+            <img src="{{ p.image.url }}" alt="{{ item.listing.title }}">
+          {% endif %}
         {% else %}
-          <img src="{{ p.image.url }}"
-               alt="{{ item.listing.title }}"
-               class="w-full h-[260px] object-cover hover:scale-105 transition-transform duration-300 rounded-none" />
+          <div class="w-full h-full flex items-center justify-center text-sm text-gray-400">
+            {% trans "No image" %}
+          </div>
         {% endif %}
-      {% else %}
-        <div class="w-full h-[260px] bg-gray-100 flex items-center justify-center text-sm text-gray-400">
-          {% trans "No image" %}
-        </div>
-      {% endif %}
-    {% endwith %}
+      {% endwith %}
+    </div>
 
-    <!-- Heart -->
+
     {% if request.user.is_authenticated %}
+
+      {% if item.listing.user_id == request.user.user_id and HIDE_OWNER_FAV %}
+        {# authenticated OWNER #}
+
+          <button
+            type="button"
+            class="ad-fav-btn absolute bottom-3 left-3 z-20{% if item.is_favorited %} is-active{% endif %}"
+            data-fav-btn="1"
+            data-guest="0"
+            data-is-owner="1"
+            data-url="{% url 'toggle_favorite' item.id %}"
+            data-favorited="{% if item.is_favorited %}1{% else %}0{% endif %}"
+            aria-label="{% trans 'Toggle favorite' %}"
+            aria-pressed="{% if item.is_favorited %}true{% else %}false{% endif %}"
+          >
+            <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path class="heart-outline"
+                    d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                    fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+              <path class="heart-filled"
+                    d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                    fill="currentColor"/>
+            </svg>
+          </button>
+
+      {% else %}
+        {# authenticated NON-OWNER #}
+        <button
+          type="button"
+          class="ad-fav-btn absolute bottom-3 left-3 z-20{% if item.is_favorited %} is-active{% endif %}"
+          data-fav-btn="1"
+          data-guest="0"
+          data-is-owner="0"
+          data-url="{% url 'toggle_favorite' item.id %}"
+          data-favorited="{% if item.is_favorited %}1{% else %}0{% endif %}"
+          aria-label="{% trans 'Toggle favorite' %}"
+          aria-pressed="{% if item.is_favorited %}true{% else %}false{% endif %}"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="heart-outline"
+                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                  fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="heart-filled"
+                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                  fill="currentColor"/>
+          </svg>
+        </button>
+      {% endif %}
+
+    {% else %}
+      {# guest => always show heart (no url) #}
       <button
-      type="button"
-      data-fav-btn="1"
-      data-url="{% url 'toggle_favorite' item.id %}"
-      data-guest="{% if request.user.is_authenticated %}0{% else %}1{% endif %}"
-      data-favorited="{% if item.is_favorited %}1{% else %}0{% endif %}"
-      class="absolute bottom-2 left-2 z-50 text-2xl transition duration-200 hover:scale-110"
-      aria-label="{% trans 'Toggle favorite' %}"
-    >
-      <span class="fav-heart">
-        {% if item.is_favorited %}
-          ❤️
-        {% else %}
-          🤍
-        {% endif %}
-      </span>
-    </button>
+        type="button"
+        class="ad-fav-btn absolute bottom-3 left-3 z-20"
+        data-fav-btn="1"
+        data-guest="1"
+        data-is-owner="0"
+        data-favorited="0"
+        aria-label="{% trans 'Toggle favorite' %}"
+        aria-pressed="false"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="heart-outline"
+                d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="heart-filled"
+                d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                fill="currentColor"/>
+        </svg>
+      </button>
     {% endif %}
 
-    <!-- Category badge -->
+    <!-- CATEGORY BADGE -->
     {% if item.listing.category %}
-      <span class="absolute top-3 right-3
-                   bg-white/90 text-gray-800 text-xs font-semibold
-                   px-3 py-1 rounded-full shadow-sm
-                   flex items-center gap-1 border border-orange-300">
-        {% if item.listing.category.icon %}
-          {{ item.listing.category.icon }}
-        {% else %}
-          🏷️
-        {% endif %}
-
+      <span class="ad-cat-badge">
         {% if LANGUAGE_CODE == "ar" %}
           {{ item.listing.category.name_ar }}
         {% else %}
@@ -71,79 +115,79 @@
         {% endif %}
       </span>
     {% endif %}
+
+    <!-- FEATURED TAG -->
+    {% if item.listing.is_featured or featured_card %}
+      <span class="ad-featured-tag">مميز</span>
+    {% endif %}
   </div>
 
-  <!-- CONTENT -->
-  <div class="p-4">
-    <!-- Title -->
-    <h3 class="font-semibold text-lg line-clamp-2 min-h-[55px] text-gray-900"
-        title="{{ item.listing.title }}">
-      {{ item.listing.title }}
-    </h3>
-
-    <!-- City + Time -->
-    <div class="flex items-center justify-between text-sm text-[var(--muted)] mt-2">
-      <span>
-        📍
-        {% if item.listing.city %}
-          {{ item.listing.city }}
-        {% else %}
-          —
-        {% endif %}
-      </span>
-
-      <span>
-        ⏱️
-        {% with t=item.listing.updated_at|default:item.listing.created_at %}
-          {% if t %}
-            {% if t|timesince == "0 minutes" %}
-              الآن
-            {% else %}
-              {% trans "Since" %} {{ t|timesince }}
-            {% endif %}
-          {% endif %}
-        {% endwith %}
-      </span>
+  <!-- LOWER (overlay here, like mockup) -->
+  <div class="ad-lower relative isolate">
+    <div class="ad-hover-layer" aria-hidden="true">
+      <div class="ad-hover-hint">
+        <div class="txt"><span>عرض</span><span>الإعلان</span></div>
+        <span class="arrow">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+               viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+               class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+          </svg>
+        </span>
+      </div>
     </div>
-  </div>
 
-  <!-- FOOTER -->
-  <div class="flex items-center justify-between p-4 border-t border-gray-100 bg-white">
+    <div class="ad-body">
+      <h3 class="ad-title line-clamp-2" title="{{ item.listing.title }}">
+        {{ item.listing.title }}
+      </h3>
 
-    <!-- Seller -->
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center
-                  text-xs font-bold text-gray-700 shadow">
-        {% with fn=item.listing.user.first_name|default:"" un=item.listing.user.username|default:"" %}
-          {% if fn %}
-            {{ fn|slice:":1"|upper }}
-          {% elif un %}
-            {{ un|slice:":1"|upper }}
+      <div class="ad-meta">
+        <span>
+          <svg class="ad-ico" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+            <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+          <span>{% if item.listing.city %}{{ item.listing.city }}{% else %}—{% endif %}</span>
+        </span>
+
+        <span>
+          <svg class="ad-ico" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M7 2v4M13 2v4M4 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <span>
+            {% with t=item.listing.updated_at|default:item.listing.created_at %}
+              {% if t %}
+                {% if t|timesince == "0 minutes" %}الآن{% else %}{{ t|timesince }}{% endif %}
+              {% endif %}
+            {% endwith %}
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <div class="ad-footer">
+      <div class="ad-seller">
+        {% with avatar=item.listing.user.profile.avatar|default_if_none:"" %}
+          {% if avatar %}
+            <img src="{{ avatar.url }}" alt="{{ item.listing.user.username }}">
           {% else %}
-            ?
+            <div class="ad-avatar-fallback">
+              {% with fn=item.listing.user.first_name|default:"" un=item.listing.user.username|default:"" %}
+                {% if fn %}{{ fn|slice:":1"|upper }}{% elif un %}{{ un|slice:":1"|upper }}{% else %}?{% endif %}
+              {% endwith %}
+            </div>
           {% endif %}
         {% endwith %}
+
+        <span class="ad-seller-name">{{ item.listing.user.username }}</span>
       </div>
 
-      <span class="text-sm font-medium text-gray-800 truncate max-w-[110px]">
-        {% if item.listing.user %}
-          {{ item.listing.user.username }}
-        {% else %}
-          {% trans "Unknown" %}
-        {% endif %}
-      </span>
+      <span class="ad-price">{{ item.price|floatformat:0 }} د.أ</span>
     </div>
-
-    <!-- Price -->
-    <div class="text-white text-base font-bold rounded-3xl shadow text-center min-w-[90px] py-2 px-4 bg-[var(--rukn-orange)]">
-      {{ item.price|floatformat:0 }} د.أ
-    </div>
-
   </div>
 
-  <!-- CLICKABLE OVERLAY (keep it UNDER the heart) -->
-  <a href="{% url 'item_detail' item.id %}"
-     class="absolute inset-0 z-0 pointer-events-auto"
-     aria-label="{% trans 'View Details' %}"></a>
-
 </article>
+
+{% endwith %} {# HIDE_OWNER_FAV #}

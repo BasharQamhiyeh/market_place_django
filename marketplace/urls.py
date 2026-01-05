@@ -80,6 +80,8 @@ urlpatterns = [
 
     path("items/<int:item_id>/store-review/", views.submit_store_review, name="submit_store_review"),
 
+    path("listing/<int:listing_id>/feature/", views.feature_listing, name="feature_listing")
+
 
 
     # path('api/', include('marketplace.api_urls')),

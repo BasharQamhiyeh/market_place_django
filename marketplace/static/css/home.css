@@ -242,3 +242,12 @@ body {
   left: -2px;         /* a bit more to the left, outside the box */
 }
 
+/* =========================================================
+   Prevent flex containers from stretching item cards
+   ========================================================= */
+.list-ads-page #adsList,
+.list-ads-page .ads-grid,
+.list-ads-page .cards-row {
+  align-items: flex-start;
+}
+

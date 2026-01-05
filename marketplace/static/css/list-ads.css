@@ -1,0 +1,805 @@
+﻿/* ======================================================================
+   list-ads.css (UPDATED - COMPONENT SAFE)
+   - Goal: list page styles ONLY (filters/banner/vip layout/grid placement)
+   - IMPORTANT: does NOT style .ad-card visuals (that belongs to item-card.css)
+   ====================================================================== */
+
+/* keep variables global (OK) */
+:root {
+  --rukn-orange: #ff7a18;
+  --rukn-orange-light: #fdba74;
+  --rukn-gray: #f3f4f6;
+  --muted: #6b7280;
+  --rukn-green: #16a34a;
+  --rukn-green-700: #15803d;
+  --rukn-green-50: #ecfdf5;
+  --rukn-green-100: #d1fae5;
+  --rukn-green-200: #a7f3d0;
+}
+
+/* ======================================================================
+   Scope page styling (NO global body leak)
+   ====================================================================== */
+.list-ads-page {
+  font-family: 'Cairo', sans-serif;
+  background: #F1F1F1;
+  color: #111827;
+  line-height: 1.6;
+  min-height: 100%;
+}
+
+.list-ads-page input[type="checkbox"],
+.list-ads-page input[type="radio"] {
+  accent-color: var(--rukn-orange) !important;
+}
+
+.list-ads-page .filter-select:focus,
+.list-ads-page .filter-input:focus {
+  border-color: var(--rukn-orange) !important;
+  box-shadow: 0 0 0 3px rgba(255, 122, 24, .25) !important;
+  outline: none !important;
+  background: #fff7f1 !important;
+}
+
+.list-ads-page .no-scrollbar::-webkit-scrollbar { display: none; }
+.list-ads-page .no-scrollbar { scrollbar-width: none; }
+
+/* filter title */
+.list-ads-page .filter-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #444;
+  padding: 0;
+  margin: 10px 0 8px;
+}
+
+.list-ads-page .filter-input,
+.list-ads-page .filter-select {
+  width: 100%;
+  border: 2px solid rgb(231, 232, 234);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: #fff;
+  transition: .25s;
+}
+
+/* ======================================================================
+   Container shell
+   ====================================================================== */
+.list-ads-page .container-box {
+  background: #fff;
+  border-radius: 24px;
+  width: 100%;
+  margin-bottom: 20px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, .12);
+  position: relative;
+  overflow: hidden;
+}
+
+.list-ads-page .container-box::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--rukn-orange), var(--rukn-orange-light));
+  opacity: .9;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.list-ads-page .container-box > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ======================================================================
+   Segmented controls
+   ====================================================================== */
+.list-ads-page .seg-btn {
+  display: flex;
+  width: 100%;
+  border: 2px solid rgb(231, 232, 234);
+  border-radius: 99px;
+  padding: 4px 1px;
+  overflow: hidden;
+  background: var(--rukn-gray);
+}
+
+.list-ads-page .seg-btn input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.list-ads-page .seg-btn label {
+  flex: 1;
+  padding: 6px 8px;
+  margin: 0 2px;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+  color: #6b7280;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.8;
+  transition: .15s ease;
+  white-space: nowrap;
+  border-radius: 99px;
+}
+
+.list-ads-page .seg-btn input:checked + label {
+  color: #fff;
+  background: var(--rukn-orange);
+}
+
+.list-ads-page .seg-btn label:hover {
+  color: #fff;
+  background: var(--rukn-orange);
+}
+
+.list-ads-page .seg-btn input:checked + label:hover {
+  background: #e36a00;
+}
+
+.list-ads-page .seg-btn input:focus-visible + label {
+  outline: 2px solid rgba(255, 122, 24, .25);
+  outline-offset: -2px;
+}
+
+/* ======================================================================
+   Banner
+   ====================================================================== */
+.list-ads-page .ad-banner-wrap {
+  border-radius: 26px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, .14);
+  background: #fff;
+}
+
+.list-ads-page .ad-banner-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 240px at 20% 0%, rgba(255, 122, 24, .20), transparent 55%),
+    radial-gradient(900px 240px at 80% 0%, rgba(22, 163, 74, .12), transparent 55%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.list-ads-page .ad-banner-img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.02);
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .ad-banner-img { height: 260px; }
+}
+
+@media (min-width: 1024px) {
+  .list-ads-page .ad-banner-img { height: 290px; }
+}
+
+.list-ads-page .ad-banner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    rgba(17, 24, 39, .78),
+    rgba(17, 24, 39, .20) 55%,
+    rgba(17, 24, 39, .06)
+  );
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .ad-banner-overlay { padding: 24px; }
+}
+
+.list-ads-page .ad-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .94);
+  border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(8px);
+}
+
+.list-ads-page .ad-cta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 13px;
+  transition: .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.list-ads-page .ad-cta .btn-primary { background: var(--rukn-orange); color: #fff; }
+.list-ads-page .ad-cta .btn-primary:hover { background: #e06600; }
+
+.list-ads-page .ad-cta .btn-ghost {
+  background: #fff;
+  color: #111827;
+  border: 1px solid rgba(255, 122, 24, .22);
+}
+
+.list-ads-page .ad-cta .btn-ghost:hover { background: #fff6ef; }
+
+.list-ads-page .ad-banner-slides { position: relative; }
+.list-ads-page .ad-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .45s ease, transform .45s ease;
+  transform: scale(1.02);
+}
+.list-ads-page .ad-slide.is-active {
+  opacity: 1;
+  position: relative;
+  transform: scale(1.02);
+}
+
+.list-ads-page .ad-dots {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 14px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .ad-dots { bottom: 16px; }
+}
+
+.list-ads-page .ad-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .18);
+  transition: transform .2s ease, background .2s ease, width .2s ease;
+}
+
+.list-ads-page .ad-dot:hover { transform: scale(1.15); }
+
+.list-ads-page .ad-dot.is-active {
+  width: 26px;
+  background: rgba(255, 255, 255, .92);
+}
+
+@media (max-width: 639px) {
+  .list-ads-page #bannerTitle {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .list-ads-page #bannerDesc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .list-ads-page .ad-banner-overlay { padding-bottom: 76px; }
+}
+
+/* corner CTA helper */
+.list-ads-page .ad-cta-corner {
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  padding: 8px 10px;
+  gap: 8px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  max-width: calc(100% - 28px);
+}
+
+.list-ads-page .ad-cta-corner a {
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 12px;
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .ad-cta-corner {
+    left: 24px;
+    bottom: 22px;
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .list-ads-page .ad-cta-corner a {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 14px;
+  }
+}
+
+/* ======================================================================
+   Separator
+   ====================================================================== */
+.list-ads-page .page-sep {
+  position: relative;
+  padding: 22px 0 6px;
+  margin: 10px 0 24px;
+}
+
+.list-ads-page .page-sep::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(to left, transparent, rgba(255, 122, 24, .35), transparent);
+}
+
+.list-ads-page .page-sep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(to left, transparent, rgba(22, 163, 74, .18), transparent);
+}
+
+.list-ads-page .sep-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid rgba(255, 122, 24, .20);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, .10);
+  backdrop-filter: blur(8px);
+}
+
+.list-ads-page .sep-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--rukn-orange), var(--rukn-orange-light));
+  box-shadow: 0 0 0 4px rgba(255, 122, 24, .10);
+}
+
+.list-ads-page .sep-title {
+  font-weight: 900;
+  color: #111827;
+  font-size: 16px;
+}
+
+.list-ads-page .sep-sub {
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 8px;
+  max-width: 64ch;
+}
+
+/* ======================================================================
+   VIP container + rail layout ONLY (no .ad-card resizing here)
+   ====================================================================== */
+.list-ads-page .vip-shell {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(900px 280px at 15% 0%, rgba(255, 122, 24, .18), transparent 55%),
+    radial-gradient(900px 280px at 85% 0%, rgba(22, 163, 74, .12), transparent 55%),
+    linear-gradient(180deg, #ffffff, #fffaf6);
+  border: 1px solid rgba(255, 122, 24, .22);
+  box-shadow: 0 26px 70px rgba(15, 23, 42, .12);
+}
+
+.list-ads-page .vip-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: linear-gradient(90deg, var(--rukn-orange), var(--rukn-orange-light), rgba(22, 163, 74, .6));
+  opacity: .95;
+}
+
+.list-ads-page .vip-head {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 18px 10px;
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .vip-head { padding: 22px 22px 12px; }
+}
+
+.list-ads-page .vip-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.list-ads-page .vip-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid rgba(255, 122, 24, .22);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
+}
+
+.list-ads-page .vip-h2 {
+  font-weight: 900;
+  font-size: 18px;
+  color: #111827;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .vip-h2 { font-size: 20px; }
+}
+
+.list-ads-page .vip-sub {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: #6b7280;
+  max-width: 60ch;
+}
+
+.list-ads-page .vip-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.list-ads-page .vip-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, .9);
+  border: 1px solid rgba(255, 122, 24, .20);
+  color: #111827;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .10);
+  transition: transform .15s ease, background .15s ease;
+}
+
+.list-ads-page .vip-btn:hover {
+  transform: translateY(-1px);
+  background: #fff7f1;
+}
+
+.list-ads-page .vip-btn:active { transform: translateY(0); }
+
+.list-ads-page .vip-body {
+  position: relative;
+  z-index: 2;
+  padding: 6px 14px 14px;
+}
+
+@media (min-width: 640px) {
+  .list-ads-page .vip-body { padding: 8px 18px 18px; }
+}
+
+.list-ads-page .vip-body::before {
+  content: "";
+  position: absolute;
+  inset: 10px 10px 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(255, 255, 255, .55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.list-ads-page .vip-body > * { position: relative; z-index: 1; }
+
+.list-ads-page .vip-dots {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  direction: rtl;
+}
+
+.list-ads-page .vip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, .18);
+  border: 1px solid rgba(255, 122, 24, .18);
+  transition: width .2s ease, background .2s ease, transform .2s ease;
+}
+
+.list-ads-page .vip-dot.is-active {
+  width: 28px;
+  background: rgba(255, 122, 24, .85);
+}
+
+.list-ads-page .vip-dot:hover { transform: scale(1.12); }
+
+@media (max-width: 639px) {
+  .list-ads-page .vip-dots { display: none !important; }
+}
+
+/* VIP rail: layout only, keep card width from item-card.css */
+.list-ads-page .vip-rtl-rail {
+  direction: rtl;
+  display: flex;
+  gap: 20px; /* match Tailwind gap-5 */
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-snap-stop: always;
+}
+
+/* each child slides as a unit (card keeps its own fixed width) */
+.list-ads-page .vip-rtl-rail > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 1280px) {
+  .list-ads-page .vip-rtl-rail {
+    scroll-snap-type: none; /* desktop: dots/buttons handle nav; no forced snap */
+  }
+}
+
+/* ======================================================================
+   Ads grid placement ONLY (card visuals are in item-card.css)
+   ====================================================================== */
+.list-ads-page #adsGrid,
+.list-ads-page .ads-grid {
+  display: grid;
+  gap: 20px;
+  justify-content: center; /* keeps it visually centered in RTL too */
+  grid-template-columns: repeat(auto-fit, minmax(var(--ad-card-w), var(--ad-card-w)));
+}
+
+.list-ads-page #adsGrid > *,
+.list-ads-page .ads-grid > * {
+  justify-self: center;
+}
+
+/* ======================================================================
+   Mobile Bottom Filter Dock + Sheet
+   ====================================================================== */
+@media (max-width: 767px) {
+  .list-ads-page { padding-bottom: 96px; }
+
+  .list-ads-page #toggleFilters,
+  .list-ads-page #filtersBackdrop { display: none !important; }
+
+  .list-ads-page #filtersBox { display: none !important; }
+}
+
+.list-ads-page .mf-dock {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 9999;
+  border-radius: 22px;
+  background: #fff;
+  border: 0;
+  box-shadow: 0 16px 46px rgba(15, 23, 42, .16);
+  overflow: hidden;
+}
+
+.list-ads-page .mf-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px 10px 10px;
+  direction: rtl;
+}
+
+.list-ads-page .mf-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  color: #111827;
+  transition: .18s ease;
+  user-select: none;
+}
+
+.list-ads-page .mf-item svg { width: 20px; height: 20px; }
+
+.list-ads-page .mf-item .lbl {
+  font-size: 11px;
+  font-weight: 900;
+  color: #374151;
+  line-height: 1;
+}
+
+.list-ads-page .mf-item.is-active {
+  background: #fff7f1;
+  border-color: rgba(255, 122, 24, .22);
+}
+
+.list-ads-page .mf-item.is-active svg { color: var(--rukn-orange); }
+
+.list-ads-page .mf-sheet {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: calc(var(--mf-dock-h, 86px) + 18px);
+  z-index: 9998;
+  border-radius: 22px;
+  background: #fff;
+  border: 0;
+  box-shadow: 0 18px 52px rgba(15, 23, 42, .22);
+  overflow: hidden;
+  transform: translateY(18px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform .22s cubic-bezier(.2, .9, .2, 1), opacity .18s ease;
+}
+
+.list-ads-page .mf-sheet.is-open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.list-ads-page .mf-grab {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 2px;
+}
+
+.list-ads-page .mf-grab span {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, .14);
+}
+
+.list-ads-page .mf-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 8px;
+  direction: rtl;
+}
+
+.list-ads-page .mf-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.list-ads-page .mf-ico {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, .10);
+  border: 1px solid rgba(0, 0, 0, .04);
+}
+
+.list-ads-page .mf-h3 {
+  font-size: 14px;
+  font-weight: 900;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.list-ads-page .mf-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.list-ads-page .mf-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, .06);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+}
+
+.list-ads-page .mf-body {
+  padding: 6px 12px 12px;
+  max-height: min(42dvh, 340px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.list-ads-page .mf-actions {
+  padding: 10px 12px 12px;
+  display: flex;
+  gap: 10px;
+  direction: rtl;
+  border-top: 1px solid rgba(17, 24, 39, .06);
+  background: #fff;
+}
+
+.list-ads-page .mf-btn {
+  flex: 1;
+  border-radius: 16px;
+  padding: 12px 12px;
+  font-weight: 900;
+  font-size: 13px;
+  transition: .18s ease;
+}
+
+.list-ads-page .mf-btn.primary { background: var(--rukn-orange); color: #fff; }
+.list-ads-page .mf-btn.primary:hover { background: #e06600; }
+
+.list-ads-page .mf-btn.ghost {
+  background: #fff;
+  color: #111827;
+  border: 1px solid rgba(255, 122, 24, .22);
+}
+
+.list-ads-page .mf-btn.ghost:hover { background: #fff7f1; }
+
+.list-ads-page .mf-body .filter-title {
+  font-size: 12.5px;
+  margin: 10px 0 8px;
+}
+
+.list-ads-page .mf-body .filter-input,
+.list-ads-page .mf-body .filter-select {
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+/* ======================================================================
+   Optional: stop “page shift by few pixels” due to scrollbar changes
+   ====================================================================== */
+html { scrollbar-gutter: stable; }
+
+/* Safety: ensure slides behave (scoped) */
+.list-ads-page .ad-banner-slides { position: relative; }
+.list-ads-page .ad-banner-slides .ad-slide { display: block; }
+
+
+.cards-row { align-items: flex-start; }

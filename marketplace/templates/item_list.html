@@ -1,126 +1,309 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load static %}
 
-{% block title %}{% trans "Browse items" %}{% endblock %}
+{% block title %}ركن — جميع الإعلانات{% endblock %}
+
+{% block base_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/list-ads.css' %}">
+{% endblock %}
+
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-10">
-  <div class="flex flex-col lg:flex-row gap-6">
+<div class="list-ads-page" data-page="list-ads">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-16" dir="rtl">
 
-    {# ================= FILTERS (LEFT) ================= #}
-    <aside class="w-full lg:w-72 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-      <h2 class="text-sm font-semibold mb-3">
-        {% trans "Filter" %}
-      </h2>
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 mb-3">
+      <a href="{% url 'home' %}" class="hover:text-[var(--rukn-orange)]">الرئيسية</a>
+      <span class="mx-1">/</span>
+      <span class="text-gray-800 font-medium">جميع الإعلانات</span>
+    </nav>
 
-      <form method="get" action="{% url 'item_list' %}" class="space-y-4">
-        <input type="hidden" name="q" value="{{ q }}">
+    <!-- ✅ Banner Partial -->
+    <section class="mb-6">
+      {# banners: queryset/list of banner objects with .image.url, optional .title/.desc/.primary_url/.secondary_url #}
+      {% include "partials/_top_banner.html" with banners=banners banner_id="topBanner" %}
+    </section>
 
-        {# CATEGORIES (Listing.category) #}
-        <div>
-          <p class="text-xs font-medium text-gray-500 mb-1">
-            {% trans "Categories" %}
-          </p>
-
-          <div class="space-y-2 max-h-64 overflow-y-auto text-xs">
-            {% for cat in categories %}
-              <label class="flex items-center gap-2 text-gray-700">
-                <input
-                  type="checkbox"
-                  name="categories"
-                  value="{{ cat.id }}"
-                  class="rounded border-gray-300 text-[var(--rukn-orange)] focus:ring-[var(--rukn-orange)]"
-                  {% if cat.id|stringformat:"s" in selected_categories %}checked{% endif %}
-                >
-                <span>{{ cat }}</span>
-              </label>
-
-              {% for sub in cat.subcategories.all %}
-                <label class="flex items-center gap-2 text-gray-500 ms-4">
-                  <input
-                    type="checkbox"
-                    name="categories"
-                    value="{{ sub.id }}"
-                    class="rounded border-gray-300 text-[var(--rukn-orange)] focus:ring-[var(--rukn-orange)]"
-                    {% if sub.id|stringformat:"s" in selected_categories %}checked{% endif %}
-                  >
-                  <span class="text-[0.8rem]">– {{ sub }}</span>
-                </label>
-              {% endfor %}
-            {% endfor %}
+    <!-- ===== VIP Featured (RTL + touch scroll) ===== -->
+    {% if featured_items %}
+    <section id="featuredSection" class="vip-shell mb-6 mt-16">
+      <div class="vip-head">
+        <div class="vip-title">
+          <span class="vip-icon">⭐</span>
+          <div>
+            <h2 class="vip-h2">الإعلانات المميزة</h2>
+            <p class="vip-sub">إعلانات مختارة بعناية — تصفّح سريع بالسحب.</p>
           </div>
         </div>
 
-        {# CITY (Listing.city) #}
-        <div>
-          <p class="text-xs font-medium text-gray-500 mb-1">
-            {% trans "City" %}
-          </p>
-          <select
-            name="city"
-            class="w-full rounded-lg border border-gray-300 text-xs py-1.5 focus:ring-[var(--rukn-orange)] focus:border-[var(--rukn-orange)]"
-          >
-            <option value="">{% trans "All cities" %}</option>
-            {% for city in cities %}
-              <option value="{{ city.id }}"
-                      {% if city.id|stringformat:"s" == request.GET.city %}selected{% endif %}>
-                {{ city.name_ar }}
-              </option>
-            {% endfor %}
-          </select>
+        <div class="vip-controls">
+          <button type="button" class="vip-btn" id="vipPrev" aria-label="السابق">
+            <svg viewBox="0 0 24 24" class="w-5 h-5">
+              <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button type="button" class="vip-btn" id="vipNext" aria-label="التالي">
+            <svg viewBox="0 0 24 24" class="w-5 h-5">
+              <path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
         </div>
-
-        {# PRICE — from Item.price #}
-        <div>
-          <p class="text-xs font-medium text-gray-500 mb-1">
-            {% trans "Price (JOD)" %}
-          </p>
-          <div class="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              name="min_price"
-              value="{{ request.GET.min_price }}"
-              placeholder="{% trans 'Min' %}"
-              class="w-full rounded-lg border border-gray-300 text-xs py-1.5 px-2 focus:ring-[var(--rukn-orange)] focus:border-[var(--rukn-orange)]"
-            >
-            <input
-              type="number"
-              name="max_price"
-              value="{{ request.GET.max_price }}"
-              placeholder="{% trans 'Max' %}"
-              class="w-full rounded-lg border border-gray-300 text-xs py-1.5 px-2 focus:ring-[var(--rukn-orange)] focus:border-[var(--rukn-orange)]"
-            >
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          class="w-full mt-2 rounded-full bg-[var(--rukn-orange)] text-white text-xs font-semibold py-2 shadow-sm hover:brightness-110 transition"
-        >
-          {% trans "Apply filters" %}
-        </button>
-      </form>
-    </aside>
-
-    {# ================= RESULTS (RIGHT) ================= #}
-    <section class="flex-1">
-      <div class="flex items-center justify-between mb-3">
-        <h1 class="text-lg md:text-xl font-bold">
-          {% trans "Items" %}
-        </h1>
-        {% if q %}
-          <p class="text-xs text-gray-500">
-            {% blocktrans %}Results for "{{ q }}"{% endblocktrans %}
-          </p>
-        {% endif %}
       </div>
 
-      <div id="results">
-        {# IMPORTANT: this partial must also be updated #}
-        {% include "partials/item_results.html" %}
+      <div class="vip-body">
+        <div id="featuredList" class="vip-rtl-rail text-right flex gap-5 overflow-x-auto pb-3 pt-1 no-scrollbar">
+          {% for item in featured_items %}
+            {# IMPORTANT: partial MUST output .featured-card when featured_card=1 #}
+            {% include "partials/_item_card.html" with item=item featured_card=1 %}
+          {% endfor %}
+        </div>
+        <div class="vip-dots" id="vipDots" aria-label="مؤشر الصفحات"></div>
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- ===== Separator ===== -->
+    <section class="page-sep" id="allAdsAnchor">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="sep-chip">
+            <span class="sep-dot"></span>
+            <span class="sep-title">جميع الإعلانات</span>
+          </div>
+          <p class="sep-sub">استخدم الفلاتر لتضييق نتائج البحث والعثور على الإعلان المناسب لك.</p>
+        </div>
       </div>
     </section>
 
-  </div>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6 items-start">
+
+      <!-- ========== Filters (Desktop only) ========== -->
+      <aside id="filtersBox"
+             class="hidden md:block lg:col-span-1 container-box p-5 sm:p-6 space-y-4 sticky top-1 self-start h-fit">
+
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold text-gray-800">تصفية النتائج</h2>
+          <button type="button" id="resetFilters" class="hover:underline text-xs">مسح</button>
+        </div>
+
+        <form id="filtersForm" method="get" action="{% url 'item_list' %}" class="space-y-4">
+          <input type="hidden" name="page" id="pageField" value="1" />
+
+          <div>
+            <label class="filter-title">القسم</label>
+            <select name="category" id="filterCategory" class="filter-select">
+              <option value="">كل الأقسام</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if filters.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name_ar }}</option>
+                {% for sub in cat.subcategories.all %}
+                  <option value="{{ sub.id }}" {% if filters.category == sub.id|stringformat:"s" %}selected{% endif %}>
+                    — {{ sub.name_ar }}
+                  </option>
+                {% endfor %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="filter-title">المدينة</label>
+            <select name="city" id="filterCity" class="filter-select">
+              <option value="">كل المدن</option>
+              {% for c in cities %}
+                <option value="{{ c.id }}" {% if filters.city == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name_ar }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="filter-title">حالة المنتج</label>
+            <div class="seg-btn" role="group" aria-label="حالة المنتج">
+              <input type="radio" id="status_all" name="condition" value="" {% if not filters.condition %}checked{% endif %}>
+              <label for="status_all">الكل</label>
+
+              <input type="radio" id="status_new" name="condition" value="new" {% if filters.condition == "new" %}checked{% endif %}>
+              <label for="status_new">جديد</label>
+
+              <input type="radio" id="status_used" name="condition" value="used" {% if filters.condition == "used" %}checked{% endif %}>
+              <label for="status_used">مستعمل</label>
+            </div>
+          </div>
+
+          <div>
+            <label class="filter-title">نطاق السعر (د.أ)</label>
+            <div class="flex gap-2">
+              <input id="filterPriceMin" type="number" min="0" name="min_price" placeholder="من" class="filter-input w-1/2" value="{{ filters.min_price|default_if_none:'' }}">
+              <input id="filterPriceMax" type="number" min="0" name="max_price" placeholder="إلى" class="filter-input w-1/2" value="{{ filters.max_price|default_if_none:'' }}">
+            </div>
+          </div>
+
+          <div>
+            <label class="filter-title">نوع المعلن</label>
+            <div class="seg-btn" role="group" aria-label="نوع المعلن">
+              <input type="radio" id="seller_all" name="seller_type" value="" {% if not filters.seller_type %}checked{% endif %}>
+              <label for="seller_all">الكل</label>
+
+              <input type="radio" id="seller_ind" name="seller_type" value="individual" {% if filters.seller_type == "individual" %}checked{% endif %}>
+              <label for="seller_ind">فرد</label>
+
+              <input type="radio" id="seller_store" name="seller_type" value="store" {% if filters.seller_type == "store" %}checked{% endif %}>
+              <label for="seller_store">متجر</label>
+            </div>
+          </div>
+
+          <div>
+            <label class="filter-title">الفترة الزمنية</label>
+            <div class="seg-btn" role="group" aria-label="الفترة الزمنية">
+              <input type="radio" id="time_any" name="time" value="" {% if not filters.time %}checked{% endif %}>
+              <label for="time_any">أي وقت</label>
+
+              <input type="radio" id="time_24" name="time" value="24" {% if filters.time == "24" %}checked{% endif %}>
+              <label for="time_24">24 ساعة</label>
+
+              <input type="radio" id="time_7" name="time" value="168" {% if filters.time == "168" %}checked{% endif %}>
+              <label for="time_7">7 أيام</label>
+
+              <input type="radio" id="time_30" name="time" value="720" {% if filters.time == "720" %}checked{% endif %}>
+              <label for="time_30">30 يوم</label>
+            </div>
+          </div>
+
+          <div>
+            <label class="filter-title">ترتيب حسب</label>
+            <div class="seg-btn" role="group" aria-label="ترتيب حسب">
+              <input type="radio" id="sort_latest" name="sort" value="latest" {% if not filters.sort or filters.sort == "latest" %}checked{% endif %}>
+              <label for="sort_latest">الأحدث</label>
+
+              <input type="radio" id="sort_asc" name="sort" value="priceAsc" {% if filters.sort == "priceAsc" %}checked{% endif %}>
+              <label for="sort_asc">الأقل سعرًا</label>
+
+              <input type="radio" id="sort_desc" name="sort" value="priceDesc" {% if filters.sort == "priceDesc" %}checked{% endif %}>
+              <label for="sort_desc">الأعلى سعرًا</label>
+            </div>
+          </div>
+        </form>
+      </aside>
+
+      <!-- ========== Ads list ========== -->
+      <section class="lg:col-span-3 container-box p-5 sm:p-6">
+        <div class="flex items-center justify-between mb-3 text-xs text-gray-500">
+          <div>
+            عرض
+            <span id="resultsVisible" class="font-bold text-[var(--rukn-orange)]">{{ visible_count }}</span>
+            من
+            <span id="resultsTotal" class="font-bold text-gray-800">{{ total_count }}</span>
+            إعلان
+          </div>
+          <div class="hidden md:block">يمكنك استخدام الفلاتر لتخصيص النتائج.</div>
+        </div>
+
+        <div id="adsList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {% include "partials/item_results.html" %}
+        </div>
+
+        <div class="mt-8 flex justify-center">
+          <button id="loadMoreBtn"
+                  class="px-8 py-3 rounded-xl font-bold text-white bg-[var(--rukn-orange)] hover:bg-[#e06600] transition shadow-sm {% if not has_more %}hidden{% endif %}">
+            عرض المزيد
+          </button>
+        </div>
+
+        <div id="noResults" class="{% if total_count != 0 %}hidden{% endif %} mt-6 text-center text-sm text-gray-500">
+          لا توجد إعلانات مطابقة للفلاتر الحالية.
+          <button class="block mx-auto mt-2 text-[var(--rukn-orange)] hover:underline text-xs" id="clearAfterNoResults">
+            مسح الفلاتر وعرض جميع الإعلانات
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== Mobile Filter Sheet ===== -->
+  <section id="mfSheet" class="mf-sheet md:hidden" role="dialog" aria-modal="false" aria-labelledby="mfSheetTitle">
+    <div class="mf-grab"><span></span></div>
+
+    <div class="mf-head">
+      <div class="mf-title">
+        <div class="mf-ico" id="mfSheetIcon"></div>
+        <div>
+          <div id="mfSheetTitle" class="mf-h3">تصفية</div>
+          <div id="mfSheetSub" class="mf-sub">اختر الخيار وسيتم الإغلاق تلقائياً</div>
+        </div>
+      </div>
+
+      <button type="button" class="mf-close" id="mfClose" aria-label="إغلاق">
+        <svg viewBox="0 0 24 24" class="w-5 h-5">
+          <path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="mf-body" id="mfBody"></div>
+
+    <div class="mf-actions">
+      <button type="button" class="mf-btn primary" id="mfApply">تطبيق</button>
+      <button type="button" class="mf-btn ghost" id="mfResetOne">مسح</button>
+    </div>
+  </section>
+
+  <!-- ===== Mobile Filter Dock ===== -->
+  <nav id="mfDock" class="mf-dock md:hidden" aria-label="فلاتر الموبايل">
+    <div class="mf-row">
+      <button type="button" class="mf-item" data-key="category">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 6h16M6 12h12M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span class="lbl">القسم</span>
+      </button>
+
+      <button type="button" class="mf-item" data-key="city">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 22s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z" stroke="currentColor" stroke-width="2" />
+          <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2" />
+        </svg>
+        <span class="lbl">المدينة</span>
+      </button>
+
+      <button type="button" class="mf-item" data-key="condition">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 12l3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M5 5h14v14H5z" stroke="currentColor" stroke-width="2" opacity=".55" />
+        </svg>
+        <span class="lbl">الحالة</span>
+      </button>
+
+      <button type="button" class="mf-item" data-key="price">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 3v18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M16 7.5c0-1.9-1.8-3.5-4-3.5s-4 1.2-4 3 1.3 2.6 4 3 4 1.3 4 3-1.8 3.5-4 3.5-4-1.6-4-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span class="lbl">السعر</span>
+      </button>
+
+      <button type="button" class="mf-item" data-key="time">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 8v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2" />
+        </svg>
+        <span class="lbl">الوقت</span>
+      </button>
+
+      <button type="button" class="mf-item" data-key="sort">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M8 6h13M8 12h9M8 18h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M4 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".55" />
+        </svg>
+        <span class="lbl">الترتيب</span>
+      </button>
+    </div>
+  </nav>
 </div>
+{% endblock %}
+
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/banner.js' %}"></script>
+  <script src="{% static 'js/list-ads-django.js' %}"></script>
 {% endblock %}

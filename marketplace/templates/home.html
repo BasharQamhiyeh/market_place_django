@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block page_css %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
 {% block title %}ركن — الرئيسية{% endblock %}
 
 {% block content %}
@@ -458,5 +462,11 @@
 </section>
 
 
+
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/main.js' %}"></script>
 
 {% endblock %}

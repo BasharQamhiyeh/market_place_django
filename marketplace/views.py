@@ -95,6 +95,11 @@ from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login
+from django.db.models import Q, Exists, OuterRef
+from .models import User
+
 try:
     from django.contrib.postgres.search import TrigramSimilarity
     TRIGRAM_AVAILABLE = True
@@ -167,47 +172,67 @@ def home(request):
 
 
 def item_list(request):
-    # Auto-deactivate very old active listings
+    # ✅ keep your cleanup
     Listing.objects.filter(
         created_at__lt=timezone.now() - timedelta(days=1000),
         type="item",
         is_active=True
     ).update(is_active=False)
 
+    now = timezone.now()
     q = request.GET.get("q", "").strip()
 
-    # --- Filters ---
     category_id_single = request.GET.get("category")
     category_ids_multi = request.GET.getlist("categories")
     city_id = request.GET.get("city")
     min_price = request.GET.get("min_price")
     max_price = request.GET.get("max_price")
 
-    # ================================
-    # BASE QUERY → FILTER BY LISTING
-    # ================================
+    condition = (request.GET.get("condition") or "").strip()
+    seller_type = (request.GET.get("seller_type") or "").strip()
+    time_hours = (request.GET.get("time") or "").strip()
+    sort = (request.GET.get("sort") or "").strip()
+
+    # ✅ FAVORITE exists subquery (same as home)
+    fav_exists = None
+    if request.user.is_authenticated:
+        fav_exists = Exists(
+            Favorite.objects.filter(
+                user=request.user,
+                listing=OuterRef("listing"),
+            )
+        )
+
+    # ✅ Featured from DB (independent of filters/search)
+    featured_items = (
+        Item.objects.filter(
+            listing__type="item",
+            listing__is_approved=True,
+            listing__is_active=True,
+            listing__featured_until__gt=now,
+        )
+        .select_related("listing", "listing__category", "listing__city", "listing__user")
+        .prefetch_related("photos")
+        .order_by("-listing__featured_until", "-listing__created_at")[:12]
+    )
+
+    if fav_exists is not None:
+        featured_items = featured_items.annotate(is_favorited=fav_exists)
+
+    # ✅ Normal results (exclude featured so they don't repeat)
     base_qs = Item.objects.filter(
         listing__type="item",
         listing__is_approved=True,
         listing__is_active=True,
     )
 
-    # CATEGORY FILTER
+    # ✅ ADD THIS: annotate base_qs (so every later queryset keeps it)
+    if fav_exists is not None:
+        base_qs = base_qs.annotate(is_favorited=fav_exists)
+
     selected_category = None
 
-    if category_ids_multi:
-        all_ids = []
-        for cid in category_ids_multi:
-            try:
-                cat = Category.objects.get(id=cid)
-                all_ids += _category_descendant_ids(cat)
-            except Category.DoesNotExist:
-                continue
-
-        if all_ids:
-            base_qs = base_qs.filter(listing__category_id__in=all_ids)
-
-    elif category_id_single:
+    if category_id_single:
         try:
             selected_category = Category.objects.get(id=category_id_single)
             ids = _category_descendant_ids(selected_category)
@@ -215,38 +240,57 @@ def item_list(request):
         except Category.DoesNotExist:
             selected_category = None
 
-    # CITY FILTER
+    elif category_ids_multi:
+        all_ids = []
+        for cid in category_ids_multi:
+            try:
+                cat = Category.objects.get(id=cid)
+                all_ids += _category_descendant_ids(cat)
+            except Category.DoesNotExist:
+                continue
+        if all_ids:
+            base_qs = base_qs.filter(listing__category_id__in=all_ids)
+
     if city_id:
         base_qs = base_qs.filter(listing__city_id=city_id)
 
-    # PRICE FILTER
     if min_price:
         base_qs = base_qs.filter(price__gte=min_price)
     if max_price:
         base_qs = base_qs.filter(price__lte=max_price)
 
-    # =============================
-    # ORDER BY LISTING DATE
-    # =============================
-    queryset = base_qs.order_by("-listing__created_at")
+    if condition:
+        base_qs = base_qs.filter(listing__condition=condition)
 
-    # =============================
-    # SEARCH (q)
-    # =============================
+    if seller_type:
+        if Store is not None:
+            if seller_type == "store":
+                base_qs = base_qs.filter(listing__user__store__isnull=False)
+            elif seller_type == "individual":
+                base_qs = base_qs.filter(listing__user__store__isnull=True)
+
+    if time_hours:
+        try:
+            hours = int(time_hours)
+            since = now - timedelta(hours=hours)
+            base_qs = base_qs.filter(listing__created_at__gte=since)
+        except ValueError:
+            pass
+
+    if sort == "priceAsc":
+        queryset = base_qs.order_by("price", "-listing__created_at")
+    elif sort == "priceDesc":
+        queryset = base_qs.order_by("-price", "-listing__created_at")
+    else:
+        queryset = base_qs.order_by("-listing__created_at")
+
+    # ✅ Search logic
     if len(q) >= 2:
-        # LEVEL 1 — TRY ES
         if not IS_RENDER and hasattr(ListingDocument, "search"):
             try:
                 from elasticsearch_dsl.query import Q as ES_Q
 
-                es_query = ES_Q(
-                    "multi_match",
-                    query=q,
-                    fields=["title", "description"],
-                    fuzziness="AUTO",
-                )
-
-                # Search Listings NOT Items
+                es_query = ES_Q("multi_match", query=q, fields=["title", "description"], fuzziness="AUTO")
                 hits = (
                     ListingDocument.search()
                     .query(es_query)
@@ -255,7 +299,6 @@ def item_list(request):
                     .execute()
                     .hits
                 )
-
                 listing_ids = [hit.meta.id for hit in hits]
 
                 if listing_ids:
@@ -264,7 +307,6 @@ def item_list(request):
                         .select_related("listing__category", "listing__city", "listing__user")
                         .prefetch_related("photos")
                     )
-
                     qs_list.sort(key=lambda i: listing_ids.index(i.listing_id))
                     queryset = qs_list
                 else:
@@ -273,20 +315,20 @@ def item_list(request):
             except Exception as e:
                 print("[WARN] ES DOWN:", e)
                 queryset = base_qs.filter(listing__title__icontains=q)
-
         else:
-            # LEVEL 2 — FALLBACK
             queryset = base_qs.filter(
-                Q(listing__title__icontains=q) |
-                Q(listing__description__icontains=q)
+                Q(listing__title__icontains=q) | Q(listing__description__icontains=q)
             ).order_by("-listing__created_at")
 
-    # Normalize if ES returned list
+    # if search returned list, rehydrate queryset
     if isinstance(queryset, list):
         ids = [obj.id for obj in queryset]
         queryset = Item.objects.filter(id__in=ids).order_by("-listing__created_at")
 
-    # FINAL SELECT RELATED
+        # ✅ CRITICAL: re-annotate after rebuilding queryset
+        if fav_exists is not None:
+            queryset = queryset.annotate(is_favorited=fav_exists)
+
     queryset = queryset.select_related(
         "listing",
         "listing__category",
@@ -294,34 +336,59 @@ def item_list(request):
         "listing__user"
     ).prefetch_related("photos")
 
-    paginator = Paginator(queryset, 12)
-    page_number = request.GET.get("page")
+    PAGE_SIZE = 27
+    paginator = Paginator(queryset, PAGE_SIZE)
+    page_number = request.GET.get("page") or "1"
     page_obj = paginator.get_page(page_number)
 
-    categories = (
-        Category.objects.filter(parent__isnull=True)
-        .prefetch_related("subcategories")
-        .distinct()
-    )
+    total_count = paginator.count
+    visible_count = page_obj.end_index() if total_count else 0
+    has_more = page_obj.has_next()
+
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories").distinct()
     cities = City.objects.all().order_by("name_ar")
-    selected_categories = request.GET.getlist("categories")
 
     context = {
         "page_obj": page_obj,
+        "items": page_obj.object_list,
         "q": q,
         "selected_category": selected_category,
         "categories": categories,
         "cities": cities,
-        "selected_categories": selected_categories,
+        "selected_categories": request.GET.getlist("categories"),
+        "total_count": total_count,
+        "visible_count": visible_count,
+        "featured_items": featured_items,
+        "has_more": has_more,
+        "filters": {
+            "category": category_id_single or "",
+            "city": city_id or "",
+            "condition": condition,
+            "seller_type": seller_type,
+            "time": time_hours,
+            "sort": sort or "latest",
+            "min_price": min_price,
+            "max_price": max_price,
+        }
     }
 
-    # HTMX partial
-    if request.headers.get("HX-Request") or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+    is_hx = bool(request.headers.get("HX-Request"))
+    is_xhr = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    if is_hx:
         html = render_to_string("partials/item_results.html", context, request=request)
         return HttpResponse(html)
 
-    return render(request, "item_list.html", context)
+    if is_xhr:
+        html = render_to_string("partials/item_results.html", context, request=request)
+        return JsonResponse({
+            "html": html,
+            "total_count": total_count,
+            "visible_count": visible_count,
+            "has_more": has_more,
+        })
 
+    return render(request, "item_list.html", context)
 
 
 def request_list(request):
@@ -2366,11 +2433,6 @@ def reset_password(request):
     return render(request, 'reset_password.html', {'form': form})
 
 
-# Login
-from django.shortcuts import redirect
-from django.contrib.auth import authenticate, login
-from django.db.models import Q
-from .models import User
 
 def _digits_only(s: str) -> str:
     return re.sub(r"\D+", "", (s or ""))
@@ -2503,3 +2565,20 @@ def submit_store_review(request, item_id):
     recalc_store_rating(store.id)
     messages.success(request, "تم إرسال المراجعة بنجاح.")
     return redirect("view_item", item_id=item_id)
+
+
+from marketplace.services.promotions import buy_featured_with_points, NotEnoughPoints
+
+@login_required
+def feature_listing(request, listing_id):
+    listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
+
+    DAYS = 7
+    COST = 50  # set your business rule
+
+    try:
+        buy_featured_with_points(user=request.user, listing=listing, days=DAYS, points_cost=COST)
+        messages.success(request, f"تم تمييز الإعلان لمدة {DAYS} أيام.")
+    except NotEnoughPoints:
+        messages.error(request, "رصيد النقاط غير كافٍ.")
+    return redirect("profile")  # or listing detail

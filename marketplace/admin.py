@@ -15,7 +15,8 @@ import nested_admin, json
 from django.utils import translation
 from .forms import CityForm
 from django import forms
-
+from datetime import timedelta
+from django.utils import timezone
 
 from .models import (
     User, Category, Attribute, AttributeOption,
@@ -221,6 +222,8 @@ class ItemAdmin(admin.ModelAdmin):
 
     ordering = ("-listing__updated_at",)
 
+    actions = ["feature_7_days", "unfeature"]
+
     # ============================
     # LIST DISPLAY
     # ============================
@@ -232,6 +235,9 @@ class ItemAdmin(admin.ModelAdmin):
         "listing_user_username",
         "listing_user_first_name",
         "listing_user_last_name",
+        "is_featured",  # ✅ ADD
+        "listing_featured_until",  # ✅ ADD
+
         "colored_status",
         "listing_approved_by",
         "listing_rejected_by",
@@ -299,6 +305,18 @@ class ItemAdmin(admin.ModelAdmin):
     # LISTING FIELDS (READ ONLY)
     # ============================
     inlines = [ItemPhotoInline, ItemAttributeValueInline]
+
+    def listing_featured_until(self, obj):
+        return obj.listing.featured_until
+    listing_featured_until.short_description = "Featured Until"
+    listing_featured_until.admin_order_field = "listing__featured_until"
+
+    def is_featured(self, obj):
+        until = obj.listing.featured_until
+        return bool(until and until > timezone.now())
+    is_featured.short_description = "Featured?"
+    is_featured.boolean = True
+
 
     def listing_title(self, obj):
         return obj.listing.title
@@ -399,6 +417,23 @@ class ItemAdmin(admin.ModelAdmin):
             color, text = "orange", "Pending"
         return format_html(f'<b style="color:{color};">{text}</b>')
     colored_status.short_description = "Status"
+
+
+    @admin.action(description="⭐ Feature selected items for 7 days")
+    def feature_7_days(self, request, queryset):
+        until = timezone.now() + timedelta(days=7)
+        for item in queryset.select_related("listing"):
+            item.listing.featured_until = until
+            item.listing.save(update_fields=["featured_until"])
+        self.message_user(request, f"✅ Featured {queryset.count()} items until {until}.")
+
+    @admin.action(description="❌ Remove featured from selected items")
+    def unfeature(self, request, queryset):
+        for item in queryset.select_related("listing"):
+            item.listing.featured_until = None
+            item.listing.save(update_fields=["featured_until"])
+        self.message_user(request, f"✅ Un-featured {queryset.count()} items.")
+
 
     # -----------------------------
     # Approve view  ✅ records who + redirects to list
@@ -526,7 +561,7 @@ class ItemAdmin(admin.ModelAdmin):
         self.message_user(request, "🗑️ Photo deleted successfully.", level=messages.SUCCESS)
 
         listing = item.listing
-        change_url = reverse("admin:marketplace_listing_change", args=[listing.pk])
+        change_url = reverse("admin:marketplace_item_change", args=[item.pk])
         return redirect(change_url)
 
     # -----------------------------
@@ -846,6 +881,7 @@ class ItemAdmin(admin.ModelAdmin):
 class RequestAdmin(admin.ModelAdmin):
     change_form_template = "admin/marketplace/request/change_form.html"
     ordering = ("-listing__updated_at",)
+    actions = ["feature_7_days", "unfeature"]
 
     # ============================
     # LIST DISPLAY
@@ -857,6 +893,8 @@ class RequestAdmin(admin.ModelAdmin):
         "budget",
         "condition_preference",
         "listing_user_username",
+        "is_featured",
+        "listing_featured_until",
         "colored_status",
         "listing_created_at",
         "listing_is_active",
@@ -912,6 +950,18 @@ class RequestAdmin(admin.ModelAdmin):
     # ============================
     # LISTING WRAPPER FIELDS
     # ============================
+
+    def listing_featured_until(self, obj):
+        return obj.listing.featured_until
+    listing_featured_until.short_description = "Featured Until"
+    listing_featured_until.admin_order_field = "listing__featured_until"
+
+    def is_featured(self, obj):
+        until = obj.listing.featured_until
+        return bool(until and until > timezone.now())
+    is_featured.short_description = "Featured?"
+    is_featured.boolean = True
+
 
     def listing_title(self, obj):
         return obj.listing.title
@@ -994,6 +1044,22 @@ class RequestAdmin(admin.ModelAdmin):
             path("<int:request_id>/reject/", self.admin_site.admin_view(self.reject_view), name="request_reject"),
         ]
         return custom + urls
+
+    @admin.action(description="⭐ Feature selected requests for 7 days")
+    def feature_7_days(self, request, queryset):
+        until = timezone.now() + timedelta(days=7)
+        for req in queryset.select_related("listing"):
+            req.listing.featured_until = until
+            req.listing.save(update_fields=["featured_until"])
+        self.message_user(request, f"✅ Featured {queryset.count()} requests until {until}.")
+
+    @admin.action(description="❌ Remove featured from selected requests")
+    def unfeature(self, request, queryset):
+        for req in queryset.select_related("listing"):
+            req.listing.featured_until = None
+            req.listing.save(update_fields=["featured_until"])
+        self.message_user(request, f"✅ Un-featured {queryset.count()} requests.")
+
 
     # Approve request
     def approve_view(self, request, request_id):

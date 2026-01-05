@@ -1,3 +1,20 @@
+/* =========================================================
+   header.js (GLOBAL)
+   - Runs on every page (loaded from base.html)
+   - Contains: login modal + password toggle + navbar dropdowns + referral link
+   - Keeps your existing Buy/Sell logic and toggleFavorite exactly as-is
+   - Uses `.show` (same as your CSS + old main.js)
+========================================================= */
+
+function getCSRFToken() {
+  return (
+    document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("csrftoken="))
+      ?.split("=")[1] || ""
+  );
+}
+
 // ===================== LOGIN SCRIPT =====================
 const loginBtn    = document.getElementById("loginBtn");
 const authButtons = document.getElementById("authButtons");
@@ -91,9 +108,97 @@ if (loginPassword && toggleLoginPassword) {
 }
 
 
+/* =========================================================
+   NAVBAR DROPDOWNS (moved from main.js -> header.js)
+   - Uses `.show` (same as your old main.js)
+   - Safe: won't break if elements are missing
+   - Keeps your "mark notifications read" behavior
+========================================================= */
+window.menus = window.menus || {
+  fav:  { btn: document.getElementById("favBtn"),  menu: document.getElementById("favMenu") },
+  msg:  { btn: document.getElementById("msgBtn"),  menu: document.getElementById("msgMenu") },
+  noti: { btn: document.getElementById("notiBtn"), menu: document.getElementById("notiMenu") },
+  user: { btn: document.getElementById("userBtn"), menu: document.getElementById("userMenu") }
+};
+
+function closeAll(except) {
+  Object.keys(menus).forEach(k => {
+    const o = menus[k];
+    if (!o.btn || !o.menu) return;
+    if (k !== except) {
+      o.menu.classList.remove("show");
+      o.btn.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+Object.keys(menus).forEach(key => {
+  const o = menus[key];
+  if (!o.btn || !o.menu) return;
+
+  o.btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = o.menu.classList.contains("show");
+    closeAll(key);
+
+    if (!isOpen) {
+      o.menu.classList.add("show");
+      o.btn.setAttribute("aria-expanded", "true");
+
+      // REMOVE BADGE VISUALLY + MARK AS READ
+      if (key === "noti") {
+        const badge = document.querySelector("#notiBtn .badge");
+        if (badge) badge.remove();
+
+        fetch(`/${document.documentElement.lang}/notifications/mark-read/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken(),
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify({})
+        }).catch(() => {});
+      }
+    }
+  });
+});
+
+document.addEventListener("click", () => closeAll(null));
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeAll(null); });
 
 
-// ===== Toggle Buy / Sell (ONLY HERE) =====
+/* =========================================================
+   Referral link handling (moved from main.js -> header.js)
+========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
+  const inviteLinkEl = document.getElementById("inviteFriendsLink");
+  if (!inviteLinkEl) return;
+
+  const referralCode = inviteLinkEl.dataset.referralCode || "";
+  if (!referralCode) return;
+
+  inviteLinkEl.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    const registerUrl = inviteLinkEl.dataset.registerUrl || "/register/";
+    const fullLink = window.location.origin + registerUrl + "?ref=" + referralCode;
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(fullLink)
+        .then(() => alert("✔️ تم نسخ رابط الدعوة:\n" + fullLink))
+        .catch(() => alert("رابط الدعوة:\n" + fullLink));
+    } else {
+      alert("رابط الدعوة:\n" + fullLink);
+    }
+  });
+});
+
+
+/* =========================================================
+   Buy / Sell toggle (kept exactly, already in header.js)
+========================================================= */
 document.addEventListener('DOMContentLoaded', () => {
   const sellBtn     = document.getElementById('sellBtn');
   const buyBtn      = document.getElementById('buyBtn');
@@ -178,50 +283,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+/* =========================================================
+   toggleFavorite (global, kept exactly)
+========================================================= */
 function toggleFavorite(e, itemId, formElement) {
-    e.preventDefault(); // Stop page refresh
+  e.preventDefault(); // Stop page refresh
 
-    const csrfToken = formElement.querySelector("[name=csrfmiddlewaretoken]").value;
+  const csrfToken = formElement.querySelector("[name=csrfmiddlewaretoken]").value;
 
-    fetch(`/${document.documentElement.lang}/favorites/toggle/${itemId}/`, {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": csrfToken,
-            "X-Requested-With": "XMLHttpRequest",
-        },
-    })
+  fetch(`/${document.documentElement.lang}/favorites/toggle/${itemId}/`, {
+    method: "POST",
+    headers: {
+      "X-CSRFToken": csrfToken,
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  })
     .then(response => response.json())
     .then(data => {
-    // Update heart icon
-    formElement.querySelector("button").textContent =
+      // Update heart icon
+      formElement.querySelector("button").textContent =
         data.is_favorited ? "❤️" : "🤍";
 
-    // Update navbar favorite counter
-    const counter = document.querySelector("#favBtn .badge");
+      // Update navbar favorite counter
+      const counter = document.querySelector("#favBtn .badge");
 
-    if (counter) {
+      if (counter) {
         // If no favorites left — remove badge
         if (data.favorite_count === 0) {
-            counter.remove();
+          counter.remove();
         } else {
-            counter.textContent = data.favorite_count;
+          counter.textContent = data.favorite_count;
         }
-    } else {
+      } else {
         // If badge does not exist (first favorite) — create one
         if (data.favorite_count > 0) {
-            const badge = document.createElement("span");
-            badge.className = "badge";
-            badge.textContent = data.favorite_count;
-            document.querySelector("#favBtn").appendChild(badge);
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          badge.textContent = data.favorite_count;
+          document.querySelector("#favBtn").appendChild(badge);
         }
-    }
-})
-
+      }
+    })
     .catch(err => console.error(err));
 }
 
-document.addEventListener("DOMContentLoaded", function () {
 
+/* =========================================================
+   Add Ad button: guests only (kept, but safer)
+   - Only binds if loginModal exists (guest)
+========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
   const addAdBtn = document.getElementById("addAdBtn");
   const loginModal = document.getElementById("loginModal");
   const loginNext = document.getElementById("loginNext");
@@ -236,7 +347,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // remember where user wanted to go
     const targetUrl = addAdBtn.dataset.targetUrl || addAdBtn.getAttribute("data-target-url");
 
-
     if (loginNext && targetUrl) {
       loginNext.value = targetUrl;
     }
@@ -244,6 +354,4 @@ document.addEventListener("DOMContentLoaded", function () {
     // show login modal
     loginModal.classList.remove("hidden");
   });
-
 });
-

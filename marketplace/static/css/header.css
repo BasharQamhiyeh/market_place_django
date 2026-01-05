@@ -288,3 +288,8 @@ body {
   .dropdown { max-width:90vw; }
   #userMenu { width: 210px; }
 }
+
+
+.ad-card {
+  display: flex !important;
+}
