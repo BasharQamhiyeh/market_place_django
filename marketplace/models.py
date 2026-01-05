@@ -37,6 +37,34 @@ class City(models.Model):
 # USER
 # ======================================================
 
+def normalize_jo_mobile_to_07(raw: str) -> str:
+    """
+    Normalize Jordan mobile numbers to local format: 07XXXXXXXX
+    Accepts: 07XXXXXXXX, 9627XXXXXXXX, +9627XXXXXXXX, 009627XXXXXXXX, with spaces/dashes.
+    """
+    if not raw:
+        return ""
+
+    digits = re.sub(r"\D+", "", str(raw).strip())
+
+    # 00962... -> 962...
+    if digits.startswith("00962"):
+        digits = digits[2:]
+
+    # 9627XXXXXXXX -> 07XXXXXXXX
+    if digits.startswith("9627") and len(digits) >= 12:
+        return "0" + digits[3:13]
+
+    # already 07XXXXXXXX
+    if digits.startswith("07") and len(digits) >= 10:
+        return digits[:10]
+
+    # edge: 7XXXXXXXX -> 07XXXXXXXX
+    if digits.startswith("7") and len(digits) >= 9:
+        return "0" + digits[:9]
+
+    return digits
+
 class UserManager(BaseUserManager):
     def create_user(self, phone, password=None, **extra_fields):
         if not phone:
@@ -80,8 +108,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def save(self, *args, **kwargs):
+        # ✅ normalize phone before saving (applies everywhere: admin/forms/api/scripts)
+        if self.phone:
+            self.phone = normalize_jo_mobile_to_07(self.phone)
+
         if not self.referral_code:
             self.referral_code = uuid.uuid4().hex[:12]
+
         super().save(*args, **kwargs)
 
     def __str__(self):
