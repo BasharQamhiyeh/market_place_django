@@ -1,12 +1,14 @@
 /* ======================================================================
-   item-card.css (HARD-ISOLATED / FIXES "lower part disappears" + TITLE HIDDEN)
-   - Keeps your current layout exactly
-   - Adds HARD anti-override rules so title/body can’t be hidden by globals
+   item-card.css (MOCKUP-SIZED + HARD-ISOLATED)
+   - Match Tailwind mockup sizing behavior:
+     * no fixed card height
+     * image keeps 4:3 aspect ratio
+     * card width controlled by container/grid (with safe max)
    ====================================================================== */
 
 :root{
-  --ad-card-w: 290px;
-  --ad-card-h: 430px;
+  --ad-card-w: 290px;         /* reference width like mockup */
+  --ad-card-max-w: 290px;     /* prevents huge stretch in wide rows */
 
   --ad-radius: 18px;
   --ad-border: #fed7aa;
@@ -18,16 +20,10 @@
 
 .ad-card, .ad-card * { box-sizing: border-box; }
 
-/* ✅ HARD: make the card ALWAYS a column flex container */
+/* ✅ Card behaves like mockup: width from grid, no fixed height */
 .ad-card{
-  width: var(--ad-card-w);
-  min-width: var(--ad-card-w);
-  max-width: var(--ad-card-w);
-
-  height: var(--ad-card-h);
-  min-height: var(--ad-card-h);
-  max-height: var(--ad-card-h);
-
+  width: 100% !important;            /* let grid/container decide */
+  max-width: var(--ad-card-max-w) !important;
   background:#fff;
   border:1px solid var(--ad-border);
   border-radius: var(--ad-radius);
@@ -38,6 +34,9 @@
   align-items:stretch !important;
 
   transition: .25s;
+
+  /* ✅ prevent weird shrinking in flex parents */
+  min-width: 0 !important;
 }
 
 .ad-card:hover{
@@ -47,15 +46,18 @@
 }
 
 /* =========================
-   Image area (aspect 4/3)
+   Image area (true aspect 4/3)
    ========================= */
 .ad-imgwrap{
   position: relative;
-  height: 218px; /* 290 * 3/4 */
   background:#f3f4f6;
   overflow:hidden;
 
-  flex: 0 0 auto !important; /* ✅ HARD: never stretch to fill whole card */
+  /* ✅ mockup behavior */
+  aspect-ratio: 4 / 3 !important;
+  width: 100% !important;
+
+  flex: 0 0 auto !important;
 }
 
 .ad-imgwrap img{
@@ -137,19 +139,15 @@
 
 /* =========================
    LOWER STACK (body + footer)
-   ✅ HARD: must exist and take remaining height
-   + HARD stacking isolation so overlay never hides title
    ========================= */
 .ad-lower{
   position: relative !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-
   display:flex !important;
   flex-direction:column !important;
   align-items:stretch !important;
 
-  isolation: isolate !important; /* ✅ HARD: create stacking context */
+  isolation: isolate !important;
+  min-height: 0 !important;
 }
 
 /* Hover overlay ONLY over lower area */
@@ -157,7 +155,7 @@
   position:absolute;
   inset:0;
   pointer-events:none;
-  z-index: 1 !important; /* ✅ HARD: always behind body/footer */
+  z-index: 1 !important;
 }
 
 .ad-hover-layer::before{
@@ -205,23 +203,18 @@
 
 /* =========================
    Body
-   ✅ HARD: force display + z-index above overlay
    ========================= */
 .ad-body{
   position: relative !important;
-  z-index: 5 !important; /* ✅ HARD: above overlay */
+  z-index: 5 !important;
 
   display:flex !important;
   flex-direction:column !important;
-
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
 
   padding: 8px 16px 8px;
   gap: 10px;
 }
 
-/* ✅ HARD: prevent globals from hiding/zeroing the title */
 .ad-title{
   display:block !important;
   visibility: visible !important;
@@ -232,15 +225,12 @@
   line-height:1.25 !important;
 
   color:#111827 !important;
-  -webkit-text-fill-color:#111827 !important; /* protects against weird clamp/theme rules */
+  -webkit-text-fill-color:#111827 !important;
 
   min-height:48px;
   padding: 4px 0;
   border-radius:10px;
-
-  /* keep your blur, but ensure it doesn't break text */
   backdrop-filter: blur(6px);
-
   transition: color .2s ease;
 }
 
@@ -255,7 +245,7 @@
   font-size:12px;
   color: var(--ad-muted);
 
-  margin-top:auto;
+  margin-top: 6px;
   align-items:center;
 }
 
@@ -273,17 +263,14 @@
 
 /* =========================
    Footer
-   ✅ HARD: force display + fixed height
    ========================= */
 .ad-footer{
   position: relative !important;
-  z-index: 5 !important; /* ✅ HARD: above overlay */
+  z-index: 5 !important;
 
   display:flex !important;
   align-items:center;
   justify-content:space-between;
-
-  flex: 0 0 auto !important;
 
   padding: 12px 16px;
   background:#fff;
