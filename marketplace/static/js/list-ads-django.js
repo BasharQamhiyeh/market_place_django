@@ -166,6 +166,42 @@
       const priceMin = document.getElementById("filterPriceMin");
       const priceMax = document.getElementById("filterPriceMax");
 
+      // ✅ sync UI from URL on first load (supports ?categories=3 while select is name="category")
+        (function syncFiltersFromUrl() {
+          const params = new URLSearchParams(window.location.search);
+
+          // alias: URL uses "categories" but form uses "category"
+          if (!params.has("category") && params.has("categories")) {
+            params.set("category", params.get("categories") || "");
+          }
+
+          // selects (includes #filterCategory)
+          form.querySelectorAll("select").forEach(sel => {
+            if (!sel.name) return;
+            if (params.has(sel.name)) sel.value = params.get(sel.name) || "";
+          });
+
+          // radios
+          const radioNames = new Set();
+          form.querySelectorAll('input[type="radio"]').forEach(r => r.name && radioNames.add(r.name));
+          radioNames.forEach(name => {
+            if (!params.has(name)) return;
+            const v = params.get(name) || "";
+            const target = form.querySelector(
+              `input[type="radio"][name="${CSS.escape(name)}"][value="${CSS.escape(v)}"]`
+            );
+            if (target) target.checked = true;
+          });
+
+          // price inputs
+          if (priceMin?.name && params.has(priceMin.name)) priceMin.value = params.get(priceMin.name) || "";
+          if (priceMax?.name && params.has(priceMax.name)) priceMax.value = params.get(priceMax.name) || "";
+
+          // page
+          if (pageField && params.has("page")) pageField.value = params.get("page") || "1";
+        })();
+
+
       let isLoading = false;
 
       function resetToFirstPage() {
@@ -307,6 +343,7 @@
 
       const priceMin = document.getElementById("filterPriceMin");
       const priceMax = document.getElementById("filterPriceMax");
+
 
       let activeKey = null;
 
