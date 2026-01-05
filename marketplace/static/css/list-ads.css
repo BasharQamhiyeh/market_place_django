@@ -567,10 +567,35 @@
   scroll-snap-stop: always;
 }
 
-/* each child slides as a unit (card keeps its own fixed width) */
-.list-ads-page .vip-rtl-rail > * {
-  flex: 0 0 auto;
-  scroll-snap-align: start;
+@media (min-width: 1280px) {
+    .vip-rtl-rail {
+        overflow-x: hidden;
+        scroll-snap-type: none;
+        touch-action: auto;
+    }
+
+        .vip-rtl-rail > .featured-card {
+            flex: 0 0 calc((100% - (20px * 3)) / 4);
+            scroll-snap-align: none;
+        }
+}
+
+/* Mobile + tablet: 1 card per swipe */
+@media (max-width: 1279px) {
+    .vip-rtl-rail {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-snap-stop: always;
+        touch-action: pan-x;
+        scroll-behavior: auto;
+    }
+
+        .vip-rtl-rail > .featured-card {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+        }
 }
 
 @media (min-width: 1280px) {

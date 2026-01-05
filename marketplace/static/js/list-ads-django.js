@@ -65,18 +65,22 @@
 
       // RTL-safe: use scrollLeft directly based on element offset
       function scrollToCardIndex(cardIndex, smooth) {
-        const cards = [...rail.querySelectorAll(".featured-card")];
-        const target = cards[Math.max(0, Math.min(cards.length - 1, cardIndex))];
-        if (!target) return;
+          const cards = [...rail.querySelectorAll(".featured-card")];
+          const target = cards[Math.max(0, Math.min(cards.length - 1, cardIndex))];
+          if (!target) return;
 
-        applySnap(false);
+          applySnap(false);
 
-        const left = target.offsetLeft;
-        rail.scrollTo({ left, behavior: smooth ? "smooth" : "auto" });
+          // RTL-safe: works correctly in RTL across browsers
+          target.scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+            inline: "start",
+            block: "nearest"
+          });
 
-        clearTimeout(scrollEndTimer);
-        scrollEndTimer = setTimeout(() => applySnap(true), 260);
-      }
+          clearTimeout(scrollEndTimer);
+          scrollEndTimer = setTimeout(() => applySnap(true), 260);
+        }
 
       function scrollToPage(pageIdx, smooth = true) {
         const tp = totalPages();
