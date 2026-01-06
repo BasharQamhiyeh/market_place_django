@@ -37,6 +37,15 @@
 
   /* ✅ prevent weird shrinking in flex parents */
   min-width: 0 !important;
+
+  /* ✅ make cursor a hand (like request card) */
+  cursor: pointer;
+}
+
+/* keep interactive elements as hand too */
+.ad-card button,
+.ad-card a{
+  cursor: pointer;
 }
 
 .ad-card:hover{
@@ -150,24 +159,27 @@
   min-height: 0 !important;
 }
 
-/* Hover overlay ONLY over lower area */
-.ad-hover-layer{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index: 1 !important;
-}
-
-.ad-hover-layer::before{
+/* ✅ Hover tint layer (covers body + footer, footer must not be solid white) */
+.ad-lower::before{
   content:"";
   position:absolute;
   inset:0;
   background: rgba(255,237,213,0);
   transition: background .2s ease;
+  z-index: 1;
+  pointer-events:none;
 }
 
-.ad-card:hover .ad-hover-layer::before{
+.ad-card:hover .ad-lower::before{
   background: rgba(255,237,213,.70);
+}
+
+/* Hint layer */
+.ad-hover-layer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index: 2 !important;
 }
 
 .ad-hover-hint{
@@ -273,8 +285,20 @@
   justify-content:space-between;
 
   padding: 12px 16px;
+
+  /* ✅ IMPORTANT:
+     This solid white background was blocking the hover tint.
+     We keep it white normally, but make it transparent on hover. */
   background:#fff;
+
   border-top: 2px solid rgba(254, 215, 170, 1);
+
+  transition: background .2s ease;
+}
+
+/* ✅ Let hover tint show through footer */
+.ad-card:hover .ad-footer{
+  background: transparent;
 }
 
 .ad-seller{
@@ -330,3 +354,40 @@
 .ad-fav-btn[data-is-owner="1"]{
   display: none !important;
 }
+
+
+/* =========================
+   PAGE TOAST (global message)
+   ========================= */
+.page-toast{
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 9999;
+
+  min-width: 220px;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border-radius: 14px;
+
+  background: rgba(17, 24, 39, 0.95);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+
+  box-shadow: 0 12px 26px rgba(15,23,42,.22);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.page-toast.is-show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+  cursor: pointer;
+}
+

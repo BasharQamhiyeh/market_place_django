@@ -392,52 +392,177 @@ def item_list(request):
 
 
 def request_list(request):
-    q = request.GET.get("q", "").strip()
+    now = timezone.now()
+
+    q = (request.GET.get("q") or "").strip()
+
+    category_id_single = request.GET.get("category")
+    category_ids_multi = request.GET.getlist("categories")
     city_id = request.GET.get("city")
-    category_ids = request.GET.getlist("categories")
+
+    min_budget = request.GET.get("min_budget")
+    max_budget = request.GET.get("max_budget")
+
+    condition = (request.GET.get("condition") or "").strip()     # kept for UI parity (may be ignored if your models don’t support it)
+    seller_type = (request.GET.get("seller_type") or "").strip()
+    time_hours = (request.GET.get("time") or "").strip()
+    sort = (request.GET.get("sort") or "").strip()
+
+    # Featured (independent)
+    featured_requests = (
+        Request.objects.filter(
+            listing__type="request",
+            listing__is_approved=True,
+            listing__is_active=True,
+            listing__featured_until__gt=now,
+        )
+        .select_related("listing", "listing__category", "listing__city", "listing__user")
+        .order_by("-listing__featured_until", "-listing__created_at")[:12]
+    )
 
     base_qs = Request.objects.filter(
+        listing__type="request",
         listing__is_approved=True,
         listing__is_active=True,
     ).select_related(
         "listing", "listing__user", "listing__category", "listing__city"
     )
 
-    # CATEGORY FILTERS
-    if category_ids:
-        base_qs = base_qs.filter(listing__category_id__in=category_ids)
+    selected_category = None
 
-    # CITY
+    if category_id_single:
+        try:
+            selected_category = Category.objects.get(id=category_id_single)
+            ids = _category_descendant_ids(selected_category)
+            base_qs = base_qs.filter(listing__category_id__in=ids)
+        except Category.DoesNotExist:
+            selected_category = None
+
+    elif category_ids_multi:
+        all_ids = []
+        for cid in category_ids_multi:
+            try:
+                cat = Category.objects.get(id=cid)
+                all_ids += _category_descendant_ids(cat)
+            except Category.DoesNotExist:
+                continue
+        if all_ids:
+            base_qs = base_qs.filter(listing__category_id__in=all_ids)
+
     if city_id:
         base_qs = base_qs.filter(listing__city_id=city_id)
 
-    # SEARCH
+    # Budget range (Request.budget)
+    if min_budget:
+        try:
+            base_qs = base_qs.filter(budget__gte=float(min_budget))
+        except ValueError:
+            pass
+    if max_budget:
+        try:
+            base_qs = base_qs.filter(budget__lte=float(max_budget))
+        except ValueError:
+            pass
+
+    # seller type (store/individual)
+    if seller_type:
+        # if you have Store model like in items
+        try:
+            from .models import Store  # adjust import if needed
+        except Exception:
+            Store = None
+
+        if Store is not None:
+            if seller_type == "store":
+                base_qs = base_qs.filter(listing__user__store__isnull=False)
+            elif seller_type == "individual":
+                base_qs = base_qs.filter(listing__user__store__isnull=True)
+
+    # time window
+    if time_hours:
+        try:
+            hours = int(time_hours)
+            since = now - timedelta(hours=hours)
+            base_qs = base_qs.filter(listing__created_at__gte=since)
+        except ValueError:
+            pass
+
+    # search
     if len(q) >= 2:
         base_qs = base_qs.filter(
-            Q(listing__title__icontains=q) |
-            Q(listing__description__icontains=q)
+            Q(listing__title__icontains=q) | Q(listing__description__icontains=q)
         )
 
-    base_qs = base_qs.order_by("-listing__created_at")
+    # sort
+    if sort == "budgetAsc":
+        queryset = base_qs.order_by("budget", "-listing__created_at")
+    elif sort == "budgetDesc":
+        queryset = base_qs.order_by("-budget", "-listing__created_at")
+    else:
+        queryset = base_qs.order_by("-listing__created_at")
 
-    paginator = Paginator(base_qs, 12)
-    page = request.GET.get("page")
-    page_obj = paginator.get_page(page)
+    PAGE_SIZE = 27
+    paginator = Paginator(queryset, PAGE_SIZE)
+    page_number = request.GET.get("page") or "1"
+    page_obj = paginator.get_page(page_number)
 
-    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories")
-    cities = City.objects.all()
+    total_count = paginator.count
+    visible_count = page_obj.end_index() if total_count else 0
+    has_more = page_obj.has_next()
 
-    return render(
-        request,
-        "request_list.html",
-        {
-            "page_obj": page_obj,
-            "categories": categories,
-            "cities": cities,
-            "selected_categories": category_ids,
-            "q": q,
-        },
-    )
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories").distinct()
+    cities = City.objects.all().order_by("name_ar")
+
+    # banners (same behavior as items; if you already provide banners elsewhere, keep it)
+    banners = []
+    try:
+        from .models import Banner  # adjust if your banner model is named differently
+        banners = Banner.objects.filter(is_active=True).order_by("-id")[:3]
+    except Exception:
+        banners = []
+
+    context = {
+        "page_obj": page_obj,
+        "requests": page_obj.object_list,
+        "q": q,
+        "selected_category": selected_category,
+        "categories": categories,
+        "cities": cities,
+        "selected_categories": request.GET.getlist("categories"),
+        "total_count": total_count,
+        "visible_count": visible_count,
+        "featured_requests": featured_requests,
+        "has_more": has_more,
+        "banners": banners,
+        "filters": {
+            "category": category_id_single or "",
+            "city": city_id or "",
+            "condition": condition,
+            "seller_type": seller_type,
+            "time": time_hours,
+            "sort": sort or "latest",
+            "min_budget": min_budget,
+            "max_budget": max_budget,
+        }
+    }
+
+    is_hx = bool(request.headers.get("HX-Request"))
+    is_xhr = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    if is_hx:
+        html = render_to_string("partials/request_results.html", context, request=request)
+        return HttpResponse(html)
+
+    if is_xhr:
+        html = render_to_string("partials/request_results.html", context, request=request)
+        return JsonResponse({
+            "html": html,
+            "total_count": total_count,
+            "visible_count": visible_count,
+            "has_more": has_more,
+        })
+
+    return render(request, "request_list.html", context)
 
 
 # Item details

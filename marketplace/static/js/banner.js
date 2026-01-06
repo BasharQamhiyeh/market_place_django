@@ -1,21 +1,25 @@
 // static/js/banner-slider.js
 (() => {
+  "use strict";
+
   function initBanner(root) {
     if (!root) return;
+
+    // Prevent double init (if script is loaded twice, or HTMX partial swap, etc.)
+    if (root.dataset.bannerInit === "1") return;
+    root.dataset.bannerInit = "1";
 
     const slidesWrap = root.querySelector(".ad-banner-slides");
     if (!slidesWrap) return;
 
-    // ✅ Works with your current markup (img.ad-slide...)
     const slides = Array.from(slidesWrap.querySelectorAll(".ad-slide"));
     if (slides.length <= 1) return;
 
-    // Dots can be inside overlay OR directly under slidesWrap (both supported)
-    const dotsWrap =
-      root.querySelector(".ad-dots") ||
-      slidesWrap.querySelector(".ad-dots");
+    // Dots are inside root
+    const dotsWrap = root.querySelector(".ad-dots");
 
-    // If dots are not present or wrong count, rebuild them safely
+    // Build dots exactly matching slides
+    let dots = [];
     if (dotsWrap) {
       dotsWrap.innerHTML = "";
       slides.forEach((_, i) => {
@@ -26,38 +30,29 @@
         b.setAttribute("aria-label", `إعلان ${i + 1}`);
         dotsWrap.appendChild(b);
       });
+      dots = Array.from(dotsWrap.querySelectorAll(".ad-dot"));
     }
 
-    const dots = dotsWrap ? Array.from(dotsWrap.querySelectorAll(".ad-dot")) : [];
-
-    // Autoplay config
     const autoplay = slidesWrap.dataset.autoplay !== "0";
     const intervalMs = Number(slidesWrap.dataset.interval || "4500") || 4500;
 
-    let idx = slides.findIndex(s => s.classList.contains("is-active"));
+    let idx = slides.findIndex((s) => s.classList.contains("is-active"));
     if (idx < 0) idx = 0;
 
     let timer = null;
 
+    function applyActiveState() {
+      slides.forEach((s, i) => s.classList.toggle("is-active", i === idx));
+      dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+    }
+
     function setActive(next) {
-      if (next === idx) return;
-      slides[idx].classList.remove("is-active");
-      if (dots[idx]) dots[idx].classList.remove("is-active");
-
       idx = (next + slides.length) % slides.length;
-
-      slides[idx].classList.add("is-active");
-      if (dots[idx]) dots[idx].classList.add("is-active");
+      applyActiveState();
     }
 
     function next() {
       setActive(idx + 1);
-    }
-
-    function start() {
-      if (!autoplay) return;
-      stop();
-      timer = window.setInterval(next, intervalMs);
     }
 
     function stop() {
@@ -65,6 +60,12 @@
         window.clearInterval(timer);
         timer = null;
       }
+    }
+
+    function start() {
+      if (!autoplay) return;
+      stop();
+      timer = window.setInterval(next, intervalMs);
     }
 
     // Dots click
@@ -75,7 +76,7 @@
         const n = Number(btn.dataset.idx);
         if (!Number.isFinite(n)) return;
         setActive(n);
-        start(); // restart autoplay after manual change
+        start(); // restart autoplay
       });
     }
 
@@ -83,14 +84,22 @@
     root.addEventListener("mouseenter", stop);
     root.addEventListener("mouseleave", start);
 
-    // ✅ Ensure first slide is active at init
-    slides.forEach((s, i) => s.classList.toggle("is-active", i === idx));
-    dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
-
+    // Ensure initial state
+    applyActiveState();
     start();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    initBanner(document.getElementById("adBanner"));
-  });
+  function initAllBanners() {
+    document.querySelectorAll("[data-banner]").forEach(initBanner);
+  }
+
+  // Normal load
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAllBanners, { once: true });
+  } else {
+    initAllBanners();
+  }
+
+  // Optional: if you ever use HTMX later, this keeps it working on swapped content
+  document.addEventListener("htmx:afterSwap", initAllBanners);
 })();

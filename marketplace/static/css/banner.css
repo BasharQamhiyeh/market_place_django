@@ -1,0 +1,199 @@
+/* ======================================================================
+   banner.css (SHARED)
+   - Shared banner slider styles used by multiple pages.
+   - DO NOT scope to .list-ads-page or .list-requests-page
+   ====================================================================== */
+
+.ad-banner-wrap {
+  border-radius: 26px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, .14);
+  background: #fff;
+}
+
+.ad-banner-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(900px 240px at 20% 0%, rgba(255, 122, 24, .20), transparent 55%),
+    radial-gradient(900px 240px at 80% 0%, rgba(22, 163, 74, .12), transparent 55%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ad-banner-img {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.02);
+}
+
+@media (min-width: 640px) {
+  .ad-banner-img { height: 260px; }
+}
+
+@media (min-width: 1024px) {
+  .ad-banner-img { height: 290px; }
+}
+
+.ad-banner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    rgba(17, 24, 39, .78),
+    rgba(17, 24, 39, .20) 55%,
+    rgba(17, 24, 39, .06)
+  );
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+}
+
+@media (min-width: 640px) {
+  .ad-banner-overlay { padding: 24px; }
+}
+
+.ad-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .94);
+  border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(8px);
+}
+
+.ad-cta a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 13px;
+  transition: .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Uses your global vars defined in page css (:root) */
+.ad-cta .btn-primary { background: var(--rukn-orange); color: #fff; }
+.ad-cta .btn-primary:hover { background: #e06600; }
+
+.ad-cta .btn-ghost {
+  background: #fff;
+  color: #111827;
+  border: 1px solid rgba(255, 122, 24, .22);
+}
+.ad-cta .btn-ghost:hover { background: #fff6ef; }
+
+.ad-banner-slides { position: relative; }
+
+.ad-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .45s ease, transform .45s ease;
+  transform: scale(1.02);
+  display: block;
+}
+
+.ad-slide.is-active {
+  opacity: 1;
+  position: relative;
+  transform: scale(1.02);
+}
+
+.ad-dots {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 14px;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+@media (min-width: 640px) {
+  .ad-dots { bottom: 16px; }
+}
+
+.ad-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
+  border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .18);
+  transition: transform .2s ease, background .2s ease, width .2s ease;
+}
+
+.ad-dot:hover { transform: scale(1.15); }
+
+.ad-dot.is-active {
+  width: 26px;
+  background: rgba(255, 255, 255, .92);
+}
+
+/* Mobile clamp helpers (your partial uses these IDs optionally) */
+@media (max-width: 639px) {
+  #bannerTitle {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  #bannerDesc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ad-banner-overlay { padding-bottom: 76px; }
+}
+
+/* corner CTA helper */
+.ad-cta-corner {
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  padding: 8px 10px;
+  gap: 8px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  max-width: calc(100% - 28px);
+}
+
+.ad-cta-corner a {
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 12px;
+}
+
+@media (min-width: 640px) {
+  .ad-cta-corner {
+    left: 24px;
+    bottom: 22px;
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .ad-cta-corner a {
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 14px;
+  }
+}

@@ -1,0 +1,4 @@
+{# templates/partials/request_results.html #}
+{% for req in page_obj %}
+  {% include "partials/_request_card.html" with req=req %}
+{% endfor %}

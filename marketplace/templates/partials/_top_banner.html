@@ -1,13 +1,18 @@
 {# templates/partials/_top_banner.html #}
 {% load static %}
 
-<section class="mb-6">
-  <div class="ad-banner-wrap" id="adBanner">
-    <div class="relative">
+{# Optional: pass banner_id from include: {% include ... with banner_id="topBanner" %} #}
+{# If not provided, it still works. #}
 
+<section class="mb-6">
+  <div class="ad-banner-wrap"
+       data-banner
+       {% if banner_id %}data-banner-id="{{ banner_id }}"{% endif %}>
+
+    <div class="relative">
       <div class="ad-banner-slides" data-autoplay="1" data-interval="4500">
 
-        {# ✅ EXACT mockup images (3) #}
+        {# ✅ Mockup images (3) #}
         <img class="ad-banner-img ad-slide is-active"
              src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1600&auto=format&fit=crop"
              alt="مساحة إعلانية 1" />
@@ -24,38 +29,32 @@
           <div class="w-full flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
 
             <div class="text-white">
-              <h2 id="bannerTitle" class="mt-2 sm:mt-3 text-[18px] leading-snug sm:text-2xl font-extrabold">
+              <h2 class="mt-2 sm:mt-3 text-[18px] leading-snug sm:text-2xl font-extrabold">
                 عروض نهاية السنة — خصومات قوية على الإلكترونيات
               </h2>
-              <p id="bannerDesc" class="mt-1.5 sm:mt-2 text-[12.5px] sm:text-sm text-white/90 max-w-2xl leading-relaxed">
+              <p class="mt-1.5 sm:mt-2 text-[12.5px] sm:text-sm text-white/90 max-w-2xl leading-relaxed">
                 مساحة إعلانية قابلة للاستبدال بصورة (Banner) — تصميم أنيق بدون صندوق الصفحة.
               </p>
             </div>
 
             <div class="ad-cta ad-cta-corner">
-              {# ✅ SAFE create URL (won’t crash) #}
               {% url 'item_create' as item_create_url %}
-              <a id="bannerPrimary"
-                 href="{% if item_create_url %}{{ item_create_url }}{% else %}{% url 'home' %}{% endif %}"
+              <a href="{% if item_create_url %}{{ item_create_url }}{% else %}{% url 'home' %}{% endif %}"
                  class="btn-primary">
                 أضف إعلان
               </a>
 
-              <a id="bannerSecondary" href="{% url 'item_list' %}" class="btn-ghost">تفاصيل</a>
+              <a href="{% url 'item_list' %}" class="btn-ghost">تفاصيل</a>
             </div>
 
-            {# ✅ Dots (same as mockup) #}
-            <div class="ad-dots" role="tablist" aria-label="Banner slider">
-              <button class="ad-dot is-active" type="button" data-idx="0" aria-label="إعلان 1"></button>
-              <button class="ad-dot" type="button" data-idx="1" aria-label="إعلان 2"></button>
-              <button class="ad-dot" type="button" data-idx="2" aria-label="إعلان 3"></button>
-            </div>
+            {# Dots (JS will rebuild to match slide count safely) #}
+            <div class="ad-dots" role="tablist" aria-label="Banner slider"></div>
 
           </div>
         </div>
 
       </div>
-
     </div>
+
   </div>
 </section>

@@ -2,17 +2,13 @@
 (() => {
   "use strict";
 
-  // ---------- hard guard: prevent double init even if script is injected twice ----------
   const ROOT = document.documentElement;
   if (ROOT.dataset.listRequestsInit === "1") return;
   ROOT.dataset.listRequestsInit = "1";
 
   const onReady = (fn) => {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", fn, { once: true });
-    } else {
-      fn();
-    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once: true });
+    else fn();
   };
 
   onReady(() => {
@@ -38,9 +34,7 @@
 
     // ---------- Helpers ----------
     const setRadioGroupValue = (name, valueToCheck) => {
-      const r = document.querySelector(
-        `input[name="${name}"][value="${CSS.escape(String(valueToCheck))}"]`
-      );
+      const r = document.querySelector(`input[name="${name}"][value="${CSS.escape(String(valueToCheck))}"]`);
       if (r) r.checked = true;
     };
 
@@ -49,9 +43,68 @@
       return r ? r.value : fallback;
     };
 
-    const buildQuery = () => {
-      if (!form) return "";
+    // ✅ robust select setter (works if option values are ids OR slugs OR stored in data-id)
+    const setSelectSmart = (selectEl, desired) => {
+      if (!selectEl) return false;
+      const want = String(desired ?? "").trim();
+      if (!want) return false;
 
+      // 1) direct value match
+      selectEl.value = want;
+      if (String(selectEl.value) === want) return true;
+
+      // 2) try data-id match (if your options are like <option value="cars" data-id="6">...)
+      const opt = [...selectEl.options].find((o) => String(o.dataset?.id || "") === want);
+      if (opt) {
+        selectEl.value = opt.value;
+        return true;
+      }
+
+      // 3) not found
+      return false;
+    };
+
+    // ✅ Sync filters from URL (retry a few times in case options are injected later)
+    const syncFiltersFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+
+      const cat = params.get("categories") || params.get("category") || "";
+      const city = params.get("city") || "";
+      const minB = params.get("min_budget") || "";
+      const maxB = params.get("max_budget") || "";
+
+      if (city && filterCity) filterCity.value = city;
+      if (minB && filterMin) filterMin.value = minB;
+      if (maxB && filterMax) filterMax.value = maxB;
+
+      if (params.has("condition")) setRadioGroupValue("condition", params.get("condition") || "");
+      if (params.has("seller_type")) setRadioGroupValue("seller_type", params.get("seller_type") || "");
+      if (params.has("time")) setRadioGroupValue("time", params.get("time") || "");
+      if (params.has("sort")) setRadioGroupValue("sort", params.get("sort") || "latest");
+
+      // page (optional)
+      const p = params.get("page");
+      if (p && pageField) pageField.value = p;
+
+      // category (robust + retry)
+      if (cat && filterCategory) {
+        let tries = 0;
+        const trySet = () => {
+          tries += 1;
+          const ok = setSelectSmart(filterCategory, cat);
+          if (ok) return;
+
+          // options might arrive later -> retry a bit
+          if (tries < 10) setTimeout(trySet, 80);
+        };
+        trySet();
+      }
+    };
+
+    // run once
+    syncFiltersFromUrl();
+
+    const buildQuery = () => {
       const fd = new FormData(form);
 
       // normalize page
@@ -101,7 +154,8 @@
 
     // ---------- Desktop listeners ----------
     [filterCategory, filterCity].forEach((el) =>
-      el?.addEventListener("change", () => {
+      el &&
+      el.addEventListener("change", () => {
         if (pageField) pageField.value = "1";
         applyFilters({ append: false });
       })
@@ -143,7 +197,6 @@
         applyFilters({ append: false });
       }, ms);
     };
-
     const flushPriceApply = () => {
       clearTimeout(priceTimer);
       if (pageField) pageField.value = "1";
@@ -181,34 +234,24 @@
 
     // ---------- VIP slider (same behavior as mockup) ----------
     let vipPage = 0;
+    let vipBound = false;
     let vipScrollEndTimer = null;
 
     function initVip() {
       const rail = document.getElementById("featuredList");
       const dotsWrap = document.getElementById("vipDots");
-      const section = document.getElementById("featuredSection");
       if (!rail || !dotsWrap) return;
 
-      // ✅ guard (same idea as list-ads-django.js)
-      if (rail.dataset.init === "1") return;
-      rail.dataset.init = "1";
-
       const cards = [...rail.querySelectorAll(".featured-card")];
-      if (!cards.length) {
-        if (section) section.style.display = "none";
-        return;
-      }
+      if (!cards.length) return;
 
       const logicalCount = Number(rail.dataset.logicalCount || cards.length);
-      const perPage = () => (window.innerWidth >= 1280 ? 4 : 1);
-      const totalPages = () => Math.max(1, Math.ceil(logicalCount / perPage()));
+      const perPage = window.innerWidth >= 1280 ? 4 : 1;
+      const totalPages = Math.max(1, Math.ceil(logicalCount / perPage));
 
-      const buildDots = () => {
-        const tp = totalPages();
-        dotsWrap.innerHTML = Array.from({ length: tp }, (_, i) =>
-          `<button type="button" class="vip-dot ${i === 0 ? "is-active" : ""}" data-idx="${i}" aria-label="صفحة ${i + 1}"></button>`
-        ).join("");
-      };
+      dotsWrap.innerHTML = Array.from({ length: totalPages }, (_, i) =>
+        `<button type="button" class="vip-dot ${i === 0 ? "is-active" : ""}" data-idx="${i}" aria-label="صفحة ${i + 1}"></button>`
+      ).join("");
 
       const setVipDot = (i) => {
         [...dotsWrap.querySelectorAll(".vip-dot")].forEach((d, idx) =>
@@ -222,9 +265,8 @@
       };
 
       const scrollToPage = (i, smooth = true) => {
-        const tp = totalPages();
-        vipPage = Math.max(0, Math.min(tp - 1, i));
-        const targetIndex = vipPage * perPage();
+        vipPage = Math.max(0, Math.min(totalPages - 1, i));
+        const targetIndex = vipPage * perPage;
         const target = cards[Math.min(targetIndex, cards.length - 1)];
         if (!target) return;
 
@@ -241,62 +283,58 @@
         }, 260);
       };
 
-      document.getElementById("vipPrev")?.addEventListener("click", () => scrollToPage(vipPage - 1, true));
-      document.getElementById("vipNext")?.addEventListener("click", () => scrollToPage(vipPage + 1, true));
+      if (!vipBound) {
+        vipBound = true;
 
-      dotsWrap.addEventListener("click", (e) => {
-        const btn = e.target.closest(".vip-dot");
-        if (!btn) return;
-        const idx = parseInt(btn.dataset.idx || "0", 10);
-        scrollToPage(idx, true);
-      });
+        document.getElementById("vipPrev")?.addEventListener("click", () => scrollToPage(vipPage - 1, true));
+        document.getElementById("vipNext")?.addEventListener("click", () => scrollToPage(vipPage + 1, true));
 
-      rail.addEventListener(
-        "scroll",
-        () => {
-          clearTimeout(vipScrollEndTimer);
-          vipScrollEndTimer = setTimeout(() => {
-            const railRect = rail.getBoundingClientRect();
-            const center = railRect.left + railRect.width / 2;
+        dotsWrap.addEventListener("click", (e) => {
+          const btn = e.target.closest(".vip-dot");
+          if (!btn) return;
+          const idx = parseInt(btn.dataset.idx || "0", 10);
+          scrollToPage(idx, true);
+        });
 
-            let bestIdx = 0;
-            let bestDist = Infinity;
+        rail.addEventListener(
+          "scroll",
+          () => {
+            clearTimeout(vipScrollEndTimer);
+            vipScrollEndTimer = setTimeout(() => {
+              const railRect = rail.getBoundingClientRect();
+              const center = railRect.left + railRect.width / 2;
 
-            for (let i = 0; i < cards.length; i++) {
-              const r = cards[i].getBoundingClientRect();
-              const cCenter = r.left + r.width / 2;
-              const dist = Math.abs(cCenter - center);
-              if (dist < bestDist) {
-                bestDist = dist;
-                bestIdx = i;
+              let bestIdx = 0;
+              let bestDist = Infinity;
+
+              for (let i = 0; i < cards.length; i++) {
+                const r = cards[i].getBoundingClientRect();
+                const cCenter = r.left + r.width / 2;
+                const dist = Math.abs(cCenter - center);
+                if (dist < bestDist) {
+                  bestDist = dist;
+                  bestIdx = i;
+                }
               }
-            }
 
-            const logicalIdx = bestIdx % logicalCount;
-            const page = Math.floor(logicalIdx / perPage());
+              const logicalIdx = bestIdx % logicalCount;
+              const page = Math.floor(logicalIdx / perPage);
 
-            if (page !== vipPage) {
-              vipPage = page;
-              setVipDot(vipPage);
-            }
+              if (page !== vipPage) {
+                vipPage = page;
+                setVipDot(vipPage);
+              }
 
-            rail.style.scrollBehavior = "auto";
-            applySnapMode(true);
-          }, 90);
-        },
-        { passive: true }
-      );
+              rail.style.scrollBehavior = "auto";
+              applySnapMode(true);
+            }, 90);
+          },
+          { passive: true }
+        );
 
-      window.addEventListener("resize", () => {
-        // rebuild dots + snap
-        buildDots();
-        vipPage = 0;
-        setVipDot(0);
-        applySnapMode(true);
-        scrollToPage(0, false);
-      });
+        window.addEventListener("resize", () => initVip());
+      }
 
-      buildDots();
       vipPage = 0;
       setVipDot(0);
       applySnapMode(true);
@@ -318,32 +356,22 @@
 
     let activeKey = null;
 
-    function isMobile() {
-      return window.matchMedia("(max-width: 767px)").matches;
-    }
+    function isMobile() { return window.matchMedia("(max-width: 767px)").matches; }
 
     function syncSheetPosition() {
       const dockH = mfDock?.getBoundingClientRect().height || 86;
       document.documentElement.style.setProperty("--mf-dock-h", dockH + "px");
     }
 
-    function sheetIsOpen() {
-      return mfSheet?.classList.contains("is-open");
-    }
+    function sheetIsOpen() { return mfSheet?.classList.contains("is-open"); }
 
     function segHTML(name, options, checkedValue) {
       return `
         <div class="seg-btn" role="group" aria-label="${name}">
-          ${options
-            .map(
-              (o) => `
-            <input type="radio" id="${o.id}" name="${name}" value="${o.value}" ${
-                String(o.value) === String(checkedValue) ? "checked" : ""
-              }>
+          ${options.map(o => `
+            <input type="radio" id="${o.id}" name="${name}" value="${o.value}" ${String(o.value) === String(checkedValue) ? "checked" : ""}>
             <label for="${o.id}">${o.label}</label>
-          `
-            )
-            .join("")}
+          `).join("")}
         </div>`;
     }
 
@@ -369,15 +397,11 @@
         return `
           <div>
             <label class="filter-title">حالة المنتج</label>
-            ${segHTML(
-              "mfCondition",
-              [
-                { value: "", label: "الكل", id: "mf_cond_all" },
-                { value: "new", label: "جديد", id: "mf_cond_new" },
-                { value: "used", label: "مستعمل", id: "mf_cond_used" },
-              ],
-              v
-            )}
+            ${segHTML("mfCondition", [
+              { value: "", label: "الكل", id: "mf_cond_all" },
+              { value: "new", label: "جديد", id: "mf_cond_new" },
+              { value: "used", label: "مستعمل", id: "mf_cond_used" }
+            ], v)}
           </div>`;
       }
 
@@ -397,16 +421,12 @@
         return `
           <div>
             <label class="filter-title">الفترة الزمنية</label>
-            ${segHTML(
-              "mfTime",
-              [
-                { value: "", label: "أي وقت", id: "mf_time_any" },
-                { value: "24", label: "24 ساعة", id: "mf_time_24" },
-                { value: "168", label: "7 أيام", id: "mf_time_7" },
-                { value: "720", label: "30 يوم", id: "mf_time_30" },
-              ],
-              v
-            )}
+            ${segHTML("mfTime", [
+              { value: "", label: "أي وقت", id: "mf_time_any" },
+              { value: "24", label: "24 ساعة", id: "mf_time_24" },
+              { value: "168", label: "7 أيام", id: "mf_time_7" },
+              { value: "720", label: "30 يوم", id: "mf_time_30" }
+            ], v)}
           </div>`;
       }
 
@@ -415,15 +435,11 @@
         return `
           <div>
             <label class="filter-title">ترتيب حسب</label>
-            ${segHTML(
-              "mfSort",
-              [
-                { value: "latest", label: "الأحدث", id: "mf_sort_latest" },
-                { value: "budgetAsc", label: "الأقل", id: "mf_sort_asc" },
-                { value: "budgetDesc", label: "الأعلى", id: "mf_sort_desc" },
-              ],
-              v
-            )}
+            ${segHTML("mfSort", [
+              { value: "latest", label: "الأحدث", id: "mf_sort_latest" },
+              { value: "budgetAsc", label: "الأقل", id: "mf_sort_asc" },
+              { value: "budgetDesc", label: "الأعلى", id: "mf_sort_desc" }
+            ], v)}
           </div>`;
       }
 
@@ -440,7 +456,7 @@
 
       activeKey = key;
 
-      mfDock?.querySelectorAll(".mf-item").forEach((b) => b.classList.toggle("is-active", b.dataset.key === key));
+      mfDock?.querySelectorAll(".mf-item").forEach(b => b.classList.toggle("is-active", b.dataset.key === key));
 
       mfBody.innerHTML = buildSheetContent(key);
       initSheetControls(key);
@@ -451,9 +467,8 @@
         condition: { title: "الحالة", ico: "✓", sub: "اختر الحالة وسيتم الإغلاق تلقائياً" },
         price: { title: "السعر", ico: "د.أ", sub: "حدّد النطاق ثم اضغط تطبيق" },
         time: { title: "الوقت", ico: "⏱", sub: "اختر الفترة وسيتم الإغلاق تلقائياً" },
-        sort: { title: "الترتيب", ico: "⇅", sub: "اختر الترتيب وسيتم الإغلاق تلقائياً" },
+        sort: { title: "الترتيب", ico: "⇅", sub: "اختر الترتيب وسيتم الإغلاق تلقائياً" }
       };
-
       const meta = map[key] || { title: "تصفية", ico: "⚙", sub: "" };
       if (mfSheetTitle) mfSheetTitle.textContent = meta.title;
       if (mfSheetSub) mfSheetSub.textContent = meta.sub;
@@ -466,7 +481,7 @@
     function closeSheet() {
       if (!mfSheet) return;
       mfSheet.classList.remove("is-open");
-      mfDock?.querySelectorAll(".mf-item").forEach((b) => b.classList.remove("is-active"));
+      mfDock?.querySelectorAll(".mf-item").forEach(b => b.classList.remove("is-active"));
       activeKey = null;
     }
 
@@ -491,8 +506,8 @@
       if (activeKey === "price") {
         const minEl = document.getElementById("mfPriceMin");
         const maxEl = document.getElementById("mfPriceMax");
-        if (filterMin) filterMin.value = minEl ? minEl.value || "" : "";
-        if (filterMax) filterMax.value = maxEl ? maxEl.value || "" : "";
+        if (filterMin) filterMin.value = minEl ? (minEl.value || "") : "";
+        if (filterMax) filterMax.value = maxEl ? (maxEl.value || "") : "";
       }
 
       if (activeKey === "time") {
@@ -502,7 +517,7 @@
 
       if (activeKey === "sort") {
         const r = document.querySelector('input[name="mfSort"]:checked');
-        setRadioGroupValue("sort", r ? r.value || "latest" : "latest");
+        setRadioGroupValue("sort", r ? (r.value || "latest") : "latest");
       }
 
       if (pageField) pageField.value = "1";
@@ -515,10 +530,7 @@
       if (activeKey === "category" && filterCategory) filterCategory.value = "";
       if (activeKey === "city" && filterCity) filterCity.value = "";
       if (activeKey === "condition") setRadioGroupValue("condition", "");
-      if (activeKey === "price") {
-        if (filterMin) filterMin.value = "";
-        if (filterMax) filterMax.value = "";
-      }
+      if (activeKey === "price") { if (filterMin) filterMin.value = ""; if (filterMax) filterMax.value = ""; }
       if (activeKey === "time") setRadioGroupValue("time", "");
       if (activeKey === "sort") setRadioGroupValue("sort", "latest");
 
@@ -530,49 +542,34 @@
       if (key === "category") {
         const el = document.getElementById("mfCategory");
         if (el && filterCategory) el.value = filterCategory.value || "";
-        el?.addEventListener("change", () => {
-          commitFromSheet();
-          closeSheet();
-        });
+        el?.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
         return;
       }
 
       if (key === "city") {
         const el = document.getElementById("mfCity");
         if (el && filterCity) el.value = filterCity.value || "";
-        el?.addEventListener("change", () => {
-          commitFromSheet();
-          closeSheet();
-        });
+        el?.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
         return;
       }
 
       if (key === "condition") {
-        document.querySelectorAll('input[name="mfCondition"]').forEach((r) => {
-          r.addEventListener("change", () => {
-            commitFromSheet();
-            closeSheet();
-          });
+        document.querySelectorAll('input[name="mfCondition"]').forEach(r => {
+          r.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
         });
         return;
       }
 
       if (key === "time") {
-        document.querySelectorAll('input[name="mfTime"]').forEach((r) => {
-          r.addEventListener("change", () => {
-            commitFromSheet();
-            closeSheet();
-          });
+        document.querySelectorAll('input[name="mfTime"]').forEach(r => {
+          r.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
         });
         return;
       }
 
       if (key === "sort") {
-        document.querySelectorAll('input[name="mfSort"]').forEach((r) => {
-          r.addEventListener("change", () => {
-            commitFromSheet();
-            closeSheet();
-          });
+        document.querySelectorAll('input[name="mfSort"]').forEach(r => {
+          r.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
         });
         return;
       }
@@ -580,7 +577,7 @@
       // price uses Apply
     }
 
-    mfDock?.querySelectorAll(".mf-item").forEach((btn) => {
+    mfDock?.querySelectorAll(".mf-item").forEach(btn => {
       btn.addEventListener("click", () => {
         if (!isMobile()) return;
         openSheet(btn.dataset.key);
@@ -600,10 +597,7 @@
     });
 
     window.addEventListener("resize", () => {
-      if (!isMobile()) {
-        closeSheet();
-        return;
-      }
+      if (!isMobile()) { closeSheet(); return; }
       syncSheetPosition();
     });
 

@@ -1,5 +1,5 @@
 {# templates/partials/_item_card.html #}
-{% load i18n %}
+{% load i18n timeago_ar %}
 
 
 {% with HIDE_OWNER_FAV=0 %}
@@ -158,9 +158,7 @@
           </svg>
           <span>
             {% with t=item.listing.updated_at|default:item.listing.created_at %}
-              {% if t %}
-                {% if t|timesince == "0 minutes" %}الآن{% else %}{{ t|timesince }}{% endif %}
-              {% endif %}
+              {% if t %}{{ t|timeago_ar }}{% endif %}
             {% endwith %}
           </span>
         </span>
