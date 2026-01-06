@@ -1,612 +1,592 @@
-// static/js/list-requests-django.js
 (() => {
   "use strict";
 
   // ---------- hard guard: prevent double init even if script is injected twice ----------
   const ROOT = document.documentElement;
-  if (ROOT.dataset.listRequestsInit === "1") return;
-  ROOT.dataset.listRequestsInit = "1";
+  if (ROOT.dataset.listAdsInit === "1") return;
+  ROOT.dataset.listAdsInit = "1";
 
   const onReady = (fn) => {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", fn, { once: true });
-    } else {
-      fn();
-    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once: true });
+    else fn();
   };
 
   onReady(() => {
-    const pageRoot = document.querySelector(".list-requests-page[data-page='list-requests']");
-    if (!pageRoot) return;
+    const pageRoot = document.querySelector(".list-ads-page[data-page='list-ads']");
+    if (!pageRoot) return; // not on this page
 
-    // ---------- Elements ----------
-    const form = document.getElementById("filtersForm");
-    const filterCategory = document.getElementById("filterCategory");
-    const filterCity = document.getElementById("filterCity");
-    const filterMin = document.getElementById("filterPriceMin");
-    const filterMax = document.getElementById("filterPriceMax");
-    const pageField = document.getElementById("pageField");
-
-    const listEl = document.getElementById("adsList");
-    const totalEl = document.getElementById("resultsTotal");
-    const visEl = document.getElementById("resultsVisible");
-    const loadMoreBtn = document.getElementById("loadMoreBtn");
-    const noResults = document.getElementById("noResults");
-
-    const resetBtn = document.getElementById("resetFilters");
-    const clearAfterNoResults = document.getElementById("clearAfterNoResults");
-
-    // ---------- Helpers ----------
-    const setRadioGroupValue = (name, valueToCheck) => {
-      const r = document.querySelector(
-        `input[name="${name}"][value="${CSS.escape(String(valueToCheck))}"]`
-      );
-      if (r) r.checked = true;
-    };
-
-    const getRadioValue = (name, fallback = "") => {
-      const r = document.querySelector(`input[name="${name}"]:checked`);
-      return r ? r.value : fallback;
-    };
-
-    const buildQuery = () => {
-      if (!form) return "";
-
-      const fd = new FormData(form);
-
-      // normalize page
-      if (!fd.get("page")) fd.set("page", pageField?.value || "1");
-
-      // remove empty fields
-      [...fd.keys()].forEach((k) => {
-        const vals = fd.getAll(k);
-        if (vals.length === 1 && (vals[0] === "" || vals[0] == null)) fd.delete(k);
-      });
-
-      const qs = new URLSearchParams();
-      for (const [k, v] of fd.entries()) qs.append(k, v);
-      return qs.toString();
-    };
-
-    const applyFilters = async ({ append = false } = {}) => {
-      if (!form || !listEl) return;
-
-      const url = new URL(form.action, window.location.origin);
-      url.search = buildQuery();
-
-      const res = await fetch(url.toString(), {
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-      });
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-
-      if (!append) listEl.innerHTML = data.html || "";
-      else listEl.insertAdjacentHTML("beforeend", data.html || "");
-
-      if (totalEl) totalEl.textContent = String(data.total_count ?? 0);
-      if (visEl) visEl.textContent = String(data.visible_count ?? 0);
-
-      const total = Number(data.total_count ?? 0);
-      if (noResults) noResults.classList.toggle("hidden", total !== 0);
-
-      const hasMore = !!data.has_more;
-      if (loadMoreBtn) loadMoreBtn.classList.toggle("hidden", !hasMore);
-
-      if (!append) {
-        document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    };
-
-    // ---------- Desktop listeners ----------
-    [filterCategory, filterCity].forEach((el) =>
-      el?.addEventListener("change", () => {
-        if (pageField) pageField.value = "1";
-        applyFilters({ append: false });
-      })
-    );
-
-    document.querySelectorAll('input[name="condition"]').forEach((r) =>
-      r.addEventListener("change", () => {
-        if (pageField) pageField.value = "1";
-        applyFilters({ append: false });
-      })
-    );
-
-    document.querySelectorAll('input[name="seller_type"]').forEach((r) =>
-      r.addEventListener("change", () => {
-        if (pageField) pageField.value = "1";
-        applyFilters({ append: false });
-      })
-    );
-
-    document.querySelectorAll('input[name="time"]').forEach((r) =>
-      r.addEventListener("change", () => {
-        if (pageField) pageField.value = "1";
-        applyFilters({ append: false });
-      })
-    );
-
-    document.querySelectorAll('input[name="sort"]').forEach((r) =>
-      r.addEventListener("change", () => {
-        if (pageField) pageField.value = "1";
-        applyFilters({ append: false });
-      })
-    );
-
-    let priceTimer = null;
-    const schedulePriceApply = (ms = 500) => {
-      clearTimeout(priceTimer);
-      priceTimer = setTimeout(() => {
-        if (pageField) pageField.value = "1";
-        applyFilters({ append: false });
-      }, ms);
-    };
-
-    const flushPriceApply = () => {
-      clearTimeout(priceTimer);
-      if (pageField) pageField.value = "1";
-      applyFilters({ append: false });
-    };
-
-    [filterMin, filterMax].forEach((el) => {
-      if (!el) return;
-      el.addEventListener("input", () => schedulePriceApply(500));
-      el.addEventListener("change", () => flushPriceApply());
-    });
-
-    resetBtn?.addEventListener("click", () => {
-      if (filterCategory) filterCategory.value = "";
-      if (filterCity) filterCity.value = "";
-      if (filterMin) filterMin.value = "";
-      if (filterMax) filterMax.value = "";
-
-      setRadioGroupValue("seller_type", "");
-      setRadioGroupValue("time", "");
-      setRadioGroupValue("sort", "latest");
-      setRadioGroupValue("condition", "");
-
-      if (pageField) pageField.value = "1";
-      applyFilters({ append: false });
-    });
-
-    clearAfterNoResults?.addEventListener("click", () => resetBtn?.click());
-
-    loadMoreBtn?.addEventListener("click", () => {
-      const current = parseInt(pageField?.value || "1", 10) || 1;
-      if (pageField) pageField.value = String(current + 1);
-      applyFilters({ append: true });
-    });
-
-    // ---------- VIP slider (same behavior as mockup) ----------
-    let vipPage = 0;
-    let vipScrollEndTimer = null;
-
-    function initVip() {
+    // =====================================================================
+    // VIP Slider (no conflicting sizing, no fixed-width fighting, RTL-safe)
+    // =====================================================================
+    (function initVip() {
       const rail = document.getElementById("featuredList");
       const dotsWrap = document.getElementById("vipDots");
       const section = document.getElementById("featuredSection");
       if (!rail || !dotsWrap) return;
 
-      // ✅ guard (same idea as list-ads-django.js)
+      // Guard
       if (rail.dataset.init === "1") return;
       rail.dataset.init = "1";
 
-      const cards = [...rail.querySelectorAll(".featured-card")];
-      if (!cards.length) {
+      // REQUIRE: cards must have .featured-card in server-rendered HTML
+      const logicalCards = [...rail.querySelectorAll(".featured-card")];
+      const logicalCount = logicalCards.length;
+
+      if (!logicalCount) {
+        // If you don’t see VIP, it means your partial didn’t output featured-card.
         if (section) section.style.display = "none";
         return;
       }
 
-      const logicalCount = Number(rail.dataset.logicalCount || cards.length);
+      let vipPage = 0;
+      let scrollEndTimer = null;
+
       const perPage = () => (window.innerWidth >= 1280 ? 4 : 1);
+
       const totalPages = () => Math.max(1, Math.ceil(logicalCount / perPage()));
 
-      const buildDots = () => {
+      function buildDots() {
         const tp = totalPages();
         dotsWrap.innerHTML = Array.from({ length: tp }, (_, i) =>
-          `<button type="button" class="vip-dot ${i === 0 ? "is-active" : ""}" data-idx="${i}" aria-label="صفحة ${i + 1}"></button>`
+          `<button type="button" class="vip-dot ${i === vipPage ? "is-active" : ""}" data-idx="${i}" aria-label="صفحة ${i + 1}"></button>`
         ).join("");
-      };
+      }
 
-      const setVipDot = (i) => {
-        [...dotsWrap.querySelectorAll(".vip-dot")].forEach((d, idx) =>
-          d.classList.toggle("is-active", idx === i)
+      function setDot(i) {
+        [...dotsWrap.querySelectorAll(".vip-dot")].forEach((d, k) =>
+          d.classList.toggle("is-active", k === i)
         );
-      };
+      }
 
-      const applySnapMode = (enabled) => {
-        if (window.innerWidth >= 1280) return;
+      function applySnap(enabled) {
+        if (window.innerWidth >= 1280) return; // desktop: no snap by design
         rail.style.scrollSnapType = enabled ? "x mandatory" : "none";
-      };
+      }
 
-      const scrollToPage = (i, smooth = true) => {
+      // RTL-safe: use scrollLeft directly based on element offset
+      function scrollToCardIndex(cardIndex, smooth) {
+          const cards = [...rail.querySelectorAll(".featured-card")];
+          const target = cards[Math.max(0, Math.min(cards.length - 1, cardIndex))];
+          if (!target) return;
+
+          applySnap(false);
+
+          // RTL-safe: works correctly in RTL across browsers
+          target.scrollIntoView({
+            behavior: smooth ? "smooth" : "auto",
+            inline: "start",
+            block: "nearest"
+          });
+
+          clearTimeout(scrollEndTimer);
+          scrollEndTimer = setTimeout(() => applySnap(true), 260);
+        }
+
+      function scrollToPage(pageIdx, smooth = true) {
         const tp = totalPages();
-        vipPage = Math.max(0, Math.min(tp - 1, i));
+        vipPage = Math.max(0, Math.min(tp - 1, pageIdx));
         const targetIndex = vipPage * perPage();
-        const target = cards[Math.min(targetIndex, cards.length - 1)];
-        if (!target) return;
+        scrollToCardIndex(targetIndex, smooth);
+        setDot(vipPage);
+      }
 
-        applySnapMode(false);
-        rail.style.scrollBehavior = smooth ? "smooth" : "auto";
-        target.scrollIntoView({ behavior: smooth ? "smooth" : "auto", inline: "start", block: "nearest" });
-
-        setVipDot(vipPage);
-
-        clearTimeout(vipScrollEndTimer);
-        vipScrollEndTimer = setTimeout(() => {
-          rail.style.scrollBehavior = "auto";
-          applySnapMode(true);
-        }, 260);
-      };
-
+      // Dots + buttons (delegate + guard against double-bind)
       document.getElementById("vipPrev")?.addEventListener("click", () => scrollToPage(vipPage - 1, true));
       document.getElementById("vipNext")?.addEventListener("click", () => scrollToPage(vipPage + 1, true));
 
       dotsWrap.addEventListener("click", (e) => {
         const btn = e.target.closest(".vip-dot");
         if (!btn) return;
-        const idx = parseInt(btn.dataset.idx || "0", 10);
-        scrollToPage(idx, true);
+        const i = parseInt(btn.dataset.idx || "0", 10);
+        if (!Number.isNaN(i)) scrollToPage(i, true);
       });
 
-      rail.addEventListener(
-        "scroll",
-        () => {
-          clearTimeout(vipScrollEndTimer);
-          vipScrollEndTimer = setTimeout(() => {
-            const railRect = rail.getBoundingClientRect();
-            const center = railRect.left + railRect.width / 2;
+      // dot sync after manual scroll settles
+      rail.addEventListener("scroll", () => {
+        clearTimeout(scrollEndTimer);
+        scrollEndTimer = setTimeout(() => {
+          const cards = [...rail.querySelectorAll(".featured-card")];
+          const pp = perPage();
+          const tp = totalPages();
 
-            let bestIdx = 0;
-            let bestDist = Infinity;
+          const center = rail.scrollLeft + rail.clientWidth / 2;
+          let best = 0;
+          let bestDist = Infinity;
 
-            for (let i = 0; i < cards.length; i++) {
-              const r = cards[i].getBoundingClientRect();
-              const cCenter = r.left + r.width / 2;
-              const dist = Math.abs(cCenter - center);
-              if (dist < bestDist) {
-                bestDist = dist;
-                bestIdx = i;
-              }
-            }
+          for (let i = 0; i < cards.length; i++) {
+            const c = cards[i];
+            const cCenter = c.offsetLeft + c.offsetWidth / 2;
+            const dist = Math.abs(cCenter - center);
+            if (dist < bestDist) { bestDist = dist; best = i; }
+          }
 
-            const logicalIdx = bestIdx % logicalCount;
-            const page = Math.floor(logicalIdx / perPage());
+          const logicalIdx = Math.max(0, Math.min(logicalCount - 1, best));
+          const page = Math.max(0, Math.min(tp - 1, Math.floor(logicalIdx / pp)));
 
-            if (page !== vipPage) {
-              vipPage = page;
-              setVipDot(vipPage);
-            }
-
-            rail.style.scrollBehavior = "auto";
-            applySnapMode(true);
-          }, 90);
-        },
-        { passive: true }
-      );
+          vipPage = page;
+          setDot(vipPage);
+          applySnap(true);
+        }, 90);
+      }, { passive: true });
 
       window.addEventListener("resize", () => {
-        // rebuild dots + snap
+        // rebuild dots, keep current vipPage in bounds
+        const tp = totalPages();
+        vipPage = Math.max(0, Math.min(tp - 1, vipPage));
         buildDots();
-        vipPage = 0;
-        setVipDot(0);
-        applySnapMode(true);
-        scrollToPage(0, false);
+        setDot(vipPage);
+        applySnap(true);
       });
 
+      // init
       buildDots();
-      vipPage = 0;
-      setVipDot(0);
-      applySnapMode(true);
+      applySnap(true);
       scrollToPage(0, false);
-    }
+    })();
 
-    initVip();
+    // =====================================================================
+    // AJAX filtering + load more (init-guarded)
+    // =====================================================================
+    (function initFilters() {
+      const form = document.getElementById("filtersForm");
+      const adsList = document.getElementById("adsList");
+      if (!form || !adsList) return;
 
-    // ---------- Mobile filter sheet ----------
-    const mfDock = document.getElementById("mfDock");
-    const mfSheet = document.getElementById("mfSheet");
-    const mfBody = document.getElementById("mfBody");
-    const mfClose = document.getElementById("mfClose");
-    const mfApply = document.getElementById("mfApply");
-    const resetOneBtn = document.getElementById("mfResetOne");
-    const mfSheetTitle = document.getElementById("mfSheetTitle");
-    const mfSheetSub = document.getElementById("mfSheetSub");
-    const mfSheetIcon = document.getElementById("mfSheetIcon");
+      if (form.dataset.init === "1") return;
+      form.dataset.init = "1";
 
-    let activeKey = null;
+      const loadMoreBtn = document.getElementById("loadMoreBtn");
+      const noResults = document.getElementById("noResults");
+      const clearAfterNoResults = document.getElementById("clearAfterNoResults");
+      const resetFiltersBtn = document.getElementById("resetFilters");
+      const pageField = document.getElementById("pageField");
+      const resultsTotal = document.getElementById("resultsTotal");
+      const resultsVisible = document.getElementById("resultsVisible");
 
-    function isMobile() {
-      return window.matchMedia("(max-width: 767px)").matches;
-    }
+      const priceMin = document.getElementById("filterPriceMin");
+      const priceMax = document.getElementById("filterPriceMax");
 
-    function syncSheetPosition() {
-      const dockH = mfDock?.getBoundingClientRect().height || 86;
-      document.documentElement.style.setProperty("--mf-dock-h", dockH + "px");
-    }
+      // ✅ sync UI from URL on first load (supports ?categories=3 while select is name="category")
+        (function syncFiltersFromUrl() {
+          const params = new URLSearchParams(window.location.search);
 
-    function sheetIsOpen() {
-      return mfSheet?.classList.contains("is-open");
-    }
+          // alias: URL uses "categories" but form uses "category"
+          if (!params.has("category") && params.has("categories")) {
+            params.set("category", params.get("categories") || "");
+          }
 
-    function segHTML(name, options, checkedValue) {
-      return `
-        <div class="seg-btn" role="group" aria-label="${name}">
-          ${options
-            .map(
-              (o) => `
-            <input type="radio" id="${o.id}" name="${name}" value="${o.value}" ${
-                String(o.value) === String(checkedValue) ? "checked" : ""
-              }>
-            <label for="${o.id}">${o.label}</label>
-          `
-            )
-            .join("")}
-        </div>`;
-    }
+          // selects (includes #filterCategory)
+          form.querySelectorAll("select").forEach(sel => {
+            if (!sel.name) return;
+            if (params.has(sel.name)) sel.value = params.get(sel.name) || "";
+          });
 
-    function buildSheetContent(key) {
-      if (key === "category") {
+          // radios
+          const radioNames = new Set();
+          form.querySelectorAll('input[type="radio"]').forEach(r => r.name && radioNames.add(r.name));
+          radioNames.forEach(name => {
+            if (!params.has(name)) return;
+            const v = params.get(name) || "";
+            const target = form.querySelector(
+              `input[type="radio"][name="${CSS.escape(name)}"][value="${CSS.escape(v)}"]`
+            );
+            if (target) target.checked = true;
+          });
+
+          // price inputs
+          if (priceMin?.name && params.has(priceMin.name)) priceMin.value = params.get(priceMin.name) || "";
+          if (priceMax?.name && params.has(priceMax.name)) priceMax.value = params.get(priceMax.name) || "";
+
+          // page
+          if (pageField && params.has("page")) pageField.value = params.get("page") || "1";
+        })();
+
+
+      let isLoading = false;
+
+      function resetToFirstPage() {
+        if (pageField) pageField.value = "1";
+      }
+
+      function qsFromForm() {
+        const fd = new FormData(form);
+        const params = new URLSearchParams();
+        for (const [k, v] of fd.entries()) {
+          const val = (v || "").toString().trim();
+          if (val !== "") params.set(k, val);
+        }
+        if (!params.get("page")) params.set("page", "1");
+        return params;
+      }
+
+      async function fetchResults({ append = false } = {}) {
+        if (isLoading) return;
+        isLoading = true;
+
+        const params = qsFromForm();
+        const url = `${form.action}?${params.toString()}`;
+
+        try {
+          const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+          if (!res.ok) throw new Error("Bad response");
+          const data = await res.json();
+
+          if (!append) adsList.innerHTML = data.html || "";
+          else adsList.insertAdjacentHTML("beforeend", data.html || "");
+
+          if (resultsTotal) resultsTotal.textContent = String(data.total_count ?? 0);
+          if (resultsVisible) resultsVisible.textContent = String(data.visible_count ?? 0);
+
+          if (noResults) noResults.classList.toggle("hidden", (data.total_count ?? 0) !== 0);
+
+          if (loadMoreBtn) loadMoreBtn.classList.toggle("hidden", !data.has_more);
+
+          const clean = new URL(window.location.href);
+          clean.search = params.toString();
+          window.history.replaceState({}, "", clean.toString());
+        } finally {
+          isLoading = false;
+        }
+      }
+
+      // Submit prevention (we use AJAX)
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        resetToFirstPage();
+        fetchResults({ append: false });
+      });
+
+      // Apply on selects + radios
+      form.querySelectorAll("select").forEach(el => {
+        el.addEventListener("change", () => {
+          resetToFirstPage();
+          fetchResults({ append: false });
+          document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+
+      form.querySelectorAll('input[type="radio"]').forEach(el => {
+        el.addEventListener("change", () => {
+          resetToFirstPage();
+          fetchResults({ append: false });
+          document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+
+      // Debounced price typing
+      let priceTimer = null;
+      function scheduleApply(ms = 450) {
+        clearTimeout(priceTimer);
+        priceTimer = setTimeout(() => {
+          resetToFirstPage();
+          fetchResults({ append: false });
+          document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, ms);
+      }
+
+      [priceMin, priceMax].forEach(el => {
+        if (!el) return;
+        el.addEventListener("input", () => scheduleApply(450));
+        el.addEventListener("change", () => {
+          resetToFirstPage();
+          fetchResults({ append: false });
+          document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+
+      // reset filters (desktop)
+      resetFiltersBtn?.addEventListener("click", () => {
+        form.querySelectorAll("select").forEach(s => (s.value = ""));
+        ["condition", "seller_type", "time"].forEach(name => {
+          const r = form.querySelector(`input[name="${name}"][value=""]`);
+          if (r) r.checked = true;
+        });
+        const sortLatest = form.querySelector(`input[name="sort"][value="latest"]`);
+        if (sortLatest) sortLatest.checked = true;
+
+        if (priceMin) priceMin.value = "";
+        if (priceMax) priceMax.value = "";
+
+        resetToFirstPage();
+        fetchResults({ append: false });
+      });
+
+      clearAfterNoResults?.addEventListener("click", () => resetFiltersBtn?.click());
+
+      // load more
+      loadMoreBtn?.addEventListener("click", () => {
+        const current = parseInt(pageField?.value || "1", 10) || 1;
+        if (pageField) pageField.value = String(current + 1);
+        fetchResults({ append: true });
+      });
+    })();
+
+    // =====================================================================
+    // Mobile Dock + Sheet (init-guarded)
+    // =====================================================================
+    (function initMobileFilters() {
+      const mfDock = document.getElementById("mfDock");
+      const mfSheet = document.getElementById("mfSheet");
+      const mfBody = document.getElementById("mfBody");
+      const mfClose = document.getElementById("mfClose");
+      const mfApply = document.getElementById("mfApply");
+      const resetOneBtn = document.getElementById("mfResetOne");
+      const mfSheetTitle = document.getElementById("mfSheetTitle");
+      const mfSheetSub = document.getElementById("mfSheetSub");
+      const mfSheetIcon = document.getElementById("mfSheetIcon");
+
+      const form = document.getElementById("filtersForm");
+      if (!mfDock || !mfSheet || !mfBody || !form) return;
+
+      if (mfDock.dataset.init === "1") return;
+      mfDock.dataset.init = "1";
+
+      const priceMin = document.getElementById("filterPriceMin");
+      const priceMax = document.getElementById("filterPriceMax");
+
+
+      let activeKey = null;
+
+      function isMobile() { return window.matchMedia("(max-width: 767px)").matches; }
+      function sheetIsOpen() { return mfSheet.classList.contains("is-open"); }
+
+      function syncSheetPosition() {
+        const dockH = mfDock.getBoundingClientRect().height || 86;
+        document.documentElement.style.setProperty("--mf-dock-h", dockH + "px");
+      }
+
+      function getChecked(name) {
+        const r = form.querySelector(`input[name="${name}"]:checked`);
+        return r ? r.value : "";
+      }
+
+      function setRadioValue(name, value) {
+        const r = form.querySelector(`input[name="${name}"][value="${CSS.escape(String(value))}"]`);
+        if (r) r.checked = true;
+      }
+
+      function segHTML(name, options, checkedValue) {
         return `
-          <div>
-            <label class="filter-title">القسم</label>
-            <select id="mfCategory" class="filter-select">${filterCategory?.innerHTML || ""}</select>
+          <div class="seg-btn" role="group" aria-label="${name}">
+            ${options.map(o => `
+              <input type="radio" id="${o.id}" name="${name}" value="${o.value}" ${String(o.value) === String(checkedValue) ? "checked" : ""}>
+              <label for="${o.id}">${o.label}</label>
+            `).join("")}
           </div>`;
       }
 
-      if (key === "city") {
-        return `
-          <div>
-            <label class="filter-title">المدينة</label>
-            <select id="mfCity" class="filter-select">${filterCity?.innerHTML || ""}</select>
-          </div>`;
-      }
+      function buildSheetContent(key) {
+        const catSel = document.getElementById("filterCategory");
+        const citySel = document.getElementById("filterCity");
 
-      if (key === "condition") {
-        const v = getRadioValue("condition", "");
-        return `
-          <div>
-            <label class="filter-title">حالة المنتج</label>
-            ${segHTML(
-              "mfCondition",
-              [
+        if (key === "category") {
+          return `
+            <div>
+              <label class="filter-title">القسم</label>
+              <select id="mfCategory" class="filter-select">${catSel?.innerHTML || ""}</select>
+            </div>`;
+        }
+        if (key === "city") {
+          return `
+            <div>
+              <label class="filter-title">المدينة</label>
+              <select id="mfCity" class="filter-select">${citySel?.innerHTML || ""}</select>
+            </div>`;
+        }
+        if (key === "condition") {
+          return `
+            <div>
+              <label class="filter-title">حالة المنتج</label>
+              ${segHTML("mfCondition", [
                 { value: "", label: "الكل", id: "mf_cond_all" },
                 { value: "new", label: "جديد", id: "mf_cond_new" },
-                { value: "used", label: "مستعمل", id: "mf_cond_used" },
-              ],
-              v
-            )}
-          </div>`;
-      }
-
-      if (key === "price") {
-        return `
-          <div>
-            <label class="filter-title">نطاق الميزانية (د.أ)</label>
-            <div class="grid grid-cols-2 gap-2">
-              <input id="mfPriceMin" type="number" min="0" placeholder="من" class="filter-input" value="${filterMin?.value || ""}">
-              <input id="mfPriceMax" type="number" min="0" placeholder="إلى" class="filter-input" value="${filterMax?.value || ""}">
-            </div>
-          </div>`;
-      }
-
-      if (key === "time") {
-        const v = getRadioValue("time", "");
-        return `
-          <div>
-            <label class="filter-title">الفترة الزمنية</label>
-            ${segHTML(
-              "mfTime",
-              [
+                { value: "used", label: "مستعمل", id: "mf_cond_used" }
+              ], getChecked("condition"))}
+            </div>`;
+        }
+        if (key === "price") {
+          return `
+            <div>
+              <label class="filter-title">نطاق السعر (د.أ)</label>
+              <div class="grid grid-cols-2 gap-2">
+                <input id="mfPriceMin" type="number" min="0" placeholder="من" class="filter-input" value="${priceMin?.value || ""}">
+                <input id="mfPriceMax" type="number" min="0" placeholder="إلى" class="filter-input" value="${priceMax?.value || ""}">
+              </div>
+            </div>`;
+        }
+        if (key === "time") {
+          return `
+            <div>
+              <label class="filter-title">الفترة الزمنية</label>
+              ${segHTML("mfTime", [
                 { value: "", label: "أي وقت", id: "mf_time_any" },
                 { value: "24", label: "24 ساعة", id: "mf_time_24" },
                 { value: "168", label: "7 أيام", id: "mf_time_7" },
-                { value: "720", label: "30 يوم", id: "mf_time_30" },
-              ],
-              v
-            )}
-          </div>`;
-      }
-
-      if (key === "sort") {
-        const v = getRadioValue("sort", "latest");
-        return `
-          <div>
-            <label class="filter-title">ترتيب حسب</label>
-            ${segHTML(
-              "mfSort",
-              [
+                { value: "720", label: "30 يوم", id: "mf_time_30" }
+              ], getChecked("time"))}
+            </div>`;
+        }
+        if (key === "sort") {
+          return `
+            <div>
+              <label class="filter-title">ترتيب حسب</label>
+              ${segHTML("mfSort", [
                 { value: "latest", label: "الأحدث", id: "mf_sort_latest" },
-                { value: "budgetAsc", label: "الأقل", id: "mf_sort_asc" },
-                { value: "budgetDesc", label: "الأعلى", id: "mf_sort_desc" },
-              ],
-              v
-            )}
-          </div>`;
+                { value: "priceAsc", label: "الأقل", id: "mf_sort_asc" },
+                { value: "priceDesc", label: "الأعلى", id: "mf_sort_desc" }
+              ], getChecked("sort") || "latest")}
+            </div>`;
+        }
+        return "";
       }
 
-      return "";
-    }
+      function commitFromSheet() {
+        if (!activeKey) return;
 
-    function openSheet(key) {
-      if (!mfSheet || !mfBody) return;
+        if (activeKey === "category") {
+          const el = document.getElementById("mfCategory");
+          const desktop = document.getElementById("filterCategory");
+          if (el && desktop) desktop.value = el.value;
+        }
 
-      if (sheetIsOpen() && activeKey === key) {
-        closeSheet();
-        return;
+        if (activeKey === "city") {
+          const el = document.getElementById("mfCity");
+          const desktop = document.getElementById("filterCity");
+          if (el && desktop) desktop.value = el.value;
+        }
+
+        if (activeKey === "condition") {
+          const r = document.querySelector('input[name="mfCondition"]:checked');
+          setRadioValue("condition", r ? r.value : "");
+        }
+
+        if (activeKey === "price") {
+          const minEl = document.getElementById("mfPriceMin");
+          const maxEl = document.getElementById("mfPriceMax");
+          if (priceMin) priceMin.value = minEl ? (minEl.value || "") : "";
+          if (priceMax) priceMax.value = maxEl ? (maxEl.value || "") : "";
+        }
+
+        if (activeKey === "time") {
+          const r = document.querySelector('input[name="mfTime"]:checked');
+          setRadioValue("time", r ? r.value : "");
+        }
+
+        if (activeKey === "sort") {
+          const r = document.querySelector('input[name="mfSort"]:checked');
+          setRadioValue("sort", r ? r.value : "latest");
+        }
+
+        // trigger desktop flow by dispatching submit
+        const submit = new Event("submit", { cancelable: true });
+        form.dispatchEvent(submit);
+        document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
-      activeKey = key;
+      function resetOnlyActiveKey() {
+        if (!activeKey) return;
+        if (activeKey === "category") document.getElementById("filterCategory").value = "";
+        if (activeKey === "city") document.getElementById("filterCity").value = "";
+        if (activeKey === "condition") setRadioValue("condition", "");
+        if (activeKey === "price") { if (priceMin) priceMin.value = ""; if (priceMax) priceMax.value = ""; }
+        if (activeKey === "time") setRadioValue("time", "");
+        if (activeKey === "sort") setRadioValue("sort", "latest");
 
-      mfDock?.querySelectorAll(".mf-item").forEach((b) => b.classList.toggle("is-active", b.dataset.key === key));
-
-      mfBody.innerHTML = buildSheetContent(key);
-      initSheetControls(key);
-
-      const map = {
-        category: { title: "القسم", ico: "≡", sub: "اختر القسم وسيتم الإغلاق تلقائياً" },
-        city: { title: "المدينة", ico: "📍", sub: "اختر المدينة وسيتم الإغلاق تلقائياً" },
-        condition: { title: "الحالة", ico: "✓", sub: "اختر الحالة وسيتم الإغلاق تلقائياً" },
-        price: { title: "السعر", ico: "د.أ", sub: "حدّد النطاق ثم اضغط تطبيق" },
-        time: { title: "الوقت", ico: "⏱", sub: "اختر الفترة وسيتم الإغلاق تلقائياً" },
-        sort: { title: "الترتيب", ico: "⇅", sub: "اختر الترتيب وسيتم الإغلاق تلقائياً" },
-      };
-
-      const meta = map[key] || { title: "تصفية", ico: "⚙", sub: "" };
-      if (mfSheetTitle) mfSheetTitle.textContent = meta.title;
-      if (mfSheetSub) mfSheetSub.textContent = meta.sub;
-      if (mfSheetIcon) mfSheetIcon.textContent = meta.ico;
-
-      syncSheetPosition();
-      mfSheet.classList.add("is-open");
-    }
-
-    function closeSheet() {
-      if (!mfSheet) return;
-      mfSheet.classList.remove("is-open");
-      mfDock?.querySelectorAll(".mf-item").forEach((b) => b.classList.remove("is-active"));
-      activeKey = null;
-    }
-
-    function commitFromSheet() {
-      if (!activeKey) return;
-
-      if (activeKey === "category") {
-        const el = document.getElementById("mfCategory");
-        if (el && filterCategory) filterCategory.value = el.value;
+        const submit = new Event("submit", { cancelable: true });
+        form.dispatchEvent(submit);
       }
 
-      if (activeKey === "city") {
-        const el = document.getElementById("mfCity");
-        if (el && filterCity) filterCity.value = el.value;
-      }
-
-      if (activeKey === "condition") {
-        const r = document.querySelector('input[name="mfCondition"]:checked');
-        setRadioGroupValue("condition", r ? r.value : "");
-      }
-
-      if (activeKey === "price") {
-        const minEl = document.getElementById("mfPriceMin");
-        const maxEl = document.getElementById("mfPriceMax");
-        if (filterMin) filterMin.value = minEl ? minEl.value || "" : "";
-        if (filterMax) filterMax.value = maxEl ? maxEl.value || "" : "";
-      }
-
-      if (activeKey === "time") {
-        const r = document.querySelector('input[name="mfTime"]:checked');
-        setRadioGroupValue("time", r ? r.value : "");
-      }
-
-      if (activeKey === "sort") {
-        const r = document.querySelector('input[name="mfSort"]:checked');
-        setRadioGroupValue("sort", r ? r.value || "latest" : "latest");
-      }
-
-      if (pageField) pageField.value = "1";
-      applyFilters({ append: false });
-    }
-
-    function resetOnlyActiveKey() {
-      if (!activeKey) return;
-
-      if (activeKey === "category" && filterCategory) filterCategory.value = "";
-      if (activeKey === "city" && filterCity) filterCity.value = "";
-      if (activeKey === "condition") setRadioGroupValue("condition", "");
-      if (activeKey === "price") {
-        if (filterMin) filterMin.value = "";
-        if (filterMax) filterMax.value = "";
-      }
-      if (activeKey === "time") setRadioGroupValue("time", "");
-      if (activeKey === "sort") setRadioGroupValue("sort", "latest");
-
-      if (pageField) pageField.value = "1";
-      applyFilters({ append: false });
-    }
-
-    function initSheetControls(key) {
-      if (key === "category") {
-        const el = document.getElementById("mfCategory");
-        if (el && filterCategory) el.value = filterCategory.value || "";
-        el?.addEventListener("change", () => {
-          commitFromSheet();
-          closeSheet();
-        });
-        return;
-      }
-
-      if (key === "city") {
-        const el = document.getElementById("mfCity");
-        if (el && filterCity) el.value = filterCity.value || "";
-        el?.addEventListener("change", () => {
-          commitFromSheet();
-          closeSheet();
-        });
-        return;
-      }
-
-      if (key === "condition") {
-        document.querySelectorAll('input[name="mfCondition"]').forEach((r) => {
-          r.addEventListener("change", () => {
-            commitFromSheet();
-            closeSheet();
-          });
-        });
-        return;
-      }
-
-      if (key === "time") {
-        document.querySelectorAll('input[name="mfTime"]').forEach((r) => {
-          r.addEventListener("change", () => {
-            commitFromSheet();
-            closeSheet();
-          });
-        });
-        return;
-      }
-
-      if (key === "sort") {
-        document.querySelectorAll('input[name="mfSort"]').forEach((r) => {
-          r.addEventListener("change", () => {
-            commitFromSheet();
-            closeSheet();
-          });
-        });
-        return;
-      }
-
-      // price uses Apply
-    }
-
-    mfDock?.querySelectorAll(".mf-item").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      function openSheet(key) {
         if (!isMobile()) return;
-        openSheet(btn.dataset.key);
-      });
-    });
 
-    mfClose?.addEventListener("click", closeSheet);
+        if (sheetIsOpen() && activeKey === key) {
+          closeSheet();
+          return;
+        }
 
-    mfApply?.addEventListener("click", () => {
-      if (activeKey === "price") commitFromSheet();
-      closeSheet();
-    });
+        activeKey = key;
+        mfDock.querySelectorAll(".mf-item").forEach(b => b.classList.toggle("is-active", b.dataset.key === key));
 
-    resetOneBtn?.addEventListener("click", () => {
-      resetOnlyActiveKey();
-      if (activeKey && activeKey !== "price") closeSheet();
-    });
+        mfBody.innerHTML = buildSheetContent(key);
 
-    window.addEventListener("resize", () => {
-      if (!isMobile()) {
-        closeSheet();
-        return;
+        const meta = {
+          category: { title: "القسم", ico: "≡", sub: "اختر القسم وسيتم الإغلاق تلقائياً" },
+          city: { title: "المدينة", ico: "📍", sub: "اختر المدينة وسيتم الإغلاق تلقائياً" },
+          condition: { title: "الحالة", ico: "✓", sub: "اختر الحالة وسيتم الإغلاق تلقائياً" },
+          price: { title: "السعر", ico: "د.أ", sub: "حدّد النطاق ثم اضغط تطبيق" },
+          time: { title: "الوقت", ico: "⏱", sub: "اختر الفترة وسيتم الإغلاق تلقائياً" },
+          sort: { title: "الترتيب", ico: "⇅", sub: "اختر الترتيب وسيتم الإغلاق تلقائياً" }
+        }[key] || { title: "تصفية", ico: "⚙", sub: "" };
+
+        if (mfSheetTitle) mfSheetTitle.textContent = meta.title;
+        if (mfSheetSub) mfSheetSub.textContent = meta.sub;
+        if (mfSheetIcon) mfSheetIcon.textContent = meta.ico;
+
+        // init controls
+        if (key === "category") {
+          const el = document.getElementById("mfCategory");
+          const desktop = document.getElementById("filterCategory");
+          if (el && desktop) el.value = desktop.value || "";
+          el?.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
+        }
+
+        if (key === "city") {
+          const el = document.getElementById("mfCity");
+          const desktop = document.getElementById("filterCity");
+          if (el && desktop) el.value = desktop.value || "";
+          el?.addEventListener("change", () => { commitFromSheet(); closeSheet(); });
+        }
+
+        if (key === "condition") {
+          document.querySelectorAll('input[name="mfCondition"]').forEach(r =>
+            r.addEventListener("change", () => { commitFromSheet(); closeSheet(); })
+          );
+        }
+
+        if (key === "time") {
+          document.querySelectorAll('input[name="mfTime"]').forEach(r =>
+            r.addEventListener("change", () => { commitFromSheet(); closeSheet(); })
+          );
+        }
+
+        if (key === "sort") {
+          document.querySelectorAll('input[name="mfSort"]').forEach(r =>
+            r.addEventListener("change", () => { commitFromSheet(); closeSheet(); })
+          );
+        }
+
+        syncSheetPosition();
+        mfSheet.classList.add("is-open");
       }
-      syncSheetPosition();
-    });
 
-    syncSheetPosition();
+      function closeSheet() {
+        mfSheet.classList.remove("is-open");
+        mfDock.querySelectorAll(".mf-item").forEach(b => b.classList.remove("is-active"));
+        activeKey = null;
+      }
+
+      mfDock.querySelectorAll(".mf-item").forEach(btn => {
+        btn.addEventListener("click", () => openSheet(btn.dataset.key));
+      });
+
+      mfClose?.addEventListener("click", closeSheet);
+
+      mfApply?.addEventListener("click", () => {
+        if (activeKey === "price") commitFromSheet();
+        closeSheet();
+      });
+
+      resetOneBtn?.addEventListener("click", () => {
+        resetOnlyActiveKey();
+        if (activeKey && activeKey !== "price") closeSheet();
+      });
+
+      window.addEventListener("resize", () => {
+        if (!isMobile()) { closeSheet(); return; }
+        syncSheetPosition();
+      });
+
+      syncSheetPosition();
+    })();
   });
 })();
