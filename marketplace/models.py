@@ -447,7 +447,7 @@ class PointsTransaction(models.Model):
 class Item(models.Model):
     CONDITION_CHOICES = [('new', 'New'), ('used', 'Used')]
 
-    listing = models.OneToOneField(Listing, on_delete=models.CASCADE, related_name="item")
+    listing = models.OneToOneField("Listing", on_delete=models.CASCADE, related_name="item")
 
     price = models.FloatField()
     condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
@@ -465,18 +465,19 @@ class Item(models.Model):
         main = self.photos.filter(is_main=True).first()
         return main or self.photos.order_by('id').first()
 
-
     def __str__(self):
         return self.listing.title
 
 
-THUMB_WIDTH = 600
-THUMB_HEIGHT = 450
+# Single normalized target (16:10)
+NORMAL_W = 1600
+NORMAL_H = 1000
+
 
 class ItemPhoto(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='photos')
-    image = models.ImageField(upload_to='items/')
-    thumbnail = models.ImageField(upload_to='items/thumbs/', blank=True, null=True)
+    image = models.ImageField(upload_to='items/')  # original
+    normalized = models.ImageField(upload_to='items/normalized/', blank=True, null=True)  # ✅ single normalized
     created_at = models.DateTimeField(auto_now_add=True)
     is_main = models.BooleanField(default=False)
 
@@ -484,46 +485,55 @@ class ItemPhoto(models.Model):
         return f"Photo for {self.item.listing.title}"
 
     def save(self, *args, **kwargs):
-        """
-        Save original image first, then generate thumbnail if not exists.
-        """
         super().save(*args, **kwargs)
 
-        if self.image and not self.thumbnail:
-            self.generate_thumbnail()
+        # generate once (or regenerate if original changed and normalized missing)
+        if self.image and not self.normalized:
+            self.generate_normalized()
 
-    def generate_thumbnail(self):
+    def generate_normalized(self):
         """
-        Generates a full-image thumbnail with padding so the ENTIRE image is visible,
-        resized to fit exactly 600×450 (mockup-perfect).
+        Create a single normalized image:
+        - exact size NORMAL_W x NORMAL_H
+        - FULL image visible (no crop)
+        - no empty space (filled with blurred background)
         """
         try:
-            img = Image.open(self.image)
-            img = img.convert("RGB")
+            # open from storage
+            self.image.open("rb")
+            im = Image.open(self.image)
+            im = ImageOps.exif_transpose(im)  # fix rotation from phone photos
+            im = im.convert("RGB")
 
-            # Resize proportionally to fit within the target box
-            img.thumbnail((THUMB_WIDTH, THUMB_HEIGHT), Image.LANCZOS)
+            # background: cover then blur (fills full canvas)
+            bg = ImageOps.fit(im, (NORMAL_W, NORMAL_H), method=Image.LANCZOS)
+            bg = bg.filter(ImageFilter.GaussianBlur(28))
 
-            # Create background for exact thumbnail size
-            background = Image.new("RGB", (THUMB_WIDTH, THUMB_HEIGHT), (255, 255, 255))
+            # foreground: contain (no crop)
+            fg = ImageOps.contain(im, (NORMAL_W, NORMAL_H), method=Image.LANCZOS)
 
-            # Paste resized image into the center
-            offset = (
-                (THUMB_WIDTH - img.width) // 2,
-                (THUMB_HEIGHT - img.height) // 2,
-            )
-            background.paste(img, offset)
+            # paste centered
+            x = (NORMAL_W - fg.width) // 2
+            y = (NORMAL_H - fg.height) // 2
+            bg.paste(fg, (x, y))
 
-            # Save thumbnail to memory buffer
-            buffer = BytesIO()
-            background.save(buffer, format="JPEG", quality=90)
+            # write to buffer
+            buf = BytesIO()
+            bg.save(buf, format="JPEG", quality=85, optimize=True, progressive=True)
 
-            thumb_name = f"thumb_{self.image.name.split('/')[-1]}"
-            self.thumbnail.save(thumb_name, ContentFile(buffer.getvalue()), save=False)
-            super().save(update_fields=["thumbnail"])
+            base = self.image.name.split("/")[-1]
+            name = f"norm_{base.rsplit('.', 1)[0]}.jpg"
+
+            self.normalized.save(name, ContentFile(buf.getvalue()), save=False)
+            super().save(update_fields=["normalized"])
 
         except Exception as e:
-            print("Thumbnail generation failed:", e)
+            print("Normalized image generation failed:", e)
+        finally:
+            try:
+                self.image.close()
+            except Exception:
+                pass
 
 
 class ItemAttributeValue(models.Model):

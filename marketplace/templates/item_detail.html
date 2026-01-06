@@ -712,8 +712,8 @@
   <!-- Gallery data for JS (real photos) -->
   <script id="gallery-data" type="application/json">
     [
-      {% for p in item.photos.all %}
-        "{{ p.image.url }}"{% if not forloop.last %},{% endif %}
+      {% for p in item.photos.all|dictsortreversed:"is_main" %}
+        "{% if p.normalized %}{{ p.normalized.url }}{% else %}{{ p.image.url }}{% endif %}"{% if not forloop.last %},{% endif %}
       {% endfor %}
     ]
   </script>

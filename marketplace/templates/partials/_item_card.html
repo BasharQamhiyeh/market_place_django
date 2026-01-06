@@ -15,11 +15,12 @@
     <div class="ad-imgwrap">
       {% with p=item.main_photo %}
         {% if p %}
-          {% if p.thumbnail %}
-            <img src="{{ p.thumbnail.url }}" alt="{{ item.listing.title }}">
-          {% else %}
-            <img src="{{ p.image.url }}" alt="{{ item.listing.title }}">
-          {% endif %}
+          <img
+            src="{% if p.normalized %}{{ p.normalized.url }}{% else %}{{ p.image.url }}{% endif %}"
+            alt="{{ item.listing.title }}"
+            loading="lazy"
+            decoding="async"
+          >
         {% else %}
           <div class="w-full h-full flex items-center justify-center text-sm text-gray-400">
             {% trans "No image" %}
