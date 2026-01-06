@@ -289,7 +289,11 @@
                       {% else %}
                         <div class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0
                                     bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
-                          {{ u.username|default_if_none:u.first_name|first|upper }}
+                          {% if u.username %}
+                            {{ u.username|first|upper }}
+                          {% else %}
+                            {{ u.first_name|first|upper }}
+                          {% endif %}
                         </div>
                       {% endif %}
                     {% endwith %}
