@@ -584,12 +584,15 @@ class ItemAdmin(admin.ModelAdmin):
     # -----------------------------
     def import_excel_view(self, request):
         """
-        FINAL VERSION — EXACT OLD BEHAVIOR, adapted to Listing model.
+        FINAL VERSION — adapted to Listing model.
+        Adds 3-level category tree: Category → Sub Category → Sub Category 2
+        Creates missing categories/cities based on Arabic name (case-insensitive).
         Fully working ZIP + URL photos.
         """
-
         import os, tempfile, zipfile, openpyxl, requests
         from django.core.files.base import ContentFile
+        from django.db import IntegrityError
+        from django.db.models import Q
 
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
@@ -612,6 +615,64 @@ class ItemAdmin(admin.ModelAdmin):
                     return str(v).strip()
                 except:
                     return str(v).strip()
+
+            def clean_str(v):
+                if v is None:
+                    return None
+                s = str(v).strip()
+                return s if s else None
+
+            # ---------------------------
+            # HELPERS (AR name = source of truth)
+            # ---------------------------
+            def get_or_create_category_by_ar(name_ar, parent=None):
+                """
+                Find by name_ar (case-insensitive). If missing, create.
+                Ensure parent is set correctly.
+                """
+                name_ar = clean_str(name_ar)
+                if not name_ar:
+                    return None
+
+                cat = Category.objects.filter(name_ar__iexact=name_ar).first()
+                if cat:
+                    # enforce parent match
+                    if (parent and cat.parent_id != parent.id) or (not parent and cat.parent_id is not None):
+                        cat.parent = parent
+                        cat.save(update_fields=["parent"])
+                    return cat
+
+                # create (handle unique collisions safely)
+                try:
+                    return Category.objects.create(
+                        name_ar=name_ar,
+                        name_en=name_ar,
+                        parent=parent,
+                    )
+                except IntegrityError:
+                    # someone else created it or unique collision (eg different casing)
+                    cat = Category.objects.filter(name_ar__iexact=name_ar).first()
+                    if cat and ((parent and cat.parent_id != parent.id) or (not parent and cat.parent_id is not None)):
+                        cat.parent = parent
+                        cat.save(update_fields=["parent"])
+                    return cat
+
+            def get_or_create_city_by_ar(name_ar):
+                """
+                Find by city.name_ar (case-insensitive). If missing, create.
+                """
+                name_ar = clean_str(name_ar)
+                if not name_ar:
+                    return None
+
+                city = City.objects.filter(name_ar__iexact=name_ar).first()
+                if city:
+                    return city
+
+                try:
+                    return City.objects.create(name_ar=name_ar, name_en=name_ar)
+                except IntegrityError:
+                    return City.objects.filter(name_ar__iexact=name_ar).first()
 
             excel_path = zip_path = photos_dir = None
 
@@ -668,66 +729,46 @@ class ItemAdmin(admin.ModelAdmin):
                 name_col = col("name")
                 desc_col = col("description")
                 price_col = col("price")
+
                 cat_col = col("category")
-                subcat_col = col("subcategory")
+                subcat_col = col("sub category") or col("subcategory")  # supports both
+                subcat2_col = col("sub category 2") or col("subcategory 2") or col("sub_category_2")
+
                 city_col = col("city")
                 img_col = col("image")
 
                 for row in sheet.iter_rows(min_row=2, values_only=True):
                     try:
-                        external_id = norm(row[id_col])
+                        external_id = norm(row[id_col]) if id_col is not None else None
                         if not external_id:
                             continue
 
-                        title = str(row[name_col]).strip()
-                        desc = str(row[desc_col]).strip() if desc_col and row[desc_col] else ""
-                        price = float(row[price_col]) if row[price_col] else 0.0
-                        cat_name = str(row[cat_col]).strip()
+                        title = clean_str(row[name_col]) if name_col is not None else None
+                        if not title:
+                            title = external_id
 
-                        subcat_name = (
-                            str(row[subcat_col]).strip()
-                            if subcat_col and row[subcat_col]
-                            else None
-                        )
+                        desc = clean_str(row[desc_col]) if desc_col is not None else ""
+                        price = float(row[price_col]) if (price_col is not None and row[price_col]) else 0.0
 
-                        city_name = (
-                            str(row[city_col]).strip()
-                            if city_col and row[city_col]
-                            else None
-                        )
+                        cat_name_ar = clean_str(row[cat_col]) if cat_col is not None else None
+                        subcat_name_ar = clean_str(row[subcat_col]) if (subcat_col is not None) else None
+                        subcat2_name_ar = clean_str(row[subcat2_col]) if (subcat2_col is not None) else None
+
+                        city_name_ar = clean_str(row[city_col]) if (city_col is not None) else None
 
                         # -----------------------------
-                        # CATEGORY
+                        # CATEGORY (3 levels)
                         # -----------------------------
-                        cat, _ = Category.objects.get_or_create(
-                            name_ar=cat_name,
-                            defaults={"name_en": cat_name},
-                        )
+                        lvl1 = get_or_create_category_by_ar(cat_name_ar, parent=None)
+                        lvl2 = get_or_create_category_by_ar(subcat_name_ar, parent=lvl1) if subcat_name_ar else None
+                        lvl3 = get_or_create_category_by_ar(subcat2_name_ar, parent=lvl2) if subcat2_name_ar else None
 
-                        if subcat_name:
-                            subcat, _ = Category.objects.get_or_create(
-                                name_ar=subcat_name,
-                                defaults={"name_en": subcat_name, "parent": cat},
-                            )
-                            if subcat.parent_id != cat.id:
-                                subcat.parent = cat
-                                subcat.save(update_fields=["parent"])
-                            assigned_category = subcat
-                        else:
-                            assigned_category = cat
+                        assigned_category = lvl3 or lvl2 or lvl1
 
                         # -----------------------------
-                        # CITY
+                        # CITY (Arabic name)
                         # -----------------------------
-                        if city_name:
-                            city = City.objects.filter(
-                                models.Q(name_ar__iexact=city_name) |
-                                models.Q(name_en__iexact=city_name)
-                            ).first() or City.objects.create(
-                                name_ar=city_name, name_en=city_name
-                            )
-                        else:
-                            city = None
+                        city = get_or_create_city_by_ar(city_name_ar)
 
                         # ======================================================
                         # FIND ITEM BY external_id
@@ -735,12 +776,11 @@ class ItemAdmin(admin.ModelAdmin):
                         item = Item.objects.filter(external_id=external_id).first()
 
                         if not item:
-                            # CREATE LISTING FIRST
                             listing = Listing.objects.create(
                                 type="item",
                                 user=request.user,
                                 title=title,
-                                description=desc,
+                                description=desc or "",
                                 category=assigned_category,
                                 city=city,
                                 is_active=True,
@@ -756,16 +796,14 @@ class ItemAdmin(admin.ModelAdmin):
                             created += 1
 
                         else:
-                            # UPDATE EXISTING ITEM
                             item.price = price
                             item.condition = "new"
                             item.save(update_fields=["price", "condition"])
                             updated += 1
 
-                            # ensure listing exists
                             listing = item.listing
                             listing.title = title
-                            listing.description = desc
+                            listing.description = desc or ""
                             listing.category = assigned_category
                             listing.city = city
                             listing.user = request.user
@@ -795,13 +833,9 @@ class ItemAdmin(admin.ModelAdmin):
                                         except:
                                             pass
 
-                        # ---- URL ----
-                        # 2️⃣ URL PHOTOS — also add ALL images
-                        # ---- URL ----
-                        # 2️⃣ URL PHOTOS — also add ALL images
+                        # ---- URL (comma-separated) ----
                         if img_col is not None and row[img_col]:
                             urls = [u.strip() for u in str(row[img_col]).split(",") if u.strip()]
-
                             for url in urls:
                                 try:
                                     r = requests.get(url, timeout=10)
@@ -834,15 +868,14 @@ class ItemAdmin(admin.ModelAdmin):
             elif zip_file and not excel_file:
                 existing = {
                     norm(i.external_id): i
-                    for i in Item.objects.exclude(external_id__isnull=True)
-                    .exclude(external_id__exact="")
+                    for i in Item.objects.exclude(external_id__isnull=True).exclude(external_id__exact="")
                 }
 
                 for root, _, files in os.walk(photos_dir):
                     for fn in files:
                         low = fn.lower()
                         for ext_id, item in existing.items():
-                            if ext_id.lower() in low:
+                            if ext_id and ext_id.lower() in low:
                                 try:
                                     fp = os.path.join(root, fn)
                                     with open(fp, "rb") as img:

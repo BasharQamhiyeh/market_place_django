@@ -5,7 +5,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta
 import uuid
-from PIL import Image
+from PIL import Image, ImageOps, ImageFilter
 from io import BytesIO
 from django.core.files.base import ContentFile
 from django.core.exceptions import ValidationError
