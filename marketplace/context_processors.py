@@ -60,6 +60,7 @@ def navbar_counters(request):
             "conversation",          # FK on Message
             "sender",                # FK on Message
             "conversation__listing", # FK on Conversation
+            "conversation__store",
         )
         .order_by("-created_at")[:6]
     )

@@ -1508,6 +1508,18 @@ class AttributeOptionForm(forms.ModelForm):
         fields = ['value_en', 'value_ar', 'attribute']
 
 
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+
+# make sure Store is imported
+from .models import Item, Request, Store, Conversation, Message
+# validate_no_links_or_html is assumed already available/imported
+
+
 @login_required
 def start_conversation(request, item_id):
     item = get_object_or_404(Item, id=item_id)
@@ -1522,7 +1534,14 @@ def start_conversation(request, item_id):
             return JsonResponse({"ok": False, "error": "self_message"}, status=400)
         return redirect("item_detail", item_id=item_id)
 
-    convo = Conversation.objects.filter(listing=listing, buyer=buyer, seller=seller).first()
+    # ✅ defensive: ensure this is a listing conversation (store must be null)
+    convo = Conversation.objects.filter(
+        listing=listing,
+        store__isnull=True,
+        buyer=buyer,
+        seller=seller
+    ).first()
+
     if not convo:
         convo = Conversation.objects.create(listing=listing, buyer=buyer, seller=seller)
 
@@ -1536,7 +1555,6 @@ def start_conversation(request, item_id):
     if not body:
         return JsonResponse({"ok": False, "error": "empty"}, status=400)
 
-    # optional validation if you want
     try:
         validate_no_links_or_html(body)
     except ValidationError:
@@ -1544,11 +1562,9 @@ def start_conversation(request, item_id):
 
     Message.objects.create(conversation=convo, sender=request.user, body=body)
 
-    # ✅ IMPORTANT: AJAX returns JSON (NO redirect)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         return JsonResponse({"ok": True})
 
-    # fallback old behavior
     return redirect("chat_room", conversation_id=convo.id)
 
 
@@ -1566,7 +1582,14 @@ def start_conversation_request(request, request_id):
             return JsonResponse({"ok": False, "error": "self_message"}, status=400)
         return redirect("request_detail", request_id=request_id)
 
-    convo = Conversation.objects.filter(listing=listing, buyer=buyer, seller=seller).first()
+    # ✅ defensive: ensure this is a listing conversation (store must be null)
+    convo = Conversation.objects.filter(
+        listing=listing,
+        store__isnull=True,
+        buyer=buyer,
+        seller=seller
+    ).first()
+
     if not convo:
         convo = Conversation.objects.create(listing=listing, buyer=buyer, seller=seller)
 
@@ -1592,11 +1615,57 @@ def start_conversation_request(request, request_id):
     return redirect("chat_room", conversation_id=convo.id)
 
 
+# ✅ NEW: start conversation with a Store (no listing attached)
+@login_required
+def start_store_conversation(request, store_id):
+    store = get_object_or_404(Store, id=store_id, is_active=True)
+
+    seller = store.owner
+    buyer = request.user
+
+    # don't allow messaging yourself
+    if seller == buyer:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "self_message"}, status=400)
+        return redirect("store_profile", store_id=store_id)
+
+    convo = Conversation.objects.filter(
+        store=store,
+        listing__isnull=True,
+        buyer=buyer,
+        seller=seller
+    ).first()
+
+    if not convo:
+        convo = Conversation.objects.create(store=store, buyer=buyer, seller=seller)
+
+    # If not POST: just go to chat
+    if request.method != "POST":
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "conversation_id": convo.id})
+        return redirect("chat_room", conversation_id=convo.id)
+
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        return JsonResponse({"ok": False, "error": "empty"}, status=400)
+
+    try:
+        validate_no_links_or_html(body)
+    except ValidationError:
+        return JsonResponse({"ok": False, "error": "invalid"}, status=400)
+
+    Message.objects.create(conversation=convo, sender=request.user, body=body)
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "conversation_id": convo.id})
+
+    return redirect("chat_room", conversation_id=convo.id)
+
 
 @login_required
 def chat_room(request, conversation_id):
     conversation = get_object_or_404(
-        Conversation.objects.select_related("listing", "buyer", "seller"),
+        Conversation.objects.select_related("listing", "store", "buyer", "seller"),
         id=conversation_id
     )
 
@@ -1605,10 +1674,15 @@ def chat_room(request, conversation_id):
         return redirect("item_list")
 
     listing = conversation.listing
+    store = conversation.store
 
-    # The listing may be attached to an Item OR a Request (1-to-1)
-    item = getattr(listing, "item", None)
-    request_obj = getattr(listing, "request", None)
+    item = None
+    request_obj = None
+
+    # Only resolve item/request if conversation is listing-based
+    if listing:
+        item = getattr(listing, "item", None)
+        request_obj = getattr(listing, "request", None)
 
     # Mark unread messages (from the other user) as read
     Message.objects.filter(
@@ -1642,6 +1716,7 @@ def chat_room(request, conversation_id):
             "conversation": conversation,
             "messages": messages_qs,
             "listing": listing,
+            "store": store,          # ✅ NEW
             "item": item,
             "request_obj": request_obj,
         },
@@ -1650,13 +1725,14 @@ def chat_room(request, conversation_id):
 
 @login_required
 def user_inbox(request):
-    convos = Conversation.objects.filter(
-        Q(buyer=request.user) | Q(seller=request.user)
-    ).order_by('-created_at')
+    convos = (
+        Conversation.objects
+        .filter(Q(buyer=request.user) | Q(seller=request.user))
+        .select_related("listing", "store", "buyer", "seller")
+        .order_by("-created_at")
+    )
 
-    return render(request, 'inbox.html', {
-        'convos': convos
-    })
+    return render(request, "inbox.html", {"convos": convos})
 
 
 @login_required

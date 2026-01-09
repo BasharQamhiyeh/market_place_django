@@ -318,12 +318,14 @@ function bindShare() {
 }
 
 /* ========= Message accordion ========= */
+/* ========= Message accordion (send message to store WITHOUT redirect) ========= */
 function bindMessage() {
   const toggleMessageBox = document.getElementById("toggleMessageBox");
   const messageBox = document.getElementById("messageBox");
   const messageChevron = document.getElementById("messageChevron");
   const messageInputRef = document.getElementById("messageText");
 
+  // Open/close accordion (login gated)
   if (toggleMessageBox && messageBox) {
     toggleMessageBox.addEventListener("click", () => {
       const isAuth = toggleMessageBox.dataset.auth === "1" || isAuthedFromEl(toggleMessageBox);
@@ -346,33 +348,89 @@ function bindMessage() {
     });
   }
 
+  // Submit form (AJAX + toast, NO redirect)
   const messageForm = document.getElementById("messageForm");
   const messageText = document.getElementById("messageText");
   const messageError = document.getElementById("messageError");
 
-  if (messageForm) {
-    messageForm.addEventListener("submit", (e) => {
-      // ✅ FIX: template form has no data-auth, so this always returned false before.
-      const can = document.body?.dataset.auth === "1";
-      if (!can) {
-        e.preventDefault();
-        openLoginModalById(messageForm.dataset.loginModal || "loginModal");
+  if (!messageForm) return;
+
+  messageForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const isAuth = document.body?.dataset.auth === "1";
+    if (!isAuth) {
+      openLoginModalById(messageForm.dataset.loginModal || "loginModal");
+      return;
+    }
+
+    const val = (messageText?.value || "").trim();
+    if (!val) {
+      if (messageError) messageError.classList.remove("hidden");
+      return;
+    }
+    if (messageError) messageError.classList.add("hidden");
+
+    // URL comes from form action OR data-action
+    const url = messageForm.dataset.action || messageForm.getAttribute("action");
+    if (!url) {
+      console.error("Missing message URL on #messageForm (action or data-action)");
+      showToast("تعذر إرسال الرسالة");
+      return;
+    }
+
+    const fd = new FormData();
+    fd.set("body", val);
+
+    const csrftoken = getCookie("csrftoken");
+
+    const submitBtn = messageForm.querySelector("button[type='submit']");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-60", "cursor-not-allowed");
+    }
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        body: fd,
+        credentials: "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": csrftoken,
+        },
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        if (data.error === "self_message") {
+          showToast("لا يمكنك مراسلة نفسك");
+          return;
+        }
+        showToast(data.message || "تعذر إرسال الرسالة");
         return;
       }
 
-      e.preventDefault();
-      const val = (messageText?.value || "").trim();
-      if (!val) {
-        if (messageError) messageError.classList.remove("hidden");
-        return;
-      }
-      if (messageError) messageError.classList.add("hidden");
-
+      // ✅ SUCCESS: stay on same page
       showToast("✔ تم إرسال الرسالة");
       messageForm.reset();
-    });
-  }
+
+      // Optional: close the box after sending
+      if (messageBox) messageBox.classList.add("hidden");
+      if (messageChevron) messageChevron.classList.remove("rotate-180");
+    } catch (err) {
+      console.error(err);
+      showToast("تعذر الاتصال بالخادم");
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("opacity-60", "cursor-not-allowed");
+      }
+    }
+  });
 }
+
 
 /* ========= Reviews (FULL mockup: list + pagination + summary) ========= */
 function bindStoreReviews() {

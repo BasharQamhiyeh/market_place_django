@@ -156,21 +156,23 @@
               <div class="dropdown-list">
 
                 {% for msg in recent_messages %}
-                  {% with listing=msg.conversation.listing item=listing.item req=listing.request %}
+                  {% with convo=msg.conversation listing=msg.conversation.listing store=msg.conversation.store %}
 
-                    <a href="{% url 'chat_room' msg.conversation.id %}"
+                    <a href="{% url 'chat_room' convo.id %}"
                        class="
                          dropdown-item
-                         {% if item %} bg-orange-50 border-r-4 border-[var(--rukn-orange)] {% endif %}
-                         {% if req %} bg-green-50 border-r-4 border-[var(--rukn-green)] {% endif %}
+                         {% if store %} bg-blue-50 border-r-4 border-blue-400 {% endif %}
+                         {% if listing and listing.item %} bg-orange-50 border-r-4 border-[var(--rukn-orange)] {% endif %}
+                         {% if listing and listing.request %} bg-green-50 border-r-4 border-[var(--rukn-green)] {% endif %}
                          {% if not msg.is_read %} shadow-sm {% endif %}
                        ">
 
                       <!-- ICON CIRCLE -->
                       <div class="
                           flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold
-                          {% if item %} bg-orange-200 text-orange-800 {% endif %}
-                          {% if req %} bg-green-200 text-green-800 {% endif %}
+                          {% if store %} bg-blue-200 text-blue-800 {% endif %}
+                          {% if listing and listing.item %} bg-orange-200 text-orange-800 {% endif %}
+                          {% if listing and listing.request %} bg-green-200 text-green-800 {% endif %}
                       ">
                         {% with u=msg.sender.first_name|default:"" %}
                           {% if u %}{{ u|slice:":1"|upper }}{% else %}?{% endif %}
@@ -189,11 +191,14 @@
                           </div>
                         </div>
 
+                        <!-- context line: listing title or store name -->
                         <div class="text-xs text-gray-600 truncate">
-                          {% if item %}
-                            {{ item.listing.title }}
-                          {% elif req %}
-                            {{ req.listing.title }}
+                          {% if store %}
+                            {{ store.name }} <span class="text-[10px] text-gray-400">• متجر</span>
+                          {% elif listing and listing.item %}
+                            {{ listing.title }} <span class="text-[10px] text-gray-400">• إعلان</span>
+                          {% elif listing and listing.request %}
+                            {{ listing.title }} <span class="text-[10px] text-gray-400">• طلب</span>
                           {% else %}
                             {% trans "Conversation" %}
                           {% endif %}
@@ -209,11 +214,9 @@
 
                   {% endwith %}
                 {% empty %}
-
                   <div class="px-4 py-3 text-sm text-gray-500">
                     لا يوجد رسائل.
                   </div>
-
                 {% endfor %}
               </div>
 

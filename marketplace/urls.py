@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
-from .views import store_profile
+from .views import store_profile, start_store_conversation
 
 urlpatterns = [
     # --- Auth ---
@@ -27,6 +27,8 @@ urlpatterns = [
     path('chat/<int:conversation_id>/', views.chat_room, name='chat_room'),
     path('inbox/', views.user_inbox, name='user_inbox'),
     path("request/<int:request_id>/message/", views.start_conversation_request, name="start_conversation_request"),
+    path("stores/<int:store_id>/start-chat/", start_store_conversation, name="start_store_conversation"),
+
 
     # --- Item Management ---
     path('item/edit/<int:item_id>/', views.item_edit, name='item_edit'),
