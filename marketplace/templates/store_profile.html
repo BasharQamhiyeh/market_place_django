@@ -1,6 +1,7 @@
 {# templates/stores/store_profile.html #}
 {% extends "base.html" %}
 {% load static %}
+{% load formatting timeago_ar %}
 
 {% block title %}{{ store.name }} – ركن{% endblock %}
 
@@ -40,7 +41,7 @@
                  class="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 saturate-110" />
           {% else %}
             <img id="heroParallaxImg"
-                 src="{% static 'img/store-cover-fallback.jpg' %}"
+                 src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=2400&auto=format&fit=crop"
                  alt=""
                  class="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 saturate-110" />
           {% endif %}
@@ -73,7 +74,6 @@
                           text-white font-extrabold text-xs sm:text-sm shadow hover:brightness-95 transition">
                   اشترك الآن
                 </a>
-
               </div>
             </div>
           </div>
@@ -129,7 +129,7 @@
                         <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
                       </svg>
                     </span>
-                    عضو منذ {{ store.created_at|date:"Y" }}
+                    عضو منذ {{ store.created_at|timeago_ar }}
                   </span>
 
                   {% if store.website %}
@@ -167,7 +167,13 @@
 
                 <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
                   <div class="text-[11px] text-gray-500 font-bold mb-1">زيارات الصفحة</div>
-                  <div class="text-3xl font-extrabold text-gray-900">{{ store.views_count }}</div>
+                  <div class="text-3xl font-extrabold text-gray-900">
+                    {% with views=store.views_count|compact_ar_k %}
+                      <div class="text-3xl font-extrabold text-gray-900">
+                        {{ views.num }}{% if views.is_k %}<span class="text-lg font-extrabold text-gray-400">ألف</span>{% endif %}
+                      </div>
+                    {% endwith %}
+                  </div>
                   <div class="text-xs text-gray-500 mt-1">زيارة</div>
                 </div>
 
