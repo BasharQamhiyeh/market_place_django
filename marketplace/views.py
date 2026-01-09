@@ -2711,6 +2711,13 @@ from django.db.models import F
 def store_profile(request, store_id):
     store = get_object_or_404(Store, pk=store_id, is_active=True)
 
+    # ✅ Increment views (logged-in + logged-out), once per session per store
+    session_key = f"store_viewed_{store_id}"
+    if not request.session.get(session_key):
+        Store.objects.filter(pk=store.pk).update(views_count=F("views_count") + 1)
+        request.session[session_key] = True
+        store.refresh_from_db(fields=["views_count"])
+
     listings = (
         Listing.objects
         .filter(user=store.owner, is_active=True, is_approved=True, type="item")
@@ -2781,18 +2788,23 @@ def store_profile(request, store_id):
         "is_following": is_following,
         "full_phone": full_phone,
         "masked_phone": masked_phone,
-
-        # ✅ pass to template
         "user_review": user_review,  # dict or None
     }
 
     return render(request, "store_profile.html", ctx)
 
-
 @login_required
 @require_POST
 def store_follow_toggle(request, store_id):
     store = get_object_or_404(Store, pk=store_id, is_active=True)
+
+    session_key = f"store_viewed_{store_id}"
+    if not request.session.get(session_key):
+        Store.objects.filter(pk=store.pk).update(views_count=F("views_count") + 1)
+        request.session[session_key] = True
+
+        # refresh value in `store` object so template shows updated count
+        store.refresh_from_db(fields=["views_count"])
 
     obj = StoreFollow.objects.filter(store=store, user=request.user).first()
     if obj:
