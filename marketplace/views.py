@@ -157,10 +157,21 @@ def home(request):
         .order_by("name_ar")
     )
 
+    stores = (
+        Store.objects
+        .filter(is_active=True)  # if you have this field, otherwise remove
+        .annotate(
+            avg_rating=Avg("reviews__rating"),
+            reviews_count=Count("reviews"),
+        )
+        .order_by("-avg_rating", "-reviews_count")[:12]
+    )
+
     context = {
         "categories": categories,
         "latest_items": latest_items,
         "latest_requests": latest_requests,
+        "stores": stores,
     }
 
     # HTMX partial for "أحدث الإعلانات"

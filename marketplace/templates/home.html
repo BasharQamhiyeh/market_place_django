@@ -210,42 +210,46 @@
         <div id="storesScroll"
              class="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth px-4">
 
-          <!-- STATIC Mockup Store Cards (UNCHANGED) -->
-          <a href="#"
-             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
-                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
-            <img src="https://via.placeholder.com/80"
-                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
-            <div class="font-bold text-md mb-1">متجر التقنية الحديثة</div>
-            <div class="text-yellow-400 text-lg">★★★★☆</div>
-          </a>
+          {% for s in stores %}
+            <a href="{% url 'store_profile' s.id %}?tab=ads"
+               class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
+                      hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
 
-          <a href="#"
-             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
-                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
-            <img src="https://via.placeholder.com/80"
-                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
-            <div class="font-bold text-md mb-1">متجر المنزل</div>
-            <div class="text-yellow-400 text-lg">★★★★★</div>
-          </a>
+              {% if s.logo %}
+                <img src="{{ s.logo.url }}"
+                     class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" alt="{{ s.name }}" />
+              {% else %}
+                <div class="w-20 h-20 rounded-full mx-auto shadow mb-2 bg-gray-100 flex items-center justify-center text-2xl">
+                  🏪
+                </div>
+              {% endif %}
 
-          <a href="#"
-             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
-                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
-            <img src="https://via.placeholder.com/80"
-                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
-            <div class="font-bold text-md mb-1">متجر الموضة</div>
-            <div class="text-yellow-400 text-lg">★★★★☆</div>
-          </a>
+              <div class="font-bold text-md mb-1 truncate">{{ s.name }}</div>
 
-          <a href="#"
-             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
-                    hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
-            <img src="https://via.placeholder.com/80"
-                 class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" />
-            <div class="font-bold text-md mb-1">متجر الجوالات</div>
-            <div class="text-yellow-400 text-lg">★★★☆☆</div>
-          </a>
+              {# rating row #}
+              {% with r=s.avg_rating|default:0 %}
+                <div class="text-yellow-400 text-lg leading-none">
+                  {% if r >= 4.5 %}★★★★★
+                  {% elif r >= 3.5 %}★★★★☆
+                  {% elif r >= 2.5 %}★★★☆☆
+                  {% elif r >= 1.5 %}★★☆☆☆
+                  {% elif r >= 0.5 %}★☆☆☆☆
+                  {% else %}☆☆☆☆☆
+                  {% endif %}
+                </div>
+              {% endwith %}
+
+              <div class="text-xs text-gray-500 mt-1">
+                ({{ s.reviews_count|default:0 }}) تقييم
+              </div>
+
+            </a>
+          {% empty %}
+            <div class="text-center text-gray-500 py-8 w-full">
+              لا توجد متاجر حالياً.
+            </div>
+          {% endfor %}
+
 
         </div>
       </div>
