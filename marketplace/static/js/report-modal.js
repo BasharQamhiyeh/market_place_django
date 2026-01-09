@@ -1,4 +1,4 @@
-// static/js/report-modal.js
+// static/js/report-modal.js  (UPDATED: supports item/request/store)
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("reportModal");
   const openBtn = document.getElementById("openReportModalBtn");
@@ -16,32 +16,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const details = document.getElementById("reportDetails");
   const submitBtn = form.querySelector('button[type="submit"]');
 
-  // ✅ hidden inputs that backend expects
+  // hidden inputs backend expects
   const targetKindInput = document.getElementById("reportTargetKind");
   const targetIdInput = document.getElementById("reportTargetId");
   const listingTypeInput = document.getElementById("reportListingType");
 
-  // ----------------------------
-  // Kind-aware messages (item/request)
-  // ----------------------------
   function getReportKind() {
-    return (modal.getAttribute("data-report-kind") || "item").toLowerCase(); // "item" or "request"
+    return (modal.getAttribute("data-report-kind") || "item").toLowerCase(); // item|request|store
   }
 
   function ownMessage() {
-    return getReportKind() === "request"
-      ? "هذا طلبك ولا يمكنك الإبلاغ عنه."
-      : "هذا إعلانك ولا يمكنك الإبلاغ عنه.";
+    const k = getReportKind();
+    if (k === "request") return "هذا طلبك ولا يمكنك الإبلاغ عنه.";
+    if (k === "store") return "هذا متجرك ولا يمكنك الإبلاغ عنه.";
+    return "هذا إعلانك ولا يمكنك الإبلاغ عنه.";
   }
 
   function alreadyMessage() {
-    return getReportKind() === "request"
-      ? "سبق أن قمت بالإبلاغ عن هذا الطلب."
-      : "سبق أن قمت بالإبلاغ عن هذا الإعلان.";
+    const k = getReportKind();
+    if (k === "request") return "سبق أن قمت بالإبلاغ عن هذا الطلب.";
+    if (k === "store") return "سبق أن قمت بالإبلاغ عن هذا المتجر.";
+    return "سبق أن قمت بالإبلاغ عن هذا الإعلان.";
   }
 
   function normalizeServerMessage(msg) {
-    // if backend returns generic text, convert it to correct kind text
     if (!msg) return msg;
 
     // duplicate (generic)
@@ -49,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return alreadyMessage();
     }
 
-    // own listing (generic)
+    // own (generic)
     if (msg.includes("لا يمكنك") && (msg.includes("المحتوى") || msg.includes("هذا المحتوى"))) {
       return ownMessage();
     }
@@ -61,6 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.classList.remove("hidden");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+  }
+
+  function closeReasonMenu() {
+    if (!reasonMenu) return;
+    reasonMenu.classList.add("hidden");
+    const chevron = document.getElementById("reportReasonChevron");
+    if (chevron) chevron.style.transform = "";
   }
 
   function hideModal() {
@@ -96,13 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (chevron) chevron.style.transform = "rotate(180deg)";
   }
 
-  function closeReasonMenu() {
-    if (!reasonMenu) return;
-    reasonMenu.classList.add("hidden");
-    const chevron = document.getElementById("reportReasonChevron");
-    if (chevron) chevron.style.transform = "";
-  }
-
   function setLockedUI(isLocked, message) {
     if (isLocked) {
       showFormError(message || alreadyMessage());
@@ -133,7 +131,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (details) details.value = "";
   }
 
-  // ✅ Always sync hidden inputs from data-attrs
   function syncTargetHiddenInputs() {
     const tk = form.getAttribute("data-target-kind") || "";
     const tid = form.getAttribute("data-target-id") || "";
@@ -144,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (listingTypeInput) listingTypeInput.value = lt;
   }
 
-  // ---------- OPEN BUTTON ----------
+  // OPEN
   openBtn.addEventListener("click", () => {
     const isAuth = openBtn.getAttribute("data-auth") === "1";
 
@@ -162,16 +159,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const isOwn = modal.getAttribute("data-own-listing") === "1";
     const already = modal.getAttribute("data-reported-already") === "1";
 
-    if (isOwn) {
-      setLockedUI(true, ownMessage());
-    } else if (already) {
-      setLockedUI(true, alreadyMessage());
-    } else {
-      setLockedUI(false);
-    }
+    if (isOwn) setLockedUI(true, ownMessage());
+    else if (already) setLockedUI(true, alreadyMessage());
+    else setLockedUI(false);
   });
 
-  // ---------- CLOSE ----------
+  // CLOSE
   if (closeBtn) closeBtn.addEventListener("click", hideModal);
 
   modal.addEventListener("click", (e) => {
@@ -182,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Escape" && !modal.classList.contains("hidden")) hideModal();
   });
 
-  // ---------- REASON DROPDOWN ----------
+  // REASON DROPDOWN
   if (reasonBtn) {
     reasonBtn.addEventListener("click", () => {
       const locked = modal.getAttribute("data-reported-already") === "1";
@@ -218,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!inside) closeReasonMenu();
   });
 
-  // ---------- SUBMIT (AJAX) ----------
+  // SUBMIT (AJAX)
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearErrors();
@@ -255,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fd = new FormData(form);
 
-    // backend expects message, textarea is details
+    // backend expects "message" (we store textarea in details)
     const detailsVal = (fd.get("details") || "").toString();
     fd.set("message", detailsVal);
 
@@ -278,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
           modal.setAttribute("data-reported-already", "1");
           setLockedUI(true, alreadyMessage());
         }
-        if (msg.includes("إعلانك") || msg.includes("طلبك")) {
+        if (msg.includes("إعلانك") || msg.includes("طلبك") || msg.includes("متجرك")) {
           modal.setAttribute("data-own-listing", "1");
           setLockedUI(true, ownMessage());
         }

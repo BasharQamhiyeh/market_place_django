@@ -1,0 +1,56 @@
+<div class="dropdown-header">المفضلة</div>
+
+<div class="dropdown-list">
+  {% for fav in recent_favorites %}
+    {% with item=fav.listing.item request_obj=fav.listing.request %}
+
+      {% if item %}
+        <a href="{% url 'item_detail' item.id %}"
+           class="dropdown-item border-r-4 border-[var(--rukn-orange)]">
+      {% elif request_obj %}
+        <a href="{% url 'request_detail' request_obj.id %}"
+           class="dropdown-item border-r-4 border-[var(--rukn-green)]">
+      {% endif %}
+
+          <div class="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border flex-shrink-0">
+            {% if item %}
+              {% with photo=item.photos.first %}
+                {% if photo %}
+                  <img src="{{ photo.image.url }}"
+                       alt="{{ item.listing.title }}"
+                       class="w-full h-full object-cover">
+                {% else %}
+                  <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🖼️</div>
+                {% endif %}
+              {% endwith %}
+            {% else %}
+              <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🙋‍♂️</div>
+            {% endif %}
+          </div>
+
+          <div>
+            {% if item %}
+              <div class="font-medium text-gray-900 truncate">{{ item.listing.title }}</div>
+              <div class="text-xs text-[var(--muted)]">{{ item.price }} د.أ</div>
+            {% elif request_obj %}
+              <div class="font-medium text-gray-900 truncate">{{ request_obj.listing.title }}</div>
+              <div class="text-xs text-[var(--muted)]">طلب شراء</div>
+            {% endif %}
+          </div>
+
+        </a>
+
+    {% endwith %}
+  {% empty %}
+    <div class="px-4 py-3 text-sm text-gray-500">
+      لا يوجد عناصر في المفضلة.
+    </div>
+  {% endfor %}
+</div>
+
+<div class="p-3 border-t">
+  <a href="{% url 'my_favorites' %}"
+     class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
+    عرض كل المفضلة
+  </a>
+</div>

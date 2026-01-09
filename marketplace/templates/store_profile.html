@@ -1,0 +1,683 @@
+{# templates/stores/store_profile.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ store.name }} – ركن{% endblock %}
+
+{% block base_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/store-profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<body class="px-4 sm:px-0"
+      dir="rtl" lang="ar"
+      data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
+
+  <div class="max-w-7xl mx-auto py-8 space-y-6">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="text-sm text-gray-500">
+      <ol class="flex items-center gap-2">
+        <li><a href="{% url 'home' %}" class="hover:text-[var(--rukn-orange)] transition">الرئيسية</a></li>
+        <li class="text-gray-400">›</li>
+        <li><a href="#" class="hover:text-[var(--rukn-orange)] transition">المتاجر</a></li>
+        <li class="text-gray-400">›</li>
+        <li class="font-extrabold text-[var(--rukn-orange)] truncate max-w-[240px]">{{ store.name }}</li>
+      </ol>
+    </nav>
+
+    <!-- HERO + TOP INFO -->
+    <section class="container-box no-top-bar">
+      <div class="relative">
+
+        <!-- UPPER HERO -->
+        <div id="heroParallax" class="relative h-48 sm:h-64 md:h-96 overflow-hidden">
+          {% if store.cover %}
+            <img id="heroParallaxImg"
+                 src="{{ store.cover.url }}"
+                 alt=""
+                 class="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 saturate-110" />
+          {% else %}
+            <img id="heroParallaxImg"
+                 src="{% static 'img/store-cover-fallback.jpg' %}"
+                 alt=""
+                 class="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 saturate-110" />
+          {% endif %}
+
+          <div class="absolute inset-0 bg-gradient-to-l from-orange-100/45 via-white/25 to-orange-50/45"></div>
+
+          <div class="absolute inset-0 pointer-events-none opacity-70">
+            <div class="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-orange-200 blur-2xl"></div>
+            <div class="absolute top-6 -right-10 w-44 h-44 rounded-full bg-amber-200 blur-2xl"></div>
+          </div>
+
+          <!-- Subscription strip -->
+          <div class="absolute inset-x-0 top-0 z-[4]">
+            <div class="mx-5 sm:mx-7 mt-8 rounded-2xl bg-white/75 backdrop-blur-md border border-white/70 shadow-sm">
+              <div class="px-4 sm:px-5 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-right">
+                  <div class="inline-block px-2 py-0.5 rounded-lg bg-orange-100 text-[11px] sm:text-xs font-extrabold text-[var(--rukn-orange)]">
+                    لأصحاب المتاجر
+                  </div>
+                  <div class="text-sm sm:text-base font-extrabold text-gray-900 mt-1 leading-tight">
+                    أنشئ صفحة متجرك على ركن ووسّع انتشارك
+                  </div>
+                  <div class="hidden sm:block text-xs font-semibold text-gray-700 mt-1">
+                    صفحة احترافية • شارة موثوقية • إحصاءات
+                  </div>
+                </div>
+
+                <a href="{% url 'register' %}"
+                   class="inline-flex items-center justify-center px-5 py-2.5 rounded-2xl bg-[var(--rukn-orange)]
+                          text-white font-extrabold text-xs sm:text-sm shadow hover:brightness-95 transition">
+                  اشترك الآن
+                </a>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOWER PROFILE AREA -->
+        <div class="relative z-[3] px-5 sm:px-7 pb-7 -mt-6">
+          <div class="p-4 sm:p-6 pt-12 sm:pt-14 bg-transparent shadow-none">
+            <div class="relative flex flex-col lg:flex-row gap-5 items-center lg:items-start">
+
+              <!-- Floating logo -->
+              <div class="relative">
+                <div class="absolute -top-14 sm:-top-16 right-1/2 translate-x-1/2 lg:right-auto lg:translate-x-0">
+                  <div class="relative">
+                    <img src="{{ store.logo_url }}"
+                         alt="{{ store.name }}"
+                         class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-4 border-white bg-white shadow-xl" />
+                    {% if store.is_featured %}
+                      <div class="absolute -bottom-2 -left-2 bg-white border border-orange-200 rounded-2xl px-3 py-1 text-xs font-extrabold text-[var(--rukn-orange)] shadow">
+                        مميز
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="w-24 h-10 sm:w-28 sm:h-12"></div>
+              </div>
+
+              <!-- Main info -->
+              <div class="flex-1 text-center lg:text-right">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{{ store.name }}</h1>
+                <p class="text-sm text-[var(--muted)] mt-2 leading-7 max-w-2xl mx-auto lg:mx-0">
+                  {{ store.description|default:"" }}
+                </p>
+
+                <div class="mt-4 flex flex-wrap gap-2 justify-center lg:justify-start">
+                  <span class="meta-pill">
+                    <span class="meta-icon text-orange-500">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                        <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+                      </svg>
+                    </span>
+                    {{ store.city|default:"" }}
+                  </span>
+
+                  <span class="meta-pill">
+                    <span class="meta-icon text-orange-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 22h14" />
+                        <path d="M5 2h14" />
+                        <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                        <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                      </svg>
+                    </span>
+                    عضو منذ {{ store.created_at|date:"Y" }}
+                  </span>
+
+                  {% if store.website %}
+                    <span class="meta-pill">
+                      <span class="meta-icon text-orange-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                          <path d="M2 12h20" />
+                        </svg>
+                      </span>
+                      <a href="{{ store.website }}" target="_blank" rel="noopener"
+                         class="text-[var(--rukn-orange)] underline font-extrabold">
+                        {{ store.website }}
+                      </a>
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Small stats -->
+              <div class="grid grid-cols-3 gap-3 text-right">
+                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                  <div class="text-[11px] text-gray-500 font-bold mb-1">التقييم</div>
+                  <div class="flex items-end gap-1">
+                    <span id="topRatingAvg" class="text-3xl font-extrabold text-[var(--rukn-orange)]">{{ store.rating_avg|default:"0" }}</span>
+                    <span class="text-sm font-extrabold text-gray-400">/5</span>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                    {# ✅ FIX: add data-avg so JS can render correctly #}
+                    <div id="storeStarsInline" data-avg="{{ store.rating_avg|default:0 }}"></div>
+                  </div>
+                </div>
+
+                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                  <div class="text-[11px] text-gray-500 font-bold mb-1">زيارات الصفحة</div>
+                  <div class="text-3xl font-extrabold text-gray-900">{{ store.views_count }}</div>
+                  <div class="text-xs text-gray-500 mt-1">زيارة</div>
+                </div>
+
+                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                  <div class="text-[11px] text-gray-500 font-bold mb-1">إعلانات المتجر</div>
+                  <div class="text-3xl font-extrabold text-gray-900">{{ listings_count|default:0 }}</div>
+                  <div class="text-xs text-gray-500 mt-1">إعلان فعال</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CONTENT GRID -->
+    <main class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr),360px] gap-6">
+
+      <!-- MAIN -->
+      <div class="space-y-6">
+
+        <!-- TABS WRAPPER -->
+        <section class="container-box">
+          <div class="p-4 sm:p-6">
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center p-1 w-full sm:w-auto">
+                <button type="button"
+                        class="tab-btn flex-1 sm:flex-none px-4 py-2 text-xs sm:text-sm font-extrabold transition border-b border-gray-300"
+                        data-tab="ads">إعلانات المتجر</button>
+
+                <button type="button"
+                        class="tab-btn flex-1 sm:flex-none px-4 py-2 text-xs sm:text-sm font-extrabold transition border-b border-gray-300"
+                        data-tab="ratings">التقييمات</button>
+
+                <button type="button"
+                        class="tab-btn flex-1 sm:flex-none px-4 py-2 text-xs sm:text-sm font-extrabold transition border-b border-gray-300"
+                        data-tab="store">عن المتجر</button>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+
+              <!-- PANEL: ADS -->
+              <div class="tab-panel" data-panel="ads">
+                <section id="storeAdsSection">
+                  <div class="px-3 sm:px-5 py-5 sm:py-7 space-y-5">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4">
+                      <div class="text-right">
+                        <h2 class="text-lg sm:text-xl font-extrabold text-gray-900">جميع الإعلانات</h2>
+                        <p class="text-xs text-gray-500 mt-1">جميع إعلانات المتجر في مكان واحد</p>
+                      </div>
+
+                      <div class="md:mr-auto flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                        <select id="categoryFilter"
+                                class="border border-gray-200 bg-white rounded-2xl px-4 py-2.5 text-sm font-bold
+                                       focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition w-full sm:w-48">
+                          <option value="all">جميع الأقسام</option>
+                          {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c }}</option>
+                          {% endfor %}
+                        </select>
+
+                        <select id="cityFilter"
+                                class="border border-gray-200 bg-white rounded-2xl px-4 py-2.5 text-sm font-bold
+                                       focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition w-full sm:w-48">
+                          <option value="all">جميع المناطق</option>
+                          {% for city in cities %}
+                            <option value="{{ city.id }}">{{ city }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+
+                      <span class="inline-flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-full border border-orange-200 w-fit">
+                        <span class="text-sm text-gray-600 font-extrabold">عدد الإعلانات</span>
+                        <span id="adsCount" class="text-xl font-extrabold text-[var(--rukn-orange)]">{{ listings_count|default:0 }}</span>
+                      </span>
+                    </div>
+
+                    <div class="border-t border-gray-200"></div>
+
+                    <div id="storeAdsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {% for listing in listings %}
+
+                        {# ✅ FIX: direct child wrapper that contains filter datasets #}
+                        <div class="store-ad-wrap"
+                             data-root-category-id="{{ listing.root_category_id }}"
+                             data-city-id="{{ listing.city_id }}">
+                          {% include "partials/_item_card.html" with item=listing.item %}
+                        </div>
+
+                      {% empty %}
+
+                        {# ✅ FIX: mark empty state so JS doesn't count/filter it #}
+                        <div class="col-span-full text-center text-sm text-gray-500 py-10" data-empty="1">
+                          لا يوجد إعلانات بعد.
+                        </div>
+
+                      {% endfor %}
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- PANEL: RATINGS -->
+              <div class="tab-panel hidden" data-panel="ratings">
+                <section id="ratingSection">
+                  <div class="px-3 sm:px-5">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="text-right">
+                        <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 mt-1">تقييمات العملاء</h2>
+                        <p class="text-xs text-gray-500 mt-1">آراء العملاء وتقييماتهم</p>
+                      </div>
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-5">
+                      <aside class="lg:col-span-1">
+                        <div class="soft-card p-5">
+                          <div class="text-sm font-extrabold text-gray-900">تقييمات العملاء</div>
+
+                          <div class="mt-3 flex items-end gap-2">
+                            <span id="ratingAvg" class="text-4xl font-extrabold text-[var(--rukn-orange)]">{{ store.rating_avg|default:"0" }}</span>
+                            <span class="text-sm font-extrabold text-gray-400">/ 5</span>
+                          </div>
+
+                          <div class="mt-2 flex items-center gap-2">
+                            <div id="avgStars"></div>
+                            <div class="text-xs text-gray-500"><span id="ratingCount">{{ store.rating_count|default:0 }}</span> تقييم</div>
+                          </div>
+
+                          <div class="mt-5 border-t border-gray-200 pt-4">
+                            <div class="text-sm font-extrabold text-gray-900 mb-3">التوزيع حسب النجوم</div>
+                            <div id="ratingBreakdown" class="space-y-2 text-sm"></div>
+                          </div>
+
+                          <div class="mt-5 border-t border-gray-200 pt-4">
+                            <div class="text-sm font-extrabold text-gray-900">أضف تقييمك</div>
+                            <div class="text-xs text-gray-500 mt-1">قيّم تجربتك وشاركها مع الآخرين</div>
+
+                            <div id="ratingMsg" class="text-xs font-extrabold text-[var(--rukn-orange)] text-center mt-2"></div>
+
+                            <div class="flex justify-center mt-3">
+                              <div id="stars" class="flex gap-3 select-none">
+                                <svg data-v="1" class="star" viewBox="0 0 24 24"><path d="M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z" /></svg>
+                                <svg data-v="2" class="star" viewBox="0 0 24 24"><path d="M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z" /></svg>
+                                <svg data-v="3" class="star" viewBox="0 0 24 24"><path d="M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z" /></svg>
+                                <svg data-v="4" class="star" viewBox="0 0 24 24"><path d="M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z" /></svg>
+                                <svg data-v="5" class="star" viewBox="0 0 24 24"><path d="M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z" /></svg>
+                              </div>
+                            </div>
+
+                            <input id="ratingSubject" type="text" placeholder="عنوان المراجعة"
+                                   class="mt-3 w-full border border-gray-200 rounded-2xl px-3 py-2 text-xs bg-gray-50
+                                          focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition" />
+
+                            <textarea id="ratingNote" rows="4" placeholder="اكتب تفاصيل مراجعتك"
+                                      class="mt-2 w-full border border-gray-200 rounded-2xl px-3 py-2 text-xs resize-none bg-gray-50
+                                             focus:bg-white focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition"></textarea>
+
+                            <button id="submitRating"
+                                    class="mt-3 w-full px-5 py-2.5 border border-orange-200 rounded-2xl btn-orange text-sm font-extrabold shadow">
+                              إرسال
+                            </button>
+                          </div>
+                        </div>
+                      </aside>
+
+                      <section class="lg:col-span-2">
+                        <div class="soft-card p-5">
+                          <div class="flex items-center justify-between gap-3">
+                            <div class="text-right">
+                              <div id="reviewSection" class="text-sm font-extrabold text-gray-900">مراجعات العملاء</div>
+                              <div id="reviewsMeta" class="text-[11px] text-gray-500 mt-1"></div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                              <button id="prevPage" class="page-btn" type="button">السابق</button>
+                              <button id="nextPage" class="page-btn" type="button">التالي</button>
+                            </div>
+                          </div>
+
+                          {# ✅ JS renders this now. Do NOT server-render reviews here #}
+                          <div id="latestReviews" class="mt-4 space-y-3"></div>
+
+                          <div class="mt-5 flex items-center justify-center gap-2 flex-wrap" id="pageNumbers"></div>
+                        </div>
+                      </section>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+              <!-- PANEL: STORE -->
+              <div class="tab-panel hidden" data-panel="store">
+                <section id="storeAbout">
+                  <div class="px-3 sm:px-5">
+                    <div class="text-right">
+                      <h2 class="text-lg sm:text-xl font-extrabold text-gray-900">معلومات عن المتجر</h2>
+                      <p class="text-xs text-gray-500 mt-1 mb-4">معلومات عامة عن المتجر وخياراته</p>
+                    </div>
+
+                    <div class="soft-card p-5 text-right">
+                      <div class="text-sm font-extrabold text-gray-900 mb-4">نبذة عن المتجر</div>
+                      <div class="text-sm text-gray-800 leading-8">
+                        {{ store.description|default:"" }}
+                      </div>
+
+                      <div class="mt-5 border-t border-gray-200 pt-4">
+                        <div class="text-sm font-extrabold text-gray-900 mb-4">روابط المتجر</div>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                          {% if store.website %}
+                            <a href="{{ store.website }}" target="_blank" rel="noopener" class="social-pill">
+                              <span class="social-icon" aria-hidden="true">🌐</span>
+                              الموقع الإلكتروني
+                            </a>
+                          {% endif %}
+                          {% if store.instagram %}
+                            <a href="{{ store.instagram }}" target="_blank" rel="noopener" class="social-pill">
+                              <span class="social-icon" aria-hidden="true">📸</span>
+                              إنستغرام
+                            </a>
+                          {% endif %}
+                          {% if store.facebook %}
+                            <a href="{{ store.facebook }}" target="_blank" rel="noopener" class="social-pill">
+                              <span class="social-icon" aria-hidden="true">📘</span>
+                              فيسبوك
+                            </a>
+                          {% endif %}
+                          {% if store.whatsapp %}
+                            <a href="https://wa.me/{{ store.whatsapp|cut:'+'|cut:' ' }}" target="_blank" rel="noopener" class="social-pill">
+                              <span class="social-icon" aria-hidden="true">💬</span>
+                              واتساب
+                            </a>
+                          {% endif %}
+                        </div>
+                      </div>
+
+                      <div class="mt-5 border-t border-gray-200 pt-4">
+                        <div class="text-sm font-extrabold text-gray-900 mb-4">قبل الشراء</div>
+
+                        <div class="purchase-mini">
+                          <div class="row">
+                            <div class="item">
+                              <div class="ico" aria-hidden="true">💳</div>
+                              <div>
+                                <div class="t">الدفع</div>
+                                <div class="d">كاش / بطاقة / CliQ (حسب المنتج/التوفر)</div>
+                              </div>
+                            </div>
+
+                            <div class="item">
+                              <div class="ico" aria-hidden="true">🚚</div>
+                              <div>
+                                <div class="t">التوصيل</div>
+                                <div class="d">24–48 ساعة (حسب المنطقة)</div>
+                              </div>
+                            </div>
+
+                            <div class="item">
+                              <div class="ico" aria-hidden="true">↩️</div>
+                              <div>
+                                <div class="t">الاسترجاع</div>
+                                <div class="d">خلال 7 أيام (حسب شروط الإعلان)</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- SIDEBAR -->
+      <aside class="space-y-6 lg:sticky lg:top-6 h-fit">
+        <section class="container-box">
+          <div class="relative z-10">
+
+            <div class="p-5 sm:p-6 border-b-2 border-gray-200">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-right">
+                  <div class="text-[12px] tracking-[0.2em] uppercase text-[var(--rukn-orange)] font-extrabold">دليل الشراء</div>
+                  <div class="text-xs text-gray-500 mt-1">الدفع • التوصيل • الاسترجاع</div>
+                </div>
+
+                <a href="?tab=store"
+                   onclick="setActiveTab('store', true); return false;"
+                   class="px-4 py-2 rounded-2xl bg-[var(--rukn-orange)] text-white
+                          text-xs font-extrabold shadow hover:brightness-95 transition">عرض التفاصيل</a>
+              </div>
+
+              <div class="mt-4 rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
+                <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
+                  <div class="rounded-2xl bg-white border border-gray-200 px-3 py-3">
+                    <span class="mx-auto flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-50 border border-gray-200 text-gray-400">💳</span>
+                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">كاش / بطاقة / CliQ</div>
+                  </div>
+
+                  <div class="rounded-2xl bg-white border border-gray-200 px-3 py-3">
+                    <span class="mx-auto flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-50 border border-gray-200 text-gray-400">🚚</span>
+                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">التوصيل خلال 24–48 ساعة</div>
+                  </div>
+
+                  <div class="rounded-2xl bg-white border border-gray-200 px-3 py-3">
+                    <span class="mx-auto flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-50 border border-gray-200 text-gray-400">↩️</span>
+                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">الاسترجاع خلال 7 أيام</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <span>⚡</span><span>إجراءات سريعة</span>
+                </h3>
+              </div>
+
+              <div class="rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
+                <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+
+                  <button id="favBtn" type="button"
+                          class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                 bg-white border border-gray-200
+                                 hover:border-orange-300 hover:bg-orange-50 hover:shadow-sm
+                                 text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                    <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                 bg-gray-50 border border-gray-200 text-gray-400
+                                 group-hover:bg-orange-100 group-hover:border-orange-300 group-hover:text-[var(--rukn-orange)] transition">📌</span>
+                    <span id="favText" class="leading-tight text-center text-xs group-hover:text-orange-700 transition">متابعة المتجـر</span>
+                  </button>
+
+                  <button id="shareBtn" type="button"
+                          class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                 bg-white border border-gray-200
+                                 hover:border-sky-300 hover:bg-sky-50 hover:shadow-sm
+                                 text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                    <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                 bg-gray-50 border border-gray-200 text-gray-400
+                                 group-hover:bg-sky-100 group-hover:border-sky-300 group-hover:text-sky-600 transition">🔗</span>
+                    <span class="leading-tight text-center group-hover:text-sky-700 transition">مشاركة المتجـر</span>
+                  </button>
+
+                  <button id="openReportModalBtn" type="button"
+                    data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                    data-login-modal="loginModal"
+
+                    data-report-url="{% url 'create_issue_report_ajax' %}"
+                    data-target-kind="store"
+                    data-target-id="{{ store.id }}"
+
+                    class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                           bg-white border border-gray-200
+                           hover:border-rose-300 hover:bg-rose-50 hover:shadow-sm
+                           text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+              <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                           bg-gray-50 border border-gray-200 text-gray-400
+                           group-hover:bg-rose-100 group-hover:border-rose-300 group-hover:text-rose-600 transition">
+                🚩
+              </span>
+              <span class="leading-tight text-center group-hover:text-rose-700 transition">الإبلاغ عن المتجر</span>
+            </button>
+
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact -->
+            <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <span>☎️</span><span>طرق التواصل</span>
+                </h3>
+              </div>
+
+              <div class="space-y-2 text-[11px] sm:text-xs">
+                <span class="text-gray-500">رقم الموبايل (اضغط على الرقم لإظهاره بالكامل)</span>
+
+                <div class="flex items-center justify-start gap-5">
+                  <button type="button" id="revealPhoneBtn"
+                          data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                          data-login-modal="loginModal"
+                          class="flex text-right text-lg font-extrabold text-gray-900 underline-offset-2 hover:text-[var(--rukn-orange)] hover:underline transition">
+                    <span id="sellerPhone"
+                          dir="ltr"
+                          data-masked="{{ masked_phone|default:'079•• •• ••••' }}"
+                          data-full="{{ full_phone|default:'' }}"
+                          data-revealed="false">•• •• ••• •07</span>
+                  </button>
+
+                  <div id="contactActions" class="hidden flex items-center justify-start gap-2">
+                    {% if full_phone %}
+                      <a id="callBtn"
+                         data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                         data-login-modal="loginModal"
+                         href="tel:{{ full_phone }}"
+                         title="اتصال مباشر"
+                         class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400
+                                hover:bg-green-50 hover:border-green-300 hover:text-emerald-700 transition">📞</a>
+                    {% endif %}
+
+                    {% if store.whatsapp %}
+                      <a id="whatsappBtn"
+                         data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                         data-login-modal="loginModal"
+                         href="https://wa.me/{{ store.whatsapp|cut:'+'|cut:' ' }}"
+                         target="_blank" rel="noopener"
+                         title="مراسلة عبر واتساب"
+                         class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400
+                                hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition">💬</a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Message accordion -->
+              <div class="mt-2">
+                <button id="toggleMessageBox" type="button"
+                        data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                        data-login-modal="loginModal"
+                        class="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-2xl
+                               bg-white border border-orange-200 text-[var(--rukn-orange)]
+                               text-xs sm:text-sm font-semibold shadow-sm hover:bg-orange-50/60 transition">
+                  <span class="flex items-center gap-2">💌 <span>تواصل مع البائع من خلال ركن</span></span>
+                  <svg id="messageChevron" class="w-4 h-4 text-[var(--rukn-orange)] transition-transform" viewBox="0 0 20 20" fill="none">
+                    <path d="M6 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+
+                <div id="messageBox" class="mt-3 hidden rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+                  <form id="messageForm" class="space-y-2 text-right">
+                    {% csrf_token %}
+                    <p class="text-[11px] sm:text-[12px] text-[var(--muted)] mb-1">
+                      يُرجى الالتزام بالآداب وعدم مشاركة بيانات حساسة.
+                    </p>
+
+                    <textarea id="messageText" rows="5"
+                              placeholder="لا تشارك كلمات المرور أو أرقام الحسابات البنكية أو أي بيانات شخصية حساسة"
+                              class="w-full border border-gray-200 rounded-2xl py-2.5 px-3 text-xs
+                                     focus:outline-none focus:border-[var(--rukn-orange)]"></textarea>
+
+                    <p id="messageError" class="text-red-600 text-xs font-bold hidden">⚠️ اكتب رسالتك أولاً ليتم إرسالها للبائع</p>
+
+                    <button type="submit"
+                            class="px-6 py-2.5 bg-[var(--rukn-orange)] text-white font-semibold
+                                   rounded-2xl text-sm hover:opacity-95 shadow-sm w-full sm:w-auto">
+                      إرسال الرسالة
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  {# Report modal (shared, then item details) #}
+  {% include "partials/_report_modal_mockup.html" with report_kind="store" store=store reported_already=reported_already is_own_store=is_own_store %}
+
+  <!-- Toast -->
+  <div id="toast" class="fixed inset-0 flex items-center justify-center pointer-events-none">
+    <div id="toastBox"
+         class="bg-orange-500 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-extrabold opacity-0 scale-90 transition-all duration-300"></div>
+  </div>
+
+  {# --------- DATA FOR JS --------- #}
+  <script id="store-profile-data" type="application/json">
+    {
+      "storeId": {{ store.id }},
+      "storeName": {{ store.name|escapejs|safe|add:""|json_script:"_ignored" }}
+    }
+  </script>
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/store-profile.js' %}"></script>
+  <script src="{% static 'js/report-modal.js' %}" defer></script>
+
+  {# ✅ Reviews config #}
+  <script id="store-reviews-data" type="application/json">
+  {
+    "storeId": {{ store.id }},
+    "submitUrl": "{% url 'submit_store_review_ajax' store.id %}",
+    "listUrl": "{% url 'store_reviews_list' store.id %}",
+    "loginModalId": "loginModal",
+    "perPage": 4
+  }
+  </script>
+
+  {% if request.user.is_authenticated %}
+    {{ user_review|default:None|json_script:"user-review-json" }}
+  {% else %}
+    <script id="user-review-json" type="application/json">null</script>
+  {% endif %}
+{% endblock %}

@@ -40,7 +40,7 @@
       <div class="flex-1">
         <div class="text-[11px] text-gray-500 font-semibold">{{ title_label }}</div>
         <div class="text-sm sm:text-base font-extrabold text-gray-900 leading-snug">
-          {{ listing.title|default:"—" }}
+          {{ display_title|default:"—" }}
         </div>
       </div>
     </div>
@@ -73,7 +73,7 @@
 
         <div class="flex-1">
           <div class="text-[11px] text-gray-500 font-semibold">الموقع</div>
-          <div class="text-sm font-extrabold text-gray-900">{{ listing.city|default:"—" }}</div>
+          <div class="text-sm font-extrabold text-gray-900">{{ display_city|default:"—" }}</div>
         </div>
       </div>
 
@@ -89,12 +89,12 @@
       method="post"
       action="{% url 'create_issue_report_ajax' %}"
       class="space-y-3 text-right px-4 sm:px-5"
-      data-target-kind="listing"
-      data-target-id="{{ listing.id }}"
+      data-target-kind="{{ form_target_kind }}"
+      data-target-id="{{ form_target_id }}"
       data-listing-type="{{ listing_type }}">
   {% csrf_token %}
 
-  <!-- ✅ REQUIRED hidden fields for backend -->
+  <!-- required hidden fields for backend -->
   <input type="hidden" name="target_kind" id="reportTargetKind" value="">
   <input type="hidden" name="target_id" id="reportTargetId" value="">
   <input type="hidden" name="listing_type" id="reportListingType" value="">

@@ -4,18 +4,29 @@
      class="popup-bg hidden {% if report_kind == 'request' %}theme-green{% else %}theme-orange{% endif %}"
      aria-hidden="true"
      data-reported-already="{% if reported_already %}1{% else %}0{% endif %}"
-     data-own-listing="{% if is_own_listing %}1{% else %}0{% endif %}"
+
+     {# keep the same attr name so JS keeps working #}
+     data-own-listing="{% if is_own_listing or is_own_store %}1{% else %}0{% endif %}"
+
      data-report-kind="{{ report_kind }}">
 
   <div class="popup-box" role="dialog" aria-modal="true">
 
-    {# ----------- Define unified variables safely ----------- #}
+    {# ================== REQUEST ================== #}
     {% if report_kind == "request" %}
-      {% with listing=request_obj.listing listing_type="request" modal_title="الإبلاغ عن الطلب" title_label="عنوان الطلب" id_label="رقم الطلب" display_id=request_obj.id %}
+      {% with display_title=request_obj.listing.title display_city=request_obj.listing.city modal_title="الإبلاغ عن الطلب" title_label="عنوان الطلب" id_label="رقم الطلب" display_id=request_obj.id form_target_kind="listing" form_target_id=request_obj.listing.id listing_type="request" %}
         {% include "partials/_report_modal_body.html" %}
       {% endwith %}
+
+    {# ================== STORE ================== #}
+    {% elif report_kind == "store" %}
+      {% with display_title=store.name display_city=store.city modal_title="الإبلاغ عن المتجر" title_label="اسم المتجر" id_label="رقم المتجر" display_id=store.id form_target_kind="store" form_target_id=store.id listing_type="" %}
+        {% include "partials/_report_modal_body.html" %}
+      {% endwith %}
+
+    {# ================== ITEM (default) ================== #}
     {% else %}
-      {% with listing=item.listing listing_type="item" modal_title="الإبلاغ عن الإعلان" title_label="عنوان الإعلان" id_label="رقم الإعلان" display_id=item.id %}
+      {% with display_title=item.listing.title display_city=item.listing.city modal_title="الإبلاغ عن الإعلان" title_label="عنوان الإعلان" id_label="رقم الإعلان" display_id=item.id form_target_kind="listing" form_target_id=item.listing.id listing_type="item" %}
         {% include "partials/_report_modal_body.html" %}
       {% endwith %}
     {% endif %}

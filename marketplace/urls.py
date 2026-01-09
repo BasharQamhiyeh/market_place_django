@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
+from .views import store_profile
 
 urlpatterns = [
     # --- Auth ---
@@ -78,11 +79,16 @@ urlpatterns = [
     path("requests/", views.request_list, name="request_list"),
     path("request/<int:request_id>/", views.request_detail, name="request_detail"),
 
-    path("items/<int:item_id>/store-review/", views.submit_store_review, name="submit_store_review"),
+    path("listing/<int:listing_id>/feature/", views.feature_listing, name="feature_listing"),
 
-    path("listing/<int:listing_id>/feature/", views.feature_listing, name="feature_listing")
+    path("stores/<int:store_id>/", views.store_profile, name="store_profile"),
 
+    # AJAX / API endpoints used by JS
+    path("stores/<int:store_id>/follow-toggle/", views.store_follow_toggle, name="store_follow_toggle"),
 
+    path("stores/<int:store_id>/review/submit/", views.submit_store_review_ajax, name="submit_store_review_ajax"),
+
+    path("stores/<int:store_id>/review/list/", views.store_reviews_list, name="store_reviews_list"),
 
     # path('api/', include('marketplace.api_urls')),
 ]

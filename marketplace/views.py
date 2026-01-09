@@ -25,7 +25,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Avg
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.contrib.postgres.search import TrigramSimilarity
@@ -48,7 +48,7 @@ from .models import (
     User,
     Request,
     Listing,
-    RequestAttributeValue, Store, StoreReview
+    RequestAttributeValue, Store, StoreReview, StoreFollow
 )
 
 from .forms import (
@@ -60,6 +60,7 @@ from .forms import (
     ResetPasswordForm,
     RequestForm, SignupAfterOtpForm, UserRegistrationForm, StoreReviewForm
 )
+from .utils.service import recalc_store_rating
 
 # Local imports
 from .validators import validate_no_links_or_html
@@ -2220,8 +2221,6 @@ def create_issue_report_ajax(request):
     if not reason:
         return JsonResponse({"ok": False, "message": "Please choose a reason."}, status=400)
 
-    print(reason)
-    print(details)
     # reason is REQUIRED → always validate
     try:
         validate_no_links_or_html(reason)
@@ -2293,7 +2292,25 @@ def create_issue_report_ajax(request):
             return JsonResponse({"ok": False, "message": "سبق أن قمت بالإبلاغ عن هذا المستخدم."}, status=400)
 
     else:  # store
-        return JsonResponse({"ok": False, "message": "Store reporting not enabled yet."}, status=400)
+        store = get_object_or_404(Store, id=target_id_int, is_active=True)
+
+        # ✅ prevent reporting your own store
+        if store.owner_id == request.user.user_id:
+            return JsonResponse(
+                {"ok": False, "message": "لا يمكنك الإبلاغ عن متجرك."},
+                status=400
+            )
+
+        # ✅ block duplicates (same user + same store)
+        already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="store",
+            store=store,
+        ).exists()
+        if already:
+            return JsonResponse({"ok": False, "message": "سبق أن قمت بالإبلاغ عن هذا المتجر."}, status=400)
+
+        report.store = store
 
     try:
         report.full_clean()
@@ -2660,37 +2677,6 @@ def user_logout(request):
     logout(request)
     return redirect('home')
 
-@login_required
-@require_POST
-def submit_store_review(request, item_id):
-    item = get_object_or_404(Item, id=item_id)
-    seller = item.listing.user
-
-    # Only if seller has a store AND it's verified
-    store = getattr(seller, "store", None)  # change if your related_name differs
-    if not store or not store.is_verified:
-        messages.error(request, "لا يمكن إضافة مراجعة لهذا البائع.")
-        return redirect("view_item", item_id=item_id)  # adjust url name
-
-    form = StoreReviewForm(request.POST)
-    if not form.is_valid():
-        messages.error(request, "تحقق من التقييم/التعليق.")
-        return redirect("view_item", item_id=item_id)
-
-    # Create or update (1 review per store per user)
-    obj, created = StoreReview.objects.update_or_create(
-        store=store,
-        reviewer=request.user,
-        defaults={
-            "rating": form.cleaned_data["rating"],
-            "comment": form.cleaned_data["comment"],
-        },
-    )
-
-    recalc_store_rating(store.id)
-    messages.success(request, "تم إرسال المراجعة بنجاح.")
-    return redirect("view_item", item_id=item_id)
-
 
 from marketplace.services.promotions import buy_featured_with_points, NotEnoughPoints
 
@@ -2707,3 +2693,197 @@ def feature_listing(request, listing_id):
     except NotEnoughPoints:
         messages.error(request, "رصيد النقاط غير كافٍ.")
     return redirect("profile")  # or listing detail
+
+
+from django.db.models import F
+
+def store_profile(request, store_id):
+    store = get_object_or_404(Store, pk=store_id, is_active=True)
+
+    listings = (
+        Listing.objects
+        .filter(user=store.owner, is_active=True, is_approved=True, type="item")
+        .select_related("category", "city", "user")
+        .order_by("-created_at")[:30]
+    )
+
+    listings_count = Listing.objects.filter(
+        user=store.owner, is_active=True, is_approved=True, type="item"
+    ).count()
+
+    def _root_category(cat):
+        while cat and cat.parent_id:
+            cat = cat.parent
+        return cat
+
+    for l in listings:
+        # category is on the Listing attached to Item in your project
+        cat = getattr(l.item, "listing", None)
+        cat = getattr(cat, "category", None)
+        root = _root_category(cat)
+        l.root_category_id = root.id if root else ""
+
+        city_id = getattr(l.item, "city_id", None)
+        if not city_id:
+            city_id = getattr(l, "city_id", None)
+
+        l._city_id = city_id or ""
+
+    categories = Category.objects.filter(parent__isnull=True).order_by("name_ar")
+    cities = City.objects.filter(is_active=True).order_by("name_ar")
+
+    # Reviews list (server-rendered list if you already show it)
+    reviews = (
+        StoreReview.objects
+        .filter(store=store)
+        .select_related("reviewer")
+        .order_by("-created_at")
+    )
+
+    # follow state
+    is_following = False
+    if request.user.is_authenticated:
+        is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
+
+    # phone reveal
+    full_phone = store.owner.phone if getattr(store.owner, "phone", None) else ""
+    masked_phone = "07•• ••• •••"
+
+    # ✅ user review (for prefill + edit after reload)
+    user_review = None
+    if request.user.is_authenticated:
+        r = StoreReview.objects.filter(store=store, reviewer=request.user).first()
+        if r:
+            user_review = {
+                "rating": int(r.rating or 0),
+                "subject": r.subject or "",
+                "comment": r.comment or "",
+            }
+
+    ctx = {
+        "store": store,
+        "listings": listings,
+        "listings_count": listings_count,
+        "categories": categories,
+        "cities": cities,
+        "reviews": reviews,
+        "is_following": is_following,
+        "full_phone": full_phone,
+        "masked_phone": masked_phone,
+
+        # ✅ pass to template
+        "user_review": user_review,  # dict or None
+    }
+
+    return render(request, "store_profile.html", ctx)
+
+
+@login_required
+@require_POST
+def store_follow_toggle(request, store_id):
+    store = get_object_or_404(Store, pk=store_id, is_active=True)
+
+    obj = StoreFollow.objects.filter(store=store, user=request.user).first()
+    if obj:
+        obj.delete()
+        following = False
+    else:
+        StoreFollow.objects.create(store=store, user=request.user)
+        following = True
+
+    followers_count = StoreFollow.objects.filter(store=store).count()
+    return JsonResponse({"ok": True, "following": following, "followers_count": followers_count})
+
+
+
+@login_required
+@require_POST
+@csrf_protect
+def submit_store_review_ajax(request, store_id):
+    store = get_object_or_404(Store, id=store_id)
+
+    rating = (request.POST.get("rating") or "").strip()
+    subject = (request.POST.get("subject") or "").strip()
+    comment = (request.POST.get("comment") or "").strip()
+
+    try:
+        rating_int = int(rating)
+    except Exception:
+        return JsonResponse({"ok": False, "message": "التقييم غير صالح."}, status=400)
+
+    if rating_int < 1 or rating_int > 5:
+        return JsonResponse({"ok": False, "message": "اختر تقييم من 1 إلى 5."}, status=400)
+
+    obj, created = StoreReview.objects.update_or_create(
+        store=store,
+        reviewer=request.user,
+        defaults={
+            "rating": rating_int,
+            "subject": subject,
+            "comment": comment,
+        },
+    )
+
+    recalc_store_rating(store.id)
+    store.refresh_from_db()
+
+    return JsonResponse({
+        "ok": True,
+        "message": "✔ تم حفظ تقييمك بنجاح",
+        "created": created,
+
+        # aggregates
+        "rating_avg": float(store.rating_avg or 0),
+        "rating_count": int(store.rating_count or 0),
+
+        # ✅ return what we saved (so JS can update state without reload)
+        "user_review": {
+            "rating": int(obj.rating or 0),
+            "subject": obj.subject or "",
+            "comment": obj.comment or "",
+        }
+    })
+
+
+def store_reviews_list(request, store_id):
+    store = get_object_or_404(Store, pk=store_id, is_active=True)
+
+    page = int(request.GET.get("page", "1") or 1)
+    per_page = int(request.GET.get("per_page", "6") or 6)
+
+    qs = StoreReview.objects.filter(store=store).select_related("reviewer").order_by("-created_at")
+    paginator = Paginator(qs, per_page)
+    p = paginator.get_page(page)
+
+    breakdown = (
+        qs.values("rating")
+        .annotate(count=Count("id"))
+        .order_by("-rating")
+    )
+    breakdown_map = {str(x["rating"]): x["count"] for x in breakdown}
+
+    avg = qs.aggregate(avg=Avg("rating"))["avg"] or 0
+    count = qs.count()
+
+    data = {
+        "ok": True,
+        "avg": round(float(avg), 2),
+        "count": count,
+        "breakdown": breakdown_map,
+        "page": p.number,
+        "pages": paginator.num_pages,
+        "results": [
+            {
+                "id": r.id,
+                "rating": r.rating,
+                "subject": r.subject or "",
+                "comment": r.comment or "",
+                "created_at": r.created_at.strftime("%Y-%m-%d"),
+                "reviewer": getattr(r.reviewer, "username", "") or r.reviewer.phone,
+                "is_user": (request.user.is_authenticated and r.reviewer_id == request.user.user_id),
+            }
+            for r in p.object_list
+        ],
+    }
+    return JsonResponse(data)
+
