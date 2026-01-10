@@ -218,23 +218,23 @@
                 <h2 class="text-lg md:text-xl font-extrabold text-gray-900">طلبات مشابهة في نفس القسم</h2>
               </div>
 
-              <div id="requestsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-                {% for r in similar_requests|slice:":8" %}
+              <div id="similarRequestsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                {% for r in similar_requests|slice:":4" %}
                   {% include "partials/_request_card.html" with req=r %}
                 {% empty %}
                   <p class="text-center text-gray-500 py-6 col-span-full">لا توجد طلبات مشابهة حالياً.</p>
                 {% endfor %}
               </div>
 
-              {% if similar_requests|length > 8 %}
-                <div class="mt-8 flex justify-center">
-                  <button id="loadMoreBtn"
-                          class="px-6 py-2.5 rounded-full bg-[var(--rukn-green)] text-white text-sm sm:text-base font-semibold shadow hover:opacity-95 active:opacity-90 transition">
-                    تحميل المزيد من الطلبات
-                  </button>
-                </div>
-                {{ similar_requests|slice:"8:"|json_script:"more-requests-data" }}
-              {% endif %}
+
+            </div>
+            <div class="mt-8 flex justify-center">
+              <button id="loadMoreSimilarRequestsBtn"
+                    type="button"
+                    data-request-id="{{ request_obj.id }}"
+                    class="px-6 py-2.5 rounded-full bg-[var(--rukn-green)] text-white text-sm sm:text-base font-semibold shadow hover:opacity-95 active:opacity-90 transition">
+              تحميل المزيد من الطلبات
+            </button>
             </div>
           </section>
 

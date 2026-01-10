@@ -1,4 +1,5 @@
 // static/js/view-request.js
+console.log("view-request.js LOADED");
 
 /* ========= Helpers ========= */
 function showRuknAlert(message) {
@@ -113,6 +114,8 @@ window.copyAdNumber = function copyAdNumber() {
   if (!shareBtn) return;
 
   shareBtn.addEventListener("click", async () => {
+    console.log("LOAD MORE CLICK", { requestId: btn.dataset.requestId, offset: grid.children.length });
+
     const shareData = {
       title: "طلب على منصة ركن",
       text: "شاهد هذا الطلب",
@@ -260,85 +263,73 @@ window.copyAdNumber = function copyAdNumber() {
 })();
 
 /* ========= Similar Requests Load More ========= */
-(function initLoadMore() {
-  const grid = document.getElementById("requestsGrid");
-  const btn = document.getElementById("loadMoreBtn");
-  const dataEl = document.getElementById("more-requests-data");
-  if (!grid || !btn) return;
+/* ========= Similar Requests Load More (ROW BY ROW via endpoint) ========= */
+(function () {
+  async function handleLoadMore(btn) {
+    const grid = document.getElementById("similarRequestsGrid");
+    if (!grid) {
+      console.log("❌ similarRequestsGrid NOT FOUND");
+      return;
+    }
 
-  if (!dataEl) {
-    btn.classList.add("hidden");
-    return;
-  }
+    const requestId = btn.dataset.requestId;
+    console.log("LOAD MORE START", { requestId, currentCount: grid.children.length });
 
-  let more = [];
-  try { more = JSON.parse(dataEl.textContent || "[]"); } catch (e) { more = []; }
+    const cols = Math.max(
+      (getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length) || 1,
+      1
+    );
+    const limit = cols; // row by row
+    const offset = grid.children.length;
 
-  const PAGE_SIZE = 8;
-  let index = 0;
+    btn.disabled = true;
+    btn.classList.add("opacity-60");
 
-  function appendSimpleCard(r) {
-    const url = r.url || "#";
-    const title = r.title || r.listing_title || (r.listing && r.listing.title) || "طلب";
-    const city = r.city || r.listing_city || (r.listing && r.listing.city) || "—";
-    const created = r.created_at || (r.listing && r.listing.created_at) || "";
+    try {
+      const url = `/requests/${requestId}/more-similar/?offset=${offset}&limit=${limit}`;
+      console.log("FETCH", url);
 
-    const card = document.createElement("a");
-    card.href = url;
-    card.className = "req-card group cursor-pointer";
-    card.innerHTML = `
-      <div class="hover-mask"></div>
-      <div class="hint-container">
-        <div class="flex flex-col text-[11px] font-extrabold text-[var(--rukn-green)] leading-tight text-center">
-          <span>عرض</span><span>الطلب</span>
-        </div>
-        <span class="hint-arrow text-[var(--rukn-green)]">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-               viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-               class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                  d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
-          </svg>
-        </span>
-      </div>
+      const res = await fetch(url, {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
 
-      <div class="p-4 pb-2 flex-1 relative">
-        <h3 class="relative z-30 font-bold text-gray-900 text-sm line-clamp-2 min-h-[48px] leading-relaxed mb-3 transition group-hover:text-[var(--rukn-green)]">
-          ${title}
-        </h3>
+      console.log("RESPONSE", res.status);
 
-        <div class="flex items-center gap-4 sm:text-xs text-gray-500 relative z-0">
-          <span class="flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-green-500" viewBox="0 0 20 20" fill="none">
-              <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
-              <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
-            </svg>
-            <span>${city}</span>
-          </span>
+      if (!res.ok) throw new Error("Bad response " + res.status);
 
-          <span class="flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-green-500" viewBox="0 0 20 20" fill="none">
-              <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6" />
-              <path d="M7 2v4M13 2v4M4 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
-            <span>${created}</span>
-          </span>
-        </div>
-      </div>
-    `;
-    grid.appendChild(card);
-  }
+      const data = await res.json();
+      console.log("DATA", data);
 
-  function renderMore() {
-    const chunk = more.slice(index, index + PAGE_SIZE);
-    chunk.forEach(appendSimpleCard);
-    index += chunk.length;
+      if (data.html && data.html.trim()) {
+        grid.insertAdjacentHTML("beforeend", data.html);
+      }
 
-    if (index >= more.length) {
-      btn.disabled = true;
-      btn.textContent = "لا توجد طلبات أخرى";
+      if (!data.has_more) {
+        btn.disabled = true;
+        btn.textContent = "لا يوجد المزيد من الطلبات";
+        btn.classList.add("cursor-not-allowed");
+        return;
+      }
+
+      btn.disabled = false;
+      btn.classList.remove("opacity-60");
+    } catch (err) {
+      console.error("LOAD MORE ERROR", err);
+      btn.disabled = false;
+      btn.classList.remove("opacity-60");
     }
   }
 
-  btn.addEventListener("click", renderMore);
+  // ✅ event delegation (always works)
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#loadMoreSimilarRequestsBtn");
+    if (!btn) return;
+    e.preventDefault();
+    if (btn.dataset.loading === "1") return;
+    btn.dataset.loading = "1";
+    handleLoadMore(btn).finally(() => (btn.dataset.loading = "0"));
+  });
+
+  console.log("✅ load-more handler READY");
 })();
+

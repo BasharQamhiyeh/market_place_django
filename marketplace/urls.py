@@ -18,6 +18,9 @@ urlpatterns = [
     path('item/create/', views.item_create, name='create_item'),
     path("home/more-items/", views.home_more_items, name="home_more_items"),
     path("home/more-requests/", views.home_more_requests, name="home_more_requests"),
+    path("items/<int:item_id>/more-similar/", views.item_detail_more_similar, name="item_detail_more_similar"),
+    path("requests/<int:request_id>/more-similar/", views.request_detail_more_similar, name="request_detail_more_similar"),
+
 
     # --- Categories & Attributes ---
     path('categories/', views.category_list, name='category_list'),

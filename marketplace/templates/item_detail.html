@@ -695,13 +695,22 @@
             <h2 class="text-lg md:text-xl font-extrabold text-gray-900">إعلانات مشابهة قد تهمّك</h2>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-3">
+          <div id="similarItemsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-3">
             {% for it in similar_items %}
               {% include "partials/_item_card.html" with item=it %}
             {% empty %}
               <p class="col-span-full text-center text-gray-500 py-6">لا توجد إعلانات مشابهة حالياً.</p>
             {% endfor %}
           </div>
+          <div class="flex justify-center mt-6">
+            <button id="loadMoreSimilarBtn"
+                    type="button"
+                    data-item-id="{{ item.id }}"
+                    class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
+              تحميل المزيد من الإعلانات
+            </button>
+          </div>
+
 
         </div>
       </div>

@@ -510,3 +510,62 @@ if (toggleMessageBox && messageBox) {
    init
 ========================= */
 renderGallery();
+
+
+(function initLoadMoreSimilar() {
+  const btn = document.getElementById("loadMoreSimilarBtn");
+  const grid = document.getElementById("similarItemsGrid");
+  if (!btn || !grid) return;
+
+  function gridCols(gridEl) {
+    const cols = getComputedStyle(gridEl).gridTemplateColumns.split(" ").filter(Boolean).length;
+    return Math.max(cols || 1, 1);
+  }
+
+  function disableBtn(text) {
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-not-allowed");
+    btn.textContent = text;
+  }
+
+  let locked = false;
+
+  btn.addEventListener("click", async () => {
+    if (locked) return;
+    locked = true;
+
+    const cols = gridCols(grid);
+    const limit = 3 * cols;               // ✅ 3 rows
+    const offset = grid.children.length;  // ✅ already visible cards
+    const itemId = btn.dataset.itemId;
+
+    btn.disabled = true;
+    btn.classList.add("opacity-60");
+
+    try {
+      const url = `/items/${itemId}/more-similar/?offset=${offset}&limit=${limit}`;
+
+      const res = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      if (!res.ok) throw new Error("Bad response");
+
+      const data = await res.json();
+
+      if (data.html && data.html.trim()) {
+        grid.insertAdjacentHTML("beforeend", data.html);
+      }
+
+      if (!data.has_more) {
+        disableBtn("لا يوجد المزيد من الإعلانات");
+        return;
+      }
+
+      btn.disabled = false;
+      btn.classList.remove("opacity-60");
+    } catch (e) {
+      btn.disabled = false;
+      btn.classList.remove("opacity-60");
+    } finally {
+      locked = false;
+    }
+  });
+})();

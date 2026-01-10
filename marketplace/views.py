@@ -112,6 +112,87 @@ IS_RENDER = getattr(settings, "IS_RENDER", False)
 
 
 @require_GET
+def item_detail_more_similar(request, item_id):
+    offset = int(request.GET.get("offset", 0))
+    limit = int(request.GET.get("limit", 12))
+
+    item = get_object_or_404(Item, id=item_id)
+    cat = getattr(item.listing, "category", None)
+
+    qs = (
+        Item.objects
+        .filter(
+            listing__type="item",
+            listing__is_active=True,
+            listing__is_approved=True,
+        )
+        .exclude(id=item.id)
+        .select_related("listing__category", "listing__city", "listing__user")
+        .prefetch_related("photos")
+        .order_by("-listing__created_at")
+    )
+
+    # Same “fallback similar” logic: same category if exists
+    if cat:
+        qs = qs.filter(listing__category=cat)
+
+    # Optional: keep favorited UI consistent for logged-in users
+    if request.user.is_authenticated:
+        qs = qs.annotate(
+            is_favorited=Exists(
+                Favorite.objects.filter(user=request.user, listing=OuterRef("listing"))
+            )
+        )
+
+    chunk = list(qs[offset:offset + limit])
+
+    html = render_to_string(
+        "partials/_item_cards_only.html",
+        {"items": chunk},
+        request=request
+    )
+
+    has_more = qs.count() > (offset + limit)
+    return JsonResponse({"html": html, "has_more": has_more})
+
+
+@require_GET
+def request_detail_more_similar(request, request_id):
+    offset = int(request.GET.get("offset", 0))
+    limit = int(request.GET.get("limit", 2))
+
+    request_obj = get_object_or_404(Request, id=request_id)
+    cat = getattr(request_obj.listing, "category", None)
+
+    qs = (
+        Request.objects
+        .filter(
+            listing__type="request",
+            listing__is_active=True,
+            listing__is_approved=True,
+        )
+        .exclude(id=request_obj.id)
+        .select_related("listing__category", "listing__city", "listing__user")
+        .order_by("-listing__created_at")
+    )
+
+    if cat:
+        qs = qs.filter(listing__category=cat)
+
+    chunk = list(qs[offset:offset + limit])
+
+    html = render_to_string(
+        "partials/_request_cards_only.html",
+        {"latest_requests": chunk},  # ✅ FIX
+        request=request
+    )
+
+    has_more = qs.count() > (offset + len(chunk))  # ✅ FIX
+    return JsonResponse({"html": html, "has_more": has_more})
+
+
+
+@require_GET
 def home_more_items(request):
     offset = int(request.GET.get("offset", 0))
     limit = int(request.GET.get("limit", 12))
@@ -681,7 +762,7 @@ def item_detail(request, item_id):
                 listing__is_active=True,
             )
             .exclude(id=item.id)
-            .order_by('-listing__created_at')[:6]
+            .order_by('-listing__created_at')[:4]
         )
 
     # Default → fallback queryset
@@ -701,7 +782,7 @@ def item_detail(request, item_id):
                         "max_query_terms": 12,
                     }
                 },
-                "size": 6,
+                "size": 4,
             }
 
             # --- IMPORTANT ---
@@ -720,7 +801,7 @@ def item_detail(request, item_id):
                         listing__is_active=True,
                     )
                     .exclude(id=item.id)
-                    .order_by('-created_at')[:6]
+                    .order_by('-created_at')[:4]
                 )
 
                 if es_items.exists():
@@ -869,7 +950,7 @@ def request_detail(request, request_id):
             listing__is_active=True,
         )
         .exclude(id=request_obj.id)
-        .order_by("-listing__created_at")[:8]
+        .order_by("-listing__created_at")[:4]
     )
 
     requester = request_obj.listing.user
