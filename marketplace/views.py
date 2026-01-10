@@ -720,14 +720,12 @@ def item_detail(request, item_id):
 
     breadcrumb_categories = []
     cat = getattr(item.listing, "category", None)
-
-    # Walk up to the root
     while cat:
         breadcrumb_categories.append(cat)
         cat = cat.parent
+    breadcrumb_categories.reverse()
 
-    breadcrumb_categories.reverse()  # root -> leaf
-
+    # Attributes
     attributes = []
     for av in item.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
         attr = av.attribute
@@ -736,23 +734,18 @@ def item_detail(request, item_id):
         if attr.input_type == "select" and value:
             option = None
             try:
-                option_id = int(value)  # ✅ only if it's a real option id
+                option_id = int(value)
                 option = attr.options.filter(id=option_id).first()
             except (TypeError, ValueError):
-                option = None  # ✅ "Other" text
+                option = None
 
             if option:
-                value = option.value_ar  # or value_en depending on language
-            # else: keep typed text as-is
+                value = option.value_ar
 
-        attributes.append({
-            "name": attr.name_ar,
-            "value": value,
-        })
-
+        attributes.append({"name": attr.name_ar, "value": value})
 
     # ----------------------------
-    # 1. Django fallback function
+    # Similar items (fallback + ES)
     # ----------------------------
     def fallback_similar():
         return (
@@ -762,16 +755,15 @@ def item_detail(request, item_id):
                 listing__is_active=True,
             )
             .exclude(id=item.id)
-            .order_by('-listing__created_at')[:4]
+            .select_related("listing__category", "listing__city", "listing__user")
+            .order_by("-listing__created_at")[:4]
         )
 
-    # Default → fallback queryset
     similar_items = fallback_similar()
 
-    # Only try ES if NOT on Render
     if not getattr(settings, "IS_RENDER", False):
         try:
-            es = Elasticsearch(settings.ELASTICSEARCH_DSL['default']['hosts'])
+            es = Elasticsearch(settings.ELASTICSEARCH_DSL["default"]["hosts"])
 
             query = {
                 "query": {
@@ -785,14 +777,10 @@ def item_detail(request, item_id):
                 "size": 4,
             }
 
-            # --- IMPORTANT ---
-            # This is the line that raises NotFoundError when index = "items" does not exist
             response = es.search(index="items", body=query)
-
             hits = response.get("hits", {}).get("hits", [])
             ids = [hit["_id"] for hit in hits]
 
-            # If ES returned valid hits → get Django queryset
             if ids:
                 es_items = (
                     Item.objects.filter(
@@ -801,62 +789,56 @@ def item_detail(request, item_id):
                         listing__is_active=True,
                     )
                     .exclude(id=item.id)
-                    .order_by('-created_at')[:4]
+                    .select_related("listing__category", "listing__city", "listing__user")
+                    .order_by("-listing__created_at")[:4]
                 )
 
                 if es_items.exists():
                     similar_items = es_items
 
-        # ===============================
-        # FULL protection from all errors
-        # ===============================
         except (ConnectionError, NotFoundError, Exception) as e:
             print("[WARN] Elasticsearch error in item_detail:", e)
-            # Keep fallback_similar()
 
     # ----------------------------
-    # Is Favorite
+    # Favorites (main item + cards)
     # ----------------------------
-    is_favorited = False
+    fav_listing_ids = set()
     if request.user.is_authenticated:
-        is_favorited = Favorite.objects.filter(user=request.user, listing=item.listing).exists()
+        fav_listing_ids = set(
+            Favorite.objects.filter(user=request.user).values_list("listing_id", flat=True)
+        )
 
+    # main item (used by the big fav button)
+    is_favorited = bool(item.listing_id in fav_listing_ids) if request.user.is_authenticated else False
 
+    # similar cards (partials/_item_card.html expects item.is_favorited)
+    similar_items = list(similar_items)
+    for it in similar_items:
+        it.is_favorited = bool(it.listing_id in fav_listing_ids) if request.user.is_authenticated else False
+
+    # ----------------------------
+    # Seller + contact privacy
+    # ----------------------------
     seller = item.listing.user
-
-    # ✅ CONTACT PRIVACY (NO PHONE LEAK)
     raw_phone = (seller.phone or "").strip()
 
-    # masked (first 2 digits)
     seller_phone_masked = "07•• ••• •••"
     if raw_phone:
         first2 = raw_phone[:2] if len(raw_phone) >= 2 else raw_phone
         seller_phone_masked = f"{first2}•• ••• •••"
 
-    # only send full phone if:
-    # - seller allows showing phone
-    # - viewer is authenticated
     can_send_full_phone = bool(item.listing.show_phone) and request.user.is_authenticated
     seller_phone_full = raw_phone if can_send_full_phone else ""
 
-    # True if the seller has a Store row (OneToOne)
     seller_is_store = hasattr(seller, "store") and seller.store is not None
     store = seller.store if seller_is_store else None
-
-    # verified flag (use is_verified or is_approved depending on your model)
     seller_is_verified_store = bool(store and getattr(store, "is_verified", False))
-    # if you still have is_approved, use this instead:
-    # seller_is_verified_store = bool(store and getattr(store, "is_approved", False))
 
-    # Reviews: show ONLY for store users (verified or not — your choice)
     reviews = []
     if seller_is_store:
-        # if your Review model related_name is "reviews" on Store
         reviews = store.reviews.select_related("reviewer").order_by("-created_at")[:10]
-
     seller_reviews_count = len(reviews)
 
-    # Seller items count (same as you already do)
     seller_items_count = Listing.objects.filter(
         user=seller,
         type="item",
@@ -877,23 +859,24 @@ def item_detail(request, item_id):
     if request.user.is_authenticated:
         is_own_listing = (item.listing.user_id == request.user.user_id)
 
-    # ----------------------------
-    # Final render
-    # ----------------------------
-    return render(request, 'item_detail.html', {
-        'item': item,
-        'attributes': attributes,
-        'similar_items': similar_items,
+    return render(request, "item_detail.html", {
+        "item": item,
+        "attributes": attributes,
+        "similar_items": similar_items,
+
         "is_favorited": is_favorited,
+
         "seller_items_count": seller_items_count,
         "seller_reviews_count": seller_reviews_count,
         "seller_is_store": seller_is_store,
         "seller_is_verified_store": seller_is_verified_store,
         "store_reviews": reviews,
         "store": store,
+
         "allow_show_phone": item.listing.show_phone,
         "seller_phone_masked": seller_phone_masked,
         "seller_phone_full": seller_phone_full,
+
         "report_kind": "item",
         "reported_already": reported_already,
         "breadcrumb_categories": breadcrumb_categories,

@@ -153,7 +153,8 @@ function applyFavUI(btn, isFav) {
   }
 
   // icon wrapper
-  const iconWrap = btn.querySelector("#favIconWrap");
+  const iconWrap = btn.querySelector("[data-fav-icon]");
+
 
   if (isFav) {
     // button background
@@ -195,7 +196,7 @@ function applyFavUI(btn, isFav) {
 }
 
 
-const favBtns = Array.from(document.querySelectorAll('[data-fav-btn="1"]'));
+const favBtns = Array.from(document.querySelectorAll('[data-fav-btn="1"][data-fav-scope="detail"]'));
 console.log("⭐ fav buttons found:", favBtns.length, favBtns);
 
 favBtns.forEach((btn) => {
