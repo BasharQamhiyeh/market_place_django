@@ -271,17 +271,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) {
         if (data.duplicated) {
           mobile.classList.remove("input-error");
+
+          const homeUrl = new URL("/", window.location.origin);
+          homeUrl.searchParams.set("login", "1");
+          homeUrl.searchParams.set("mobile", val);
+
           mobileErr.innerHTML = `
             <div class="field-error">
-              هذا الرقم مسجَّل لدينا بالفعل.
+              لديك حساب بإمكانك
+              <a href="${homeUrl.toString()}" class="underline font-bold text-[var(--rukn-orange)] hover:opacity-80">
+                تسجيل الدخول
+              </a>
             </div>
           `;
-          const resetLinkBtn = document.getElementById("resetLink");
-          if (resetLinkBtn) {
-            resetLinkBtn.onclick = () => {
-              window.location.href = "/reset-password?mobile=" + encodeURIComponent(val);
-            };
-          }
           return false;
         }
         return setFieldError(mobile, data.error || "حدث خطأ", mobileErr);

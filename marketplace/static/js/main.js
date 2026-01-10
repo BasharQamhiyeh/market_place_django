@@ -137,3 +137,62 @@ document.addEventListener("DOMContentLoaded", () => {
     noMoreText: "لا يوجد المزيد من الطلبات"
   });
 });
+
+/* =========================================================
+   Open login modal if redirected with ?login=1
+   - Open ONLY via existing trigger (so centering + close works)
+   - Retry until header.js is ready
+========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("login") !== "1") return;
+
+  const findLoginTrigger = () => {
+    return (
+      // 1) Preferred explicit triggers (your project may have one of these)
+      document.querySelector('[data-open-login]') ||
+      document.querySelector('[data-auth-open="login"]') ||
+      document.querySelector('button[data-login]') ||
+      document.getElementById("openLoginBtn") ||
+
+      // 2) Common modal toggle patterns
+      document.querySelector('[data-modal-target="login"]') ||
+      document.querySelector('[data-target="login"]') ||
+      document.querySelector('[data-bs-target="#loginModal"]') ||
+      document.querySelector('a[href="#loginModal"]') ||
+      document.querySelector('a[href="#login"]') ||
+
+      // 3) Last resort: match by visible text
+      Array.from(document.querySelectorAll("a,button")).find((el) => {
+        const t = (el.textContent || "").trim();
+        return t === "تسجيل الدخول" || t === "دخول" || t.toLowerCase() === "login";
+      }) ||
+
+      null
+    );
+  };
+
+  let tries = 0;
+  const maxTries = 30;   // ~3 seconds
+  const intervalMs = 100;
+
+  const timer = setInterval(() => {
+    tries += 1;
+
+    const trigger = findLoginTrigger();
+    if (trigger) {
+      clearInterval(timer);
+      trigger.click();
+
+      // optional: remove params so refresh doesn't reopen
+      // history.replaceState({}, "", window.location.pathname);
+
+      return;
+    }
+
+    if (tries >= maxTries) {
+      clearInterval(timer);
+      console.warn("Login trigger not found. Modal will not auto-open.");
+    }
+  }, intervalMs);
+});
