@@ -180,7 +180,17 @@
           {% endif %}
         {% endwith %}
 
-        <span class="ad-seller-name">{{ item.listing.user.first_name }}</span>
+        {% with u=item.listing.user %}
+          <span class="ad-seller-name">
+            {% if u.store and u.store.name %}
+              {{ u.store.name }}
+            {% elif u.username %}
+              {{ u.username }}
+            {% else %}
+              {{ u.first_name }}
+            {% endif %}
+          </span>
+        {% endwith %}
       </div>
 
       <span class="ad-price">{{ item.price|floatformat:0 }} د.أ</span>

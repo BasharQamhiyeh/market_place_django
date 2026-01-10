@@ -98,9 +98,15 @@
           {% endif %}
         {% endwith %}
 
-        <span class="req-user-name">
-          {{ req.listing.user.first_name|default:req.listing.user.username|default:req.listing.user.phone|default:_("User") }}
-        </span>
+        {% with u=req.listing.user %}
+          <span class="req-user-name">
+            {% if u.username %}
+              {{ u.username }}
+            {% else %}
+              {{ u.first_name }}
+            {% endif %}
+          </span>
+        {% endwith %}
       </div>
 
       <div class="req-budget">

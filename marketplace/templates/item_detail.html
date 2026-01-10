@@ -500,6 +500,7 @@
                   </div>
                 </div>
 
+                {% if not request.user.is_authenticated or request.user.user_id != item.listing.user.user_id %}
                 <!-- طرق التواصل -->
                 <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 space-y-4">
                   <div class="flex items-center justify-between">
@@ -632,7 +633,7 @@
                   </div>
 
                 </div>
-
+                {% endif %}
               </div>
             </section>
           </div>
