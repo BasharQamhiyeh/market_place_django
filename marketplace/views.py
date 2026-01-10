@@ -3102,19 +3102,74 @@ def store_reviews_list(request, store_id):
     page = int(request.GET.get("page", "1") or 1)
     per_page = int(request.GET.get("per_page", "6") or 6)
 
-    qs = StoreReview.objects.filter(store=store).select_related("reviewer").order_by("-created_at")
+    qs = (
+        StoreReview.objects
+        .filter(store=store)
+        .select_related("reviewer")
+        .order_by("-created_at")
+    )
+
     paginator = Paginator(qs, per_page)
     p = paginator.get_page(page)
 
-    breakdown = (
-        qs.values("rating")
-        .annotate(count=Count("id"))
-        .order_by("-rating")
-    )
+    breakdown = qs.values("rating").annotate(count=Count("id")).order_by("-rating")
     breakdown_map = {str(x["rating"]): x["count"] for x in breakdown}
 
     avg = qs.aggregate(avg=Avg("rating"))["avg"] or 0
     count = qs.count()
+
+    def get_display_name(user):
+        if not user:
+            return "مستخدم"
+        username = (getattr(user, "username", "") or "").strip()
+        first_name = (getattr(user, "first_name", "") or "").strip()
+        phone = (getattr(user, "phone", "") or "").strip()
+        return username or first_name or phone or "مستخدم"
+
+    def get_avatar_url(user):
+        """
+        Adjust the field list below to match your actual User image field name.
+        Common ones: avatar, photo, profile_photo, image, profile_image
+        """
+        if not user:
+            return ""
+
+        for field in ("avatar", "photo", "profile_photo", "image", "profile_image", "picture"):
+            f = getattr(user, field, None)
+            try:
+                if f and getattr(f, "url", None):
+                    # make it absolute so JS can use it directly
+                    return request.build_absolute_uri(f.url)
+            except Exception:
+                pass
+
+        return ""
+
+    # your custom user PK might be user_id
+    current_uid = getattr(request.user, "user_id", None) if request.user.is_authenticated else None
+    if current_uid is None and request.user.is_authenticated:
+        current_uid = request.user.id
+
+    results = []
+    for r in p.object_list:
+        u = getattr(r, "reviewer", None)
+        reviewer_id = getattr(r, "reviewer_id", None)
+
+        results.append({
+            "id": r.id,
+            "rating": r.rating,
+            "subject": r.subject or "",
+            "comment": r.comment or "",
+            "created_at": r.created_at.strftime("%Y-%m-%d"),
+
+            # ✅ frontend will use this for name + initials
+            "reviewer": get_display_name(u),
+
+            # ✅ if exists -> photo will show; else "" -> JS shows initial letter
+            "avatar": get_avatar_url(u),
+
+            "is_user": (current_uid is not None and reviewer_id == current_uid),
+        })
 
     data = {
         "ok": True,
@@ -3123,18 +3178,7 @@ def store_reviews_list(request, store_id):
         "breakdown": breakdown_map,
         "page": p.number,
         "pages": paginator.num_pages,
-        "results": [
-            {
-                "id": r.id,
-                "rating": r.rating,
-                "subject": r.subject or "",
-                "comment": r.comment or "",
-                "created_at": r.created_at.strftime("%Y-%m-%d"),
-                "reviewer": getattr(r.reviewer, "username", "") or r.reviewer.phone,
-                "is_user": (request.user.is_authenticated and r.reviewer_id == request.user.user_id),
-            }
-            for r in p.object_list
-        ],
+        "results": results,
     }
     return JsonResponse(data)
 

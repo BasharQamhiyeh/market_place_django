@@ -429,6 +429,7 @@ function bindMessage() {
 }
 
 /* ========= Reviews (FULL mockup: list + pagination + summary) ========= */
+/* ========= Reviews (FULL mockup: list + pagination + summary) ========= */
 function bindStoreReviews() {
   const cfg = readJsonScript("store-reviews-data") || {};
   const listUrl = cfg.listUrl || "";
@@ -467,6 +468,48 @@ function bindStoreReviews() {
     if (!iso) return "";
     const d = new Date(String(iso).slice(0, 10) + "T00:00:00");
     return new Intl.DateTimeFormat("ar-JO", { day: "2-digit", month: "long", year: "numeric" }).format(d);
+  }
+
+  /* ✅ escape to avoid breaking HTML + XSS */
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  /* ✅ initial letter from display name (reviewer) */
+  function getInitialLetter(displayName) {
+    const base = String(displayName || "").trim();
+    if (!base) return "م";
+    // Unicode-safe first character (Arabic safe)
+    return Array.from(base)[0].toUpperCase() || "م";
+  }
+
+  /* ✅ avatar: image if exists, else initial letter */
+  function renderReviewerAvatarHTML(avatarUrl, displayName) {
+    const wrapClass =
+      "w-10 h-10 rounded-full border border-gray-200 bg-gray-100 overflow-hidden flex items-center justify-center flex-shrink-0";
+
+    const alt = escapeHtml(displayName || "");
+    const initial = escapeHtml(getInitialLetter(displayName));
+
+    if (avatarUrl && String(avatarUrl).trim()) {
+      const src = escapeHtml(String(avatarUrl).trim());
+      return `
+        <div class="${wrapClass}">
+          <img src="${src}" alt="${alt}" class="w-full h-full object-cover" />
+        </div>
+      `;
+    }
+
+    return `
+      <div class="${wrapClass}">
+        <span class="text-sm font-extrabold text-gray-700">${initial}</span>
+      </div>
+    `;
   }
 
   function renderBreakdown(breakdown, count) {
@@ -520,7 +563,8 @@ function bindStoreReviews() {
 
     let last = 0;
     sorted.forEach((p) => {
-      if (p - last > 1) pageNumbers.insertAdjacentHTML("beforeend", `<span class="px-2 text-gray-400 font-extrabold">…</span>`);
+      if (p - last > 1)
+        pageNumbers.insertAdjacentHTML("beforeend", `<span class="px-2 text-gray-400 font-extrabold">…</span>`);
       pageNumbers.insertAdjacentHTML(
         "beforeend",
         `<button type="button" class="page-btn ${p === cur ? "active" : ""}" data-page="${p}">${p}</button>`
@@ -536,11 +580,6 @@ function bindStoreReviews() {
     });
   }
 
-  function reviewerAvatar(name) {
-    const safe = encodeURIComponent(name || "User");
-    return `https://ui-avatars.com/api/?name=${safe}&background=eee&color=444`;
-  }
-
   function renderReviews(results) {
     reviewsBox.innerHTML = "";
 
@@ -550,14 +589,13 @@ function bindStoreReviews() {
     }
 
     (results || []).forEach((r) => {
-      // Prefer: username -> first_name -> (old reviewer field) -> "مستخدم"
-      const name =
-        (r.username && String(r.username).trim()) ||
-        (r.first_name && String(r.first_name).trim()) ||
-        (r.reviewer && String(r.reviewer).trim()) ||
-        "مستخدم";
+      // ✅ for now: backend gives "reviewer" only
+      const reviewer = (r.reviewer && String(r.reviewer).trim()) || "مستخدم";
+      const name = reviewer;
 
-      const avatar = r.avatar || reviewerAvatar(name);
+      // ✅ optional avatar URL if your backend adds it later
+      const avatarUrl = (r.avatar && String(r.avatar).trim()) || "";
+
       const dateTxt = r.created_at ? formatArabicDate(r.created_at) : "";
       const subject = (r.subject || "").trim();
       const note = (r.comment || "").trim();
@@ -571,10 +609,14 @@ function bindStoreReviews() {
           <article class="rounded-2xl border ${isUser ? "bg-orange-50 border-orange-200" : "bg-white border-gray-200"} p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="flex items-center gap-3">
-                <img src="${avatar}" alt="${name}" class="w-10 h-10 rounded-full object-cover border border-gray-200 bg-gray-100">
+                ${renderReviewerAvatarHTML(avatarUrl, name)}
                 <div class="text-right">
-                  <div class="text-sm font-extrabold text-gray-900">${name}</div>
-                  ${dateTxt ? `<div class="text-[11px] text-gray-500 mt-0.5">تمت المراجعة بتاريخ ${dateTxt}</div>` : ""}
+                  <div class="text-sm font-extrabold text-gray-900">${escapeHtml(name)}</div>
+                  ${
+                    dateTxt
+                      ? `<div class="text-[11px] text-gray-500 mt-0.5">تمت المراجعة بتاريخ ${escapeHtml(dateTxt)}</div>`
+                      : ""
+                  }
                 </div>
               </div>
               ${isUser ? `<span class="text-[11px] font-extrabold text-[var(--rukn-orange)]">تعليقك</span>` : ""}
@@ -582,10 +624,10 @@ function bindStoreReviews() {
 
             <div class="mt-3 flex items-center gap-3">
               <div>${renderStarsSVG(wholeStars, { size: 16, idBase: "rv-" + Math.random().toString(36).slice(2) })}</div>
-              ${subject ? `<div class="text-sm font-extrabold text-gray-900">${subject}</div>` : ""}
+              ${subject ? `<div class="text-sm font-extrabold text-gray-900">${escapeHtml(subject)}</div>` : ""}
             </div>
 
-            ${note ? `<div class="mt-2 text-sm text-gray-800 leading-7">${note}</div>` : ""}
+            ${note ? `<div class="mt-2 text-sm text-gray-800 leading-7">${escapeHtml(note)}</div>` : ""}
           </article>
         `
       );
@@ -745,6 +787,8 @@ function bindStoreReviews() {
 
   loadPage(false);
 }
+
+
 
 /* ========= Safe Init ========= */
 function safeRun(fn, name) {
