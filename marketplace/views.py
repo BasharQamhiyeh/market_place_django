@@ -2978,6 +2978,19 @@ def store_profile(request, store_id):
     followers_count = StoreFollow.objects.filter(store=store).count()
     # is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
 
+    reported_already = False
+    is_own_store = False
+
+    if request.user.is_authenticated:
+        is_own_store = (store.owner_id == request.user.user_id)
+
+        # ✅ same idea as item_detail.reported_already but for store
+        reported_already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="store",
+            store=store,  # if you have FK "store"
+        ).exists()
+
     ctx = {
         "store": store,
         "listings": listings,
@@ -2990,6 +3003,8 @@ def store_profile(request, store_id):
         "user_review": user_review,
         "is_following": is_following,
         "followers_count": followers_count,
+        "reported_already": reported_already,
+        "is_own_store": is_own_store,
     }
 
     return render(request, "store_profile.html", ctx)

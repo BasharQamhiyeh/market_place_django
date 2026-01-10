@@ -29,6 +29,9 @@ function showToast(message) {
   }, 2200);
 }
 
+window.showRuknAlert = showToast;
+
+
 /* ========= Login modal (same as item page) ========= */
 function openLoginModal() {
   const m = document.getElementById("loginModal");
