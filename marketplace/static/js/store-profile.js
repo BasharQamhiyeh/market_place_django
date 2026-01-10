@@ -547,7 +547,13 @@ function bindStoreReviews() {
     }
 
     (results || []).forEach((r) => {
-      const name = r.reviewer || "مستخدم";
+      // Prefer: username -> first_name -> (old reviewer field) -> "مستخدم"
+      const name =
+        (r.username && String(r.username).trim()) ||
+        (r.first_name && String(r.first_name).trim()) ||
+        (r.reviewer && String(r.reviewer).trim()) ||
+        "مستخدم";
+
       const avatar = r.avatar || reviewerAvatar(name);
       const dateTxt = r.created_at ? formatArabicDate(r.created_at) : "";
       const subject = (r.subject || "").trim();
@@ -559,26 +565,26 @@ function bindStoreReviews() {
       reviewsBox.insertAdjacentHTML(
         "beforeend",
         `
-        <article class="rounded-2xl border ${isUser ? "bg-orange-50 border-orange-200" : "bg-white border-gray-200"} p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <img src="${avatar}" alt="${name}" class="w-10 h-10 rounded-full object-cover border border-gray-200 bg-gray-100">
-              <div class="text-right">
-                <div class="text-sm font-extrabold text-gray-900">${name}</div>
-                ${dateTxt ? `<div class="text-[11px] text-gray-500 mt-0.5">تمت المراجعة بتاريخ ${dateTxt}</div>` : ""}
+          <article class="rounded-2xl border ${isUser ? "bg-orange-50 border-orange-200" : "bg-white border-gray-200"} p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <img src="${avatar}" alt="${name}" class="w-10 h-10 rounded-full object-cover border border-gray-200 bg-gray-100">
+                <div class="text-right">
+                  <div class="text-sm font-extrabold text-gray-900">${name}</div>
+                  ${dateTxt ? `<div class="text-[11px] text-gray-500 mt-0.5">تمت المراجعة بتاريخ ${dateTxt}</div>` : ""}
+                </div>
               </div>
+              ${isUser ? `<span class="text-[11px] font-extrabold text-[var(--rukn-orange)]">تعليقك</span>` : ""}
             </div>
-            ${isUser ? `<span class="text-[11px] font-extrabold text-[var(--rukn-orange)]">تعليقك</span>` : ""}
-          </div>
 
-          <div class="mt-3 flex items-center gap-3">
-            <div>${renderStarsSVG(wholeStars, { size: 16, idBase: "rv-" + Math.random().toString(36).slice(2) })}</div>
-            ${subject ? `<div class="text-sm font-extrabold text-gray-900">${subject}</div>` : ""}
-          </div>
+            <div class="mt-3 flex items-center gap-3">
+              <div>${renderStarsSVG(wholeStars, { size: 16, idBase: "rv-" + Math.random().toString(36).slice(2) })}</div>
+              ${subject ? `<div class="text-sm font-extrabold text-gray-900">${subject}</div>` : ""}
+            </div>
 
-          ${note ? `<div class="mt-2 text-sm text-gray-800 leading-7">${note}</div>` : ""}
-        </article>
-      `
+            ${note ? `<div class="mt-2 text-sm text-gray-800 leading-7">${note}</div>` : ""}
+          </article>
+        `
       );
     });
   }
