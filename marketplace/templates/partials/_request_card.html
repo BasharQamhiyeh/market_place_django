@@ -26,6 +26,17 @@
 
     <div class="p-4 pb-2 flex-1 relative">
 
+      {# ✅ CATEGORY BADGE (same logic as item card) #}
+      {% if req.listing.category %}
+        <span class="req-cat-badge">
+          {% if LANGUAGE_CODE == "ar" %}
+            {{ req.listing.category.name_ar }}
+          {% else %}
+            {{ req.listing.category.name_en }}
+          {% endif %}
+        </span>
+      {% endif %}
+
       {# ✅ Featured badge (fixed) #}
       {% if req.featured or req.listing.is_featured %}
         <span class="req-badge-featured">مميز</span>

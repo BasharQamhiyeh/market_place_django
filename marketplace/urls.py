@@ -16,6 +16,8 @@ urlpatterns = [
     path('items/', views.item_list, name='item_list'),
     path('item/<int:item_id>/', views.item_detail, name='item_detail'),
     path('item/create/', views.item_create, name='create_item'),
+    path("home/more-items/", views.home_more_items, name="home_more_items"),
+    path("home/more-requests/", views.home_more_requests, name="home_more_requests"),
 
     # --- Categories & Attributes ---
     path('categories/', views.category_list, name='category_list'),

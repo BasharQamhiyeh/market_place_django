@@ -283,6 +283,13 @@
         <div id="adsSection">
           {% include "partials/latest_items_block.html" %}
         </div>
+        <div class="mt-6 flex justify-center">
+          <button id="loadMoreAdsBtn"
+                  type="button"
+                  class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
+            تحميل المزيد من الإعلانات
+          </button>
+        </div>
 
 
       </div>
@@ -325,9 +332,15 @@
               لا توجد طلبات حالياً.
             </p>
           {% endif %}
-
-
         </div>
+        <div class="mt-8 flex justify-center">
+          <button id="loadMoreRequestsBtn"
+                  type="button"
+                  class="px-6 py-2 rounded-full bg-green-600 text-white font-bold hover:bg-green-700 transition">
+            تحميل المزيد من الطلبات
+          </button>
+        </div>
+
 
       </div>
 

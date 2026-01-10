@@ -68,6 +68,22 @@
   animation:reqNudgeLeft .65s ease-in-out infinite;
 }
 
+/* CATEGORY BADGE (Request card) */
+.req-cat-badge{
+  position:absolute;
+  top:12px;
+  right:12px;
+  z-index:20;
+
+  background:#fff;
+  border:1px solid var(--rukn-green-200);
+  color:var(--rukn-green-700);
+  font-size:11px;
+  padding:4px 12px;
+  border-radius:999px;
+  box-shadow:0 2px 6px rgba(15,23,42,.08);
+}
+
 /* Featured badge */
 .req-badge-featured{
   position:absolute;
@@ -192,4 +208,9 @@
   border-radius:10px;
   box-shadow:0 10px 20px rgba(15,23,42,.06);
   white-space:nowrap;
+}
+
+
+.req-title{
+  margin-top:28px; /* pushes title below the badges */
 }

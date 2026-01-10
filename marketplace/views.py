@@ -111,6 +111,59 @@ except Exception:
 IS_RENDER = getattr(settings, "IS_RENDER", False)
 
 
+@require_GET
+def home_more_items(request):
+    offset = int(request.GET.get("offset", 0))
+    limit = int(request.GET.get("limit", 12))
+
+    qs = (
+        Item.objects
+        .filter(
+            listing__type="item",
+            listing__is_active=True,
+            listing__is_approved=True,
+        )
+        .select_related("listing__category", "listing__city", "listing__user")
+        .prefetch_related("photos")
+        .order_by("-listing__created_at")
+    )
+
+    if request.user.is_authenticated:
+        qs = qs.annotate(
+            is_favorited=Exists(
+                Favorite.objects.filter(user=request.user, listing=OuterRef("listing"))
+            )
+        )
+
+    chunk = list(qs[offset:offset + limit])
+    html = render_to_string("partials/_item_cards_only.html", {"items": chunk}, request=request)
+    has_more = qs.count() > (offset + limit)
+
+    return JsonResponse({"html": html, "has_more": has_more})
+
+
+@require_GET
+def home_more_requests(request):
+    offset = int(request.GET.get("offset", 0))
+    limit = int(request.GET.get("limit", 12))
+
+    qs = (
+        Request.objects
+        .filter(
+            listing__type="request",
+            listing__is_active=True,
+            listing__is_approved=True,
+        )
+        .select_related("listing__category", "listing__city", "listing__user")
+        .order_by("-listing__created_at")
+    )
+
+    chunk = list(qs[offset:offset + limit])
+    html = render_to_string("partials/_request_cards_only.html", {"latest_requests": chunk}, request=request)
+    has_more = qs.count() > (offset + limit)
+
+    return JsonResponse({"html": html, "has_more": has_more})
+
 # NEW HOMEPAGE VIEW (replaces item_list as homepage)
 def home(request):
     limit = int(request.GET.get("limit", 12))

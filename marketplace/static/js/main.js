@@ -66,3 +66,74 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+function gridCols(gridEl) {
+  const cols = getComputedStyle(gridEl).gridTemplateColumns.split(" ").filter(Boolean).length;
+  return Math.max(cols || 1, 1);
+}
+
+function disableBtn(btn, text) {
+  btn.disabled = true;
+  btn.classList.add("opacity-60", "cursor-not-allowed");
+  btn.textContent = text;
+}
+
+async function loadMoreChunk({ btnId, gridId, url, noMoreText }) {
+  const btn = document.getElementById(btnId);
+  const grid = document.getElementById(gridId);
+  if (!btn || !grid) return;
+
+  let locked = false;
+
+  btn.addEventListener("click", async () => {
+    if (locked) return;
+    locked = true;
+
+    const cols = gridCols(grid);
+    const limit = 3 * cols;              // ✅ 3 rows
+    const offset = grid.children.length; // ✅ already rendered cards count
+
+    btn.disabled = true;
+    btn.classList.add("opacity-60");
+
+    try {
+      const res = await fetch(`${url}?offset=${offset}&limit=${limit}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      });
+      const data = await res.json();
+
+      if (data.html && data.html.trim()) {
+        grid.insertAdjacentHTML("beforeend", data.html);
+      }
+
+      if (!data.has_more) {
+        disableBtn(btn, noMoreText);
+        return;
+      }
+
+      btn.disabled = false;
+      btn.classList.remove("opacity-60");
+    } catch (e) {
+      btn.disabled = false;
+      btn.classList.remove("opacity-60");
+    } finally {
+      locked = false;
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadMoreChunk({
+    btnId: "loadMoreAdsBtn",
+    gridId: "latest-items-grid",
+    url: "/home/more-items/",
+    noMoreText: "لا يوجد المزيد من الإعلانات"
+  });
+
+  loadMoreChunk({
+    btnId: "loadMoreRequestsBtn",
+    gridId: "requestsGrid",
+    url: "/home/more-requests/",
+    noMoreText: "لا يوجد المزيد من الطلبات"
+  });
+});
