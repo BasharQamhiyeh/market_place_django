@@ -419,9 +419,9 @@
         const v = getRadioValue("condition", "");
         return `
           <div>
-            <label class="filter-title">حالة المنتج</label>
+            <label class="filter-title">حالة الطلب</label>
             ${segHTML("mfCondition", [
-              { value: "", label: "الكل", id: "mf_cond_all" },
+              { value: "", label: "لا يهم", id: "mf_cond_all" },
               { value: "new", label: "جديد", id: "mf_cond_new" },
               { value: "used", label: "مستعمل", id: "mf_cond_used" }
             ], v)}

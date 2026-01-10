@@ -335,6 +335,7 @@ def item_list(request):
     max_price = request.GET.get("max_price")
 
     condition = (request.GET.get("condition") or "").strip()
+
     seller_type = (request.GET.get("seller_type") or "").strip()
     time_hours = (request.GET.get("time") or "").strip()
     sort = (request.GET.get("sort") or "").strip()
@@ -609,6 +610,9 @@ def request_list(request):
             base_qs = base_qs.filter(budget__lte=float(max_budget))
         except ValueError:
             pass
+
+    if condition:
+        base_qs = base_qs.filter(condition_preference=condition)
 
     # seller type (store/individual)
     if seller_type:

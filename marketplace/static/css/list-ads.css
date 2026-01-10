@@ -77,7 +77,7 @@
   margin-bottom: 20px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, .12);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .list-ads-page .container-box::before {
@@ -632,3 +632,17 @@
 html { scrollbar-gutter: stable; }
 
 .cards-row { align-items: flex-start; }
+
+/* ===========================
+   FIX: Keep desktop filters visible while scrolling
+   =========================== */
+@media (min-width: 768px) {
+  .list-ads-page #filtersBox {
+    position: sticky;
+    top: 90px; /* عدّلها إذا عندك هيدر أعلى */
+    align-self: start;
+    max-height: calc(100vh - 110px);
+    overflow: auto;
+    z-index: 30;
+  }
+}
