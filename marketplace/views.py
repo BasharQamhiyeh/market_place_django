@@ -2855,7 +2855,7 @@ def store_profile(request, store_id):
             }
 
     followers_count = StoreFollow.objects.filter(store=store).count()
-    is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
+    # is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
 
     ctx = {
         "store": store,
