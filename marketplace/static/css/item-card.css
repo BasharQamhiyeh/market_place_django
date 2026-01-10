@@ -124,7 +124,7 @@
   z-index:20;
 
   background:#fff;
-  border:1px solid rgba(254,215,170,1);
+  border:1px solid var(--ad-orange);
   color:#1f2937;
   font-size:11px;
   padding: 4px 12px;
