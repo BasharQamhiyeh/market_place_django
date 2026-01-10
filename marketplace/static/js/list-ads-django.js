@@ -204,6 +204,22 @@
 
       let isLoading = false;
 
+        function setLoadMoreState(hasMore) {
+          if (!loadMoreBtn) return;
+
+          if (hasMore) {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.textContent = "تحميل المزيد من الإعلانات";
+            loadMoreBtn.classList.remove("opacity-60", "cursor-not-allowed");
+            loadMoreBtn.classList.add("hover:bg-[#e06600]");
+          } else {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = "لا يوجد إعلانات جديدة لعرضها";
+            loadMoreBtn.classList.add("opacity-60", "cursor-not-allowed");
+            loadMoreBtn.classList.remove("hover:bg-[#e06600]");
+          }
+        }
+
       function resetToFirstPage() {
         if (pageField) pageField.value = "1";
       }
@@ -239,7 +255,7 @@
 
           if (noResults) noResults.classList.toggle("hidden", (data.total_count ?? 0) !== 0);
 
-          if (loadMoreBtn) loadMoreBtn.classList.toggle("hidden", !data.has_more);
+          setLoadMoreState(!!data.has_more);
 
           const clean = new URL(window.location.href);
           clean.search = params.toString();
@@ -315,10 +331,12 @@
 
       // load more
       loadMoreBtn?.addEventListener("click", () => {
-        const current = parseInt(pageField?.value || "1", 10) || 1;
-        if (pageField) pageField.value = String(current + 1);
-        fetchResults({ append: true });
-      });
+          if (loadMoreBtn.disabled) return;
+          const current = parseInt(pageField?.value || "1", 10) || 1;
+          if (pageField) pageField.value = String(current + 1);
+          fetchResults({ append: true });
+        });
+
     })();
 
     // =====================================================================

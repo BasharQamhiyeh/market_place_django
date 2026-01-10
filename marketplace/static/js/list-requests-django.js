@@ -32,6 +32,24 @@
     const resetBtn = document.getElementById("resetFilters");
     const clearAfterNoResults = document.getElementById("clearAfterNoResults");
 
+
+    function setLoadMoreState(hasMore) {
+      if (!loadMoreBtn) return;
+
+      if (hasMore) {
+        loadMoreBtn.disabled = false;
+        loadMoreBtn.textContent = "تحميل المزيد من الطلبات";
+        loadMoreBtn.classList.remove("opacity-60", "cursor-not-allowed");
+        loadMoreBtn.classList.add("hover:bg-[--rukn-green-700]");
+      } else {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = "لا يوجد طلبات جديدة لعرضها";
+        loadMoreBtn.classList.add("opacity-60", "cursor-not-allowed");
+        loadMoreBtn.classList.remove("hover:bg-[--rukn-green-700]");
+      }
+    }
+
+
     // ---------- Helpers ----------
     const setRadioGroupValue = (name, valueToCheck) => {
       const r = document.querySelector(`input[name="${name}"][value="${CSS.escape(String(valueToCheck))}"]`);
@@ -103,6 +121,8 @@
 
     // run once
     syncFiltersFromUrl();
+    setLoadMoreState(!loadMoreBtn?.classList.contains("hidden"));
+
 
     const buildQuery = () => {
       const fd = new FormData(form);
@@ -144,8 +164,8 @@
       const total = Number(data.total_count ?? 0);
       if (noResults) noResults.classList.toggle("hidden", total !== 0);
 
-      const hasMore = !!data.has_more;
-      if (loadMoreBtn) loadMoreBtn.classList.toggle("hidden", !hasMore);
+      setLoadMoreState(!!data.has_more);
+
 
       if (!append) {
         document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -227,10 +247,13 @@
     clearAfterNoResults?.addEventListener("click", () => resetBtn?.click());
 
     loadMoreBtn?.addEventListener("click", () => {
+      if (loadMoreBtn.disabled) return;
+
       const current = parseInt(pageField?.value || "1", 10) || 1;
       if (pageField) pageField.value = String(current + 1);
       applyFilters({ append: true });
     });
+
 
     // ---------- VIP slider (same behavior as mockup) ----------
     let vipPage = 0;
