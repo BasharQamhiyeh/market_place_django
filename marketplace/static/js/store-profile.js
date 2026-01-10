@@ -1,10 +1,11 @@
 ﻿/* =========================
    store-profile.js (UPDATED for Listings + Reviews mockup)
    ✅ Keeps everything else intact
-   ✅ Fix: listings filters + correct count (ignore empty state)
-   ✅ Fix: message form auth gating actually works (form had no data-auth)
+   ✅ Fix: listings filters + correct count
+   ✅ Fix: message form auth gating actually works
    ✅ Fix: prevent double-init if script injected twice
-   ✅ Keeps: top "التقييم" box + stars update without reload (JS-only)
+   ✅ Fix: init works even if script loads AFTER DOMContentLoaded (your “button does nothing” case)
+   ✅ Keeps: top "التقييم" box + stars update without reload
    ✅ Source of truth = listUrl response (avg/count) inside loadPage()
 ========================= */
 
@@ -201,9 +202,6 @@ function bindStoreFilters() {
   apply();
 }
 
-
-
-
 /* ========= Phone Reveal (login gated like item page) ========= */
 function bindPhoneReveal() {
   const sellerPhoneEl = document.getElementById("sellerPhone");
@@ -317,7 +315,6 @@ function bindShare() {
   });
 }
 
-/* ========= Message accordion ========= */
 /* ========= Message accordion (send message to store WITHOUT redirect) ========= */
 function bindMessage() {
   const toggleMessageBox = document.getElementById("toggleMessageBox");
@@ -371,7 +368,6 @@ function bindMessage() {
     }
     if (messageError) messageError.classList.add("hidden");
 
-    // URL comes from form action OR data-action
     const url = messageForm.dataset.action || messageForm.getAttribute("action");
     if (!url) {
       console.error("Missing message URL on #messageForm (action or data-action)");
@@ -412,11 +408,9 @@ function bindMessage() {
         return;
       }
 
-      // ✅ SUCCESS: stay on same page
       showToast("✔ تم إرسال الرسالة");
       messageForm.reset();
 
-      // Optional: close the box after sending
       if (messageBox) messageBox.classList.add("hidden");
       if (messageChevron) messageChevron.classList.remove("rotate-180");
     } catch (err) {
@@ -430,7 +424,6 @@ function bindMessage() {
     }
   });
 }
-
 
 /* ========= Reviews (FULL mockup: list + pagination + summary) ========= */
 function bindStoreReviews() {
@@ -753,7 +746,140 @@ function safeRun(fn, name) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+/* ========= Store Follow (AJAX) ========= */
+function bindStoreFollow() {
+  const btn = document.getElementById("storeFollowBtn");
+  if (!btn) return;
+
+  const textEl = document.getElementById("favText");
+  // NOTE: you don't want followersCount shown, so we do NOT depend on it.
+  // const countEl = document.getElementById("followersCount");
+
+  function setUI(following) {
+      btn.dataset.following = following ? "1" : "0";
+
+      // label
+      if (textEl) {
+        textEl.textContent = following ? "أنت متابع للمتجـر" : "متابعة المتجـر";
+      }
+
+      // icon circle (first span inside button)
+      const iconCircle = btn.querySelector(":scope > span");
+      const iconSvg = iconCircle?.querySelector("svg");
+
+      if (following) {
+        // button
+        btn.classList.add("bg-orange-50", "border-orange-300");
+        btn.classList.remove("bg-white", "border-gray-200");
+
+        // icon circle
+        if (iconCircle) {
+          iconCircle.classList.add(
+            "bg-orange-100",
+            "border-orange-300",
+            "text-[var(--rukn-orange)]"
+          );
+          iconCircle.classList.remove(
+            "bg-gray-50",
+            "border-gray-200",
+            "text-gray-400"
+          );
+        }
+
+        if (iconSvg) {
+          iconSvg.classList.add("text-[var(--rukn-orange)]");
+        }
+      } else {
+        // button
+        btn.classList.remove("bg-orange-50", "border-orange-300");
+        btn.classList.add("bg-white", "border-gray-200");
+
+        // icon circle
+        if (iconCircle) {
+          iconCircle.classList.remove(
+            "bg-orange-100",
+            "border-orange-300",
+            "text-[var(--rukn-orange)]"
+          );
+          iconCircle.classList.add(
+            "bg-gray-50",
+            "border-gray-200",
+            "text-gray-400"
+          );
+        }
+
+        if (iconSvg) {
+          iconSvg.classList.remove("text-[var(--rukn-orange)]");
+        }
+      }
+    }
+
+
+  btn.addEventListener("click", async (e) => {
+    // safety (in case button is inside any clickable wrapper)
+    e.preventDefault();
+    e.stopPropagation();
+
+    const isAuth = btn.dataset.auth === "1" || isAuthedFromEl(btn);
+    if (!isAuth) {
+      openLoginModalById(btn.dataset.loginModal || "loginModal");
+      showToast("سجّل الدخول أولاً");
+      return;
+    }
+
+    // block self-follow on frontend too (backend also blocks)
+    const ownerId = String(btn.dataset.storeOwnerId || "");
+    const userId = String(btn.dataset.currentUserId || "");
+    if (ownerId && userId && ownerId === userId) {
+      showToast("لا يمكنك متابعة متجرك");
+      return;
+    }
+
+    const url = btn.dataset.followUrl;
+    if (!url) {
+      console.error("Missing data-follow-url on #storeFollowBtn");
+      showToast("تعذر تنفيذ العملية");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-not-allowed");
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        if (data.error === "self_follow_not_allowed") showToast("لا يمكنك متابعة متجرك");
+        else showToast(data.message || "حدث خطأ، حاول مرة أخرى");
+        return;
+      }
+
+      setUI(!!data.following);
+      showToast(data.following ? "تمت المتابعة ✔" : "تم إلغاء المتابعة ✔");
+    } catch (err) {
+      console.error(err);
+      showToast("تعذر الاتصال بالخادم");
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove("opacity-60", "cursor-not-allowed");
+    }
+  });
+
+  // Initial UI
+  setUI(btn.dataset.following === "1");
+}
+
+/* ========= INIT (FIX: works even if script loads late) ========= */
+function initStoreProfile() {
   safeRun(initTabs, "initTabs");
 
   safeRun(() => {
@@ -766,11 +892,17 @@ document.addEventListener("DOMContentLoaded", () => {
   safeRun(bindStoreFilters, "bindStoreFilters");
   safeRun(bindPhoneReveal, "bindPhoneReveal");
   safeRun(bindShare, "bindShare");
+  safeRun(bindStoreFollow, "bindStoreFollow");
   safeRun(bindMessage, "bindMessage");
   safeRun(bindStoreReviews, "bindStoreReviews");
+}
 
-  // ✅ DO NOT bind report modal here (report-modal.js handles it)
-});
+// ✅ this is the important fix for “button does nothing”
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initStoreProfile);
+} else {
+  initStoreProfile();
+}
 
 /* ========= Parallax (unchanged) ========= */
 (() => {

@@ -1,8 +1,9 @@
-from django.db.models.signals import post_save
+from django.db import transaction
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import Item
+from .models import Item, Listing, Store, Notification, StoreFollow
 from . import moderation   # imports the moderation.py you already created
 
 
@@ -44,3 +45,66 @@ def auto_moderate_item(sender, instance: Item, created: bool, **kwargs):
         )
 
     # If AI is unsure ("manual"), leave it pending for admin review
+
+
+@receiver(pre_save, sender=Listing)
+def listing_store_old_state(sender, instance: Listing, **kwargs):
+    """
+    Save old approval state so we can detect False -> True in post_save.
+    """
+    if not instance.pk:
+        instance._old_is_approved = False
+        instance._old_is_active = True
+        return
+
+    old = Listing.objects.filter(pk=instance.pk).values("is_approved", "is_active").first() or {}
+    instance._old_is_approved = bool(old.get("is_approved", False))
+    instance._old_is_active = bool(old.get("is_active", True))
+
+
+@receiver(post_save, sender=Listing)
+def notify_followers_on_approval(sender, instance: Listing, created, **kwargs):
+    """
+    Notify followers only when:
+    - listing becomes approved (False -> True)
+    - listing is active
+    - not notified before
+    """
+    old_approved = getattr(instance, "_old_is_approved", False)
+    became_approved = (old_approved is False) and (instance.is_approved is True)
+
+    if not became_approved:
+        return
+    if not instance.is_active:
+        return
+    if instance.followers_notified:
+        return
+
+    # ✅ Get followers (CHANGE THIS QUERY to match your follow table)
+    follower_ids = list(
+        StoreFollow.objects
+        .filter(store__owner_id=instance.user_id)     # store belongs to listing owner
+        .values_list("user_id", flat=True)
+        .distinct()
+    )
+
+    def _create():
+        if follower_ids:
+            title = "إعلان جديد من متجر تتابعه"
+            body = "تم نشر إعلان جديد وتمت الموافقة عليه."
+
+            Notification.objects.bulk_create([
+                Notification(
+                    user_id=uid,
+                    title=title,
+                    body=body,
+                    listing=instance,
+                    is_read=False,
+                )
+                for uid in follower_ids
+            ])
+
+        # ✅ mark as done so it never sends twice
+        Listing.objects.filter(pk=instance.pk).update(followers_notified=True)
+
+    transaction.on_commit(_create)

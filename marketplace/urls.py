@@ -86,7 +86,7 @@ urlpatterns = [
     path("stores/<int:store_id>/", views.store_profile, name="store_profile"),
 
     # AJAX / API endpoints used by JS
-    path("stores/<int:store_id>/follow-toggle/", views.store_follow_toggle, name="store_follow_toggle"),
+    path("store/<int:store_id>/follow-toggle/", views.store_follow_toggle, name="store_follow_toggle"),
 
     path("stores/<int:store_id>/review/submit/", views.submit_store_review_ajax, name="submit_store_review_ajax"),
 

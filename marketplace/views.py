@@ -2854,6 +2854,9 @@ def store_profile(request, store_id):
                 "comment": r.comment or "",
             }
 
+    followers_count = StoreFollow.objects.filter(store=store).count()
+    is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
+
     ctx = {
         "store": store,
         "listings": listings,
@@ -2861,38 +2864,51 @@ def store_profile(request, store_id):
         "categories": categories,
         "cities": cities,
         "reviews": reviews,
-        "is_following": is_following,
         "full_phone": full_phone,
         "masked_phone": masked_phone,
-        "user_review": user_review,  # dict or None
+        "user_review": user_review,
+        "is_following": is_following,
+        "followers_count": followers_count,
     }
 
     return render(request, "store_profile.html", ctx)
+
+
+from django.db import IntegrityError
+
 
 @login_required
 @require_POST
 def store_follow_toggle(request, store_id):
     store = get_object_or_404(Store, pk=store_id, is_active=True)
 
-    session_key = f"store_viewed_{store_id}"
-    if not request.session.get(session_key):
-        Store.objects.filter(pk=store.pk).update(views_count=F("views_count") + 1)
-        request.session[session_key] = True
+    # ✅ block self-follow
+    if store.owner_id == request.user.user_id:
+        return JsonResponse(
+            {"ok": False, "error": "self_follow_not_allowed"},
+            status=400
+        )
 
-        # refresh value in `store` object so template shows updated count
-        store.refresh_from_db(fields=["views_count"])
-
-    obj = StoreFollow.objects.filter(store=store, user=request.user).first()
-    if obj:
-        obj.delete()
+    # toggle
+    existing = StoreFollow.objects.filter(store=store, user=request.user).first()
+    if existing:
+        existing.delete()
         following = False
     else:
-        StoreFollow.objects.create(store=store, user=request.user)
-        following = True
+        try:
+            StoreFollow.objects.create(store=store, user=request.user)
+            following = True
+        except IntegrityError:
+            # unique constraint race condition (double click / multi requests)
+            following = True
 
     followers_count = StoreFollow.objects.filter(store=store).count()
-    return JsonResponse({"ok": True, "following": following, "followers_count": followers_count})
 
+    return JsonResponse({
+        "ok": True,
+        "following": following,
+        "followers_count": followers_count,
+    })
 
 
 @login_required

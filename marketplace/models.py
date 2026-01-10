@@ -355,6 +355,8 @@ class Listing(models.Model):
 
     featured_until = models.DateTimeField(null=True, blank=True, db_index=True)
 
+    followers_notified = models.BooleanField(default=False)
+
     @property
     def is_featured(self):
         until = self.featured_until

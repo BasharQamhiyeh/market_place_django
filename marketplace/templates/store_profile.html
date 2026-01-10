@@ -563,11 +563,20 @@
               <div class="rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
                 <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
 
-                  <button id="favBtn" type="button"
-                          class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
-                                 bg-white border border-gray-200
-                                 hover:border-orange-300 hover:bg-orange-50 hover:shadow-sm
-                                 text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                  <button
+                    id="storeFollowBtn"
+                    type="button"
+                    data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                    data-login-modal="loginModal"
+                    data-follow-url="{% url 'store_follow_toggle' store.id %}"
+                    data-store-owner-id="{{ store.owner_id }}"
+                    data-current-user-id="{% if request.user.is_authenticated %}{{ request.user.id }}{% else %}0{% endif %}"
+                    data-following="{% if is_following %}1{% else %}0{% endif %}"
+                    class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                           bg-white border border-gray-200
+                           hover:border-orange-300 hover:bg-orange-50 hover:shadow-sm
+                           text-[11px] sm:text-xs font-semibold text-gray-700 transition"
+                  >
                     <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
                                  bg-gray-50 border border-gray-200 text-gray-400
                                  group-hover:bg-orange-100 group-hover:border-orange-300 group-hover:text-[var(--rukn-orange)] transition">
@@ -579,8 +588,12 @@
                         <path d="M8 6v8" />
                       </svg>
                     </span>
-                    <span id="favText" class="leading-tight text-center text-xs group-hover:text-orange-700 transition">متابعة المتجـر</span>
+
+                    <span id="favText" class="leading-tight text-center text-xs group-hover:text-orange-700 transition">
+                      {% if is_following %}متابع{% else %}متابعة المتجـر{% endif %}
+                    </span>
                   </button>
+
 
                   <button id="shareBtn" type="button"
                           class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
