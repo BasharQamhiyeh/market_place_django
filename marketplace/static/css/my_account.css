@@ -1,0 +1,528 @@
+/* =========================================================
+   my_account.css  (MATCH MOCKUP)
+   - Your Django template uses: wrap/page-title/tabs-bar + card/panel/form-grid/hero-*
+   - This CSS maps them to the same visual result as the Tailwind mockup.
+========================================================= */
+
+:root{
+  --rukn-orange:#ff7a18;
+  --rukn-green:#16a34a;
+  --rukn-gray:#f3f4f6;
+  --muted:#6b7280;
+
+  --bg:#f9fafb;
+  --text:#111827;
+  --border:#e5e7eb;
+
+  --radius-2xl:16px;
+  --radius-xl:12px;
+}
+
+/* base */
+*{ box-sizing:border-box; }
+html,body{ width:100%; overflow-x:hidden; }
+body.rukn-body{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* container / title */
+.wrap{
+  max-width:1280px;           /* max-w-7xl */
+  margin:0 auto;
+  padding:24px 16px;          /* px-4 py-6 */
+}
+.page-title{
+  margin:0 0 20px;
+  font-size:30px;             /* text-3xl */
+  line-height:1.15;
+  font-weight:800;            /* extrabold */
+  color:#1f2937;
+}
+
+/* hide sidebar (since you want unified top tabs like mockup) */
+#leftTabsSidebar{ display:none !important; }
+.layout{ display:block; }
+.content{ min-width:0; }
+
+/* no scrollbar */
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
+
+/* =========================================================
+   Tabs bar (same as mockup)
+========================================================= */
+.tabs-bar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-2xl);
+  margin-bottom:16px;
+}
+.tabs-scroll{
+  display:flex;
+  gap:12px;                   /* gap-3 */
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:12px;
+  scroll-behavior:smooth;
+}
+@media (min-width:1024px){
+  .tabs-scroll{
+    overflow:visible;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+}
+
+/* tab button EXACT like mockup */
+.tab-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 20px;
+  font-weight:700;            /* ✅ mockup = 700 (not 800) */
+  font-size:15px;
+  border-radius:16px;
+  border:2px solid #e5e7eb;
+  transition:.25s ease;
+  color:#374151;
+  background:#fff;
+  white-space:nowrap;
+
+  min-width:140px;
+  justify-content:center;
+}
+.tab-btn:hover{
+  background:#fff7f1;
+  border-color:var(--rukn-orange);
+}
+.tab-btn.active{
+  background:var(--rukn-orange);
+  border-color:var(--rukn-orange);
+  color:#fff !important;
+  box-shadow:0 0 10px #ff7a1830;
+}
+@media (max-width:480px){
+  .tab-btn{ padding:10px 12px; font-size:14px; min-width:120px; }
+}
+
+/* tab content */
+.tab-content{ display:none; }
+.tab-content.active{ display:block; }
+
+/* card = bg-white border rounded-2xl p-6 (mockup) */
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-2xl);
+  padding:24px;
+}
+/* info tab special border (border-orange-200) */
+#tab-info.card{
+  border-color:#fed7aa; /* tailwind orange-200 */
+}
+
+/* =========================================================
+   INFO HEADER (📝 معلومات الحساب + chip)
+   mockup: flex gap + chip bg-orange-50 border-orange-200 text-orange-700
+========================================================= */
+.info-head{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:16px;
+}
+.info-head__title{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+@media (min-width:640px){
+  .info-head__title{
+    flex-direction:row;
+    align-items:center;
+    gap:10px;
+  }
+}
+.info-title{
+  margin:0;
+  font-weight:800;
+  font-size:18px; /* text-lg */
+  color:#1f2937;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.info-chip{
+  display:inline-flex;
+  align-items:center;
+  width:fit-content;
+  max-width:100%;
+  padding:4px 12px;
+  border-radius:999px;
+  background:#fff7ed;          /* orange-50 */
+  border:1px solid #fed7aa;    /* orange-200 */
+  color:#c2410c;               /* orange-700-ish */
+  font-size:12px;              /* text-xs */
+  font-weight:700;
+}
+
+/* =========================================================
+   HERO BOX (orange box with badge + centered layout)
+   mockup: bg-orange-50 border-orange-200 rounded-2xl p-4 relative
+========================================================= */
+.hero-box{
+  position:relative;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:var(--radius-2xl);
+  padding:16px;
+  margin-bottom:18px;
+}
+.hero-badge{
+  position:absolute;
+  top:12px;
+  left:12px; /* RTL mockup uses left */
+  padding:4px 10px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #fed7aa;
+  color:#c2410c;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+
+/* center wrapper like mockup: flex-col md:flex-row, centered */
+.hero-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  margin:0 auto;
+  width:fit-content;
+  text-align:center;
+}
+@media (min-width:768px){
+  .hero-inner{
+    flex-direction:row;
+    align-items:center;
+  }
+}
+
+/* profile column */
+.hero-profile{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+/* avatar size = w-28 h-28 */
+.avatar{
+  position:relative;
+  width:112px;
+  height:112px;
+  border-radius:999px;
+  background:#fff;
+  border:4px solid var(--rukn-orange);
+  color:#c2410c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  overflow:visible;
+  user-select:none;
+}
+.avatar--lg{ width:112px; height:112px; }
+
+/* initials */
+#profileInitials, #storeLogoInitial{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px; /* text-4xl */
+  font-weight:800;
+  line-height:1;
+  pointer-events:none;
+}
+
+/* image */
+.avatar-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#fff;
+  border-radius:999px;
+  z-index:5;
+}
+.hidden{ display:none !important; }
+
+/* remove button (same behavior as mockup: hidden until .show) */
+.avatar-remove{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:0;
+  background:#ef4444;
+  color:#fff;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.14);
+  opacity:0;
+  pointer-events:none;
+  transition:.2s ease;
+  z-index:20;
+}
+.avatar-remove.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* buttons (orange filled) */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border-radius:12px; /* rounded-xl */
+  border:1px solid transparent;
+  cursor:pointer;
+  user-select:none;
+  font-weight:700;
+  transition:.2s ease;
+}
+.btn--sm{ padding:6px 12px; font-size:12px; }
+.btn--orange{
+  background:var(--rukn-orange);
+  color:#fff;
+}
+.btn--orange:hover{ background:#f97316; }
+.btn--shadow{ box-shadow:0 4px 10px rgba(0,0,0,.08); }
+
+/* hero meta (center like mockup) */
+.hero-meta{
+  min-width:0;
+  text-align:center;
+}
+.hero-meta__inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+.hero-name{
+  margin:0;
+  font-size:24px;            /* text-2xl */
+  font-weight:800;           /* extrabold */
+  color:#111827;
+  letter-spacing:.02em;      /* tracking-wide */
+}
+@media (min-width:768px){
+  .hero-name{ font-size:30px; } /* md:text-3xl */
+}
+.hero-note{
+  margin:0;
+  font-size:14px;            /* text-sm */
+  color:#6b7280;             /* gray-500 */
+}
+
+/* register pill (white bg + border orange-200 + rounded-xl) */
+.hero-register{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#fff;
+  border:1px solid #fed7aa;
+  padding:6px 12px;
+  border-radius:12px;
+  color:#4b5563;
+  font-size:12px;
+}
+.hero-register__icon{
+  color:var(--rukn-orange);
+  font-size:16px;
+}
+.hero-register__date{
+  font-weight:700;
+  color:#c2410c;
+}
+
+/* =========================================================
+   PANELS (bg-gray-50 border rounded-2xl p-5)
+========================================================= */
+.panel{
+  background:#f9fafb;            /* gray-50 */
+  border:1px solid var(--border);
+  border-radius:var(--radius-2xl);
+  padding:20px;
+  margin-top:16px;
+}
+.panel-head{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:12px;
+}
+@media (min-width:640px){
+  .panel-head{
+    flex-direction:row;
+    align-items:center;
+    gap:10px;
+  }
+}
+.panel-title{
+  margin:0;
+  font-weight:800;
+  font-size:18px;
+  color:#1f2937;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+
+/* =========================================================
+   FORM GRID like mockup (grid-cols-1 md:grid-cols-2 gap-6)
+========================================================= */
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:24px;
+}
+@media (min-width:768px){
+  .form-grid{ grid-template-columns:1fr 1fr; }
+}
+.form-row{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+@media (min-width:640px){
+  .form-row{
+    flex-direction:row;
+    align-items:center;
+    gap:12px;
+  }
+}
+.form-row--full{
+  grid-column:1 / -1;
+  align-items:flex-start;
+}
+.form-label{
+  font-size:14px;
+  color:#6b7280;
+  width:112px;                 /* w-28 */
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.form-control{ flex:1; min-width:0; }
+
+.req{ color:#ef4444; font-weight:700; }
+
+/* inputs exactly like mockup */
+input, textarea, select{ font-size:16px; font-family:inherit; }
+@media(min-width:768px){ input, textarea, select{ font-size:14px; } }
+
+input, textarea, select{
+  width:100%;
+  padding:12px;                /* p-3 */
+  border:1px solid var(--border);
+  border-radius:12px;          /* rounded-xl */
+  background:#fff;
+  color:#111827;
+  outline:none;
+}
+textarea{ resize:vertical; }
+
+input:disabled{
+  background:#f3f4f6;          /* gray-100 */
+  color:#6b7280;
+}
+
+/* focus ring orange (approx of Tailwind ring) */
+input:focus, textarea:focus, select:focus{
+  border-color:#fdba74;
+  box-shadow:0 0 0 3px rgba(255,122,24,.18);
+}
+
+/* store logo row matches mockup "flex gap-4 flex-wrap" */
+.logo-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+/* errors */
+.field-error-text{ font-size:11px; margin-top:4px; color:#ef4444; }
+
+/* =========================================================
+   ACTIONS (Save button centered like mockup)
+========================================================= */
+.actions{
+  padding-top:12px;
+  text-align:center;
+}
+#saveBtn{
+  border:0;
+  cursor:pointer;
+  padding:12px 32px;
+  border-radius:12px;
+  background:var(--rukn-orange);
+  color:#fff;
+  font-weight:800;
+  font-size:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.10);
+  transition:.2s ease;
+}
+#saveBtn:hover{ background:#f97316; }
+
+/* =========================================================
+   Keep your old mobile fixes (same as mockup)
+========================================================= */
+@media (max-width:480px){
+  .ad-row > div:last-child,
+  .request-row > div:last-child{
+    display:grid !important;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+}
+@media (max-width:360px){
+  #tab-ads h2,#tab-requests h2{ font-size:14px !important; }
+  #tab-ads button,#tab-requests button,
+  #tab-ads div[class*="bg-"],#tab-requests div[class*="bg-"]{
+    font-size:11px !important;
+    padding:6px 8px !important;
+  }
+}
+
+/* hero mobile center fix (your mockup had this behavior) */
+@media (max-width:768px){
+  #accountHeaderBox{ text-align:center !important; }
+  #fullName, #displayNote{ text-align:center !important; }
+  #nameDateRow{ align-items:center !important; }
+}

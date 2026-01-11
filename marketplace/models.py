@@ -107,6 +107,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    profile_photo = models.ImageField(upload_to="users/avatars/", blank=True, null=True)
+
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
@@ -158,6 +160,8 @@ class Store(models.Model):
         blank=True,
         related_name="stores",
     )
+
+    address = models.CharField(max_length=255, blank=True)
 
     # STATUS
     is_verified = models.BooleanField(default=False)

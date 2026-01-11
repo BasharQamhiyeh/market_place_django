@@ -1,0 +1,63 @@
+/* =========================================================
+   tabs.css
+   - tabs bar + tab buttons + tab switching
+========================================================= */
+
+.tabs-bar{
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-2xl);
+  margin-bottom:16px;
+}
+.tabs-scroll{
+  display:flex;
+  gap:12px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:12px;
+  scroll-behavior:smooth;
+}
+@media (min-width:1024px){
+  .tabs-scroll{
+    overflow:visible;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+}
+
+.tab-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 20px;
+  font-weight:700;
+  font-size:15px;
+  border-radius:16px;
+  border:2px solid #e5e7eb;
+  transition:.25s ease;
+  color:#374151;
+  background:#fff;
+  white-space:nowrap;
+  min-width:140px;
+  justify-content:center;
+}
+.tab-btn:hover{
+  background:#fff7f1;
+  border-color:var(--rukn-orange);
+}
+.tab-btn.active{
+  background:var(--rukn-orange);
+  border-color:var(--rukn-orange);
+  color:#fff !important;
+  box-shadow:0 0 10px #ff7a1830;
+}
+@media (max-width:480px){
+  .tab-btn{ padding:10px 12px; font-size:14px; min-width:120px; }
+}
+
+/* tab content visibility */
+.tab-content{ display:none; }
+.tab-content.active{ display:block; }

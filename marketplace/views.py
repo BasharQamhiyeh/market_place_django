@@ -13,7 +13,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.admin.views.decorators import staff_member_required
 
 # Django HTTP / views
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
@@ -3182,3 +3182,320 @@ def store_reviews_list(request, store_id):
     }
     return JsonResponse(data)
 
+
+def _status_from_listing(listing):
+    # You may already have better fields (is_approved, rejected_at, reject_reason, etc.)
+    if getattr(listing, "is_approved", False):
+        return "active"
+    # if you have a reject reason / rejected flag, treat as rejected
+    reject_reason = getattr(listing, "reject_reason", "") or ""
+    if reject_reason.strip():
+        return "rejected"
+    return "pending"
+
+def _fmt_date(dt):
+    if not dt:
+        return ""
+    # mockup uses YYYY/MM/DD
+    return dt.strftime("%Y/%m/%d")
+
+
+@require_GET
+@login_required
+def my_account(request: HttpRequest):
+    user = request.user
+    store = getattr(user, "store", None)
+    has_store = bool(store) and getattr(store, "is_active", True)
+
+    today = timezone.localdate()
+
+    def _days_left(dt_or_date):
+        """
+        Returns positive integer days left from today; 0 if expired/none.
+        Works with date or datetime.
+        """
+        if not dt_or_date:
+            return 0
+        end = dt_or_date.date() if hasattr(dt_or_date, "date") else dt_or_date
+        diff = (end - today).days
+        return diff if diff > 0 else 0
+
+    # -------------------------
+    # ADS (Listings type="item")
+    # -------------------------
+    ads_qs = (
+        Item.objects
+        .filter(listing__user=user, listing__type="item", listing__is_active=True)
+        .select_related("listing__category", "listing__city", "listing")
+        .prefetch_related("photos")
+        .order_by("-listing__created_at")
+    )
+
+    my_ads = []
+    for it in ads_qs:
+        listing = it.listing
+
+        image_url = ""
+        p = getattr(it, "main_photo", None)
+        if p:
+            image_url = (p.normalized.url if getattr(p, "normalized", None) else p.image.url)
+
+        featured_until = getattr(listing, "featured_until", None)
+
+        my_ads.append({
+            # ids / text
+            "id": listing.id,
+            "title": listing.title or "",
+
+            # money
+            "price": float(it.price) if it.price is not None else None,
+
+            # meta
+            "city": str(listing.city) if listing.city else "",
+            "date": _fmt_date(getattr(listing, "created_at", None)),
+
+            # stats (keep as-is)
+            "views": 0,
+            "favCount": 0,
+
+            # media
+            "image": image_url,
+
+            # moderation/status
+            "status": _status_from_listing(listing),
+            "category": str(listing.category) if listing.category else "بدون قسم",
+            "rejectReason": getattr(listing, "moderation_reason", "") or "",
+
+            # featured
+            "featured": bool(getattr(listing, "is_featured", False)),
+            "featuredExpiresAt": _fmt_date(featured_until),
+            "featuredDaysLeft": _days_left(featured_until),
+
+            # urls (fill later if you want)
+            "editUrl": "",
+            "detailUrl": "",
+        })
+
+    # -------------------------
+    # REQUESTS (Listings type="request")
+    # -------------------------
+    req_qs = (
+        Request.objects
+        .filter(listing__user=user, listing__type="request")
+        .select_related("listing__category", "listing__city", "listing")
+        .order_by("-listing__created_at")
+    )
+
+    my_requests = []
+    for req in req_qs:
+        listing = req.listing
+
+        # your project seems inconsistent: sometimes featured_until vs featured_expires_at
+        featured_expires = getattr(listing, "featured_expires_at", None) or getattr(listing, "featured_until", None)
+
+        my_requests.append({
+            # ids / text
+            "id": req.id,
+            "title": (getattr(req, "title", "") or getattr(listing, "title", "") or ""),
+
+            # money
+            "budget": float(getattr(req, "budget", 0) or 0),
+
+            # meta
+            "city": getattr(getattr(listing, "city", None), "name", "") or str(getattr(listing, "city", "") or ""),
+            "condition": getattr(req, "condition_preference", "") or "",
+            "date": _fmt_date(getattr(listing, "created_at", None)),
+
+            # stats (keep as-is)
+            "views": getattr(listing, "views", 0) or 0,
+
+            # moderation/status
+            "status": _status_from_listing(listing),
+            "category": getattr(getattr(listing, "category", None), "name", "") or str(getattr(listing, "category", "") or "") or "ركن الطلبات",
+            "rejectReason": (
+                getattr(listing, "reject_reason", "") or
+                getattr(listing, "moderation_reason", "") or
+                ""
+            ),
+
+            # featured
+            "featured": bool(getattr(listing, "is_featured", False)),
+            "featuredExpiresAt": _fmt_date(featured_expires),
+            "featuredDaysLeft": _days_left(featured_expires),
+
+            "lastRepublishAt": _fmt_date(getattr(listing, "last_republish_at", None)),
+
+            # urls
+            "editUrl": (req.get_edit_url() if hasattr(req, "get_edit_url") else ""),
+            "detailUrl": (req.get_absolute_url() if hasattr(req, "get_absolute_url") else ""),
+        })
+
+    return render(
+        request,
+        "my_account/my_account.html",
+        {
+            "me": user,
+            "store": store,
+            "has_store": has_store,
+            "my_ads": my_ads,
+            "my_requests": my_requests,
+        },
+    )
+
+def normalize_optional_url(raw: str | None) -> str:
+    """
+    Optional URL normalizer:
+    - None/"" -> ""
+    - "www.site.com" / "site.com" -> "https://site.com"
+    - "http://..." / "https://..." kept
+    - trims spaces
+    """
+    v = (raw or "").strip()
+    if not v:
+        return ""
+
+    # Already has scheme
+    if v.lower().startswith(("http://", "https://")):
+        return v
+
+    # Add default scheme
+    return "https://" + v
+
+
+@require_POST
+@login_required
+@csrf_protect
+def my_account_save_info(request: HttpRequest):
+    user = request.user
+    store = getattr(user, "store", None)
+
+    # -----------------------
+    # User fields
+    # -----------------------
+    first_name = (request.POST.get("first_name") or "").strip()
+    last_name = (request.POST.get("last_name") or "").strip()
+    username = (request.POST.get("username") or "").strip() or None
+    email = (request.POST.get("email") or "").strip() or None
+
+    if not first_name:
+        return JsonResponse({"ok": False, "errors": {"first_name": ["الاسم الأول مطلوب."]}}, status=400)
+    if not last_name:
+        return JsonResponse({"ok": False, "errors": {"last_name": ["الاسم الأخير مطلوب."]}}, status=400)
+
+    user.first_name = first_name
+    user.last_name = last_name
+
+    # username uniqueness handled by full_clean
+    if username != user.username:
+        user.username = username
+
+    if email != user.email:
+        user.email = email
+
+    # -----------------------
+    # Avatar (same endpoint)
+    # -----------------------
+    remove_profile = (request.POST.get("remove_profile_photo") or "") == "1"
+    profile_file = request.FILES.get("profile_photo")
+
+    if hasattr(user, "profile_photo"):
+        if remove_profile:
+            if user.profile_photo:
+                user.profile_photo.delete(save=False)
+            user.profile_photo = None
+        elif profile_file:
+            if user.profile_photo:
+                user.profile_photo.delete(save=False)
+            user.profile_photo = profile_file
+
+    # Validate + save user
+    try:
+        user.full_clean()
+        user.save()
+    except ValidationError as e:
+        return JsonResponse({"ok": False, "errors": e.message_dict}, status=400)
+
+    profile_photo_url = None
+    if hasattr(user, "profile_photo") and user.profile_photo:
+        try:
+            profile_photo_url = user.profile_photo.url
+        except Exception:
+            profile_photo_url = None
+
+    # -----------------------
+    # Store fields (only if store exists)
+    # -----------------------
+    store_logo_url = None
+
+    if store:
+        store_name = (request.POST.get("store_name") or "").strip()
+        store_desc = (request.POST.get("store_desc") or "").strip()
+
+        # ✅ normalize optional URL fields so "www..." won't fail URLField validation
+        store_website = normalize_optional_url(request.POST.get("store_website"))
+        store_instagram = normalize_optional_url(request.POST.get("store_instagram"))
+        store_facebook = normalize_optional_url(request.POST.get("store_facebook"))
+
+        store_whatsapp = (request.POST.get("store_whatsapp") or "").strip()
+        store_city_id = (request.POST.get("store_city_id") or "").strip()
+        store_address = (request.POST.get("store_address") or "").strip()
+
+        if not store_name:
+            return JsonResponse({"ok": False, "errors": {"store_name": ["اسم المتجر مطلوب."]}}, status=400)
+
+        store.name = store_name
+        store.description = store_desc
+
+        # These are OPTIONAL: empty string is fine if your model has blank=True
+        store.website = store_website
+        store.instagram = store_instagram
+        store.facebook = store_facebook
+        store.whatsapp = store_whatsapp
+
+        if store_city_id:
+            try:
+                store.city_id = int(store_city_id)
+            except ValueError:
+                store.city_id = None
+        else:
+            store.city_id = None
+
+        if hasattr(store, "address"):
+            store.address = store_address
+
+        # -----------------------
+        # Store logo (same endpoint)
+        # -----------------------
+        remove_logo = (request.POST.get("remove_store_logo") or "") == "1"
+        logo_file = request.FILES.get("store_logo")
+
+        if remove_logo:
+            if store.logo:
+                store.logo.delete(save=False)
+            store.logo = None
+        elif logo_file:
+            if store.logo:
+                store.logo.delete(save=False)
+            store.logo = logo_file
+
+        try:
+            store.full_clean()
+            store.save()
+        except ValidationError as e:
+            # NOTE: Django errors here will likely use keys like:
+            # "website", "instagram", "facebook" (model field names)
+            return JsonResponse({"ok": False, "errors": e.message_dict}, status=400)
+
+        if store.logo:
+            try:
+                store_logo_url = store.logo.url
+            except Exception:
+                store_logo_url = None
+
+    return JsonResponse(
+        {
+            "ok": True,
+            "profile_photo_url": profile_photo_url,
+            "store_logo_url": store_logo_url,
+        }
+    )

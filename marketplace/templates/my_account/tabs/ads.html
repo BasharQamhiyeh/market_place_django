@@ -1,0 +1,122 @@
+<div class="ads-head">
+  <div class="ads-title-row">
+    <h2 class="ads-title">📢 جميع الإعلانات</h2>
+
+    <div class="ads-actions">
+      <div class="ads-count">
+        عدد الإعلانات: <span id="adsCount">0</span>
+      </div>
+
+      <a href="{% url 'item_create' as item_create_url %}" class="ads-add-btn">
+        أضف إعلان
+      </a>
+    </div>
+  </div>
+
+  <div class="ads-list space-y-4">
+    {% if my_ads %}
+      {% for ad in my_ads %}
+        <div class="ad-row flex flex-col md:flex-row items-start md:items-center gap-5 p-4 rounded-2xl shadow-sm
+          {% if ad.status == 'active' %} bg-white border border-gray-200
+          {% elif ad.status == 'pending' %} bg-yellow-50 border border-yellow-300
+          {% elif ad.status == 'rejected' %} bg-red-50 border border-red-300
+          {% else %} bg-white border border-gray-200 {% endif %}">
+
+          <!-- Image + Category badge -->
+          <div class="relative w-full md:w-auto flex justify-center">
+            <span class="absolute top-2 right-2 bg-white text-orange-600 text-xs px-2 py-1 rounded-lg border border-orange-400 font-bold shadow-sm">
+              {{ ad.category|default:"بدون قسم" }}
+            </span>
+
+            {% if ad.image %}
+              <img src="{{ ad.image }}"
+                   class="w-full max-w-[420px] mx-auto h-52 sm:h-56 md:w-56 md:h-44 rounded-xl object-cover border">
+            {% else %}
+              <div class="w-full max-w-[420px] mx-auto h-52 sm:h-56 md:w-56 md:h-44 rounded-xl border bg-gray-100 flex items-center justify-center text-gray-400 font-bold">
+                بدون صورة
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Main info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 flex-wrap mb-2">
+              <span class="flex items-center gap-1 text-gray-700 font-bold">
+                🆔 رقم الإعلان: <span class="text-orange-600">{{ ad.id }}</span>
+              </span>
+
+              {% if ad.status == "active" %}
+                <span class="status-badge status-active">🟢 مفعّل</span>
+              {% elif ad.status == "pending" %}
+                <span class="status-badge status-pending">🟡 قيد المراجعة</span>
+              {% elif ad.status == "rejected" %}
+                <span class="status-badge status-rejected">🔴 مرفوض</span>
+              {% endif %}
+
+              {% if ad.featured %}
+                {% if ad.featuredDaysLeft and ad.featuredDaysLeft > 0 %}
+                  <span class="feature-badge flex items-center gap-1">⭐ مميز — متبقّي: {{ ad.featuredDaysLeft }} يوم</span>
+                {% else %}
+                  <span class="feature-badge">⭐ مميز</span>
+                {% endif %}
+              {% endif %}
+            </div>
+
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
+              <h3 class="font-bold text-lg text-gray-800">{{ ad.title }}</h3>
+              <span class="text-orange-600 font-extrabold text-2xl leading-none">{{ ad.price }} د.أ</span>
+            </div>
+
+            <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2 flex-wrap">
+              <span>📍 {{ ad.city|default:"—" }}</span>
+              <span>📅 {{ ad.date|default:"—" }}</span>
+              <span>👁️ {{ ad.views|default:0 }} مشاهدة</span>
+              <span>❤️ {{ ad.favCount|default:0 }} مفضلة</span>
+            </div>
+
+            {% if ad.status == "rejected" and ad.rejectReason %}
+              <p class="text-sm text-red-700 mt-2">❗ سبب الرفض: <b>{{ ad.rejectReason }}</b></p>
+            {% endif %}
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-col gap-2 w-full md:w-auto">
+            <a href="{{ ad.editUrl }}"
+               class="px-4 py-2 pill-blue text-sm text-center {% if ad.status == 'pending' %}opacity-40 pointer-events-none{% endif %}">
+              ✏️ تعديل
+            </a>
+
+            <button type="button"
+                    class="px-4 py-2 pill-red text-sm {% if ad.status == 'pending' %}opacity-40 pointer-events-none{% endif %}"
+                    onclick="myAccountDeleteAd?.({{ ad.id }})">
+              ❌ حذف
+            </button>
+
+            <button type="button"
+                    class="px-4 py-2 pill-green text-sm {% if ad.status != 'active' %}opacity-40 pointer-events-none{% endif %}"
+                    onclick="myAccountRepublishAd?.({{ ad.id }})">
+              🔄 إعادة نشر
+            </button>
+
+            {# highlight button #}
+            {% if ad.status != "active" %}
+              <button class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">⭐ تمييز</button>
+            {% else %}
+              {% if ad.featured and ad.featuredDaysLeft|default:0 > 0 %}
+                <button class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">⭐ تمييز</button>
+              {% else %}
+                <button class="px-4 py-2 pill-orange text-sm"
+                        onclick="openHighlightModal?.('ad', {{ ad.id }})">⭐ تمييز</button>
+              {% endif %}
+            {% endif %}
+          </div>
+
+
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="text-center text-gray-500 py-10">لا يوجد إعلانات حالياً</div>
+    {% endif %}
+  </div>
+
+</div>

@@ -1,0 +1,212 @@
+/* =========================================================
+   base.css
+   - Variables + base layout + shared utilities + shared components (card/panel/form/buttons)
+========================================================= */
+
+:root{
+  --rukn-orange:#ff7a18;
+  --rukn-green:#16a34a;
+  --rukn-gray:#f3f4f6;
+  --muted:#6b7280;
+
+  --bg:#f9fafb;
+  --text:#111827;
+  --border:#e5e7eb;
+
+  --radius-2xl:16px;
+  --radius-xl:12px;
+}
+
+/* base */
+*{ box-sizing:border-box; }
+html,body{ width:100%; overflow-x:hidden; }
+body.rukn-body{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* container / title */
+.wrap{
+  max-width:1280px;
+  margin:0 auto;
+  padding:24px 16px;
+}
+.page-title{
+  margin:0 0 20px;
+  font-size:30px;
+  line-height:1.15;
+  font-weight:800;
+  color:#1f2937;
+}
+
+/* hide sidebar (unified top tabs) */
+#leftTabsSidebar{ display:none !important; }
+.layout{ display:block; }
+.content{ min-width:0; }
+
+/* utilities */
+.hidden{ display:none !important; }
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
+
+/* card */
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-2xl);
+  padding:24px;
+}
+
+/* panel */
+.panel{
+  background:#f9fafb;
+  border:1px solid var(--border);
+  border-radius:var(--radius-2xl);
+  padding:20px;
+  margin-top:16px;
+}
+.panel-head{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:12px;
+}
+@media (min-width:640px){
+  .panel-head{
+    flex-direction:row;
+    align-items:center;
+    gap:10px;
+  }
+}
+.panel-title{
+  margin:0;
+  font-weight:800;
+  font-size:18px;
+  color:#1f2937;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+
+/* buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border-radius:12px;
+  border:1px solid transparent;
+  cursor:pointer;
+  user-select:none;
+  font-weight:700;
+  transition:.2s ease;
+}
+.btn--sm{ padding:6px 12px; font-size:12px; }
+.btn--orange{ background:var(--rukn-orange); color:#fff; }
+.btn--orange:hover{ background:#f97316; }
+.btn--shadow{ box-shadow:0 4px 10px rgba(0,0,0,.08); }
+
+/* forms shared */
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:24px;
+}
+@media (min-width:768px){
+  .form-grid{ grid-template-columns:1fr 1fr; }
+}
+.form-row{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+@media (min-width:640px){
+  .form-row{
+    flex-direction:row;
+    align-items:center;
+    gap:12px;
+  }
+}
+.form-row--full{
+  grid-column:1 / -1;
+  align-items:flex-start;
+}
+.form-label{
+  font-size:14px;
+  color:#6b7280;
+  width:112px;
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.form-control{ flex:1; min-width:0; }
+.req{ color:#ef4444; font-weight:700; }
+
+/* inputs */
+input, textarea, select{ font-size:16px; font-family:inherit; }
+@media(min-width:768px){ input, textarea, select{ font-size:14px; } }
+
+input, textarea, select{
+  width:100%;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  color:#111827;
+  outline:none;
+}
+textarea{ resize:vertical; }
+input:disabled{
+  background:#f3f4f6;
+  color:#6b7280;
+}
+input:focus, textarea:focus, select:focus{
+  border-color:#fdba74;
+  box-shadow:0 0 0 3px rgba(255,122,24,.18);
+}
+
+/* errors */
+.field-error-text{ font-size:11px; margin-top:4px; color:#ef4444; }
+
+/* actions */
+.actions{
+  padding-top:12px;
+  text-align:center;
+}
+#saveBtn{
+  border:0;
+  cursor:pointer;
+  padding:12px 32px;
+  border-radius:12px;
+  background:var(--rukn-orange);
+  color:#fff;
+  font-weight:800;
+  font-size:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.10);
+  transition:.2s ease;
+}
+#saveBtn:hover{ background:#f97316; }
+
+/* keep your old mobile fixes (global) */
+@media (max-width:480px){
+  .ad-row > div:last-child,
+  .request-row > div:last-child{
+    display:grid !important;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+}
+@media (max-width:360px){
+  #tab-ads h2,#tab-requests h2{ font-size:14px !important; }
+  #tab-ads button,#tab-requests button,
+  #tab-ads div[class*="bg-"],#tab-requests div[class*="bg-"]{
+    font-size:11px !important;
+    padding:6px 8px !important;
+  }
+}

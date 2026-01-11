@@ -97,6 +97,10 @@ urlpatterns = [
 
     path("stores/<int:store_id>/review/list/", views.store_reviews_list, name="store_reviews_list"),
 
+    path("my-account/", views.my_account, name="my_account"),
+    path("save-info/", views.my_account_save_info, name="my_account_save_info"),
+
+
     # path('api/', include('marketplace.api_urls')),
 ]
 

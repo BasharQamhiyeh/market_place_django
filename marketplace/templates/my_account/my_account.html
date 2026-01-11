@@ -1,0 +1,96 @@
+{% load static i18n %}
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ركن — حسابي</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- shared css -->
+  <link rel="stylesheet" href="{% static 'css/my_account/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/tabs.css' %}">
+
+  <!-- per-tab css -->
+  <link rel="stylesheet" href="{% static 'css/my_account/info.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/ads.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/requests.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/noti.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/msgs.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/fav.css' %}">
+  <link rel="stylesheet" href="{% static 'css/my_account/wallet.css' %}">
+</head>
+
+<body class="rukn-body">
+
+  <!-- expose flags to JS -->
+  <div id="myAccountRoot"
+       data-has-store="{% if store %}1{% else %}0{% endif %}"
+       data-save-url="{% url 'my_account_save_info' %}">
+  </div>
+
+  <div class="wrap">
+    <h1 class="page-title">👤 حسابي في ركن</h1>
+
+    <!-- Top tabs -->
+    <div class="tabs-bar">
+      <div class="tabs-scroll no-scrollbar">
+        <button class="tab-btn active" type="button" data-tab="info">📄 معلوماتي</button>
+        <button class="tab-btn" type="button" data-tab="ads">📢 إعلاناتي</button>
+        <button class="tab-btn" type="button" data-tab="requests">🛒 طلباتي</button>
+        <button class="tab-btn" type="button" data-tab="noti">🔔 إشعارات</button>
+        <button class="tab-btn" type="button" data-tab="msgs">💬 رسائل</button>
+        <button class="tab-btn" type="button" data-tab="fav">⭐ المفضلة</button>
+        <button class="tab-btn" type="button" data-tab="wallet">💰 المحفظة</button>
+      </div>
+    </div>
+
+    <main class="content">
+      {% csrf_token %}
+
+      <section id="tab-info" class="tab-content active card">
+        {% include "my_account/tabs/info.html" %}
+      </section>
+
+      <section id="tab-ads" class="tab-content card">
+        {% include "my_account/tabs/ads.html" %}
+      </section>
+
+      <section id="tab-requests" class="tab-content card">
+        {% include "my_account/tabs/requests.html" %}
+      </section>
+
+      <section id="tab-noti" class="tab-content card">
+        {% include "my_account/tabs/noti.html" %}
+      </section>
+
+      <section id="tab-msgs" class="tab-content card">
+        {% include "my_account/tabs/msgs.html" %}
+      </section>
+
+      <section id="tab-fav" class="tab-content card">
+        {% include "my_account/tabs/fav.html" %}
+      </section>
+
+      <section id="tab-wallet" class="tab-content card">
+        {% include "my_account/tabs/wallet.html" %}
+      </section>
+    </main>
+  </div>
+
+  <!-- shared js -->
+  <script src="{% static 'js/my_account/tabs.js' %}"></script>
+
+  <!-- per-tab js -->
+  <script src="{% static 'js/my_account/info.js' %}"></script>
+  <script src="{% static 'js/my_account/ads.js' %}"></script>
+  <script src="{% static 'js/my_account/requests.js' %}"></script>
+  <script src="{% static 'js/my_account/noti.js' %}"></script>
+  <script src="{% static 'js/my_account/msgs.js' %}"></script>
+  <script src="{% static 'js/my_account/fav.js' %}"></script>
+  <script src="{% static 'js/my_account/wallet.js' %}"></script>
+</body>
+</html>

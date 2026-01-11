@@ -1,0 +1,21 @@
+/* mockup pills + status */
+.pill-blue { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; border-radius:12px; }
+.pill-red { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; border-radius:12px; }
+.pill-green { background:#dcfce7; color:#15803d; border:1px solid #86efac; border-radius:12px; }
+.pill-orange { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; border-radius:12px; }
+
+.status-badge { padding: 3px 10px; font-size: 12px; border-radius: 10px; font-weight: bold; }
+.status-active { background:#dcfce7; color:#15803d; }
+.status-pending { background:#fef9c3; color:#b45309; }
+.status-rejected { background:#fee2e2; color:#b91c1c; }
+
+.feature-badge { background:#f97316; color:white; padding:2px 8px; border-radius:8px; font-size:12px; font-weight:bold; }
+
+/* mobile grid buttons like mockup */
+@media (max-width: 480px){
+  .ad-row > div:last-child{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap:8px;
+  }
+}

@@ -1,0 +1,228 @@
+{# expects: request.user, store, cities #}
+
+<div class="info-head">
+  <div class="info-head__title">
+    <h3 class="info-title">📝 معلومات الحساب</h3>
+    <div class="info-chip">عدّل بيانات حسابك لتظهر بشكل احترافي في ركن.</div>
+  </div>
+</div>
+
+<div class="hero-box">
+  {% if store %}
+    <div class="hero-badge">🛡️ حساب تاجر</div>
+  {% endif %}
+
+  <div class="hero-inner">
+
+    <div class="hero-profile">
+      <div id="profilePreview" class="avatar avatar--lg">
+        <span id="profileInitials">
+          {% if request.user.username %}
+            {{ request.user.username|slice:":1" }}
+          {% elif request.user.first_name %}
+            {{ request.user.first_name|slice:":1" }}
+          {% else %}
+            ؟
+          {% endif %}
+        </span>
+
+        <img
+          id="profileImage"
+          src="{% if request.user.profile_photo %}{{ request.user.profile_photo.url }}{% endif %}"
+          alt="صورة الحساب"
+          class="{% if request.user.profile_photo %}avatar-img{% else %}avatar-img hidden{% endif %}"
+          data-has-image="{% if request.user.profile_photo %}true{% else %}false{% endif %}"
+        />
+
+        <button type="button" id="removeProfileBtn"
+                class="avatar-remove {% if request.user.profile_photo %}show{% endif %}">
+          ✕
+        </button>
+      </div>
+
+      <label class="btn btn--orange btn--sm btn--shadow">
+        📸 إضافة / تغيير الصورة
+        <input type="file" id="profileImgInput" class="hidden" accept="image/*">
+      </label>
+    </div>
+
+    <div id="accountHeaderBox" class="hero-meta">
+      <div id="nameDateRow" class="hero-meta__inner">
+
+        <div class="hero-nameblock">
+          <p id="fullName" class="hero-name">
+            {% if store and store.name %}
+              {{ store.name }}
+            {% elif request.user.username %}
+              {{ request.user.username }}
+            {% else %}
+              {{ request.user.first_name }} {{ request.user.last_name }}
+            {% endif %}
+          </p>
+
+          <p id="displayNote" class="hero-note">
+            {% if store and store.name %}
+              اسم المتجر هو الذي سيظهر للآخرين في الإعلانات والرسائل و كذلك لوجو المتجر .
+            {% else %}
+              هذا الاسم سيظهر للآخرين في الإعلانات والطلبات والرسائل.
+            {% endif %}
+          </p>
+        </div>
+
+        <div id="registerBox" class="hero-register">
+          <span class="hero-register__icon">📅</span>
+          <span>تاريخ التسجيل:</span>
+          <span id="registerDate" class="hero-register__date">{{ request.user.date_joined|date:"Y/m/d" }}</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="panel">
+  <form id="accountForm" class="form-grid" autocomplete="off">
+    <div class="form-row">
+      <label class="form-label">الاسم الأول <span class="req">*</span></label>
+      <div class="form-control">
+        <input id="firstName" type="text" value="{{ request.user.first_name|default_if_none:'' }}">
+        <p id="firstNameError" class="field-error-text hidden"></p>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">الاسم الأخير <span class="req">*</span></label>
+      <div class="form-control">
+        <input id="lastName" type="text" value="{{ request.user.last_name|default_if_none:'' }}">
+        <p id="lastNameError" class="field-error-text hidden"></p>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">الاسم المستعار</label>
+      <div class="form-control">
+        <input id="nickname" type="text" value="{{ request.user.username|default_if_none:'' }}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">الإيميل</label>
+      <div class="form-control">
+        <input id="email" type="email" value="{{ request.user.email|default_if_none:'' }}">
+        <p id="emailError" class="field-error-text hidden"></p>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">نوع الحساب</label>
+      <div class="form-control">
+        <input disabled type="text" value="{% if store %}تاجر{% else %}مستخدم{% endif %}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">رقم الهاتف</label>
+      <div class="form-control">
+        <input disabled type="text" value="{{ request.user.phone }}">
+      </div>
+    </div>
+  </form>
+</div>
+
+{% if store %}
+  <div class="panel">
+    <div class="panel-head">
+      <h3 class="panel-title">🏪 معلومات المتجر</h3>
+      <div class="info-chip">عدّل بيانات متجرك ليظهر بشكل احترافي في ركن.</div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-row">
+        <label class="form-label">اسم المتجر <span class="req">*</span></label>
+        <div class="form-control">
+          <input id="storeName" type="text" value="{{ store.name|default_if_none:'' }}">
+          <p id="storeNameError" class="field-error-text hidden"></p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">لوجو المتجر</label>
+        <div class="form-control">
+          <div class="logo-row">
+            <label class="btn btn--orange btn--sm btn--shadow">
+              🏬 إضافة / تغيير لوجو المتجر
+              <input type="file" id="storeLogoInput" accept="image/*" class="hidden">
+            </label>
+
+            <div id="storeLogoPreview" class="avatar avatar--lg">
+              <span id="storeLogoInitial">
+                {% if store.name %}{{ store.name|slice:":1" }}{% else %}م{% endif %}
+              </span>
+
+              <img id="storeLogoImage"
+                   src="{% if store.logo %}{{ store.logo.url }}{% endif %}"
+                   class="{% if store.logo %}avatar-img{% else %}avatar-img hidden{% endif %}"
+                   data-has-image="{% if store.logo %}true{% else %}false{% endif %}">
+
+              <button type="button" id="removeStoreLogoBtn"
+                      class="avatar-remove {% if store.logo %}show{% endif %}">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">عنوان المتجر</label>
+        <div class="form-control">
+          <input id="storeLocation" type="text" value="{{ store.address|default_if_none:'' }}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">المدينة</label>
+        <div class="form-control">
+          <select id="storeCity">
+            <option value="">— اختر المدينة —</option>
+            {% for c in cities %}
+              <option value="{{ c.id }}" {% if store.city_id == c.id %}selected{% endif %}>{{ c.name_ar }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">الموقع الإلكتروني</label>
+        <div class="form-control">
+          <input id="storeWebsite" type="text" value="{{ store.website|default_if_none:'' }}">
+          <p id="storeWebsiteError" class="field-error-text hidden"></p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">انستغرام</label>
+        <div class="form-control">
+          <input id="storeInstagram" type="text" value="{{ store.instagram|default_if_none:'' }}">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">فيسبوك</label>
+        <div class="form-control">
+          <input id="storeFacebook" type="text" value="{{ store.facebook|default_if_none:'' }}">
+        </div>
+      </div>
+
+      <div class="form-row form-row--full">
+        <label class="form-label">وصف المتجر</label>
+        <div class="form-control">
+          <textarea id="storeDesc" rows="3">{{ store.description|default_if_none:'' }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="actions">
+  <button id="saveBtn" type="button">💾 حفظ التعديلات</button>
+</div>

@@ -1,0 +1,224 @@
+/* =========================================================
+   info.css
+   - Only styles used inside #tab-info
+========================================================= */
+
+/* info tab special border */
+#tab-info.card{
+  border-color:#fed7aa; /* orange-200 */
+}
+
+/* info header */
+.info-head{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:16px;
+}
+.info-head__title{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+@media (min-width:640px){
+  .info-head__title{
+    flex-direction:row;
+    align-items:center;
+    gap:10px;
+  }
+}
+.info-title{
+  margin:0;
+  font-weight:800;
+  font-size:18px;
+  color:#1f2937;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+.info-chip{
+  display:inline-flex;
+  align-items:center;
+  width:fit-content;
+  max-width:100%;
+  padding:4px 12px;
+  border-radius:999px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#c2410c;
+  font-size:12px;
+  font-weight:700;
+}
+
+/* hero */
+.hero-box{
+  position:relative;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:var(--radius-2xl);
+  padding:16px;
+  margin-bottom:18px;
+}
+.hero-badge{
+  position:absolute;
+  top:12px;
+  left:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #fed7aa;
+  color:#c2410c;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.hero-inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  margin:0 auto;
+  width:fit-content;
+  text-align:center;
+}
+@media (min-width:768px){
+  .hero-inner{
+    flex-direction:row;
+    align-items:center;
+  }
+}
+.hero-profile{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+/* avatar */
+.avatar{
+  position:relative;
+  width:112px;
+  height:112px;
+  border-radius:999px;
+  background:#fff;
+  border:4px solid var(--rukn-orange);
+  color:#c2410c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  overflow:visible;
+  user-select:none;
+}
+.avatar--lg{ width:112px; height:112px; }
+
+#profileInitials, #storeLogoInitial{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+  font-weight:800;
+  line-height:1;
+  pointer-events:none;
+}
+
+.avatar-img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  background:#fff;
+  border-radius:999px;
+  z-index:5;
+}
+
+.avatar-remove{
+  position:absolute;
+  top:-6px;
+  right:-6px;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:0;
+  background:#ef4444;
+  color:#fff;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.14);
+  opacity:0;
+  pointer-events:none;
+  transition:.2s ease;
+  z-index:20;
+}
+.avatar-remove.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* hero meta */
+.hero-meta{ min-width:0; text-align:center; }
+.hero-meta__inner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+}
+.hero-name{
+  margin:0;
+  font-size:24px;
+  font-weight:800;
+  color:#111827;
+  letter-spacing:.02em;
+}
+@media (min-width:768px){
+  .hero-name{ font-size:30px; }
+}
+.hero-note{
+  margin:0;
+  font-size:14px;
+  color:#6b7280;
+}
+
+.hero-register{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:#fff;
+  border:1px solid #fed7aa;
+  padding:6px 12px;
+  border-radius:12px;
+  color:#4b5563;
+  font-size:12px;
+}
+.hero-register__icon{
+  color:var(--rukn-orange);
+  font-size:16px;
+}
+.hero-register__date{
+  font-weight:700;
+  color:#c2410c;
+}
+
+/* store logo row */
+.logo-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:16px;
+  flex-wrap:wrap;
+}
+
+/* hero mobile center fix */
+@media (max-width:768px){
+  #accountHeaderBox{ text-align:center !important; }
+  #fullName, #displayNote{ text-align:center !important; }
+  #nameDateRow{ align-items:center !important; }
+}
