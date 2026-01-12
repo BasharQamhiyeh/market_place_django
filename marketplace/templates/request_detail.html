@@ -267,23 +267,30 @@
                     </div>
 
                     <div class="relative flex items-center justify-start gap-4 px-2 pb-2">
-                      {% if u.photo %}
-                        <img src="{{ u.photo.url }}"
+                      {% if u.profile_photo %}
+                        <img src="{{ u.profile_photo.url }}"
                              class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0 object-cover"
                              alt="requester avatar">
                       {% else %}
                         <div class="w-16 h-16 rounded-full border-2 border-green-300 shadow-sm flex-shrink-0
                                     bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
-                          {{ u.first_name|default:u.username|default:"م"|first|upper }}
+                          {% if u.username %}
+                            {{ u.username|first|upper }}
+                          {% else %}
+                            {{ u.first_name|default:u.last_name|default:"م"|first|upper }}
+                          {% endif %}
                         </div>
                       {% endif %}
 
                       <div class="flex flex-col items-center text-right">
                         <div class="flex items-center gap-2 justify-end">
                           <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
-                            {{ u.first_name }} {{ u.last_name }}
+                            {% if u.username %}
+                              {{ u.username }}
+                            {% else %}
+                              {{ u.first_name }} {{ u.last_name }}
+                            {% endif %}
                           </h4>
-
                           {% if u.is_verified or u.is_phone_verified or u.is_verified_user %}
                             <span class="text-[11px] font-extrabold text-[var(--rukn-green)] bg-green-100 px-2 py-0.5 rounded-full">
                               عضو موثّق

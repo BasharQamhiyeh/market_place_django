@@ -24,6 +24,11 @@
         {% include "partials/_report_modal_body.html" %}
       {% endwith %}
 
+    {% elif report_kind == "user" %}
+      {% with display_title=store.name display_city=store.city modal_title="الإبلاغ عن مستخدم" title_label="اسم المستخدم" id_label="رقم المستخدم" display_id=user.user_id form_target_kind="user" form_target_id=seller.user_id listing_type="" %}
+        {% include "partials/_report_modal_body.html" %}
+      {% endwith %}
+
     {# ================== ITEM (default) ================== #}
     {% else %}
       {% with display_title=item.listing.title display_city=item.listing.city modal_title="الإبلاغ عن الإعلان" title_label="عنوان الإعلان" id_label="رقم الإعلان" display_id=item.id form_target_kind="listing" form_target_id=item.listing.id listing_type="item" %}

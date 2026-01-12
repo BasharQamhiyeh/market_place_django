@@ -1984,27 +1984,6 @@ def item_edit(request, item_id):
     )
 
 
-
-
-
-@login_required
-def user_profile(request, user_id):
-    User = get_user_model()
-
-    seller = get_object_or_404(User, user_id=user_id)
-
-    items = Item.objects.filter(
-        user=seller,
-        is_approved=True,
-        is_active=True
-    ).order_by('-created_at')
-
-    return render(request, 'user_profile.html', {
-        'seller': seller,
-        'items': items,
-    })
-
-
 @login_required
 def notifications(request):
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
@@ -2486,16 +2465,21 @@ def create_issue_report_ajax(request):
         report.listing = listing
         report.listing_type = listing_type
 
-    elif target_kind == "user":
-        reported = get_object_or_404(User, id=target_id_int)
-        report.reported_user = reported
 
-        # optional: prevent reporting same user twice
+    elif target_kind == "user":
+        reported = get_object_or_404(User, user_id=target_id_int, is_active=True)
+        if reported.user_id == request.user.user_id:
+            return JsonResponse(
+                {"ok": False, "message": "لا يمكنك الإبلاغ عن حسابك."},
+                status=400
+            )
+        report.reported_user = reported
         already = IssuesReport.objects.filter(
             user=request.user,
             target_kind="user",
             reported_user=reported,
         ).exists()
+
         if already:
             return JsonResponse({"ok": False, "message": "سبق أن قمت بالإبلاغ عن هذا المستخدم."}, status=400)
 
@@ -2904,6 +2888,76 @@ def feature_listing(request, listing_id):
 
 
 from django.db.models import F
+
+def user_profile(request, user_id):
+    seller = get_object_or_404(User, pk=user_id, is_active=True)
+
+    # ✅ Increment profile views once per session per user
+    session_key = f"user_viewed_{user_id}"
+    if not request.session.get(session_key):
+        # User.objects.filter(pk=seller.pk).update(views_count=F("views_count") + 1)
+        request.session[session_key] = True
+        # seller.refresh_from_db(fields=["views_count"])
+
+    listings = (
+        Listing.objects
+        .filter(user=seller, is_active=True, is_approved=True, type="item")
+        .select_related("category", "city", "user")
+        .order_by("-created_at")[:30]
+    )
+
+    listings_count = Listing.objects.filter(
+        user=seller, is_active=True, is_approved=True, type="item"
+    ).count()
+
+    def _root_category(cat):
+        while cat and cat.parent_id:
+            cat = cat.parent
+        return cat
+
+    for l in listings:
+        cat = getattr(l.item, "listing", None)
+        cat = getattr(cat, "category", None)
+        root = _root_category(cat)
+        l.root_category_id = root.id if root else ""
+
+        city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None)
+        l._city_id = city_id or ""
+
+    categories = Category.objects.filter(parent__isnull=True).order_by("name_ar")
+    cities = City.objects.filter(is_active=True).order_by("name_ar")
+
+    full_phone = seller.phone if getattr(seller, "phone", None) else ""
+    masked_phone = "07•• ••• •••"
+
+    # ✅ reporting state
+    reported_already = False
+    is_own_profile = False
+    if request.user.is_authenticated:
+        is_own_profile = (seller.user_id == request.user.user_id)
+        reported_already = IssuesReport.objects.filter(
+            user=request.user,
+            target_kind="user",
+            reported_user=seller,
+        ).exists()
+
+    avatar_url = seller.profile_photo.url if getattr(seller, "profile_photo", None) else None
+
+
+    ctx = {
+        "seller": seller,
+        "listings": listings,
+        "listings_count": listings_count,
+        "categories": categories,
+        "cities": cities,
+        "full_phone": full_phone,
+        "masked_phone": masked_phone,
+        "reported_already": reported_already,
+        "is_own_profile": is_own_profile,
+        "avatar_url": avatar_url,
+    }
+    return render(request, "user_profile.html", ctx)
+
 
 def store_profile(request, store_id):
     store = get_object_or_404(Store, pk=store_id, is_active=True)

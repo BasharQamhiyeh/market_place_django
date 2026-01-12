@@ -258,7 +258,7 @@
 
                 <!-- Seller profile -->
                 <div class="relative group cursor-pointer mt-1 p-5 sm:p-6 border-b-2 border-gray-200"
-                     onclick="window.location.href='{% url 'user_profile' item.listing.user.user_id %}'">
+                     onclick="window.location.href='{% if seller_is_store and store %}{% url 'store_profile' store.id %}{% else %}{% url 'user_profile' item.listing.user.user_id %}{% endif %}'">
 
                   <div class="absolute inset-0 group-hover:bg-orange-100/70 transition-all duration-200"></div>
 
@@ -283,9 +283,10 @@
                              alt="{{ store.name|default:u.first_name }}"
                              class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0 object-cover bg-white" />
                       {% elif u.photo %}
-                        <img src="{{ u.photo.url }}"
-                             alt="{{ u.first_name }}"
-                             class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0 object-cover" />
+                        {% elif u.profile_photo %}
+                          <img src="{{ u.profile_photo.url }}"
+                               alt="{{ u.username|default:u.first_name }}"
+                               class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0 object-cover" />
                       {% else %}
                         <div class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0
                                     bg-gray-200 flex items-center justify-center text-xl font-extrabold text-gray-700">
@@ -301,7 +302,17 @@
                     <div class="flex flex-col items-center text-right">
                       <div class="flex items-center gap-2 justify-end">
                         <h4 class="text-sm font-extrabold text-gray-900 leading-tight">
-                          {{ item.listing.user.first_name }} {{ item.listing.user.last_name }}
+                          {% if seller_is_store and store %}
+                            {{ store.name|default:"—" }}
+                          {% else %}
+                            {% with u=item.listing.user %}
+                              {% if u.username %}
+                                {{ u.username }}
+                              {% else %}
+                                {{ u.first_name }} {{ u.last_name }}
+                              {% endif %}
+                            {% endwith %}
+                          {% endif %}
                         </h4>
                         {% if seller_is_verified_store %}
                           <span class="text-[11px] font-extrabold text-[var(--rukn-orange)] bg-orange-100 px-2 py-0.5 rounded-full">

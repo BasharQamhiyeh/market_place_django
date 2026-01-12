@@ -1,72 +1,382 @@
-{% extends 'base.html' %}
-{% load i18n %}
+{# templates/user_profile.html #}
+{% extends "base.html" %}
+{% load static %}
+{% load formatting timeago_ar %}
 
-{% block title %}{{ seller.username }}{% endblock %}
+{% block title %}{{ seller.username }} – ركن{% endblock %}
+
+{% block base_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/store-profile.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+<body class="px-4 sm:px-0"
+      dir="rtl" lang="ar"
+      data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}">
 
-  <div class="lg:col-span-1">
-    <div class="bg-white border border-gray-200 rounded-xl shadow p-6 h-full">
-      <h4 class="text-xl font-semibold mb-1">{{ seller.username }}</h4>
+  <div class="max-w-7xl mx-auto py-8 space-y-6">
 
-      {% if seller.first_name or seller.last_name %}
-        <div class="text-gray-500 mb-3">{{ seller.first_name }} {{ seller.last_name }}</div>
-      {% endif %}
+    <!-- Breadcrumb (same style) -->
+    <nav aria-label="Breadcrumb" class="text-sm text-gray-500">
+      <ol class="flex items-center gap-2">
+        <li><a href="{% url 'home' %}" class="hover:text-[var(--rukn-orange)] transition">الرئيسية</a></li>
+        <li class="text-gray-400">›</li>
+        <li><a href="#" class="hover:text-[var(--rukn-orange)] transition">المستخدمين</a></li>
+        <li class="text-gray-400">›</li>
+        <li class="font-extrabold text-[var(--rukn-orange)] truncate max-w-[240px]">{{ seller.username }}</li>
+      </ol>
+    </nav>
 
-      <ul class="divide-y border rounded-lg">
-        <li class="flex justify-between items-center px-4 py-2">
-          <span class="font-semibold">{% trans "Phone" %}</span>
-          <span>{{ seller.phone }}</span>
-        </li>
+    <!-- HERO + TOP INFO (same container) -->
+    <section class="container-box no-top-bar">
+      <div class="relative">
 
-        {% if seller.email %}
-          <li class="flex justify-between items-center px-4 py-2">
-            <span class="font-semibold">{% trans "Email" %}</span>
-            <span>{{ seller.email }}</span>
-          </li>
-        {% endif %}
-      </ul>
-    </div>
-  </div>
+        <!-- UPPER HERO -->
+        <div id="heroParallax" class="relative h-48 sm:h-64 md:h-96 overflow-hidden">
+          {% if cover_url %}
+            <img id="heroParallaxImg"
+                 src="{{ cover_url }}"
+                 alt=""
+                 class="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 saturate-110" />
+          {% else %}
+            <img id="heroParallaxImg"
+                 src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2400&auto=format&fit=crop"
+                 alt=""
+                 class="absolute inset-0 w-full h-full object-cover object-bottom opacity-70 saturate-110" />
+          {% endif %}
 
-  <div class="lg:col-span-2">
-    <div class="bg-white border border-gray-200 rounded-xl shadow">
-      <div class="px-6 py-3 border-b">
-        <h5 class="text-lg font-semibold mb-0">{% trans "Active Listings" %}</h5>
-      </div>
+          <div class="absolute inset-0 bg-gradient-to-l from-orange-100/45 via-white/25 to-orange-50/45"></div>
 
-      <div class="p-6">
-        {% if items %}
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {% for item in items %}
-              <div class="bg-white border border-gray-200 rounded-xl shadow-sm h-full">
-                {% with first_photo=item.photos.first %}
-                  {% if first_photo %}
-                    <img src="{{ first_photo.image.url }}"
-                         class="w-full rounded-t-xl"
-                         style="height:180px;object-fit:cover;"
-                         alt="{{ item.title }}">
+          <div class="absolute inset-0 pointer-events-none opacity-70">
+            <div class="absolute -top-10 -left-10 w-40 h-40 rounded-full bg-orange-200 blur-2xl"></div>
+            <div class="absolute top-6 -right-10 w-44 h-44 rounded-full bg-amber-200 blur-2xl"></div>
+          </div>
+
+          {# strip exists on store page; for user page we keep same spacing but no CTA #}
+          <div class="absolute inset-x-0 top-0 z-[4]">
+            <div class="mx-5 sm:mx-7 mt-8 rounded-2xl bg-white/75 backdrop-blur-md border border-white/70 shadow-sm">
+              <div class="px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
+                <div class="text-right">
+                  <div class="inline-block px-2 py-0.5 rounded-lg bg-orange-100 text-[11px] sm:text-xs font-extrabold text-[var(--rukn-orange)]">
+                    ملف المستخدم
+                  </div>
+                  <div class="text-sm sm:text-base font-extrabold text-gray-900 mt-1 leading-tight">
+                    شاهد إعلانات المستخدم وتواصل معه
+                  </div>
+                  <div class="hidden sm:block text-xs font-semibold text-gray-700 mt-1">
+                    تواصل • مشاركة • إعلانات
+                  </div>
+                </div>
+
+                <button id="shareBtn"
+                        type="button"
+                        class="inline-flex items-center justify-center px-5 py-2.5 rounded-2xl bg-[var(--rukn-orange)]
+                               text-white font-extrabold text-xs sm:text-sm shadow hover:brightness-95 transition">
+                  مشاركة
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LOWER PROFILE AREA -->
+        <div class="relative z-[3] px-5 sm:px-7 pb-7 -mt-6">
+          <div class="p-4 sm:p-6 pt-12 sm:pt-14 bg-transparent shadow-none">
+            <div class="relative flex flex-col lg:flex-row gap-5 items-center lg:items-start">
+
+              {# Floating avatar (only if user has profile_photo) #}
+              {% if avatar_url %}
+                <div class="relative">
+                  <div class="absolute -top-14 sm:-top-16 right-1/2 translate-x-1/2 lg:right-auto lg:translate-x-0">
+                    <div class="relative">
+                      <img src="{{ avatar_url }}"
+                           alt="{{ seller.username }}"
+                           class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover border-4 border-white bg-white shadow-xl" />
+                    </div>
+                  </div>
+                  <div class="w-24 h-10 sm:w-28 sm:h-12"></div>
+                </div>
+              {% endif %}
+
+              <!-- Main info -->
+              <div class="flex-1 text-center lg:text-right">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">
+                  {% if seller.username %}
+                    {{ seller.username }}
+                  {% else %}
+                    {% with fn=seller.first_name|default:"" ln=seller.last_name|default:"" %}
+                      {% if fn or ln %}
+                        {{ fn }} {{ ln }}
+                      {% else %}
+                        مستخدم
+                      {% endif %}
+                    {% endwith %}
                   {% endif %}
-                {% endwith %}
+                </h1>
 
-                <div class="p-4">
-                  <a href="{% url 'item_detail' item.id %}" class="hover:text-jordan">
-                    <h6 class="text-base font-semibold mb-1">{{ item.title }}</h6>
-                  </a>
-                  <div class="text-gray-600">JOD {{ item.price }}</div>
+
+                <div class="mt-4 flex flex-wrap gap-2 justify-center lg:justify-start">
+
+                  {# Location: ONLY if seller_city is set #}
+                  {% if seller_city %}
+                    <span class="meta-pill">
+                      <span class="meta-icon text-orange-500">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none">
+                          <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                          <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+                        </svg>
+                      </span>
+                      {{ seller_city }}
+                    </span>
+                  {% endif %}
+
+                  {# Member since: always #}
+                  <span class="meta-pill">
+                    <span class="meta-icon text-orange-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 22h14" />
+                        <path d="M5 2h14" />
+                        <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+                        <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+                      </svg>
+                    </span>
+                    عضو منذ {{ seller.date_joined|timeago_ar }}
+                  </span>
+
+                  {# Email: only if user entered it #}
+                  {% if seller.email %}
+                    <span class="meta-pill">
+                      <span class="meta-icon text-orange-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M4 4h16v16H4z" />
+                          <path d="M4 6l8 7 8-7" />
+                        </svg>
+                      </span>
+                      <a href="mailto:{{ seller.email }}" class="text-[var(--rukn-orange)] underline font-extrabold">
+                        {{ seller.email }}
+                      </a>
+                    </span>
+                  {% endif %}
+
                 </div>
               </div>
-            {% endfor %}
+
+
+              <!-- Small stats (keep same 3 boxes layout) -->
+              <div class="grid grid-cols-3 gap-3 text-right">
+
+                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                  <div class="text-[11px] text-gray-500 font-bold mb-1">زيارات الصفحة</div>
+                  <div class="text-3xl font-extrabold text-gray-900">
+                    {% with views=views_count|default:0|compact_ar_k %}
+                      {{ views.num }}{% if views.is_k %}<span class="text-lg font-extrabold text-gray-400">ألف</span>{% endif %}
+                    {% endwith %}
+                  </div>
+                  <div class="text-xs text-gray-500 mt-1">زيارة</div>
+                </div>
+
+                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">
+                  <div class="text-[11px] text-gray-500 font-bold mb-1">إعلانات المستخدم</div>
+                  <div class="text-3xl font-extrabold text-gray-900">{{ listings_count|default:0 }}</div>
+                  <div class="text-xs text-gray-500 mt-1">إعلان فعال</div>
+                </div>
+
+<!--                <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4">-->
+<!--                  <div class="text-[11px] text-gray-500 font-bold mb-1">التواصل</div>-->
+<!--                  <div class="text-3xl font-extrabold text-[var(&#45;&#45;rukn-orange)]">متاح</div>-->
+<!--                  <div class="text-xs text-gray-500 mt-1">رسائل / هاتف</div>-->
+<!--                </div>-->
+
+              </div>
+
+            </div>
           </div>
-        {% else %}
-          <div class="bg-blue-50 text-blue-800 px-4 py-3 rounded">
-            {% trans "This seller has no active announcements at the moment." %}
-          </div>
-        {% endif %}
+        </div>
+
       </div>
-    </div>
+    </section>
+
+    <!-- CONTENT GRID (same grid sizes) -->
+    <main class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr),360px] gap-6">
+
+      <!-- MAIN -->
+      <div class="space-y-6">
+
+        <!-- TABS WRAPPER (same, but only Ads tab) -->
+        <section class="container-box">
+          <div class="p-4 sm:p-6">
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center p-1 w-full sm:w-auto">
+                <button type="button"
+                        class="tab-btn is-active flex-1 sm:flex-none px-4 py-2 text-xs sm:text-sm font-extrabold transition border-b border-gray-300"
+                        data-tab="ads">إعلانات المستخدم</button>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+
+              <!-- PANEL: ADS -->
+              <div class="tab-panel" data-panel="ads">
+                <section id="storeAdsSection">
+                  <div class="px-3 sm:px-5 py-5 sm:py-7 space-y-5">
+                    <div class="flex flex-col md:flex-row md:items-center gap-4">
+                      <div class="text-right">
+                        <h2 class="text-lg sm:text-xl font-extrabold text-gray-900">جميع الإعلانات</h2>
+                        <p class="text-xs text-gray-500 mt-1">جميع إعلانات المستخدم في مكان واحد</p>
+                      </div>
+
+                      <div class="md:mr-auto flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                        <select id="categoryFilter"
+                                class="border border-gray-200 bg-white rounded-2xl px-4 py-2.5 text-sm font-bold
+                                       focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition w-full sm:w-48">
+                          <option value="all">جميع الأقسام</option>
+                          {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c }}</option>
+                          {% endfor %}
+                        </select>
+
+                        <select id="cityFilter"
+                                class="border border-gray-200 bg-white rounded-2xl px-4 py-2.5 text-sm font-bold
+                                       focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition w-full sm:w-48">
+                          <option value="all">جميع المناطق</option>
+                          {% for city in cities %}
+                            <option value="{{ city.id }}">{{ city }}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+
+                      <span class="inline-flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-full border border-orange-200 w-fit">
+                        <span class="text-sm text-gray-600 font-extrabold">عدد الإعلانات</span>
+                        <span id="adsCount" class="text-xl font-extrabold text-[var(--rukn-orange)]">{{ listings_count|default:0 }}</span>
+                      </span>
+                    </div>
+
+                    <div class="border-t border-gray-200"></div>
+
+                    <div id="storeAdsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {% for listing in listings %}
+                        <div class="store-ad-wrap"
+                             data-root-category-id="{{ listing.root_category_id }}"
+                             data-city-id="{{ listing.city_id }}">
+                          {% include "partials/_item_card.html" with item=listing.item %}
+                        </div>
+                      {% empty %}
+                        <div class="col-span-full text-center text-sm text-gray-500 py-10" data-empty="1">
+                          لا يوجد إعلانات بعد.
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </section>
+              </div>
+
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- SIDEBAR (copy store sidebar 1:1 but user-specific targets) -->
+      <aside class="space-y-6 lg:sticky lg:top-6 h-fit">
+        <section class="container-box">
+          <div class="relative z-10">
+
+            <!-- Quick actions (share + report) -->
+            <div class="border-t-2 border-[var(--rukn-gray)] p-5 sm:p-6 border-b-2 border-gray-200">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs sm:text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                       viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="M21 9H3" />
+                    <path d="M21 15H3" />
+                  </svg>
+                  <span>إجراءات سريعة</span>
+                </h3>
+              </div>
+
+              <div class="rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
+                <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+
+                  <button id="shareBtnSide" type="button"
+                          class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                                 bg-white border border-gray-200
+                                 hover:border-sky-300 hover:bg-sky-50 hover:shadow-sm
+                                 text-[11px] sm:text-xs font-semibold text-gray-700 transition">
+                    <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                 bg-gray-50 border border-gray-200 text-gray-400
+                                 group-hover:bg-sky-100 group-hover:border-sky-300 group-hover:text-sky-600 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <path d="M8.5 11l7-4" />
+                        <path d="M8.5 13l7 4" />
+                      </svg>
+                    </span>
+                    <span class="leading-tight text-center group-hover:text-sky-700 transition">مشاركة المستخدم</span>
+                  </button>
+
+                  <button id="openReportModalBtn" type="button"
+                    data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                    data-login-modal="loginModal"
+                    data-report-url="{% url 'create_issue_report_ajax' %}"
+                    data-target-kind="user"
+                    data-target-id="{{ seller.user_id }}"
+                    class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
+                           bg-white border border-gray-200
+                           hover:border-rose-300 hover:bg-rose-50 hover:shadow-sm
+                           text-[11px] sm:text-xs font-semibold text-gray-700 transition"
+                    {% if reported_already or is_own_profile %}disabled{% endif %}>
+                    <span class="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full
+                                 bg-gray-50 border border-gray-200 text-gray-400
+                                 group-hover:bg-rose-100 group-hover:border-rose-300 group-hover:text-rose-600 transition">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5"
+                           viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.3 3.3 2.4 18a1.7 1.7 0 0 0 1.5 2.5h16.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.3a1.7 1.7 0 0 0-3.4 0Z" />
+                        <path d="M12 9v5" />
+                        <path d="M12 17h.01" />
+                      </svg>
+                    </span>
+                    <span class="leading-tight text-center group-hover:text-rose-700 transition">
+                      {% if is_own_profile %}لا يمكنك الإبلاغ عن نفسك{% elif reported_already %}تم الإبلاغ{% else %}الإبلاغ عن المستخدم{% endif %}
+                    </span>
+                  </button>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact (copy store contact 1:1) -->
+
+
+          </div>
+        </section>
+      </aside>
+    </main>
   </div>
 
-</div>
+  {# Report modal (same shared modal) #}
+  {% include "partials/_report_modal_mockup.html" with report_kind="user" reported_user=seller reported_already=reported_already is_own_profile=is_own_profile %}
+
+  <!-- Toast (same as store page) -->
+  <div id="toast" class="fixed inset-0 flex items-center justify-center pointer-events-none">
+    <div id="toastBox"
+         class="bg-orange-500 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-extrabold opacity-0 scale-90 transition-all duration-300"></div>
+  </div>
+
+</body>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/user-profile.js' %}"></script>
+  <script src="{% static 'js/report-modal.js' %}" defer></script>
 {% endblock %}
