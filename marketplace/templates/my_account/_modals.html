@@ -1,0 +1,120 @@
+{# templates/my_account/_modals.html #}
+
+<!-- ✅ SUCCESS MODAL -->
+<div id="successModal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40">
+  <div class="bg-white w-[92%] max-w-md rounded-2xl p-5 shadow-xl">
+    <div class="flex items-center justify-between mb-2">
+      <h3 id="successTitle" class="font-extrabold text-lg">تم التنفيذ بنجاح</h3>
+      <button type="button" onclick="closeSuccessModal()" class="text-gray-500 font-bold">✕</button>
+    </div>
+    <p id="successMsg" class="text-sm text-gray-700 mb-4"></p>
+    <button type="button" onclick="closeSuccessModal()"
+            class="w-full py-2 rounded-xl bg-orange-500 text-white font-bold">
+      حسناً
+    </button>
+  </div>
+</div>
+
+<!-- ✅ NO POINTS MODAL -->
+<div id="noPointsModal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40">
+  <div class="bg-white w-[92%] max-w-md rounded-2xl p-5 shadow-xl">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="font-extrabold text-lg">لا يوجد نقاط كافية</h3>
+      <button type="button" onclick="closeNoPointsModal()" class="text-gray-500 font-bold">✕</button>
+    </div>
+    <p class="text-sm text-gray-700 mb-4">لا يمكنك تنفيذ العملية لأن رصيد النقاط غير كافٍ.</p>
+    <button type="button" onclick="closeNoPointsModal()"
+            class="w-full py-2 rounded-xl bg-orange-500 text-white font-bold">
+      إغلاق
+    </button>
+  </div>
+</div>
+
+<!-- ✅ HIGHLIGHT MODAL -->
+<div id="highlightModal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40">
+  <div class="bg-white w-[92%] max-w-lg rounded-2xl p-5 shadow-xl">
+    <div class="flex items-center justify-between mb-3">
+      <h3 id="highlightModalTitle" class="font-extrabold text-lg">⭐ تمييز الإعلان</h3>
+      <button type="button" onclick="closeHighlightModal()" class="text-gray-500 font-bold">✕</button>
+    </div>
+
+    <div class="mb-4 text-sm text-gray-700">
+      رصيدك: <b><span id="highlightPointsBalance">0</span></b> نقطة
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <button type="button" onclick="selectHighlightPackage(3, 30)"
+              class="py-2 rounded-xl border font-bold hover:bg-orange-50">
+        3 أيام — 30 نقطة
+      </button>
+      <button type="button" onclick="selectHighlightPackage(7, 50)"
+              class="py-2 rounded-xl border font-bold hover:bg-orange-50">
+        7 أيام — 50 نقطة
+      </button>
+      <button type="button" onclick="selectHighlightPackage(14, 80)"
+              class="py-2 rounded-xl border font-bold hover:bg-orange-50">
+        14 يوم — 80 نقطة
+      </button>
+    </div>
+
+    <button type="button" onclick="closeHighlightModal()"
+            class="w-full mt-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold">
+      إلغاء
+    </button>
+  </div>
+</div>
+
+<!-- ✅ DELETE MODAL -->
+<div id="deleteAdModal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40">
+  <div class="bg-white w-[92%] max-w-lg rounded-2xl p-5 shadow-xl">
+    <div class="flex items-center justify-between mb-2">
+      <h3 id="deleteTitle" class="font-extrabold text-lg">حذف إعلان</h3>
+      <button type="button" onclick="closeDeleteModal()" class="text-gray-500 font-bold">✕</button>
+    </div>
+
+    <p id="deleteSubtitle" class="text-sm text-gray-700 mb-3">يرجى اختيار سبب حذف الإعلان</p>
+
+    <select id="deleteReason" class="w-full border rounded-xl p-2 mb-2"></select>
+
+    <textarea id="deleteReasonOther" class="hidden w-full border rounded-xl p-2 mb-2"
+              rows="3" placeholder="اكتب السبب..."></textarea>
+
+    <div id="deleteReasonError" class="hidden text-sm text-red-600 mb-2">
+      الرجاء اختيار سبب الحذف
+    </div>
+
+    <button id="confirmDeleteBtn" type="button" onclick="confirmDeleteAd()"
+            class="w-full py-2 rounded-xl bg-red-500 text-white font-bold">
+      حذف الإعلان
+    </button>
+
+    <button type="button" onclick="closeDeleteModal()"
+            class="w-full mt-2 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold">
+      إلغاء
+    </button>
+  </div>
+</div>
+
+<!-- ✅ REPUBLISH CONFIRM MODAL -->
+<div id="republishConfirmModal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40">
+  <div class="bg-white w-[92%] max-w-md rounded-2xl p-5 shadow-xl">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="font-extrabold text-lg">تأكيد إعادة النشر</h3>
+      <button type="button" onclick="closeRepublishConfirmModal()" class="text-gray-500 font-bold">✕</button>
+    </div>
+
+    <p class="text-sm text-gray-700 mb-3">
+      رصيدك: <b><span id="republishPointsBalance">0</span></b> نقطة
+    </p>
+
+    <button id="confirmRepublishBtn" type="button"
+            class="w-full py-2 rounded-xl bg-orange-500 text-white font-bold">
+      تأكيد
+    </button>
+
+    <button type="button" onclick="closeRepublishConfirmModal()"
+            class="w-full mt-2 py-2 rounded-xl bg-gray-100 text-gray-700 font-bold">
+      إلغاء
+    </button>
+  </div>
+</div>

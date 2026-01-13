@@ -15,14 +15,35 @@
     @media (max-width: 480px){
       .tab-btn{ padding:10px 12px; font-size:14px; }
     }
+
+
     @media (max-width: 480px){
-      .ad-row > div:last-child,
-      .request-row > div:last-child{
+
+      /* ONLY actions column becomes 2-cols grid */
+      #tab-ads .ad-row > div:last-child,
+      #tab-requests .request-row > div:last-child{
         display:grid !important;
         grid-template-columns: 1fr 1fr;
         gap:8px;
       }
+
+      /* make sure body column can’t collapse */
+      #tab-ads .ad-row > .flex-1{
+        min-width: 0 !important;
+        width: 100% !important;
+      }
+
+      /* ensure header is not clipped/hidden */
+      #tab-ads .ad-header{
+        display:flex !important;
+        visibility:visible !important;
+        opacity:1 !important;
+      }
     }
+
+
+
+
     @media (max-width: 360px){
       #tab-ads h2, #tab-requests h2{ font-size:14px !important; }
       #tab-ads button, #tab-requests button,
@@ -186,14 +207,20 @@
       gap:4px;
       font-weight:bold;
     }
-    .feature-badge {
-      background:#f97316;
-      color:white;
-      padding:2px 8px;
-      border-radius:8px;
+    .feature-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
       font-size:12px;
-      font-weight:bold;
+      line-height:1;
+      background:#fff7ed;
+      color:#c2410c;
+      border:1px solid #fed7aa;
     }
+
 
     /* ===== إصلاح تنسيق الموبايل لقسم معلومات الحساب ===== */
     @media (max-width: 768px) {
@@ -404,3 +431,65 @@ input:checked + .chip{
   0% { transform: scale(0.8); }
   100% { transform: scale(1.05); }
 }
+
+
+
+/* =========================================================
+   FIX: ad-header exists but not visible (scoped to #tab-ads)
+   Put this at the END of your CSS file
+========================================================= */
+
+/* 1) Don't clip ads tab content */
+#tab-ads.tab-content{
+  overflow-y: visible !important;  /* stop clipping inside ads tab */
+}
+
+/* Keep scrolling on the outer viewport instead (if needed) */
+#tabsViewport{
+  overflow-y: auto !important;
+}
+
+/* 2) Force the card body column to actually render */
+#tab-ads .ad-row > .flex-1{
+  display:block !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+/* 3) Force ad-header + badges visible (this fixes "in DOM but not shown") */
+#tab-ads .ad-header{
+  display:flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 5 !important;
+}
+
+/* If something hides children */
+#tab-ads .ad-header *,
+#tab-ads .status-badge,
+#tab-ads .feature-badge{
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 4) Make sure the card itself doesn't clip */
+#tab-ads .ad-row{
+  overflow: visible !important;
+}
+
+/* 5) Mobile actions grid only (safe) */
+@media (max-width: 480px){
+  #tab-ads .ad-row > div:last-child{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap:8px !important;
+  }
+}
+
+
+
