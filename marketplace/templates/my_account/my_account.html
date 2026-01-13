@@ -1,20 +1,18 @@
+{# templates/my_account/my_account.html #}
+{% extends "base.html" %}
 {% load static i18n %}
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ركن — حسابي</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+{% block title %}ركن — حسابي{% endblock %}
 
-  <!-- shared css -->
+{% block base_css %}
+  {{ block.super }}
+
+  {# keep your existing my_account CSS pipeline #}
+
+
   <link rel="stylesheet" href="{% static 'css/my_account/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/my_account/tabs.css' %}">
 
-  <!-- per-tab css -->
   <link rel="stylesheet" href="{% static 'css/my_account/info.css' %}">
   <link rel="stylesheet" href="{% static 'css/my_account/ads.css' %}">
   <link rel="stylesheet" href="{% static 'css/my_account/requests.css' %}">
@@ -22,69 +20,174 @@
   <link rel="stylesheet" href="{% static 'css/my_account/msgs.css' %}">
   <link rel="stylesheet" href="{% static 'css/my_account/fav.css' %}">
   <link rel="stylesheet" href="{% static 'css/my_account/wallet.css' %}">
-</head>
+{% endblock %}
 
-<body class="rukn-body">
-
-  <!-- expose flags to JS -->
+{% block content %}
+<div class="bg-gray-50" dir="rtl" lang="ar">
   <div id="myAccountRoot"
        data-has-store="{% if store %}1{% else %}0{% endif %}"
        data-save-url="{% url 'my_account_save_info' %}">
   </div>
 
-  <div class="wrap">
-    <h1 class="page-title">👤 حسابي في ركن</h1>
+  <div class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- Top tabs -->
-    <div class="tabs-bar">
-      <div class="tabs-scroll no-scrollbar">
-        <button class="tab-btn active" type="button" data-tab="info">📄 معلوماتي</button>
-        <button class="tab-btn" type="button" data-tab="ads">📢 إعلاناتي</button>
-        <button class="tab-btn" type="button" data-tab="requests">🛒 طلباتي</button>
-        <button class="tab-btn" type="button" data-tab="noti">🔔 إشعارات</button>
-        <button class="tab-btn" type="button" data-tab="msgs">💬 رسائل</button>
-        <button class="tab-btn" type="button" data-tab="fav">⭐ المفضلة</button>
-        <button class="tab-btn" type="button" data-tab="wallet">💰 المحفظة</button>
+    <h1 class="text-3xl font-extrabold text-gray-800 mb-5">👤  حسابي في ركن</h1>
+
+    <!-- ✅ Mobile Tabs (only mobile) -->
+    <div class="sticky top-0 z-50 bg-white border rounded-2xl mb-4">
+      <div class="flex gap-3 overflow-x-auto lg:overflow-visible lg:flex-wrap lg:justify-center px-3 py-3 no-scrollbar">
+
+        <button class="tab-btn active shrink-0" type="button" data-tab="info">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+            <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          معلوماتي
+        </button>
+
+        <button class="tab-btn shrink-0" type="button" data-tab="ads">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 11v2a1 1 0 0 0 1 1h2l8 4V6l-8 4H4a1 1 0 0 0-1 1Z"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linejoin="round"/>
+            <path d="M14 6v12"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round"/>
+            <path d="M19 8a5 5 0 0 1 0 8"
+                  stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round"/>
+          </svg>
+          إعلاناتي
+        </button>
+
+        <button class="tab-btn shrink-0" type="button" data-tab="requests">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+            <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+            <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
+            <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          طلباتي
+        </button>
+
+        <button class="tab-btn shrink-0" type="button" data-tab="noti">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7Z"
+                  stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          إشعارات
+        </button>
+
+        <button class="tab-btn shrink-0" type="button" data-tab="msgs">
+          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+            <path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"
+                  stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+          رسائل
+        </button>
+
+        <button class="tab-btn shrink-0" type="button" data-tab="fav">
+          <svg class="w-6 h-6 fav-heart-icon"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+                     a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+                     l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>
+          </svg>
+          المفضلة
+        </button>
+
+        <button class="tab-btn shrink-0" type="button" data-tab="wallet">
+          <svg width="24" height="24" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"
+               class="lucide lucide-wallet-icon lucide-wallet">
+            <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>
+            <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>
+          </svg>
+          المحفظة
+        </button>
+
       </div>
     </div>
 
-    <main class="content">
-      {% csrf_token %}
+    <div id="mainContentWrap" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-      <section id="tab-info" class="tab-content active card">
-        {% include "my_account/tabs/info.html" %}
-      </section>
+      <!-- محتوى التبويبات -->
+      <div class="lg:col-span-3 w-full min-w-0">
+        <div id="tabsViewport" class="bg-transparent min-h-[85vh]">
 
-      <section id="tab-ads" class="tab-content card">
-        {% include "my_account/tabs/ads.html" %}
-      </section>
+          {% csrf_token %}
 
-      <section id="tab-requests" class="tab-content card">
-        {% include "my_account/tabs/requests.html" %}
-      </section>
+          <!-- معلومات الحساب -->
+          <div id="tab-info" class="tab-content active bg-white border border-orange-500 rounded-2xl p-6 space-y-6">
+            {% include "my_account/tabs/info.html" %}
+          </div>
 
-      <section id="tab-noti" class="tab-content card">
-        {% include "my_account/tabs/noti.html" %}
-      </section>
+          <!-- باقي التبويبات (مكانها محفوظ كما في الموكاب) -->
+          <div id="tab-ads" class="tab-content bg-white border rounded-2xl p-6 hidden">
+            {% include "my_account/tabs/ads.html" %}
+          </div>
 
-      <section id="tab-msgs" class="tab-content card">
-        {% include "my_account/tabs/msgs.html" %}
-      </section>
+          <div id="tab-requests" class="tab-content bg-white border rounded-2xl p-6 hidden">
+            {% include "my_account/tabs/requests.html" %}
+          </div>
 
-      <section id="tab-fav" class="tab-content card">
-        {% include "my_account/tabs/fav.html" %}
-      </section>
+          <div id="tab-noti" class="tab-content bg-white border rounded-2xl p-6 hidden">
+            {% include "my_account/tabs/noti.html" %}
+          </div>
 
-      <section id="tab-wallet" class="tab-content card">
-        {% include "my_account/tabs/wallet.html" %}
-      </section>
-    </main>
+          <div id="tab-msgs" class="tab-content bg-white border rounded-2xl p-6 hidden">
+            {% include "my_account/tabs/msgs.html" %}
+          </div>
+
+          <div id="tab-fav" class="tab-content bg-white border rounded-2xl p-6 hidden">
+            {% include "my_account/tabs/fav.html" %}
+          </div>
+
+          <div id="tab-wallet" class="tab-content bg-white border rounded-2xl p-6 hidden">
+            {% include "my_account/tabs/wallet.html" %}
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </div>
 
-  <!-- shared js -->
+  <!-- ✅ Success Modal -->
+  <div id="successModal"
+       class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[9999]">
+
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm text-center shadow-xl">
+      <h3 id="successTitle" class="text-lg font-extrabold text-green-600 mb-2">
+        تم التنفيذ بنجاح
+      </h3>
+
+      <p id="successMsg" class="text-gray-700 mb-5">
+        تم حفظ المعلومات بنجاح
+      </p>
+
+      <button type="button" onclick="closeSuccessModal()"
+              class="px-6 py-2 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600">
+        حسناً
+      </button>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+
   <script src="{% static 'js/my_account/tabs.js' %}"></script>
 
-  <!-- per-tab js -->
   <script src="{% static 'js/my_account/info.js' %}"></script>
   <script src="{% static 'js/my_account/ads.js' %}"></script>
   <script src="{% static 'js/my_account/requests.js' %}"></script>
@@ -92,5 +195,4 @@
   <script src="{% static 'js/my_account/msgs.js' %}"></script>
   <script src="{% static 'js/my_account/fav.js' %}"></script>
   <script src="{% static 'js/my_account/wallet.js' %}"></script>
-</body>
-</html>
+{% endblock %}

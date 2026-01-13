@@ -1,21 +1,36 @@
-{# expects: request.user, store, cities #}
+{# templates/my_account/tabs/info.html #}
 
-<div class="info-head">
-  <div class="info-head__title">
-    <h3 class="info-title">📝 معلومات الحساب</h3>
-    <div class="info-chip">عدّل بيانات حسابك لتظهر بشكل احترافي في ركن.</div>
+<div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2">
+  <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2 whitespace-nowrap">
+    <svg class="w-7 h-7 text-orange-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    معلومات الحساب
+  </h3>
+
+  <div class="px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-xs font-semibold text-orange-700 w-fit max-w-full">
+    عدّل بيانات حسابك لتظهر بشكل احترافي في ركن.
   </div>
 </div>
 
-<div class="hero-box">
+<!-- الصورة + الاسم + التسجيل -->
+<div class="bg-orange-50 border border-orange-200 rounded-2xl p-4 relative">
+
   {% if store %}
-    <div class="hero-badge">🛡️ حساب تاجر</div>
+    <div class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white border border-orange-200 text-xs font-semibold text-orange-700 shadow">
+      🛡️ حساب تاجر
+    </div>
   {% endif %}
 
-  <div class="hero-inner">
+  <div class="flex flex-col md:flex-row items-center md:items-center justify-center gap-6 mx-auto w-fit text-center">
 
-    <div class="hero-profile">
-      <div id="profilePreview" class="avatar avatar--lg">
+    <!-- صورة الحساب -->
+    <div class="relative flex flex-col items-center gap-3">
+      <div id="profilePreview"
+           class="w-28 h-28 rounded-full bg-white text-orange-700 flex items-center justify-center text-4xl font-extrabold relative">
+
         <span id="profileInitials">
           {% if request.user.username %}
             {{ request.user.username|slice:":1" }}
@@ -26,31 +41,29 @@
           {% endif %}
         </span>
 
-        <img
-          id="profileImage"
-          src="{% if request.user.profile_photo %}{{ request.user.profile_photo.url }}{% endif %}"
-          alt="صورة الحساب"
-          class="{% if request.user.profile_photo %}avatar-img{% else %}avatar-img hidden{% endif %}"
-          data-has-image="{% if request.user.profile_photo %}true{% else %}false{% endif %}"
-        />
+        <img id="profileImage"
+             src="{% if request.user.profile_photo %}{{ request.user.profile_photo.url }}{% endif %}"
+             alt="صورة الحساب"
+             class="{% if request.user.profile_photo %}{% else %}hidden{% endif %}" />
 
         <button type="button" id="removeProfileBtn"
-                class="avatar-remove {% if request.user.profile_photo %}show{% endif %}">
+                class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white text-xs shadow hover:bg-red-600 flex items-center justify-center {% if request.user.profile_photo %}{% else %}hidden{% endif %}">
           ✕
         </button>
       </div>
 
-      <label class="btn btn--orange btn--sm btn--shadow">
-        📸 إضافة / تغيير الصورة
+      <label class="cursor-pointer px-3 py-1.5 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 shadow">
+        إضافة / تغيير الصورة
         <input type="file" id="profileImgInput" class="hidden" accept="image/*">
       </label>
     </div>
 
-    <div id="accountHeaderBox" class="hero-meta">
-      <div id="nameDateRow" class="hero-meta__inner">
+    <!-- الاسم + تاريخ التسجيل -->
+    <div id="accountHeaderBox" class="min-w-0 text-center">
+      <div id="nameDateRow" class="flex flex-col items-center gap-2">
 
-        <div class="hero-nameblock">
-          <p id="fullName" class="hero-name">
+        <div class="w-full">
+          <p id="fullName" class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-wide">
             {% if store and store.name %}
               {{ store.name }}
             {% elif request.user.username %}
@@ -60,19 +73,24 @@
             {% endif %}
           </p>
 
-          <p id="displayNote" class="hero-note">
+          <p id="displayNote" class="text-sm text-gray-500">
             {% if store and store.name %}
-              اسم المتجر هو الذي سيظهر للآخرين في الإعلانات والرسائل و كذلك لوجو المتجر .
+              اسم المتجر هو الذي سيظهر للآخرين في الإعلانات والرسائل وكذلك لوجو المتجر.
             {% else %}
               هذا الاسم سيظهر للآخرين في الإعلانات والطلبات والرسائل.
             {% endif %}
           </p>
         </div>
 
-        <div id="registerBox" class="hero-register">
-          <span class="hero-register__icon">📅</span>
+        <div id="registerBox"
+             class="flex items-center gap-2 bg-white border border-orange-200 px-3 py-1.5 rounded-xl text-xs text-gray-600">
+          <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+            <path d="M16 2v4M8 2v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
           <span>تاريخ التسجيل:</span>
-          <span id="registerDate" class="hero-register__date">{{ request.user.date_joined|date:"Y/m/d" }}</span>
+          <span id="registerDate" class="font-semibold text-orange-700">{{ request.user.date_joined|date:"Y/m/d" }}</span>
         </div>
 
       </div>
@@ -81,148 +99,435 @@
   </div>
 </div>
 
-<div class="panel">
-  <form id="accountForm" class="form-grid" autocomplete="off">
-    <div class="form-row">
-      <label class="form-label">الاسم الأول <span class="req">*</span></label>
-      <div class="form-control">
-        <input id="firstName" type="text" value="{{ request.user.first_name|default_if_none:'' }}">
-        <p id="firstNameError" class="field-error-text hidden"></p>
+<!-- معلومات الحساب -->
+<div class="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-6">
+
+  <form id="accountForm" class="grid grid-cols-1 md:grid-cols-2 gap-6" autocomplete="off">
+
+    <!-- الاسم الأول -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <label class="text-sm text-gray-600 w-28 whitespace-nowrap flex items-center gap-1">
+        الاسم الأول <span class="text-red-500">*</span>
+      </label>
+      <div class="flex-1">
+        <input id="firstName" type="text" placeholder="مثال: أحمد"
+               value="{{ request.user.first_name|default_if_none:'' }}"
+               class="w-full p-3 border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
+        <p id="firstNameError" class="field-error-text text-red-500 hidden"></p>
       </div>
     </div>
 
-    <div class="form-row">
-      <label class="form-label">الاسم الأخير <span class="req">*</span></label>
-      <div class="form-control">
-        <input id="lastName" type="text" value="{{ request.user.last_name|default_if_none:'' }}">
-        <p id="lastNameError" class="field-error-text hidden"></p>
+    <!-- الاسم الأخير -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <label class="text-sm text-gray-600 w-28 whitespace-nowrap flex items-center gap-1">
+        الاسم الأخير <span class="text-red-500">*</span>
+      </label>
+      <div class="flex-1">
+        <input id="lastName" type="text" placeholder="مثال: الأحمد"
+               value="{{ request.user.last_name|default_if_none:'' }}"
+               class="w-full p-3 border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
+        <p id="lastNameError" class="field-error-text text-red-500 hidden"></p>
       </div>
     </div>
 
-    <div class="form-row">
-      <label class="form-label">الاسم المستعار</label>
-      <div class="form-control">
-        <input id="nickname" type="text" value="{{ request.user.username|default_if_none:'' }}">
+    <!-- الاسم المستعار -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+        الاسم المستعار
+      </label>
+      <input id="nickname" type="text" placeholder="مثال: Ahmad2025"
+             value="{{ request.user.username|default_if_none:'' }}"
+             class="flex-1 p-3 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200">
+    </div>
+
+    <!-- الإيميل -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+        الإيميل
+      </label>
+
+      <div class="flex-1 relative">
+        <input id="email" type="email"
+               value="{{ request.user.email|default_if_none:'' }}"
+               class="w-full p-3 pr-10 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+               placeholder="example@mail.com">
+
+        <span id="emailOk" class="hidden absolute left-3 top-1/2 -translate-y-1/2">
+          <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+
+        <p id="emailError" class="field-error-text text-red-500 hidden mt-1"></p>
       </div>
     </div>
 
-    <div class="form-row">
-      <label class="form-label">الإيميل</label>
-      <div class="form-control">
-        <input id="email" type="email" value="{{ request.user.email|default_if_none:'' }}">
-        <p id="emailError" class="field-error-text hidden"></p>
-      </div>
+    <!-- نوع الحساب -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+        نوع الحساب
+      </label>
+      <input disabled type="text"
+             class="flex-1 p-3 border bg-gray-100 rounded-xl text-gray-500"
+             value="{% if store %}تاجر{% else %}مستخدم{% endif %}">
     </div>
 
-    <div class="form-row">
-      <label class="form-label">نوع الحساب</label>
-      <div class="form-control">
-        <input disabled type="text" value="{% if store %}تاجر{% else %}مستخدم{% endif %}">
-      </div>
+    <!-- رقم الهاتف -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+      <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+        رقم الهاتف
+      </label>
+      <input disabled type="text"
+             class="flex-1 p-3 border bg-gray-100 rounded-xl text-gray-500"
+             value="{{ request.user.phone }}">
     </div>
 
-    <div class="form-row">
-      <label class="form-label">رقم الهاتف</label>
-      <div class="form-control">
-        <input disabled type="text" value="{{ request.user.phone }}">
-      </div>
-    </div>
   </form>
 </div>
 
 {% if store %}
-  <div class="panel">
-    <div class="panel-head">
-      <h3 class="panel-title">🏪 معلومات المتجر</h3>
-      <div class="info-chip">عدّل بيانات متجرك ليظهر بشكل احترافي في ركن.</div>
+  <div class="bg-gray-50 border border-gray-200 rounded-2xl p-5 space-y-4">
+
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2">
+      <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-7 h-7 text-orange-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 9l1-5h16l1 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 9v10h14V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 19v-6h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        معلومات المتجر
+      </h3>
+
+      <div class="px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-xs font-semibold text-orange-700 w-fit max-w-full">
+        عدّل بيانات متجرك ليظهر بشكل احترافي في ركن.
+      </div>
     </div>
 
-    <div class="form-grid">
-      <div class="form-row">
-        <label class="form-label">اسم المتجر <span class="req">*</span></label>
-        <div class="form-control">
-          <input id="storeName" type="text" value="{{ store.name|default_if_none:'' }}">
-          <p id="storeNameError" class="field-error-text hidden"></p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- اسم المتجر -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap flex items-center gap-1">
+          اسم المتجر <span class="text-red-500">*</span>
+        </label>
+        <div class="flex-1">
+          <input id="storeName" type="text"
+                 value="{{ store.name|default_if_none:'' }}"
+                 class="w-full p-3 border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-300"
+                 placeholder="مثال: متجر التقنية">
+          <p id="storeNameError" class="field-error-text text-red-500 hidden"></p>
         </div>
       </div>
 
-      <div class="form-row">
-        <label class="form-label">لوجو المتجر</label>
-        <div class="form-control">
-          <div class="logo-row">
-            <label class="btn btn--orange btn--sm btn--shadow">
-              🏬 إضافة / تغيير لوجو المتجر
+      <!-- لوجو المتجر -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+          لوجو المتجر
+        </label>
+
+        <div class="flex-1">
+          <div class="flex items-center justify-start gap-4 flex-wrap">
+
+            <label class="cursor-pointer px-3 py-2 rounded-xl bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 shadow shrink-0">
+              إضافة / تغيير لوجو المتجر
               <input type="file" id="storeLogoInput" accept="image/*" class="hidden">
             </label>
 
-            <div id="storeLogoPreview" class="avatar avatar--lg">
+            <div id="storeLogoPreview"
+                 class="w-28 h-28 rounded-full border-4 border-orange-500 bg-white flex items-center justify-center text-2xl font-extrabold text-orange-700 relative select-none">
               <span id="storeLogoInitial">
                 {% if store.name %}{{ store.name|slice:":1" }}{% else %}م{% endif %}
               </span>
 
               <img id="storeLogoImage"
                    src="{% if store.logo %}{{ store.logo.url }}{% endif %}"
-                   class="{% if store.logo %}avatar-img{% else %}avatar-img hidden{% endif %}"
-                   data-has-image="{% if store.logo %}true{% else %}false{% endif %}">
+                   class="{% if store.logo %}{% else %}hidden{% endif %} absolute inset-0 w-full h-full object-contain bg-white rounded-full" />
 
               <button type="button" id="removeStoreLogoBtn"
-                      class="avatar-remove {% if store.logo %}show{% endif %}">✕</button>
+                      class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white text-xs shadow hover:bg-red-600 flex items-center justify-center {% if store.logo %}{% else %}hidden{% endif %}">
+                ✕
+              </button>
             </div>
+
           </div>
         </div>
       </div>
 
-      <div class="form-row">
-        <label class="form-label">عنوان المتجر</label>
-        <div class="form-control">
-          <input id="storeLocation" type="text" value="{{ store.address|default_if_none:'' }}">
+      <!-- تخصص المتجر -->
+      <div class="md:col-span-2 flex flex-col sm:flex-row sm:items-start gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap pt-2">
+          تخصص المتجر <span class="text-red-500">*</span>
+        </label>
+        <div class="flex-1">
+          <input id="storeSpecialty" type="text" maxlength="100"
+                 value="{{ store.specialty|default_if_none:'' }}"
+                 class="w-full p-3 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+                 placeholder="مثال: بيع الأجهزة الإلكترونية المستعملة والجديدة">
+          <p id="storeSpecialtyError" class="field-error-text text-red-500 hidden"></p>
         </div>
       </div>
 
-      <div class="form-row">
-        <label class="form-label">المدينة</label>
-        <div class="form-control">
-          <select id="storeCity">
-            <option value="">— اختر المدينة —</option>
-            {% for c in cities %}
-              <option value="{{ c.id }}" {% if store.city_id == c.id %}selected{% endif %}>{{ c.name_ar }}</option>
-            {% endfor %}
-          </select>
+      <!-- عنوان المتجر -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+          عنوان المتجر
+        </label>
+
+        <input id="storeLocation" type="text"
+               value="{{ store.address|default_if_none:'' }}"
+               class="flex-1 p-3 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+               placeholder="عمان - صويلح">
+      </div>
+
+      <!-- الموقع الإلكتروني -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+          الموقع الإلكتروني
+        </label>
+
+        <div class="flex-1 relative">
+          <input id="storeWebsite" type="text"
+                 value="{{ store.website|default_if_none:'' }}"
+                 class="w-full p-3 pr-10 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+                 placeholder="https://example.com">
+
+          <span id="storeWebsiteOk" class="hidden absolute left-3 top-1/2 -translate-y-1/2">
+            <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+
+          <p id="storeWebsiteError" class="field-error-text text-red-500 hidden mt-1"></p>
         </div>
       </div>
 
-      <div class="form-row">
-        <label class="form-label">الموقع الإلكتروني</label>
-        <div class="form-control">
-          <input id="storeWebsite" type="text" value="{{ store.website|default_if_none:'' }}">
-          <p id="storeWebsiteError" class="field-error-text hidden"></p>
+      <!-- إنستجرام -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+          إنستجرام
+        </label>
+
+        <div class="flex-1 relative">
+          <input id="instagramLink" type="text"
+                 value="{{ store.instagram|default_if_none:'' }}"
+                 class="w-full p-3 pr-10 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+                 placeholder="https://instagram.com/username">
+
+          <span id="instagramOk" class="hidden absolute left-3 top-1/2 -translate-y-1/2">
+            <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+
+          <p id="instagramError" class="field-error-text text-red-500 hidden mt-1"></p>
         </div>
       </div>
 
-      <div class="form-row">
-        <label class="form-label">انستغرام</label>
-        <div class="form-control">
-          <input id="storeInstagram" type="text" value="{{ store.instagram|default_if_none:'' }}">
+      <!-- فيسبوك -->
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap">
+          فيسبوك
+        </label>
+
+        <div class="flex-1 relative">
+          <input id="facebookLink" type="text"
+                 value="{{ store.facebook|default_if_none:'' }}"
+                 class="w-full p-3 pr-10 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+                 placeholder="https://facebook.com/page">
+
+          <span id="facebookOk" class="hidden absolute left-3 top-1/2 -translate-y-1/2">
+            <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+
+          <p id="facebookError" class="field-error-text text-red-500 hidden mt-1"></p>
         </div>
       </div>
 
-      <div class="form-row">
-        <label class="form-label">فيسبوك</label>
-        <div class="form-control">
-          <input id="storeFacebook" type="text" value="{{ store.facebook|default_if_none:'' }}">
+      <!-- وصف المتجر -->
+      <div class="md:col-span-2 flex flex-col sm:flex-row sm:items-start gap-3">
+        <label class="text-sm text-gray-600 w-28 whitespace-nowrap pt-2">
+          وصف المتجر <span class="text-red-500">*</span>
+        </label>
+
+        <div class="flex-1">
+          <textarea id="storeDesc" rows="3"
+                    class="w-full p-3 border rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-orange-200"
+                    placeholder="نبذة بسيطة عن المتجر...">{{ store.description|default_if_none:'' }}</textarea>
+          <p id="storeDescError" class="field-error-text text-red-500 hidden"></p>
         </div>
       </div>
 
-      <div class="form-row form-row--full">
-        <label class="form-label">وصف المتجر</label>
-        <div class="form-control">
-          <textarea id="storeDesc" rows="3">{{ store.description|default_if_none:'' }}</textarea>
+      <!-- ✅ إعدادات عرض رقم الهاتف (1/4) -->
+      <div id="contactBox" class="bg-white border border-orange-500 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none">
+            <path d="M22 16.92V19a2 2 0 0 1-2.18 2
+                     19.8 19.8 0 0 1-8.63-3.07
+                     19.5 19.5 0 0 1-6-6
+                     19.8 19.8 0 0 1-3.07-8.67
+                     A2 2 0 0 1 4 2h2.09
+                     a2 2 0 0 1 2 1.72
+                     12.8 12.8 0 0 0 .7 2.81
+                     a2 2 0 0 1-.45 2.11L7 9
+                     a16 16 0 0 0 6 6l.36-.36
+                     a2 2 0 0 1 2.11-.45
+                     12.8 12.8 0 0 0 2.81.7
+                     a2 2 0 0 1 1.72 2z"
+                  stroke="currentColor" stroke-width="2"/>
+          </svg>
+
+          <h3 class="font-extrabold text-gray-800">إعدادات عرض رقم الهاتف</h3>
+
+          <span class="text-xs px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 font-semibold">
+            اختر واحدة
+          </span>
         </div>
+
+        <div class="flex flex-wrap justify-center gap-3">
+          <label class="cursor-pointer">
+            <input type="radio" name="showMobile" value="yes" class="peer hidden"
+                   {% if store.show_phone %}checked{% endif %}>
+            <span class="chip">نعم، إظهار رقم الموبايل</span>
+          </label>
+
+          <label class="cursor-pointer">
+            <input type="radio" name="showMobile" value="no" class="peer hidden"
+                   {% if store.show_phone == False %}checked{% endif %}>
+            <span class="chip">لا، التواصل عبر الرسائل فقط</span>
+          </label>
+        </div>
+
+        <p id="contactError" class="field-error-text text-red-500 hidden text-center"></p>
       </div>
+
+      <!-- ✅ طرق الدفع المتوفرة (2/4) -->
+      <div id="paymentBox" class="bg-white border border-green-500 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"></rect>
+            <path d="M2 10h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M6 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+
+          <h3 class="font-extrabold text-gray-800">طرق الدفع المتوفرة</h3>
+
+          <span class="text-xs px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 font-semibold">
+            اختر طريقة أو أكثر
+          </span>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3">
+          <label class="cursor-pointer">
+            <input type="checkbox" name="paymentMethods" value="cash" class="peer hidden"
+                   {% if store.payment_methods and "cash" in store.payment_methods %}checked{% endif %}>
+            <span class="chip">كاش</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="checkbox" name="paymentMethods" value="card" class="peer hidden"
+                   {% if store.payment_methods and "card" in store.payment_methods %}checked{% endif %}>
+            <span class="chip">بطاقة</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="checkbox" name="paymentMethods" value="cliq" class="peer hidden"
+                   {% if store.payment_methods and "cliq" in store.payment_methods %}checked{% endif %}>
+            <span class="chip">كليك</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="checkbox" name="paymentMethods" value="transfer" class="peer hidden"
+                   {% if store.payment_methods and "transfer" in store.payment_methods %}checked{% endif %}>
+            <span class="chip">تحويل</span>
+          </label>
+        </div>
+
+        <p id="paymentError" class="field-error-text text-red-500 hidden text-center"></p>
+      </div>
+
+      <!-- ✅ سياسة التوصيل (3/4) -->
+      <div id="deliveryBox" class="bg-white border border-green-500 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none">
+            <path d="M10 17h4V5H2v12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M14 8h5l3 3v6h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            <circle cx="7" cy="17" r="2" stroke="currentColor" stroke-width="2"></circle>
+            <circle cx="17" cy="17" r="2" stroke="currentColor" stroke-width="2"></circle>
+          </svg>
+
+          <h3 class="font-extrabold text-gray-800">سياسة التوصيل</h3>
+
+          <span class="text-xs px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 font-semibold">
+            اختر واحدة
+          </span>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3">
+          <label class="cursor-pointer">
+            <input type="radio" name="deliveryTime" value="24" class="peer hidden"
+                   {% if store.delivery_policy == "24" %}checked{% endif %}>
+            <span class="chip">خلال 24 ساعة</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="deliveryTime" value="48" class="peer hidden"
+                   {% if store.delivery_policy == "48" %}checked{% endif %}>
+            <span class="chip">خلال 48 ساعة</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="deliveryTime" value="72" class="peer hidden"
+                   {% if store.delivery_policy == "72" %}checked{% endif %}>
+            <span class="chip">خلال 72 ساعة</span>
+          </label>
+        </div>
+
+        <p id="deliveryError" class="field-error-text text-red-500 hidden text-center"></p>
+      </div>
+
+      <!-- ✅ سياسة الإرجاع (4/4) -->
+      <div id="returnBox" class="bg-white border border-orange-500 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none">
+            <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 4v6h-6" stroke="currentColor" stroke-width="2"/>
+          </svg>
+
+          <h3 class="font-extrabold text-gray-800">سياسة الإرجاع</h3>
+
+          <span class="text-xs px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 font-semibold">
+            اختر واحدة
+          </span>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-3">
+          <label class="cursor-pointer">
+            <input type="radio" name="returnPolicy" value="3" class="peer hidden"
+                   {% if store.return_policy == "3" %}checked{% endif %}>
+            <span class="chip">خلال 3 أيام</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="returnPolicy" value="7" class="peer hidden"
+                   {% if store.return_policy == "7" %}checked{% endif %}>
+            <span class="chip">خلال 7 أيام</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="returnPolicy" value="none" class="peer hidden"
+                   {% if store.return_policy == "none" %}checked{% endif %}>
+            <span class="chip">لا يوجد إرجاع</span>
+          </label>
+        </div>
+
+        <p id="returnError" class="field-error-text text-red-500 hidden text-center"></p>
+      </div>
+
+
     </div>
   </div>
 {% endif %}
 
-<div class="actions">
-  <button id="saveBtn" type="button">💾 حفظ التعديلات</button>
+<div class="text-center pt-2">
+  <button id="saveBtn"
+          type="button"
+          onclick="saveAccountInfo()"
+          class="px-8 py-3 bg-[var(--rukn-orange)] text-white rounded-xl font-bold text-lg">
+    حفظ التعديلات
+  </button>
 </div>

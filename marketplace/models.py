@@ -178,6 +178,26 @@ class Store(models.Model):
     rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=0)
     rating_count = models.PositiveIntegerField(default=0)
 
+    specialty = models.CharField(max_length=100, blank=True)  # تخصص المتجر (optional in DB)
+    show_phone = models.BooleanField(default=True)  # إعدادات عرض رقم الهاتف
+
+    # store payment methods: ["cash","card","cliq","transfer"]
+    payment_methods = models.JSONField(default=list, blank=True)
+
+    DELIVERY_CHOICES = [
+        ("24", "خلال 24 ساعة"),
+        ("48", "خلال 48 ساعة"),
+        ("72", "خلال 72 ساعة"),
+    ]
+    delivery_policy = models.CharField(max_length=2, choices=DELIVERY_CHOICES, blank=True)
+
+    RETURN_CHOICES = [
+        ("3", "خلال 3 أيام"),
+        ("7", "خلال 7 أيام"),
+        ("none", "لا يوجد إرجاع"),
+    ]
+    return_policy = models.CharField(max_length=10, choices=RETURN_CHOICES, blank=True)
+
     class Meta:
         ordering = ["-created_at"]
         indexes = [

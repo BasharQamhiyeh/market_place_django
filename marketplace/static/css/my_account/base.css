@@ -1,212 +1,406 @@
-/* =========================================================
-   base.css
-   - Variables + base layout + shared utilities + shared components (card/panel/form/buttons)
-========================================================= */
+:root {
+      --rukn-orange:#ff7a18;
+      --rukn-green:#16a34a;
+      --rukn-gray:#f3f4f6;
+      --muted:#6b7280;
+    }
 
-:root{
-  --rukn-orange:#ff7a18;
-  --rukn-green:#16a34a;
-  --rukn-gray:#f3f4f6;
-  --muted:#6b7280;
+	 html, body { width: 100%; overflow-x: hidden; }
+    body{
+      font-family:'Cairo',sans-serif;
+      background:#f9fafb;
+      color:#111827;
+    }
 
-  --bg:#f9fafb;
-  --text:#111827;
-  --border:#e5e7eb;
+    @media (max-width: 480px){
+      .tab-btn{ padding:10px 12px; font-size:14px; }
+    }
+    @media (max-width: 480px){
+      .ad-row > div:last-child,
+      .request-row > div:last-child{
+        display:grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap:8px;
+      }
+    }
+    @media (max-width: 360px){
+      #tab-ads h2, #tab-requests h2{ font-size:14px !important; }
+      #tab-ads button, #tab-requests button,
+      #tab-ads div[class*="bg-"], #tab-requests div[class*="bg-"]{
+        font-size:11px !important;
+        padding:6px 8px !important;
+      }
+    }
 
-  --radius-2xl:16px;
-  --radius-xl:12px;
+    input, textarea, select { font-size: 16px; }
+    @media(min-width:768px){
+      input, textarea, select { font-size: 14px; }
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      font-weight: 700;
+	  font-size: 15px;
+      border-radius: 16px;
+      border: 2px solid #e5e7eb;
+      transition: .25s ease;
+      color: #374151;
+      background:white;
+      white-space: nowrap;
+
+	   /* ✅ حجم مريح وثابت */
+  min-width: 140px;
+  justify-content: center;
+    }
+    .tab-btn:hover {
+      background:#fff7f1;
+      border-color: var(--rukn-orange);
+    }
+    .tab-btn.active {
+      background: var(--rukn-orange);
+      border-color: var(--rukn-orange);
+      color: white !important;
+      box-shadow: 0 0 10px #ff7a1830;
+    }
+
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .timeline-date {
+      font-weight: 900;
+      color: #ff7a18;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+    .timeline-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 15px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      transition: .25s;
+    }
+    .timeline-item:hover {
+      background: #fff7f1;
+      border-color: var(--rukn-orange);
+      box-shadow: 0 2px 8px #ff7a1820;
+    }
+
+    .field-error-text { font-size: 11px; margin-top: 4px; }
+
+    /* ====== Avatar / Logo unified styles (FIXED X button) ====== */
+#profilePreview, #storeLogoPreview {
+  position: relative;
+  border-radius: 50%;
+  background:#ffffff;
+  border: 4px solid #ff7a18;
+  /* مهم: لا تقص الزر */
+  overflow: visible;
 }
 
-/* base */
-*{ box-sizing:border-box; }
-html,body{ width:100%; overflow-x:hidden; }
-body.rukn-body{
-  margin:0;
-  font-family:'Cairo',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
+/* قصّ الدائرة على الصورة نفسها */
+#profileImage, #storeLogoImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 50%;
+  z-index: 5;
 }
 
-/* container / title */
-.wrap{
-  max-width:1280px;
-  margin:0 auto;
-  padding:24px 16px;
-}
-.page-title{
-  margin:0 0 20px;
-  font-size:30px;
-  line-height:1.15;
-  font-weight:800;
-  color:#1f2937;
-}
-
-/* hide sidebar (unified top tabs) */
-#leftTabsSidebar{ display:none !important; }
-.layout{ display:block; }
-.content{ min-width:0; }
-
-/* utilities */
-.hidden{ display:none !important; }
-.no-scrollbar::-webkit-scrollbar{ display:none; }
-.no-scrollbar{ scrollbar-width:none; -ms-overflow-style:none; }
-
-/* card */
-.card{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:var(--radius-2xl);
-  padding:24px;
+/* ✅ initials */
+#profileInitials, #storeLogoInitial {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-weight: 800;
+  z-index: 4;
+  text-align: center;
+  pointer-events: none;
 }
 
-/* panel */
-.panel{
-  background:#f9fafb;
-  border:1px solid var(--border);
-  border-radius:var(--radius-2xl);
-  padding:20px;
-  margin-top:16px;
-}
-.panel-head{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-bottom:12px;
-}
-@media (min-width:640px){
-  .panel-head{
-    flex-direction:row;
-    align-items:center;
-    gap:10px;
-  }
-}
-.panel-title{
-  margin:0;
-  font-weight:800;
-  font-size:18px;
-  color:#1f2937;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  white-space:nowrap;
-}
-
-/* buttons */
-.btn{
-  display:inline-flex;
+/* زر الحذف */
+#removeProfileBtn, #removeStoreLogoBtn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 999;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  display:flex !important;
   align-items:center;
   justify-content:center;
-  gap:8px;
-  border-radius:12px;
-  border:1px solid transparent;
-  cursor:pointer;
-  user-select:none;
-  font-weight:700;
+  opacity: 0;
+  pointer-events: none;
   transition:.2s ease;
 }
-.btn--sm{ padding:6px 12px; font-size:12px; }
-.btn--orange{ background:var(--rukn-orange); color:#fff; }
-.btn--orange:hover{ background:#f97316; }
-.btn--shadow{ box-shadow:0 4px 10px rgba(0,0,0,.08); }
 
-/* forms shared */
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:24px;
+#removeProfileBtn.show, #removeStoreLogoBtn.show{
+  opacity: 1;
+  pointer-events: auto;
 }
-@media (min-width:768px){
-  .form-grid{ grid-template-columns:1fr 1fr; }
-}
-.form-row{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-@media (min-width:640px){
-  .form-row{
-    flex-direction:row;
-    align-items:center;
-    gap:12px;
+
+
+    .pill-blue { background:#dbeafe; color:#1d4ed8; border:1px solid #93c5fd; border-radius:12px; }
+    .pill-red { background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; border-radius:12px; }
+    .pill-green { background:#dcfce7; color:#15803d; border:1px solid #86efac; border-radius:12px; }
+    .pill-orange { background:#ffedd5; color:#c2410c; border:1px solid #fdba74; border-radius:12px; }
+
+    .status-badge {
+      padding: 3px 10px;
+      font-size: 12px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+    .status-active { background:#dcfce7; color:#15803d; }
+    .status-pending { background:#fef9c3; color:#b45309; }
+    .status-rejected { background:#fee2e2; color:#b91c1c; }
+
+    .ad-header {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:6px;
+      flex-wrap: wrap;
+    }
+    .ad-id {
+      background:#f3f4f6;
+      padding:2px 8px;
+      font-size:12px;
+      border-radius:8px;
+      color:#555;
+      display:flex;
+      align-items:center;
+      gap:4px;
+      font-weight:bold;
+    }
+    .feature-badge {
+      background:#f97316;
+      color:white;
+      padding:2px 8px;
+      border-radius:8px;
+      font-size:12px;
+      font-weight:bold;
+    }
+
+    /* ===== إصلاح تنسيق الموبايل لقسم معلومات الحساب ===== */
+    @media (max-width: 768px) {
+      #accountHeaderBox { text-align: center !important; }
+      #profilePreview { margin-left: auto !important; margin-right: auto !important; }
+      #fullName { width: 100%; text-align: center !important; }
+      #displayNote { text-align: center !important; }
+      #registerBox { margin-left: auto !important; margin-right: auto !important; }
+      #nameDateRow { flex-direction: column !important; align-items: center !important; }
+    }
+    @media (min-width: 768px) {
+      #accountHeaderBox { display: flex; flex-direction: column; justify-content: center; }
+      #headerRow { display: flex; align-items: center !important; gap: 25px; width: 100%; }
+      #profilePreview { flex-shrink: 0; margin: 0 !important; }
+      #fullName { font-size: 30px; font-weight: 800; margin: 0; padding: 0; text-align: right !important; }
+      #displayNote { font-size: 14px; color: #6b7280; margin-top: 4px; margin-bottom: 10px; text-align: right !important; }
+      #registerBox { align-self: flex-start; margin-top: 2px; text-align: right !important; }
+      #nameDateRow { display: flex; flex-direction: column; justify-content: center !important; align-items: flex-start; gap: 4px; width: 100%; height: 100%; }
+    }
+
+	@media (min-width: 768px) {
+  /* ✅ توسيط محتوى الهيدر داخل البوكس */
+  #accountHeaderBox{
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  #nameDateRow{
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  #fullName,
+  #displayNote{
+    text-align: center !important;
+  }
+
+  #registerBox{
+    align-self: center !important;
+    text-align: center !important;
   }
 }
-.form-row--full{
-  grid-column:1 / -1;
-  align-items:flex-start;
+
+
+	/* ✅ hide desktop sidebar because we unified tabs to top bar */
+#leftTabsSidebar{ display:none !important; }
+#mainContentWrap{ grid-template-columns: 1fr !important; }
+
+
+
+    /* ===== رسائل: فلاتر ===== */
+    .chat-filter-btn{
+      padding: 7px 14px;
+      border:1px solid #e5e7eb;
+      border-radius: 999px;
+      font-weight:700;
+      font-size: 13px;
+      background:#fff;
+      color:#374151;
+      transition:.2s;
+    }
+    .chat-filter-btn:hover{
+      background:#fff7f1;
+      border-color: var(--rukn-orange);
+    }
+    .chat-filter-btn.active{
+      background: var(--rukn-orange);
+      border-color: var(--rukn-orange);
+      color:#fff;
+      box-shadow: 0 0 8px #ff7a1830;
+    }
+    .chat-item{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:14px;
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      cursor:pointer;
+      transition:.2s;
+      background:#fff;
+    }
+    .chat-item:hover{
+      background:#f9fafb;
+      border-color:#fdba74;
+      box-shadow:0 2px 8px #0000000a;
+    }
+    .chat-lastline{
+      font-size:13px;
+      color:#6b7280;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+    }
+
+    /* ✅ Mobile Top Scrollable Tabs */
+    .no-scrollbar::-webkit-scrollbar{ display:none; }
+    .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+    /* ✅ Hide left sidebar only on mobile, keep desktop untouched */
+    @media (max-width: 1023px){
+      #leftTabsSidebar{ display:none !important; }
+      #mainContentWrap{ grid-template-columns: 1fr !important; }
+    }
+
+	/* ✅ إصلاح قص إطار بوكس الرسائل على الموبايل */
+@media (max-width: 768px) {
+  #tab-msgs,
+  #tab-chat {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* المحتوى الداخلي */
+  #tab-msgs > *,
+  #tab-chat > * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
-.form-label{
-  font-size:14px;
-  color:#6b7280;
-  width:112px;
-  white-space:nowrap;
-  display:flex;
+
+.chip{
+  display:inline-flex;
   align-items:center;
   gap:6px;
-}
-.form-control{ flex:1; min-width:0; }
-.req{ color:#ef4444; font-weight:700; }
-
-/* inputs */
-input, textarea, select{ font-size:16px; font-family:inherit; }
-@media(min-width:768px){ input, textarea, select{ font-size:14px; } }
-
-input, textarea, select{
-  width:100%;
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:12px;
+  padding:8px 14px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
   background:#fff;
-  color:#111827;
-  outline:none;
-}
-textarea{ resize:vertical; }
-input:disabled{
-  background:#f3f4f6;
-  color:#6b7280;
-}
-input:focus, textarea:focus, select:focus{
-  border-color:#fdba74;
-  box-shadow:0 0 0 3px rgba(255,122,24,.18);
-}
-
-/* errors */
-.field-error-text{ font-size:11px; margin-top:4px; color:#ef4444; }
-
-/* actions */
-.actions{
-  padding-top:12px;
-  text-align:center;
-}
-#saveBtn{
-  border:0;
+  font-size:13px;
+  font-weight:700;
   cursor:pointer;
-  padding:12px 32px;
-  border-radius:12px;
-  background:var(--rukn-orange);
-  color:#fff;
-  font-weight:800;
-  font-size:18px;
-  box-shadow:0 6px 14px rgba(0,0,0,.10);
-  transition:.2s ease;
+  transition:.2s;
+  white-space:nowrap;
 }
-#saveBtn:hover{ background:#f97316; }
 
-/* keep your old mobile fixes (global) */
-@media (max-width:480px){
-  .ad-row > div:last-child,
-  .request-row > div:last-child{
-    display:grid !important;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
+input:checked + .chip{
+  border-color:#ff7a18;
+  background:#fff7f1;
+  color:#c2410c;
+}
+
+#tabsViewport {
+  min-height: auto;
+}
+
+
+.tab-content {
+  padding-top: 0;
+  width: 100%;
+   min-height: 85vh;     /* نفس ارتفاع معلومات الحساب */
+  overflow-y: auto;    /* سكرول عند زيادة المحتوى */
+
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.tab-content {
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .tab-content {
+    padding: 16px;
   }
 }
-@media (max-width:360px){
-  #tab-ads h2,#tab-requests h2{ font-size:14px !important; }
-  #tab-ads button,#tab-requests button,
-  #tab-ads div[class*="bg-"],#tab-requests div[class*="bg-"]{
-    font-size:11px !important;
-    padding:6px 8px !important;
+
+
+.box-error {
+  border-color: #ef4444 !important;   /* red-500 */
+  background: #fef2f2 !important;
+  box-shadow: 0 0 0 2px #ef444430;
+}
+
+@media (max-width: 640px) {
+  #tab-chat .border-t > div {
+    flex-wrap: wrap;
   }
+
+  #tab-chat button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ❤️ القلب افتراضي: فارغ */
+.fav-heart-icon {
+  fill: none;
+  transition: fill 0.25s ease, transform 0.2s ease;
+}
+
+/* ❤️ عند تفعيل التبويب */
+.tab-btn.active .fav-heart-icon {
+  fill: currentColor;
+  transform: scale(1.05);
+}
+
+.tab-btn.active .fav-heart-icon {
+  animation: heartPop 0.3s ease;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(0.8); }
+  100% { transform: scale(1.05); }
 }

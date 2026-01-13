@@ -1,501 +1,668 @@
-/* =========================================================
-   info.js (UPDATED)
-   - Single Save button posts EVERYTHING (user + avatar + store + store logo)
-   - Optional URL fields:
-       - empty => OK
-       - if provided, auto-normalize to https://...
-   - Handles backend errors in BOTH shapes + store model field names:
-       { ok:false, errors:{ website:[...], instagram:[...], facebook:[...] } }
-       { ok:false, field:"store_name", error:"store_name_required" }
-========================================================= */
+/* static/js/my_account/info.js
+   ✅ Info tab logic for the new mockup HTML (IDs/classes are from your mockup)
+   ✅ Includes:
+      - profile image preview + remove
+      - store logo preview + remove
+      - displayed name + note refresh
+      - field validation helpers (email/links)
+      - chips groups validation (contact/payment/delivery/return)
+      - success modal helpers
+   ⚠️ NOTE:
+      This file ONLY handles the Info tab.
+      It does NOT call generateAds/generateRequests/etc.
+*/
 
 (function () {
-  const root = document.getElementById("myAccountRoot");
-  if (!root) return;
+  "use strict";
 
-  const HAS_STORE = root.dataset.hasStore === "1";
-  const SAVE_URL = root.dataset.saveUrl || "";
+  /* =========================
+     Helpers
+  ========================= */
 
-  const $ = (id) => document.getElementById(id);
-
-  /* --------------------------
-     Cookies / CSRF
-  -------------------------- */
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(";").shift();
-    return "";
-  }
-  function csrfToken() {
-    return getCookie("csrftoken");
+  function $(id) {
+    return document.getElementById(id);
   }
 
-  /* --------------------------
-     UI helpers
-  -------------------------- */
-  function toast(msg) {
-    alert(msg);
+  function hasChecked(selector) {
+    return document.querySelectorAll(selector + ":checked").length > 0;
+  }
+
+  function markBoxError(boxId, errorId) {
+    const box = $(boxId);
+    const err = $(errorId);
+    if (box) box.classList.add("box-error");
+    if (err) err.classList.remove("hidden");
+    box?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function clearBoxError(boxId, errorId) {
+    const box = $(boxId);
+    const err = $(errorId);
+    if (box) box.classList.remove("box-error");
+    if (err) err.classList.add("hidden");
   }
 
   function setFieldError(inputId, errorId, hasError, message) {
     const input = $(inputId);
     const error = $(errorId);
-    if (!error) return;
+    if (!input || !error) return;
 
-    error.textContent = message || "";
-    error.classList.toggle("hidden", !hasError);
-
-    if (input) {
-      input.classList.toggle("border-red-500", !!hasError);
+    if (hasError) {
+      if (message) error.textContent = message;
+      error.classList.remove("hidden");
+      input.classList.add("border-red-500");
+    } else {
+      error.classList.add("hidden");
+      input.classList.remove("border-red-500");
     }
   }
 
-  function clearErrors() {
-    setFieldError("firstName", "firstNameError", false, "");
-    setFieldError("lastName", "lastNameError", false, "");
-    setFieldError("email", "emailError", false, "");
+  function isLettersAndSpaces(value) {
+    if (!value) return false;
+    return /^[a-zA-Z\u0600-\u06FF\s]+$/.test(value);
+  }
 
-    if (HAS_STORE) {
-      setFieldError("storeName", "storeNameError", false, "");
-      setFieldError("storeWebsite", "storeWebsiteError", false, "");
-      // NOTE: you don't have instagram/facebook error <p> in HTML.
-      // If you add them later, add them here too.
+  function isValidEmail(value) {
+    if (!value) return true;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  function isValidURL(value) {
+    if (!value) return true;
+    return /^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/.*)?$/i.test(
+      value
+    );
+  }
+
+  function isValidWebsite(value) {
+    if (!value) return true;
+    return /^(https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-zA-Z]{2,}(\/.*)?$/.test(
+      value
+    );
+  }
+
+  function validateLinkField({ inputId, errorId, okId, validator, message }) {
+    const input = $(inputId);
+    const okIcon = $(okId);
+    const value = (input?.value || "").trim();
+
+    if (!input) return true;
+
+    // empty allowed
+    if (!value) {
+      setFieldError(inputId, errorId, false);
+      okIcon?.classList.add("hidden");
+      return true;
     }
+
+    if (!validator(value)) {
+      setFieldError(inputId, errorId, true, message);
+      okIcon?.classList.add("hidden");
+      return false;
+    }
+
+    setFieldError(inputId, errorId, false);
+    okIcon?.classList.remove("hidden");
+    return true;
   }
 
-  function safeTrim(id) {
-    return (($(id)?.value) || "").trim();
+  function filterNameInput(input) {
+    input.value = input.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, "");
   }
 
-  /* --------------------------
-     URL normalization (IMPORTANT)
-     - Optional fields:
-       "" => ""
-       "www.site.com" => "https://www.site.com"
-       "site.com"     => "https://site.com"
-       "http://..." or "https://..." keep
-  -------------------------- */
-  function normalizeUrl(value) {
-    const v = (value || "").trim();
-    if (!v) return "";
-    if (/^https?:\/\//i.test(v)) return v;
-    return "https://" + v;
-  }
+  /* =========================
+     Success Modal
+  ========================= */
 
-  /* --------------------------
-     Live display name + note
-  -------------------------- */
+  window.openSuccessModal = function openSuccessModal(
+    message,
+    title = "تم التنفيذ بنجاح"
+  ) {
+    const msg = $("successMsg");
+    const ttl = $("successTitle");
+    const modal = $("successModal");
+    if (msg) msg.innerText = message;
+    if (ttl) ttl.innerText = title;
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  };
+
+  window.closeSuccessModal = function closeSuccessModal() {
+    const modal = $("successModal");
+    if (!modal) return;
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+  };
+
+  /* =========================
+     Displayed name + note
+  ========================= */
+
   function refreshDisplayedName() {
-    const first = safeTrim("firstName");
-    const last = safeTrim("lastName");
-    const nick = safeTrim("nickname");
-    const storeName = HAS_STORE ? safeTrim("storeName") : "";
+    const storeName = ($("storeName")?.value || "").trim();
+    const first = ($("firstName")?.value || "").trim();
+    const last = ($("lastName")?.value || "").trim();
+    const nick = ($("nickname")?.value || "").trim();
+
+    const displayName = storeName.length
+      ? storeName
+      : nick.length
+      ? nick
+      : `${first} ${last}`.trim();
 
     const fullNameEl = $("fullName");
+    if (fullNameEl) fullNameEl.textContent = displayName || "—";
+
     const noteEl = $("displayNote");
-    if (!fullNameEl || !noteEl) return;
+    if (!noteEl) return;
 
-    const displayName =
-      (HAS_STORE && storeName) ? storeName :
-      (nick ? nick : `${first} ${last}`.trim());
-
-    fullNameEl.textContent = displayName || "—";
-    noteEl.textContent = (HAS_STORE && storeName)
-      ? "اسم المتجر هو الذي سيظهر للآخرين في الإعلانات والرسائل و كذلك لوجو المتجر ."
-      : "هذا الاسم سيظهر للآخرين في الإعلانات والطلبات والرسائل.";
+    if (storeName.length) {
+      noteEl.textContent =
+        "اسم المتجر هو الذي سيظهر للآخرين في الإعلانات والرسائل وكذلك لوجو المتجر.";
+    } else {
+      noteEl.textContent = "هذا الاسم سيظهر للآخرين في الإعلانات والطلبات والرسائل.";
+    }
   }
 
-  /* --------------------------
-     Avatar initials + preview/remove
-  -------------------------- */
+  /* =========================
+     Profile image
+  ========================= */
+
   function refreshProfileInitials() {
+    const first = ($("firstName")?.value || "").trim();
+    const nick = ($("nickname")?.value || "").trim();
+
     const initialsSpan = $("profileInitials");
     const imgEl = $("profileImage");
     const removeBtn = $("removeProfileBtn");
+
     if (!initialsSpan || !imgEl || !removeBtn) return;
 
     const hasImage = imgEl.dataset.hasImage === "true";
+
     if (hasImage) {
       initialsSpan.classList.add("hidden");
-      removeBtn.classList.add("show");
       imgEl.classList.remove("hidden");
+      removeBtn.classList.remove("hidden");
       return;
     }
 
-    const nick = safeTrim("nickname");
-    const first = safeTrim("firstName");
-    const initial = (nick || first || "؟").charAt(0);
+    let initial = "؟";
+    if (nick.length) initial = nick.charAt(0);
+    else if (first.length) initial = first.charAt(0);
 
     initialsSpan.textContent = initial;
     initialsSpan.classList.remove("hidden");
-    removeBtn.classList.remove("show");
     imgEl.classList.add("hidden");
+    removeBtn.classList.add("hidden");
+  }
+
+  function removeProfileImage() {
+    const imgEl = $("profileImage");
+    const initialsSpan = $("profileInitials");
+    const removeBtn = $("removeProfileBtn");
+    const fileInput = $("profileImgInput");
+
+    if (!imgEl || !initialsSpan || !removeBtn) return;
+
+    imgEl.src = "";
+    imgEl.dataset.hasImage = "false";
+    imgEl.classList.add("hidden");
+
+    removeBtn.classList.add("hidden");
+    initialsSpan.classList.remove("hidden");
+
+    if (fileInput) fileInput.value = "";
+
+    refreshProfileInitials();
+    refreshDisplayedName();
   }
 
   function bindProfileUpload() {
     const input = $("profileImgInput");
-    const imgEl = $("profileImage");
     const removeBtn = $("removeProfileBtn");
-    if (!input || !imgEl || !removeBtn) return;
 
-    input.addEventListener("change", (e) => {
+    input?.addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        imgEl.src = ev.target.result;
+      reader.onload = (event) => {
+        const imgEl = $("profileImage");
+        if (!imgEl) return;
+
+        imgEl.src = event.target.result;
         imgEl.dataset.hasImage = "true";
         imgEl.classList.remove("hidden");
-        removeBtn.classList.add("show");
-        refreshProfileInitials();
+
+        $("profileInitials")?.classList.add("hidden");
+        $("removeProfileBtn")?.classList.remove("hidden");
+
         refreshDisplayedName();
       };
       reader.readAsDataURL(file);
     });
 
-    removeBtn.addEventListener("click", () => {
-      imgEl.src = "";
-      imgEl.dataset.hasImage = "false"; // backend removes on save
-      imgEl.classList.add("hidden");
-      input.value = "";
-      refreshProfileInitials();
-      refreshDisplayedName();
-    });
+    removeBtn?.addEventListener("click", removeProfileImage);
   }
 
-  /* --------------------------
-     Store logo initials + preview/remove (store only)
-  -------------------------- */
-  function refreshStoreLogoInitial() {
-    if (!HAS_STORE) return;
+  /* =========================
+     Store logo
+  ========================= */
 
-    const initialEl = $("storeLogoInitial");
+  function refreshStoreLogoInitial() {
+    const storeName = ($("storeName")?.value || "").trim();
+    const storeInitialSpan = $("storeLogoInitial");
     const imgEl = $("storeLogoImage");
     const removeBtn = $("removeStoreLogoBtn");
-    if (!initialEl || !imgEl || !removeBtn) return;
+
+    if (!storeInitialSpan || !imgEl || !removeBtn) return;
 
     const hasImage = imgEl.dataset.hasImage === "true";
+
     if (hasImage) {
-      initialEl.classList.add("hidden");
-      removeBtn.classList.add("show");
+      storeInitialSpan.classList.add("hidden");
       imgEl.classList.remove("hidden");
+      removeBtn.classList.remove("hidden");
       return;
     }
 
-    const storeName = safeTrim("storeName");
-    initialEl.textContent = (storeName || "م").charAt(0);
-    initialEl.classList.remove("hidden");
-    removeBtn.classList.remove("show");
+    let initial = "م";
+    if (storeName.length) initial = storeName.charAt(0);
+
+    storeInitialSpan.textContent = initial;
+    storeInitialSpan.classList.remove("hidden");
+
     imgEl.classList.add("hidden");
+    removeBtn.classList.add("hidden");
+  }
+
+  function removeStoreLogo() {
+    const imgEl = $("storeLogoImage");
+    const removeBtn = $("removeStoreLogoBtn");
+    const fileInput = $("storeLogoInput");
+
+    if (!imgEl || !removeBtn) return;
+
+    imgEl.src = "";
+    imgEl.dataset.hasImage = "false";
+    imgEl.classList.add("hidden");
+    removeBtn.classList.add("hidden");
+
+    if (fileInput) fileInput.value = "";
+
+    refreshStoreLogoInitial();
   }
 
   function bindStoreLogoUpload() {
-    if (!HAS_STORE) return;
-
     const input = $("storeLogoInput");
-    const imgEl = $("storeLogoImage");
     const removeBtn = $("removeStoreLogoBtn");
-    if (!input || !imgEl || !removeBtn) return;
 
-    input.addEventListener("change", (e) => {
+    input?.addEventListener("change", (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        imgEl.src = ev.target.result;
+      reader.onload = (event) => {
+        const imgEl = $("storeLogoImage");
+        if (!imgEl) return;
+
+        imgEl.src = event.target.result;
         imgEl.dataset.hasImage = "true";
         imgEl.classList.remove("hidden");
-        removeBtn.classList.add("show");
-        refreshStoreLogoInitial();
-        refreshDisplayedName();
+
+        $("storeLogoInitial")?.classList.add("hidden");
+        $("removeStoreLogoBtn")?.classList.remove("hidden");
       };
       reader.readAsDataURL(file);
     });
 
-    removeBtn.addEventListener("click", () => {
-      imgEl.src = "";
-      imgEl.dataset.hasImage = "false"; // backend removes on save
-      imgEl.classList.add("hidden");
-      input.value = "";
-      refreshStoreLogoInitial();
-      refreshDisplayedName();
+    removeBtn?.addEventListener("click", removeStoreLogo);
+  }
+
+  /* =========================
+     Live input bindings
+  ========================= */
+
+  function bindLiveInputs() {
+    [
+      { input: "firstName", error: "firstNameError", filter: true },
+      { input: "lastName", error: "lastNameError", filter: true },
+      { input: "storeName", error: "storeNameError" },
+      { input: "email", error: "emailError" },
+      { input: "storeLocation" },
+      { input: "storeDesc" },
+      { input: "nickname" },
+    ].forEach((cfg) => {
+      const el = $(cfg.input);
+      if (!el) return;
+
+      el.addEventListener("input", () => {
+        if (cfg.filter) filterNameInput(el);
+        if (cfg.error) setFieldError(cfg.input, cfg.error, false);
+        refreshDisplayedName();
+        refreshProfileInitials();
+        if (cfg.input === "storeName") refreshStoreLogoInitial();
+      });
+    });
+
+    // clear group errors when changed
+    [
+      { box: "contactBox", error: "contactError", selector: "input[name='showMobile']" },
+      { box: "paymentBox", error: "paymentError", selector: "#paymentBox input[type='checkbox']" },
+      { box: "deliveryBox", error: "deliveryError", selector: "input[name='deliveryTime']" },
+      { box: "returnBox", error: "returnError", selector: "input[name='returnPolicy']" },
+    ].forEach((cfg) => {
+      document.querySelectorAll(cfg.selector).forEach((input) => {
+        input.addEventListener("change", () => clearBoxError(cfg.box, cfg.error));
+      });
+    });
+
+    // hide errors while typing
+    [
+      { input: "storeSpecialty", error: "storeSpecialtyError" },
+      { input: "storeDesc", error: "storeDescError" },
+    ].forEach((cfg) => {
+      const el = $(cfg.input);
+      if (!el) return;
+      el.addEventListener("input", () => setFieldError(cfg.input, cfg.error, false));
     });
   }
 
-  /* --------------------------
-     Validation
-     - Optional URL fields: validate only if not empty (after normalize)
-  -------------------------- */
-  function isLettersAndSpaces(v) {
-    return /^[a-zA-Z\u0600-\u06FF\s]+$/.test(v || "");
-  }
-  function isValidEmail(v) {
-    return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-  }
-  function looksLikeUrl(v) {
-    // after normalization, must be http(s)://domain...
-    return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(v || "");
-  }
+  /* =========================
+     Link validations
+  ========================= */
 
-  function validate() {
-    clearErrors();
+  const linkChecks = [
+    {
+      inputId: "email",
+      errorId: "emailError",
+      okId: "emailOk",
+      validator: isValidEmail,
+      message: "الرجاء إدخال بريد إلكتروني صحيح (مثال: example@mail.com).",
+    },
+    {
+      inputId: "storeWebsite",
+      errorId: "storeWebsiteError",
+      okId: "storeWebsiteOk",
+      validator: isValidWebsite,
+      message: "الرجاء إدخال رابط موقع الكتروني صحيح (مثال: https://example.com).",
+    },
+    {
+      inputId: "instagramLink",
+      errorId: "instagramError",
+      okId: "instagramOk",
+      validator: isValidURL,
+      message: "الرجاء إدخال رابط انستجرام صحيح (مثال: https://instagram.com/username).",
+    },
+    {
+      inputId: "facebookLink",
+      errorId: "facebookError",
+      okId: "facebookOk",
+      validator: isValidURL,
+      message: "الرجاء إدخال رابط فيس بوك صحيح (مثال: https://facebook.com/page).",
+    },
+  ];
 
-    const first = safeTrim("firstName");
-    const last = safeTrim("lastName");
-    const email = safeTrim("email");
+  function bindLinkChecks() {
+    linkChecks.forEach((cfg) => {
+      const el = $(cfg.inputId);
+      if (!el) return;
 
-    if (!first || !isLettersAndSpaces(first)) {
-      setFieldError("firstName", "firstNameError", true, "الاسم الأول مطلوب.");
-      return false;
-    }
-    if (!last || !isLettersAndSpaces(last)) {
-      setFieldError("lastName", "lastNameError", true, "الاسم الأخير مطلوب.");
-      return false;
-    }
-    if (!isValidEmail(email)) {
-      setFieldError("email", "emailError", true, "الرجاء إدخال بريد إلكتروني صحيح.");
-      return false;
-    }
+      el.addEventListener("input", () => validateLinkField(cfg));
+    });
 
-    if (HAS_STORE) {
-      const storeName = safeTrim("storeName");
-      if (!storeName) {
-        setFieldError("storeName", "storeNameError", true, "اسم المتجر مطلوب.");
-        return false;
-      }
+    // reset ok/error while typing (before validation)
+    [
+      { input: "email", error: "emailError", ok: "emailOk" },
+      { input: "storeWebsite", error: "storeWebsiteError", ok: "storeWebsiteOk" },
+      { input: "instagramLink", error: "instagramError", ok: "instagramOk" },
+      { input: "facebookLink", error: "facebookError", ok: "facebookOk" },
+    ].forEach((cfg) => {
+      const el = $(cfg.input);
+      if (!el) return;
 
-      // optional URLs (only validate if user typed something)
-      const website = normalizeUrl(safeTrim("storeWebsite"));
-      if (website && !looksLikeUrl(website)) {
-        setFieldError("storeWebsite", "storeWebsiteError", true, "الرجاء إدخال رابط صحيح (https://...).");
-        return false;
-      }
-
-      // instagram/facebook are optional too; we validate softly via toast (no inline error elements)
-      const insta = normalizeUrl(safeTrim("storeInstagram"));
-      if (insta && !looksLikeUrl(insta)) {
-        toast("رابط انستغرام غير صالح. استخدم مثال: https://instagram.com/...");
-        return false;
-      }
-
-      const fb = normalizeUrl(safeTrim("storeFacebook"));
-      if (fb && !looksLikeUrl(fb)) {
-        toast("رابط فيسبوك غير صالح. استخدم مثال: https://facebook.com/...");
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /* --------------------------
-     Backend error mapping
-     - Supports:
-       errors.store_website OR errors.website
-       errors.instagram OR errors.store_instagram
-       errors.facebook  OR errors.store_facebook
-  -------------------------- */
-  function applyBackendErrors(payload) {
-    const errors = payload?.errors || null;
-
-    // Manual shape: {field, error}
-    if (!errors && payload?.field) {
-      if (payload.field === "first_name") setFieldError("firstName", "firstNameError", true, "الاسم الأول مطلوب.");
-      if (payload.field === "last_name") setFieldError("lastName", "lastNameError", true, "الاسم الأخير مطلوب.");
-      if (payload.field === "store_name") setFieldError("storeName", "storeNameError", true, "اسم المتجر مطلوب.");
-      return;
-    }
-
-    if (!errors) return;
-
-    // user
-    if (errors.first_name?.[0]) setFieldError("firstName", "firstNameError", true, errors.first_name[0]);
-    if (errors.last_name?.[0]) setFieldError("lastName", "lastNameError", true, errors.last_name[0]);
-    if (errors.email?.[0]) setFieldError("email", "emailError", true, errors.email[0]);
-    if (errors.username?.[0]) toast(errors.username[0]);
-
-    if (!HAS_STORE) return;
-
-    // store required
-    if (errors.store_name?.[0]) setFieldError("storeName", "storeNameError", true, errors.store_name[0]);
-
-    // website can come as store_website OR website (model field name)
-    const websiteErr = (errors.store_website?.[0] || errors.website?.[0] || "");
-    if (websiteErr) setFieldError("storeWebsite", "storeWebsiteError", true, websiteErr);
-
-    // instagram/facebook: you don't have inline error blocks -> toast
-    const instaErr = (errors.store_instagram?.[0] || errors.instagram?.[0] || "");
-    if (instaErr) toast(instaErr);
-
-    const fbErr = (errors.store_facebook?.[0] || errors.facebook?.[0] || "");
-    if (fbErr) toast(fbErr);
-  }
-
-  /* --------------------------
-     Save: one POST with everything
-  -------------------------- */
-  async function save() {
-    if (!SAVE_URL) {
-      toast("❌ data-save-url غير موجود.");
-      return;
-    }
-    if (!validate()) return;
-
-    const fd = new FormData();
-
-    // user fields
-    fd.append("first_name", safeTrim("firstName"));
-    fd.append("last_name", safeTrim("lastName"));
-    fd.append("username", safeTrim("nickname"));
-    fd.append("email", safeTrim("email"));
-
-    // avatar file
-    const profileFile = $("profileImgInput")?.files?.[0];
-    if (profileFile) fd.append("profile_photo", profileFile);
-
-    // avatar remove flag
-    const profileImg = $("profileImage");
-    if (profileImg && profileImg.dataset.hasImage === "false") {
-      fd.append("remove_profile_photo", "1");
-    }
-
-    // store fields
-    if (HAS_STORE) {
-      fd.append("store_name", safeTrim("storeName"));
-      fd.append("store_address", safeTrim("storeLocation"));
-      fd.append("store_city_id", safeTrim("storeCity"));
-
-      // OPTIONAL URL fields: normalize before sending
-      fd.append("store_website", normalizeUrl(safeTrim("storeWebsite")));
-      fd.append("store_instagram", normalizeUrl(safeTrim("storeInstagram")));
-      fd.append("store_facebook", normalizeUrl(safeTrim("storeFacebook")));
-
-      fd.append("store_desc", ($("storeDesc")?.value || "").trim());
-
-      const storeLogoFile = $("storeLogoInput")?.files?.[0];
-      if (storeLogoFile) fd.append("store_logo", storeLogoFile);
-
-      const storeLogoImg = $("storeLogoImage");
-      if (storeLogoImg && storeLogoImg.dataset.hasImage === "false") {
-        fd.append("remove_store_logo", "1");
-      }
-    }
-
-    const saveBtn = $("saveBtn");
-    const oldText = saveBtn?.textContent;
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.textContent = "⏳ جاري الحفظ...";
-    }
-
-    try {
-      const res = await fetch(SAVE_URL, {
-        method: "POST",
-        headers: { "X-CSRFToken": csrfToken() },
-        body: fd,
+      el.addEventListener("input", () => {
+        $(cfg.error)?.classList.add("hidden");
+        $(cfg.ok)?.classList.add("hidden");
+        el.classList.remove("border-red-500");
       });
+    });
+  }
 
-      let data = null;
-      const ct = res.headers.get("content-type") || "";
+  /* =========================
+     Save (front validation only)
+     - Keep your backend POST in your existing implementation
+     - This function is exposed for onclick="saveAccountInfo()"
+  ========================= */
 
-      if (ct.includes("application/json")) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        console.error("Non-JSON response:", text);
-        data = { ok: res.ok, message: text };
-      }
+  window.saveAccountInfo = async function saveAccountInfo() {
+      const firstNameEl = document.getElementById("firstName");
+      const lastNameEl  = document.getElementById("lastName");
+      const emailEl     = document.getElementById("email");
 
-      if (!res.ok || !data?.ok) {
-        console.error("Save failed:", { status: res.status, data });
-        applyBackendErrors(data);
-        toast(data?.message || "❌ حصل خطأ أثناء الحفظ.");
+      // store fields may or may not exist (user vs store)
+      const storeNameEl = document.getElementById("storeName");
+      const specialtyEl = document.getElementById("storeSpecialty");
+      const descEl      = document.getElementById("storeDesc");
+
+      const hasStoreSection = !!storeNameEl; // store tab exists in DOM only if store
+
+      /* ======================
+         1️⃣ الاسم الأول
+      ====================== */
+      if (!firstNameEl?.value.trim() || !isLettersAndSpaces(firstNameEl.value)) {
+        setFieldError("firstName", "firstNameError", true, "الاسم الأول مطلوب.");
+        firstNameEl?.focus();
         return;
       }
 
-      // Update avatar URL from backend
-      if (data.profile_photo_url && $("profileImage")) {
-        const imgEl = $("profileImage");
-        imgEl.src = data.profile_photo_url;
-        imgEl.dataset.hasImage = "true";
-        imgEl.classList.remove("hidden");
-        $("removeProfileBtn")?.classList.add("show");
-        $("profileInitials")?.classList.add("hidden");
+      /* ======================
+         2️⃣ الاسم الأخير
+      ====================== */
+      if (!lastNameEl?.value.trim() || !isLettersAndSpaces(lastNameEl.value)) {
+        setFieldError("lastName", "lastNameError", true, "الاسم الأخير مطلوب.");
+        lastNameEl?.focus();
+        return;
       }
 
-      // Update store logo URL from backend
-      if (HAS_STORE && data.store_logo_url && $("storeLogoImage")) {
-        const imgEl = $("storeLogoImage");
-        imgEl.src = data.store_logo_url;
-        imgEl.dataset.hasImage = "true";
-        imgEl.classList.remove("hidden");
-        $("removeStoreLogoBtn")?.classList.add("show");
-        $("storeLogoInitial")?.classList.add("hidden");
+      /* ======================
+         🔟 الإيميل (اختياري)
+      ====================== */
+      if (emailEl && !isValidEmail(emailEl.value.trim())) {
+        setFieldError("email", "emailError", true,
+          "الرجاء إدخال بريد إلكتروني صحيح (مثال: example@mail.com)."
+        );
+        emailEl.focus();
+        return;
       }
 
-      refreshDisplayedName();
-      refreshProfileInitials();
-      refreshStoreLogoInitial();
+      /* ======================
+         ✅ Store-only validation (DON’T break users)
+      ====================== */
+      if (hasStoreSection) {
+        /* 3️⃣ اسم المتجر */
+        if (!storeNameEl.value.trim()) {
+          setFieldError("storeName", "storeNameError", true, "اسم المتجر مطلوب.");
+          storeNameEl.focus();
+          return;
+        }
 
-      toast(data.message || "✅ تم حفظ معلومات الحساب بنجاح!");
-    } catch (e) {
-      console.error(e);
-      toast("❌ تعذّر الاتصال بالسيرفر.");
-    } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.textContent = oldText || "💾 حفظ التعديلات";
+        /* 4️⃣ تخصص المتجر */
+        if (!specialtyEl?.value.trim()) {
+          setFieldError("storeSpecialty", "storeSpecialtyError", true, "تخصص المتجر مطلوب.");
+          specialtyEl?.focus();
+          return;
+        }
+
+        /* 5️⃣ وصف المتجر */
+        if (!descEl?.value.trim()) {
+          setFieldError("storeDesc", "storeDescError", true, "وصف المتجر مطلوب.");
+          descEl?.focus();
+          return;
+        }
+
+        /* 6️⃣ طرق التواصل */
+        if (!hasChecked("input[name='showMobile']")) {
+          markBoxError("contactBox", "contactError");
+          return;
+        }
+
+        /* 7️⃣ طرق الدفع */
+        if (!hasChecked("#paymentBox input[type='checkbox']")) {
+          markBoxError("paymentBox", "paymentError");
+          return;
+        }
+
+        /* 8️⃣ سياسة التوصيل */
+        if (!hasChecked("input[name='deliveryTime']")) {
+          markBoxError("deliveryBox", "deliveryError");
+          return;
+        }
+
+        /* 9️⃣ سياسة الإرجاع */
+        if (!hasChecked("input[name='returnPolicy']")) {
+          markBoxError("returnBox", "returnError");
+          return;
+        }
+
+        /* ⓫ الروابط (اختيارية) */
+        for (const cfg of linkChecks) {
+          // some inputs like instagram/fb exist only for store; still safe
+          const input = document.getElementById(cfg.inputId);
+          if (!input) continue;
+
+          if (!validateLinkField(cfg)) {
+            input.focus();
+            return;
+          }
+        }
+      } else {
+        // user-only: only validate email via linkChecks if the field exists
+        const emailCfg = linkChecks.find(x => x.inputId === "email");
+        if (emailCfg && document.getElementById("email")) {
+          if (!validateLinkField(emailCfg)) {
+            document.getElementById("email")?.focus();
+            return;
+          }
+        }
       }
-    }
-  }
 
-  /* --------------------------
-     Bind inputs
-  -------------------------- */
-  function bindInputs() {
-    ["firstName", "lastName", "nickname", "email"].forEach((id) => {
-      $(id)?.addEventListener("input", () => {
-        refreshDisplayedName();
-        refreshProfileInitials();
-      });
-    });
+      // ✅ passed validation -> now send
+      await postAccountInfo(hasStoreSection);
+    };
 
-    if (HAS_STORE) {
-      ["storeName", "storeLocation", "storeCity", "storeWebsite", "storeInstagram", "storeFacebook", "storeDesc"].forEach((id) => {
-        $(id)?.addEventListener("input", () => {
-          refreshDisplayedName();
-          refreshStoreLogoInitial();
+    async function postAccountInfo(hasStoreSection) {
+      const root = document.getElementById("myAccountRoot");
+      const url = root?.dataset?.saveUrl;
+      const csrf = document.querySelector("input[name='csrfmiddlewaretoken']")?.value;
+
+      if (!url) { console.error("❌ data-save-url missing"); return; }
+      if (!csrf) { console.error("❌ CSRF missing"); return; }
+
+      const fd = new FormData();
+
+      // user fields
+      fd.append("first_name", (document.getElementById("firstName")?.value || "").trim());
+      fd.append("last_name",  (document.getElementById("lastName")?.value || "").trim());
+      fd.append("username",   (document.getElementById("nickname")?.value || "").trim());
+      fd.append("email",      (document.getElementById("email")?.value || "").trim());
+
+      // profile photo
+      const profileFile = document.getElementById("profileImgInput")?.files?.[0];
+      if (profileFile) fd.append("profile_photo", profileFile);
+
+      if (hasStoreSection) {
+        fd.append("store_name",       (document.getElementById("storeName")?.value || "").trim());
+        fd.append("store_specialty",  (document.getElementById("storeSpecialty")?.value || "").trim());
+        fd.append("store_address",    (document.getElementById("storeLocation")?.value || "").trim());
+        fd.append("store_website",    (document.getElementById("storeWebsite")?.value || "").trim());
+        fd.append("store_instagram",  (document.getElementById("instagramLink")?.value || "").trim());
+        fd.append("store_facebook",   (document.getElementById("facebookLink")?.value || "").trim());
+        fd.append("store_description",(document.getElementById("storeDesc")?.value || "").trim());
+
+        const logoFile = document.getElementById("storeLogoInput")?.files?.[0];
+        if (logoFile) fd.append("store_logo", logoFile);
+
+        fd.append("show_mobile", document.querySelector("input[name='showMobile']:checked")?.value || "");
+
+        const payments = Array.from(
+          document.querySelectorAll("#paymentBox input[type='checkbox']:checked")
+        ).map(x => x.value || "on");
+        payments.forEach(p => fd.append("payment_methods", p));
+
+        fd.append("delivery_time", document.querySelector("input[name='deliveryTime']:checked")?.value || "");
+        fd.append("return_policy", document.querySelector("input[name='returnPolicy']:checked")?.value || "");
+      }
+
+      const btn = document.getElementById("saveBtn");
+      const oldText = btn?.textContent;
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add("opacity-70", "cursor-not-allowed");
+          btn.textContent = "جاري الحفظ...";
+        }
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "X-CSRFToken": csrf },
+          body: fd
         });
-      });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.ok === false) {
+          const msg = data.message || "حدث خطأ أثناء الحفظ.";
+          openSuccessModal(msg, "❌ لم يتم الحفظ");
+          return;
+        }
+
+        openSuccessModal("تم حفظ المعلومات بنجاح", "✔️ تم التحديث");
+      } catch (e) {
+        console.error(e);
+        openSuccessModal("تعذر الاتصال بالخادم. حاول مرة أخرى.", "❌ خطأ");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove("opacity-70", "cursor-not-allowed");
+          btn.textContent = oldText || "حفظ التعديلات";
+        }
+      }
     }
-  }
 
-  function init() {
-    const pImg = $("profileImage");
-    if (pImg && !pImg.dataset.hasImage) pImg.dataset.hasImage = pImg.src ? "true" : "false";
 
-    if (HAS_STORE) {
-      const sImg = $("storeLogoImage");
-      if (sImg && !sImg.dataset.hasImage) sImg.dataset.hasImage = sImg.src ? "true" : "false";
+
+  /* =========================
+     Init
+  ========================= */
+
+  window.addEventListener("load", () => {
+    // initialize "hasImage" from current DOM state (Django may render src)
+    const profileImg = $("profileImage");
+    if (profileImg) {
+      profileImg.dataset.hasImage =
+        profileImg.getAttribute("src") && profileImg.getAttribute("src").trim() ? "true" : "false";
+    }
+
+    const storeLogo = $("storeLogoImage");
+    if (storeLogo) {
+      storeLogo.dataset.hasImage =
+        storeLogo.getAttribute("src") && storeLogo.getAttribute("src").trim() ? "true" : "false";
     }
 
     bindProfileUpload();
     bindStoreLogoUpload();
-    bindInputs();
+    bindLiveInputs();
+    bindLinkChecks();
 
-    $("saveBtn")?.addEventListener("click", save);
-
+    // initial UI
     refreshDisplayedName();
     refreshProfileInitials();
     refreshStoreLogoInitial();
-  }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+    // save button click (in addition to onclick attribute, safe to keep both)
+    $("saveBtn")?.addEventListener("click", window.saveAccountInfo);
+  });
 })();

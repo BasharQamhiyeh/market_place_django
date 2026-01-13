@@ -1,121 +1,218 @@
-<div class="ads-head">
-  <div class="ads-title-row">
-    <h2 class="ads-title">📢 جميع الإعلانات</h2>
+{# templates/my_account/tabs/ads.html #}
+{% load i18n %}
 
-    <div class="ads-actions">
-      <div class="ads-count">
-        عدد الإعلانات: <span id="adsCount">0</span>
+<div class="ads-tab">
+
+  <div class="ads-head">
+    <div class="ads-title-row">
+      <h2 class="ads-title">📢 جميع الإعلانات</h2>
+
+      <div class="ads-actions">
+        <div class="ads-count">
+          عدد الإعلانات: <span id="adsCount">{% if my_ads %}{{ my_ads|length }}{% else %}0{% endif %}</span>
+        </div>
+
+        <a href="#" class="ads-add-btn">أضف إعلان</a>
       </div>
-
-      <a href="{% url 'item_create' as item_create_url %}" class="ads-add-btn">
-        أضف إعلان
-      </a>
     </div>
   </div>
 
-  <div class="ads-list space-y-4">
+  {# IMPORTANT: id="adsList" MUST exist exactly like this #}
+  <div class="ads-list" id="adsList">
     {% if my_ads %}
       {% for ad in my_ads %}
-        <div class="ad-row flex flex-col md:flex-row items-start md:items-center gap-5 p-4 rounded-2xl shadow-sm
-          {% if ad.status == 'active' %} bg-white border border-gray-200
-          {% elif ad.status == 'pending' %} bg-yellow-50 border border-yellow-300
-          {% elif ad.status == 'rejected' %} bg-red-50 border border-red-300
-          {% else %} bg-white border border-gray-200 {% endif %}">
-
-          <!-- Image + Category badge -->
-          <div class="relative w-full md:w-auto flex justify-center">
-            <span class="absolute top-2 right-2 bg-white text-orange-600 text-xs px-2 py-1 rounded-lg border border-orange-400 font-bold shadow-sm">
+        <div
+          class="ad-row
+            {% if ad.status == 'pending' %}
+              bg-yellow-50 border-yellow-300
+            {% elif ad.status == 'rejected' %}
+              bg-red-50 border-red-300
+            {% else %}
+              bg-white border-gray-200
+            {% endif %}
+          "
+          data-ad-id="{{ ad.id }}"
+        >
+          <!-- Media -->
+          <div class="ad-media-mock">
+            <span class="ad-cat-mock">
               {{ ad.category|default:"بدون قسم" }}
             </span>
 
             {% if ad.image %}
-              <img src="{{ ad.image }}"
-                   class="w-full max-w-[420px] mx-auto h-52 sm:h-56 md:w-56 md:h-44 rounded-xl object-cover border">
+              <img src="{{ ad.image }}" alt="{{ ad.title|default:'إعلان' }}" class="ad-img-mock">
             {% else %}
-              <div class="w-full max-w-[420px] mx-auto h-52 sm:h-56 md:w-56 md:h-44 rounded-xl border bg-gray-100 flex items-center justify-center text-gray-400 font-bold">
-                بدون صورة
-              </div>
+              <div class="ad-img-mock ad-img--empty">بدون صورة</div>
             {% endif %}
           </div>
 
-          <!-- Main info -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-3 flex-wrap mb-2">
-              <span class="flex items-center gap-1 text-gray-700 font-bold">
-                🆔 رقم الإعلان: <span class="text-orange-600">{{ ad.id }}</span>
+          <!-- Body -->
+          <div class="ad-body-mock">
+            <div class="ad-header-mock">
+
+              <span class="ad-id-mock">
+                <span class="inline-flex">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  رقم الإعلان:
+                  <span class="ad-id-num-mock">{{ ad.id }}</span>
+                </span>
               </span>
 
               {% if ad.status == "active" %}
-                <span class="status-badge status-active">🟢 مفعّل</span>
+                <span class="status-badge status-active">
+                  <span class="inline-flex">
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                  </span>
+                  مفعّل
+                </span>
               {% elif ad.status == "pending" %}
-                <span class="status-badge status-pending">🟡 قيد المراجعة</span>
+                <span class="status-badge status-pending">
+                  <span class="inline-flex">
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                  </span>
+                  قيد المراجعة
+                </span>
               {% elif ad.status == "rejected" %}
-                <span class="status-badge status-rejected">🔴 مرفوض</span>
+                <span class="status-badge status-rejected">
+                  <span class="inline-flex">
+                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                  </span>
+                  مرفوض
+                </span>
               {% endif %}
 
               {% if ad.featured %}
                 {% if ad.featuredDaysLeft and ad.featuredDaysLeft > 0 %}
-                  <span class="feature-badge flex items-center gap-1">⭐ مميز — متبقّي: {{ ad.featuredDaysLeft }} يوم</span>
+                  <span class="feature-badge">⭐ مميز — متبقّي: {{ ad.featuredDaysLeft }} يوم</span>
                 {% else %}
                   <span class="feature-badge">⭐ مميز</span>
                 {% endif %}
               {% endif %}
             </div>
 
-            <div class="flex items-center gap-3 mb-2 flex-wrap">
-              <h3 class="font-bold text-lg text-gray-800">{{ ad.title }}</h3>
-              <span class="text-orange-600 font-extrabold text-2xl leading-none">{{ ad.price }} د.أ</span>
+            <div class="ad-title-price-mock">
+              <h3 class="ad-title-mock">{{ ad.title }}</h3>
+              <span class="ad-price-mock">{{ ad.price }} د.أ</span>
             </div>
 
-            <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2 flex-wrap">
-              <span>📍 {{ ad.city|default:"—" }}</span>
-              <span>📅 {{ ad.date|default:"—" }}</span>
-              <span>👁️ {{ ad.views|default:0 }} مشاهدة</span>
-              <span>❤️ {{ ad.favCount|default:0 }} مفضلة</span>
+            <div class="ad-meta-mock">
+              <span class="meta-pill">
+                <svg class="w-4 h-4 icon-orange" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 21s7-7 7-11a7 7 0 1 0-14 0c0 4 7 11 7 11Z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>{{ ad.city|default:"—" }}</span>
+              </span>
+
+              <span class="meta-pill">
+                <svg class="w-4 h-4 icon-orange" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>{{ ad.date|default:"—" }}</span>
+              </span>
+
+              <span class="meta-pill">
+                <svg class="w-4 h-4 icon-orange" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>{{ ad.views|default:0 }} مشاهدة</span>
+              </span>
+
+              <span class="meta-pill">
+                <svg class="w-4 h-4 icon-red" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+                        stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <span>{{ ad.favCount|default:0 }} مفضلة</span>
+              </span>
             </div>
 
             {% if ad.status == "rejected" and ad.rejectReason %}
-              <p class="text-sm text-red-700 mt-2">❗ سبب الرفض: <b>{{ ad.rejectReason }}</b></p>
+              <p class="ad-reject-mock">
+                <svg class="w-4 h-4 icon-red" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                  <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                </svg>
+                <span>سبب الرفض: <b class="rej-bold">{{ ad.rejectReason }}</b></span>
+              </p>
             {% endif %}
           </div>
 
           <!-- Actions -->
-          <div class="flex flex-col gap-2 w-full md:w-auto">
-            <a href="{{ ad.editUrl }}"
-               class="px-4 py-2 pill-blue text-sm text-center {% if ad.status == 'pending' %}opacity-40 pointer-events-none{% endif %}">
-              ✏️ تعديل
+          <div class="ad-actions-mock">
+            <a href="{{ ad.editUrl }}" class="btn-mock pill-blue {% if ad.status == 'pending' %}is-disabled{% endif %}">
+              <span class="inline-flex">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+              تعديل
             </a>
 
             <button type="button"
-                    class="px-4 py-2 pill-red text-sm {% if ad.status == 'pending' %}opacity-40 pointer-events-none{% endif %}"
-                    onclick="myAccountDeleteAd?.({{ ad.id }})">
-              ❌ حذف
+                    class="btn-mock pill-red {% if ad.status == 'pending' %}is-disabled{% endif %}"
+                    data-action="delete"
+                    data-id="{{ ad.id }}">
+              <span class="inline-flex">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 6h18M8 6v14h8V6M10 10v6M14 10v6" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+              حذف
             </button>
 
             <button type="button"
-                    class="px-4 py-2 pill-green text-sm {% if ad.status != 'active' %}opacity-40 pointer-events-none{% endif %}"
-                    onclick="myAccountRepublishAd?.({{ ad.id }})">
-              🔄 إعادة نشر
+                    class="btn-mock pill-green {% if ad.status != 'active' %}is-disabled{% endif %}"
+                    data-action="republish"
+                    data-id="{{ ad.id }}">
+              <span class="inline-flex">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M21 12a9 9 0 1 1-3-6.7" stroke="currentColor" stroke-width="2"/>
+                  <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+              إعادة نشر
             </button>
 
-            {# highlight button #}
-            {% if ad.status != "active" %}
-              <button class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">⭐ تمييز</button>
+            {% if ad.status != "active" or ad.featuredDaysLeft|default:0 > 0 %}
+              <button type="button" class="btn-mock pill-orange is-disabled">
+                <span class="inline-flex">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                تمييز
+              </button>
             {% else %}
-              {% if ad.featured and ad.featuredDaysLeft|default:0 > 0 %}
-                <button class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">⭐ تمييز</button>
-              {% else %}
-                <button class="px-4 py-2 pill-orange text-sm"
-                        onclick="openHighlightModal?.('ad', {{ ad.id }})">⭐ تمييز</button>
-              {% endif %}
+              <button type="button" class="btn-mock pill-orange" data-action="highlight" data-id="{{ ad.id }}">
+                <span class="inline-flex">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                تمييز
+              </button>
             {% endif %}
-          </div>
 
+          </div>
 
         </div>
       {% endfor %}
+
     {% else %}
-      <div class="text-center text-gray-500 py-10">لا يوجد إعلانات حالياً</div>
+      <div class="empty-state">لا يوجد إعلانات حالياً</div>
     {% endif %}
   </div>
 

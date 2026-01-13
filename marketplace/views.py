@@ -109,7 +109,9 @@ except Exception:
 
 
 IS_RENDER = getattr(settings, "IS_RENDER", False)
-
+ALLOWED_PAYMENT_METHODS = {"cash", "card", "cliq", "transfer"}
+ALLOWED_DELIVERY = {"24", "48", "72"}
+ALLOWED_RETURN = {"3", "7", "none"}
 
 @require_GET
 def item_detail_more_similar(request, item_id):
@@ -3416,6 +3418,7 @@ def normalize_optional_url(raw: str | None) -> str:
     return "https://" + v
 
 
+
 @require_POST
 @login_required
 @csrf_protect
@@ -3483,9 +3486,15 @@ def my_account_save_info(request: HttpRequest):
 
     if store:
         store_name = (request.POST.get("store_name") or "").strip()
-        store_desc = (request.POST.get("store_desc") or "").strip()
 
-        # ✅ normalize optional URL fields so "www..." won't fail URLField validation
+        # ✅ accept either key
+        store_desc = (
+                (request.POST.get("store_desc") or "").strip()
+                or (request.POST.get("store_description") or "").strip()
+        )
+
+        store_specialty = (request.POST.get("store_specialty") or "").strip()
+
         store_website = normalize_optional_url(request.POST.get("store_website"))
         store_instagram = normalize_optional_url(request.POST.get("store_instagram"))
         store_facebook = normalize_optional_url(request.POST.get("store_facebook"))
@@ -3494,18 +3503,61 @@ def my_account_save_info(request: HttpRequest):
         store_city_id = (request.POST.get("store_city_id") or "").strip()
         store_address = (request.POST.get("store_address") or "").strip()
 
-        if not store_name:
-            return JsonResponse({"ok": False, "errors": {"store_name": ["اسم المتجر مطلوب."]}}, status=400)
+        # ✅ NEW: phone visibility (yes/no)
+        show_mobile = (request.POST.get("show_mobile") or "").strip().lower()
+        # default: True (show phone)
+        store.show_phone = (show_mobile != "no") if show_mobile else store.show_phone
 
+        # ✅ NEW: payment methods (multi)
+        pm = request.POST.getlist("payment_methods")
+        pm_clean = [p for p in pm if p in ALLOWED_PAYMENT_METHODS]
+        store.payment_methods = pm_clean
+
+        # ✅ NEW: delivery + return
+        delivery = (request.POST.get("delivery_time") or "").strip()
+        store.delivery_policy = delivery if delivery in ALLOWED_DELIVERY else ""
+
+        ret = (request.POST.get("return_policy") or "").strip()
+        store.return_policy = ret if ret in ALLOWED_RETURN else ""
+
+        # ✅ validate on SAVE (not DB required)
+        errors = {}
+        if not store_name:
+            errors["store_name"] = ["اسم المتجر مطلوب."]
+
+        # only validate these when store form exists (it does if store exists)
+        if not store_specialty:
+            errors["store_specialty"] = ["تخصص المتجر مطلوب."]
+        if not store_desc:
+            errors["store_description"] = ["وصف المتجر مطلوب."]
+
+        # group validations
+        if not show_mobile:
+            errors["show_mobile"] = ["الرجاء تحديد إعدادات عرض رقم الهاتف."]
+
+        if not pm_clean:
+            errors["payment_methods"] = ["الرجاء اختيار طريقة دفع واحدة على الأقل."]
+
+        if not store.delivery_policy:
+            errors["delivery_time"] = ["الرجاء اختيار سياسة التوصيل."]
+
+        if not store.return_policy:
+            errors["return_policy"] = ["الرجاء اختيار سياسة الإرجاع."]
+
+        if errors:
+            return JsonResponse({"ok": False, "errors": errors}, status=400)
+
+        # save store basic
         store.name = store_name
         store.description = store_desc
+        store.specialty = store_specialty
 
-        # These are OPTIONAL: empty string is fine if your model has blank=True
         store.website = store_website
         store.instagram = store_instagram
         store.facebook = store_facebook
         store.whatsapp = store_whatsapp
 
+        # city
         if store_city_id:
             try:
                 store.city_id = int(store_city_id)
@@ -3514,12 +3566,9 @@ def my_account_save_info(request: HttpRequest):
         else:
             store.city_id = None
 
-        if hasattr(store, "address"):
-            store.address = store_address
+        store.address = store_address
 
-        # -----------------------
-        # Store logo (same endpoint)
-        # -----------------------
+        # logo
         remove_logo = (request.POST.get("remove_store_logo") or "") == "1"
         logo_file = request.FILES.get("store_logo")
 
@@ -3536,8 +3585,6 @@ def my_account_save_info(request: HttpRequest):
             store.full_clean()
             store.save()
         except ValidationError as e:
-            # NOTE: Django errors here will likely use keys like:
-            # "website", "instagram", "facebook" (model field names)
             return JsonResponse({"ok": False, "errors": e.message_dict}, status=400)
 
         if store.logo:
