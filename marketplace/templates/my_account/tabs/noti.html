@@ -1,0 +1,27 @@
+<div id="notiTab"
+     data-fragment-url="{% url 'my_account_noti_fragment' %}"
+     data-read-url-template="{% url 'my_account_noti_mark_read' 0 %}"
+     data-read-all-url="{% url 'my_account_noti_mark_all_read' %}">
+
+  <div class="noti-head">
+    <div class="noti-title-row">
+      <h2 class="noti-title">🔔 الإشعارات</h2>
+
+      <div class="noti-actions">
+        <div class="noti-count">
+          الكل: <span id="notiTotal">0</span>
+          <span class="noti-unread-chip">
+            غير مقروء: <span id="notiUnread">0</span>
+          </span>
+        </div>
+
+        <button type="button" id="notiMarkAllBtn" class="noti-btn">
+          تعليم الكل كمقروء
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notiLoader" class="noti-loader">جاري تحميل الإشعارات...</div>
+  <div id="notiContent" class="noti-content hidden"></div>
+</div>

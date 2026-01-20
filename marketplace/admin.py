@@ -427,6 +427,17 @@ class ItemAdmin(admin.ModelAdmin):
             item.listing.save(update_fields=["featured_until"])
         self.message_user(request, f"✅ Featured {queryset.count()} items until {until}.")
 
+        from marketplace.services.notifications import notify, K_AD, S_APPROVED
+
+        notify(
+            user=item.listing.user,
+            kind=K_AD,
+            status="featured_set",
+            title="تم تمييز إعلانك",
+            body=f"تم تمييز إعلانك \"{item.listing.title}\" لمدة 7 أيام.",
+            listing=item.listing,
+        )
+
     @admin.action(description="❌ Remove featured from selected items")
     def unfeature(self, request, queryset):
         for item in queryset.select_related("listing"):
@@ -455,12 +466,15 @@ class ItemAdmin(admin.ModelAdmin):
             "approved_at", "rejected_at"
         ])
 
-        # Notification now references listing only
-        Notification.objects.create(
+        from marketplace.services.notifications import notify, K_AD, S_APPROVED
+
+        notify(
             user=listing.user,
+            kind=K_AD,
+            status=S_APPROVED,
+            title="تمت الموافقة على إعلانك",
+            body=f"إعلانك \"{listing.title}\" أصبح فعالاً الآن.",
             listing=listing,
-            title="✅ تمت الموافقة على إعلانك",
-            body=f"إعلانك '{listing.title}' أصبح فعالاً الآن.",
         )
 
         self.message_user(request, "✅ Listing approved & user notified.", messages.SUCCESS)
@@ -490,11 +504,15 @@ class ItemAdmin(admin.ModelAdmin):
                 "rejected_at", "approved_at"
             ])
 
-            Notification.objects.create(
+            from marketplace.services.notifications import notify, K_AD, S_REJECTED
+
+            notify(
                 user=listing.user,
+                kind=K_AD,
+                status=S_REJECTED,
+                title="تم رفض إعلانك",
+                body=f"إعلانك \"{listing.title}\" تم رفضه. السبب: {reason}",
                 listing=listing,
-                title="❌ تم رفض إعلانك",
-                body=f"إعلانك '{listing.title}' تم رفضه. الأسباب: {reason}",
             )
 
             self.message_user(request, "❌ Listing rejected & user notified.", messages.ERROR)
@@ -1086,6 +1104,17 @@ class RequestAdmin(admin.ModelAdmin):
             req.listing.save(update_fields=["featured_until"])
         self.message_user(request, f"✅ Featured {queryset.count()} requests until {until}.")
 
+        from marketplace.services.notifications import notify, K_REQUEST
+
+        notify(
+            user=req.listing.user,
+            kind=K_REQUEST,
+            status="featured_set",
+            title="تم تمييز طلبك",
+            body=f"تم تمييز طلبك \"{req.listing.title}\" لمدة 7 أيام.",
+            listing=req.listing,
+        )
+
     @admin.action(description="❌ Remove featured from selected requests")
     def unfeature(self, request, queryset):
         for req in queryset.select_related("listing"):
@@ -1107,11 +1136,15 @@ class RequestAdmin(admin.ModelAdmin):
         listing.approved_at = timezone.now()
         listing.save()
 
-        Notification.objects.create(
+        from marketplace.services.notifications import notify, K_REQUEST, S_APPROVED
+
+        notify(
             user=listing.user,
+            kind=K_REQUEST,
+            status=S_APPROVED,
+            title="تم قبول طلبك",
+            body=f"طلبك \"{listing.title}\" تم قبوله.",
             listing=listing,
-            title="✅ تم قبول طلب الشراء",
-            body=f"طلبك '{listing.title}' تم قبوله.",
         )
 
         self.message_user(request, "تم قبول الطلب", messages.SUCCESS)
@@ -1135,11 +1168,15 @@ class RequestAdmin(admin.ModelAdmin):
             listing.approved_at = None
             listing.save()
 
-            Notification.objects.create(
+            from marketplace.services.notifications import notify, K_REQUEST, S_REJECTED
+
+            notify(
                 user=listing.user,
+                kind=K_REQUEST,
+                status=S_REJECTED,
+                title="تم رفض طلب الشراء",
+                body=f"تم رفض طلبك \"{listing.title}\". السبب: {reason}",
                 listing=listing,
-                title="❌ تم رفض طلب الشراء",
-                body=f"تم رفض طلبك. السبب: {reason}",
             )
 
             self.message_user(request, "تم رفض الطلب", messages.ERROR)

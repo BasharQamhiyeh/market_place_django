@@ -60,6 +60,7 @@ from .forms import (
     ResetPasswordForm,
     RequestForm, SignupAfterOtpForm, UserRegistrationForm, StoreReviewForm
 )
+from .services.notifications import notify
 from .utils.service import recalc_store_rating
 
 # Local imports
@@ -112,6 +113,8 @@ IS_RENDER = getattr(settings, "IS_RENDER", False)
 ALLOWED_PAYMENT_METHODS = {"cash", "card", "cliq", "transfer"}
 ALLOWED_DELIVERY = {"24", "48", "72"}
 ALLOWED_RETURN = {"3", "7", "none"}
+
+REFERRAL_POINTS = 50
 
 @require_GET
 def item_detail_more_similar(request, item_id):
@@ -1118,20 +1121,28 @@ def item_create(request):
                     )
 
             # -----------------------------
-            # 6. Notifications
+            # 6. Notifications (NEW SYSTEM)
             # -----------------------------
+            from .services.notifications import K_AD, S_PENDING
+
+            # admins: pending moderation
             for admin in User.objects.filter(is_staff=True):
-                Notification.objects.create(
+                notify(
                     user=admin,
-                    title="New item pending approval",
-                    body=f"🕓 '{listing.title}' was posted by {request.user.username} and is awaiting approval.",
+                    kind=K_AD,
+                    status=S_PENDING,
+                    title="إعلان جديد بانتظار المراجعة",
+                    body=f"الإعلان: {listing.title}",
                     listing=listing,
                 )
 
-            Notification.objects.create(
+            # owner: pending
+            notify(
                 user=request.user,
-                title="✅ إعلانك قيد المراجعة",
-                body=f"تم استلام إعلانك '{listing.title}' وهو الآن بانتظار موافقة الإدارة.",
+                kind=K_AD,
+                status=S_PENDING,
+                title="إعلانك قيد المراجعة",
+                body=f"إعلانك \"{listing.title}\" قيد المراجعة حالياً.",
                 listing=listing,
             )
 
@@ -1338,21 +1349,24 @@ def item_edit(request, item_id):
                 first.is_main = True
                 first.save()
 
-        # -----------------------------
-        # 6. Notifications
-        # -----------------------------
+        from .services.notifications import K_AD, S_PENDING
+
         for admin in User.objects.filter(is_staff=True):
-            Notification.objects.create(
+            notify(
                 user=admin,
-                title="Edited item pending approval",
-                body=f"✏️ '{listing.title}' was edited by {request.user.username} and needs re-approval.",
+                kind=K_AD,
+                status=S_PENDING,
+                title="تعديل إعلان بانتظار المراجعة",
+                body=f"تم تعديل الإعلان: {listing.title}",
                 listing=listing,
             )
 
-        Notification.objects.create(
+        notify(
             user=request.user,
-            title="📋 إعلانك قيد المراجعة مجددًا",
-            body=f"تم تعديل إعلانك '{listing.title}' وهو الآن بانتظار المراجعة من الإدارة.",
+            kind=K_AD,
+            status=S_PENDING,
+            title="تم إرسال إعلانك للمراجعة مجدداً",
+            body=f"بعد التعديل، إعلانك \"{listing.title}\" بانتظار المراجعة.",
             listing=listing,
         )
 
@@ -1468,21 +1482,24 @@ def request_create(request):
                         value=final_value,
                     )
 
-            # -----------------------------
-            # 5. Notifications
-            # -----------------------------
+            from .services.notifications import K_REQUEST, S_PENDING
+
             for admin in User.objects.filter(is_staff=True):
-                Notification.objects.create(
+                notify(
                     user=admin,
-                    title="New request pending approval",
-                    body=f"🕓 '{listing.title}' was posted by {request.user.username} and is awaiting approval.",
+                    kind=K_REQUEST,
+                    status=S_PENDING,
+                    title="طلب جديد بانتظار المراجعة",
+                    body=f"الطلب: {listing.title}",
                     listing=listing,
                 )
 
-            Notification.objects.create(
+            notify(
                 user=request.user,
-                title="✅ تم استلام طلبك",
-                body=f"طلبك '{listing.title}' قيد المراجعة.",
+                kind=K_REQUEST,
+                status=S_PENDING,
+                title="طلبك قيد المراجعة",
+                body=f"طلبك \"{listing.title}\" قيد المراجعة حالياً.",
                 listing=listing,
             )
 
@@ -1958,18 +1975,24 @@ def item_edit(request, item_id):
                 first.save()
 
         # Notifications
+        from .services.notifications import K_AD, S_PENDING
+
         for admin in User.objects.filter(is_staff=True):
-            Notification.objects.create(
+            notify(
                 user=admin,
-                title="Edited item pending approval",
-                body=f"✏️ '{listing.title}' was edited by {request.user.username}.",
+                kind=K_AD,
+                status=S_PENDING,
+                title="تعديل إعلان بانتظار المراجعة",
+                body=f"تم تعديل الإعلان: {listing.title}",
                 listing=listing,
             )
 
-        Notification.objects.create(
+        notify(
             user=request.user,
-            title="📋 إعلانك قيد المراجعة مجددًا",
-            body=f"تم تعديل إعلانك '{listing.title}' وهو الآن بانتظار المراجعة.",
+            kind=K_AD,
+            status=S_PENDING,
+            title="تم إرسال إعلانك للمراجعة مجدداً",
+            body=f"بعد التعديل، إعلانك \"{listing.title}\" بانتظار المراجعة.",
             listing=listing,
         )
 
@@ -2107,6 +2130,21 @@ def toggle_favorite(request, item_id):
     if created:
         is_favorited = True
         messages.success(request, "⭐ Added to your favorites.")
+
+        owner = item.listing.user
+        if owner.user_id != request.user.user_id:
+            from .services.notifications import K_FAV, S_ADDED
+
+            notify(
+                user=owner,
+                kind=K_FAV,
+                status=S_ADDED,
+                title="تم إضافة إعلانك للمفضلة",
+                body=f"قام أحد المستخدمين بإضافة إعلانك \"{item.listing.title}\" إلى المفضلة.",
+                listing=item.listing,
+            )
+
+
     else:
         fav.delete()
         is_favorited = False
@@ -2666,8 +2704,18 @@ def complete_signup(request):
             )
 
         if user.referred_by:
-            user.referred_by.points += 50
+            user.referred_by.points += REFERRAL_POINTS
             user.referred_by.save()
+
+            from .services.notifications import K_WALLET, S_REWARD
+
+            notify(
+                user=user.referred_by,
+                kind=K_WALLET,
+                status=S_REWARD,
+                title="مكافأة دعوة صديق",
+                body=f"حصلت على +{REFERRAL_POINTS} نقطة لأن صديقك سجّل عبر رابطك.",
+            )
 
     # cleanup
     for key in ["pending_phone", "phone_verified_ok", "verification_code", "verification_sent_at", "ref_code"]:
@@ -2874,19 +2922,76 @@ def user_logout(request):
 
 from marketplace.services.promotions import buy_featured_with_points, NotEnoughPoints
 
+# @login_required
+# def feature_listing(request, listing_id):
+#     listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
+#
+#     DAYS = 7
+#     COST = 50  # set your business rule
+#
+#     try:
+#         buy_featured_with_points(user=request.user, listing=listing, days=DAYS, points_cost=COST)
+#         messages.success(request, f"تم تمييز الإعلان لمدة {DAYS} أيام.")
+#     except NotEnoughPoints:
+#         messages.error(request, "رصيد النقاط غير كافٍ.")
+#     return redirect("profile")  # or listing detail
+
+
+FEATURE_PACKAGES = {3: 30, 7: 60, 14: 100}  # match mockup exactly
+
 @login_required
-def feature_listing(request, listing_id):
+@require_POST
+def feature_listing_api(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
 
-    DAYS = 7
-    COST = 50  # set your business rule
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+
+    days = int(payload.get("days", 0))
+    if days not in FEATURE_PACKAGES:
+        return JsonResponse({"ok": False, "error": "invalid_days"}, status=400)
+
+    # mockup disables if still featured
+    if listing.featured_until and listing.featured_until > timezone.now():
+        return JsonResponse({"ok": False, "error": "already_featured"}, status=400)
+
+    cost = FEATURE_PACKAGES[days]
 
     try:
-        buy_featured_with_points(user=request.user, listing=listing, days=DAYS, points_cost=COST)
-        messages.success(request, f"تم تمييز الإعلان لمدة {DAYS} أيام.")
+        promo = buy_featured_with_points(
+            user=request.user,
+            listing=listing,
+            days=days,
+            points_cost=cost,
+        )
     except NotEnoughPoints:
-        messages.error(request, "رصيد النقاط غير كافٍ.")
-    return redirect("profile")  # or listing detail
+        return JsonResponse({"ok": False, "error": "not_enough_points"}, status=400)
+
+    # refresh listing cache updated by promo.activate()
+    listing.refresh_from_db(fields=["featured_until"])
+    request.user.refresh_from_db(fields=["points"])
+
+    from .services.notifications import K_WALLET, S_USED
+
+    notify(
+        user=request.user,
+        kind=K_WALLET,
+        status=S_USED,
+        title="تم خصم نقاط",
+        body=f"تم خصم {cost} نقطة مقابل تمييز \"{listing.title}\" لمدة {days} أيام.",
+        listing=listing,
+    )
+
+    return JsonResponse({
+        "ok": True,
+        "days": days,
+        "cost": cost,
+        "points_balance": request.user.points,
+        "featured_until": listing.featured_until.isoformat() if listing.featured_until else None,
+        "promotion_id": promo.id,
+    })
 
 
 from django.db.models import F
@@ -3093,6 +3198,27 @@ def store_follow_toggle(request, store_id):
         except IntegrityError:
             # unique constraint race condition (double click / multi requests)
             following = True
+
+    # notify store owner (no self)
+    from .services.notifications import K_STORE_FOLLOW, S_FOLLOWED, S_UNFOLLOWED
+
+    if store.owner_id != request.user.user_id:
+        if following:
+            notify(
+                user=store.owner,
+                kind=K_STORE_FOLLOW,
+                status=S_FOLLOWED,
+                title="تمت متابعة متجرك",
+                body="قام أحد المستخدمين بمتابعة متجرك وسيصله كل جديد من إعلاناتك.",
+            )
+        else:
+            notify(
+                user=store.owner,
+                kind=K_STORE_FOLLOW,
+                status=S_UNFOLLOWED,
+                title="تم إلغاء متابعة متجرك",
+                body="قام أحد المستخدمين بإلغاء متابعة متجرك.",
+            )
 
     followers_count = StoreFollow.objects.filter(store=store).count()
 
@@ -3600,3 +3726,40 @@ def my_account_save_info(request: HttpRequest):
             "store_logo_url": store_logo_url,
         }
     )
+
+
+@login_required
+def my_account_noti_fragment(request):
+    qs = Notification.objects.filter(user=request.user).order_by("-created_at")
+    total = qs.count()
+    unread = qs.filter(is_read=False).count()
+
+    return render(request, "my_account/tabs/_noti_list.html", {
+        "notifications": qs[:200],  # cap
+        "noti_total": total,
+        "noti_unread": unread,
+    })
+
+
+@login_required
+def my_account_noti_mark_read(request, pk):
+    if request.method != "POST":
+        return JsonResponse({"ok": False}, status=405)
+
+    n = get_object_or_404(Notification, pk=pk, user=request.user)
+    if not n.is_read:
+        n.is_read = True
+        n.save(update_fields=["is_read"])
+
+    unread = Notification.objects.filter(user=request.user, is_read=False).count()
+    return JsonResponse({"ok": True, "unread": unread})
+
+
+@login_required
+def my_account_noti_mark_all_read(request):
+    if request.method != "POST":
+        return JsonResponse({"ok": False}, status=405)
+
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({"ok": True, "unread": 0})
+

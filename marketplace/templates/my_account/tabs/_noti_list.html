@@ -1,0 +1,48 @@
+{# expects: notifications, noti_total, noti_unread #}
+
+<div class="noti-meta-bar hidden">
+  <span data-total="{{ noti_total }}" data-unread="{{ noti_unread }}"></span>
+</div>
+
+<div id="notiList">
+{% for n in notifications %}
+  <div class="timeline-item {% if not n.is_read %}is-unread{% endif %}"
+       data-nid="{{ n.id }}"
+       data-kind="{{ n.kind }}"
+       data-status="{{ n.status }}"
+       data-listing="{% if n.listing_id %}{{ n.listing_id }}{% endif %}">
+
+    <div class="noti-left">
+      <div class="noti-icon"></div>
+
+      <div class="noti-texts">
+        <div class="noti-titleline">
+          <span class="noti-titletext">{{ n.title }}</span>
+          <span class="noti-badge"></span>
+        </div>
+
+        {% if n.body %}<div class="noti-body">{{ n.body }}</div>{% endif %}
+        <div class="noti-time">{{ n.created_at|date:"Y/m/d - H:i" }}</div>
+      </div>
+    </div>
+
+    <div class="noti-right">
+      {% if not n.is_read %}
+        <button type="button" class="noti-mark-btn" data-mark-read>
+          <span class="noti-mark-ic"></span>
+          مقروء
+        </button>
+      {% else %}
+        <span class="noti-read-pill">مقروء</span>
+      {% endif %}
+
+      {% if n.listing_id %}
+        <a class="noti-link" ">عرض</a>
+      {% endif %}
+    </div>
+
+  </div>
+{% empty %}
+  <div class="noti-empty">لا توجد إشعارات حالياً</div>
+{% endfor %}
+</div>

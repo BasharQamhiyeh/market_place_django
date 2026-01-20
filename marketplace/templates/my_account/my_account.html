@@ -188,13 +188,18 @@
 {% block scripts %}
   {{ block.super }}
 
-  <script src="{% static 'js/my_account/tabs.js' %}"></script>
+  <script>
+    window.__pointsBalance = {{ me.points|default:0 }};
+    window.__pointsTransactions = [];
+  </script>
 
-  <script src="{% static 'js/my_account/info.js' %}"></script>
-  <script src="{% static 'js/my_account/ads.js' %}"></script>
-  <script src="{% static 'js/my_account/requests.js' %}"></script>
-  <script src="{% static 'js/my_account/noti.js' %}"></script>
-  <script src="{% static 'js/my_account/msgs.js' %}"></script>
-  <script src="{% static 'js/my_account/fav.js' %}"></script>
-  <script src="{% static 'js/my_account/wallet.js' %}"></script>
+  <script defer src="{% static 'js/my_account/noti.js' %}"></script>
+  <script defer src="{% static 'js/my_account/tabs.js' %}"></script>
+
+  <script defer src="{% static 'js/my_account/info.js' %}"></script>
+  <script defer src="{% static 'js/my_account/ads.js' %}"></script>
+  <script defer src="{% static 'js/my_account/requests.js' %}"></script>
+  <script defer src="{% static 'js/my_account/msgs.js' %}"></script>
+  <script defer src="{% static 'js/my_account/fav.js' %}"></script>
+  <script defer src="{% static 'js/my_account/wallet.js' %}"></script>
 {% endblock %}

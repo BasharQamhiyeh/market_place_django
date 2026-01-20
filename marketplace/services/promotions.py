@@ -13,6 +13,10 @@ def buy_featured_with_points(*, user: User, listing: Listing, days: int = 7, poi
     # lock user to prevent double spend
     user = User.objects.select_for_update().get(pk=user.pk)
 
+    print(user.points)
+    print(user.phone)
+    print(points_cost)
+    print("XXXXXXXXXXXXXXXXXXXXXXXXXXX")
     if user.points < points_cost:
         raise NotEnoughPoints()
 

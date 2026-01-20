@@ -1,9 +1,7 @@
 /* static/js/my_account/tabs.js
    ✅ Mockup tabs controller (mobile sticky buttons)
-   ✅ Works with your new DOM:
-      - buttons: .tab-btn[data-tab="info|ads|requests|noti|msgs|fav|wallet"]
-      - panes:   #tab-info, #tab-ads, #tab-requests, #tab-noti, #tab-msgs, #tab-fav, #tab-wallet
-   ✅ Also toggles Save button visibility (only in info tab)
+   ✅ Persists active tab on refresh (localStorage + hash)
+   ✅ Lazy-load notifications only when tab opens
 */
 
 (function () {
@@ -14,45 +12,87 @@
 
   const saveBtn = document.getElementById("saveBtn");
 
-  function setActiveTab(tabKey) {
+  const panes = ["info", "ads", "requests", "noti", "msgs", "fav", "wallet"];
+  const STORAGE_KEY = "my_account_active_tab";
+
+  function normalizeTabKey(v) {
+    const key = (v || "").toString().trim();
+    return panes.includes(key) ? key : "info";
+  }
+
+  function maybeLoadTabExtras(tabKey) {
+    // ✅ Lazy-load notifications
+    if (tabKey === "noti" && window.__ruknLoadNotiTab) {
+      window.__ruknLoadNotiTab();
+    }
+  }
+
+  function setActiveTab(tabKey, opts = {}) {
+    const key = normalizeTabKey(tabKey);
+
     // buttons
-    btns.forEach((b) => b.classList.toggle("active", b.dataset.tab === tabKey));
+    btns.forEach((b) => b.classList.toggle("active", b.dataset.tab === key));
 
     // panes
-    const panes = [
-      "info",
-      "ads",
-      "requests",
-      "noti",
-      "msgs",
-      "fav",
-      "wallet",
-    ];
-
     panes.forEach((k) => {
       const el = document.getElementById("tab-" + k);
       if (!el) return;
 
-      const isActive = k === tabKey;
+      const isActive = k === key;
       el.classList.toggle("active", isActive);
-
-      // mockup behavior: hide inactive panes
       el.classList.toggle("hidden", !isActive);
     });
 
     // save button only in info
     if (saveBtn) {
-      saveBtn.style.display = tabKey === "info" ? "inline-flex" : "none";
+      saveBtn.style.display = key === "info" ? "inline-flex" : "none";
     }
+
+    // persist selected tab (unless disabled)
+    if (!opts.skipStore) {
+      try {
+        localStorage.setItem(STORAGE_KEY, key);
+      } catch (e) {}
+    }
+
+    // optional: reflect in URL hash
+    if (!opts.skipHash) {
+      // keep it stable (no scroll jump if you don’t have anchors)
+      history.replaceState(null, "", "#tab-" + key);
+    }
+
+    // run tab-specific behavior after it becomes active
+    maybeLoadTabExtras(key);
   }
 
-  // bind
+  // bind click
   btns.forEach((btn) => {
-    btn.addEventListener("click", () => setActiveTab(btn.dataset.tab || "info"));
+    btn.addEventListener("click", () => {
+      const key = normalizeTabKey(btn.dataset.tab || "info");
+      setActiveTab(key);
+    });
   });
 
-  // initial state: respect existing "active" button if present
-  const initial =
-    btns.find((b) => b.classList.contains("active"))?.dataset.tab || "info";
-  setActiveTab(initial);
+  function readInitialTab() {
+    // 1) from URL hash: #tab-noti OR #noti
+    const h = (window.location.hash || "").replace("#", "").trim();
+    if (h) {
+      if (h.startsWith("tab-")) return normalizeTabKey(h.slice(4));
+      return normalizeTabKey(h);
+    }
+
+    // 2) from localStorage
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return normalizeTabKey(saved);
+    } catch (e) {}
+
+    // 3) from existing active button in HTML
+    const initialFromDom =
+      btns.find((b) => b.classList.contains("active"))?.dataset.tab;
+    return normalizeTabKey(initialFromDom || "info");
+  }
+
+  // initial
+  setActiveTab(readInitialTab(), { skipStore: true, skipHash: true });
 })();

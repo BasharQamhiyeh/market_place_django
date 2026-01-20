@@ -1,0 +1,249 @@
+/* static/css/my_account/noti.css
+   ✅ Pixel-close to mockup behavior
+   ✅ Only notifications tab
+*/
+
+#tab-noti { position: relative; }
+
+/* Header */
+#tab-noti .noti-head{ margin-bottom:16px; }
+#tab-noti .noti-title-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+#tab-noti .noti-title{
+  margin:0;
+  font-weight:800;
+  font-size:18px;
+  color:#1f2937;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+#tab-noti .noti-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#tab-noti .noti-count{
+  font-size:13px;
+  font-weight:800;
+  color:#374151;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:8px 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#tab-noti .noti-unread-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 10px;
+  border-radius:12px;
+  background:#ffedd5;
+  color:#c2410c;
+  border:1px solid #fdba74;
+  font-weight:900;
+}
+
+/* Button */
+#tab-noti .noti-btn{
+  border:1px solid #e5e7eb;
+  background:#fff;
+  color:#374151;
+  border-radius:14px;
+  padding:8px 12px;
+  font-weight:800;
+  font-size:13px;
+  transition:.2s;
+  cursor:pointer;
+}
+#tab-noti .noti-btn:hover{
+  background:#fff7f1;
+  border-color: var(--rukn-orange);
+}
+
+/* Loader / empty */
+#tab-noti .noti-loader,
+#tab-noti .noti-empty{
+  text-align:center;
+  padding:18px;
+  border:1px dashed #e5e7eb;
+  border-radius:14px;
+  background:#fff;
+  color:#6b7280;
+  font-weight:800;
+}
+#tab-noti .hidden{ display:none !important; }
+
+/* Timeline item (match your mockup .timeline-item) */
+#tab-noti .timeline-item{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 15px;
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  margin-bottom:8px;
+  transition:.25s;
+  position:relative;
+  gap:12px;
+}
+#tab-noti .timeline-item:hover{
+  background:#fff7f1;
+  border-color: var(--rukn-orange);
+  box-shadow:0 2px 8px #ff7a1820;
+}
+#tab-noti .timeline-item.is-unread{
+  border-color: var(--rukn-orange);
+  box-shadow:0 2px 8px #ff7a1820;
+  background: rgba(255, 122, 24, 0.06);
+}
+
+/* left side */
+#tab-noti .noti-left{ display:flex; gap:12px; align-items:flex-start; min-width:0; }
+#tab-noti .noti-icon{
+  width:38px; height:38px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  flex:0 0 auto;
+}
+#tab-noti .noti-ic{
+  width:20px; height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* title + badge in same line */
+#tab-noti .noti-titleline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#tab-noti .noti-titletext{
+  font-weight:800;
+  font-size:14px;
+  color:#111827;
+}
+#tab-noti .noti-body{
+  font-size:13px;
+  color:#6b7280;
+  margin-top:2px;
+  line-height:1.6;
+  word-break:break-word;
+}
+#tab-noti .noti-time{
+  font-size:12px;
+  color:#9ca3af;
+  margin-top:6px;
+}
+
+/* right side */
+#tab-noti .noti-right{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-end;
+  flex:0 0 auto;
+}
+#tab-noti .noti-link{
+  font-size:12px;
+  font-weight:800;
+  color: var(--rukn-orange);
+  text-decoration:none;
+}
+#tab-noti .noti-link:hover{ text-decoration:underline; }
+
+/* mark read button / read pill */
+#tab-noti .noti-mark-btn{
+  font-size:12px;
+  font-weight:800;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  color:#374151;
+  padding:6px 10px;
+  cursor:pointer;
+  transition:.2s;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+#tab-noti .noti-mark-btn:hover{
+  background:#fff7f1;
+  border-color: var(--rukn-orange);
+}
+#tab-noti .noti-mark-ic{
+  width:16px; height:16px;
+  display:inline-flex;
+}
+#tab-noti .noti-mark-ic::before{
+  content:"";
+  width:16px; height:16px;
+  display:block;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") no-repeat center / contain;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") no-repeat center / contain;
+  color:#16a34a;
+}
+#tab-noti .noti-read-pill{
+  padding:6px 10px;
+  font-size:12px;
+  border-radius:12px;
+  font-weight:800;
+  border:1px solid #e5e7eb;
+  background:#f3f4f6;
+  color:#6b7280;
+}
+
+/* status badge (same as your mockup) */
+#tab-noti .status-badge{
+  padding:3px 10px;
+  font-size:12px;
+  border-radius:10px;
+  font-weight:bold;
+}
+#tab-noti .status-active{ background:#dcfce7; color:#15803d; }
+#tab-noti .status-pending{ background:#fef9c3; color:#b45309; }
+#tab-noti .status-rejected{ background:#fee2e2; color:#b91c1c; }
+#tab-noti .status-featured{ background:#ffedd5; color:#c2410c; }
+#tab-noti .status-fav{ background:#ffedd5; color:#c2410c; }
+#tab-noti .status-unfollow{ background:#f3f4f6; color:#6b7280; }
+#tab-noti .status-system{ background:#dbeafe; color:#1d4ed8; }
+
+/* icon colors by kind (mockup-like) */
+#tab-noti .noti-kind-request .noti-icon{ background:#dcfce7; border-color:#86efac; color:#15803d; }
+#tab-noti .noti-kind-ad .noti-icon{ background:#ffedd5; border-color:#fdba74; color:#c2410c; }
+#tab-noti .noti-kind-wallet .noti-icon{ background:#fef9c3; border-color:#fde68a; color:#b45309; }
+#tab-noti .noti-kind-fav .noti-icon{ background:#fee2e2; border-color:#fca5a5; color:#b91c1c; }
+#tab-noti .noti-kind-store_follow .noti-icon{ background:#dcfce7; border-color:#86efac; color:#15803d; }
+#tab-noti .noti-kind-system .noti-icon{ background:#f3f4f6; border-color:#e5e7eb; color:#6b7280; }
+
+/* mobile layout */
+@media (max-width: 480px){
+  #tab-noti .timeline-item{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+  #tab-noti .noti-right{
+    align-self:flex-end;
+    align-items:flex-end;
+  }
+}

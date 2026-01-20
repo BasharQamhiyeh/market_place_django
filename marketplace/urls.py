@@ -86,7 +86,7 @@ urlpatterns = [
     path("requests/", views.request_list, name="request_list"),
     path("request/<int:request_id>/", views.request_detail, name="request_detail"),
 
-    path("listing/<int:listing_id>/feature/", views.feature_listing, name="feature_listing"),
+    path("listing/<int:listing_id>/feature/", views.feature_listing_api, name="feature_listing_api"),
 
     path("stores/<int:store_id>/", views.store_profile, name="store_profile"),
 
@@ -99,6 +99,11 @@ urlpatterns = [
 
     path("my-account/", views.my_account, name="my_account"),
     path("save-info/", views.my_account_save_info, name="my_account_save_info"),
+
+
+    path("my-account/noti/fragment/", views.my_account_noti_fragment, name="my_account_noti_fragment"),
+    path("my-account/noti/<int:pk>/read/", views.my_account_noti_mark_read, name="my_account_noti_mark_read"),
+    path("my-account/noti/read-all/", views.my_account_noti_mark_all_read, name="my_account_noti_mark_all_read"),
 
 
     # path('api/', include('marketplace.api_urls')),
