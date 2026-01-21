@@ -1,0 +1,76 @@
+{# templates/my_account/tabs/fav.html #}
+{% load i18n %}
+
+<div class="fav-head">
+  <h2 class="fav-title">
+    <svg class="fav-title-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+               a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+               l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+            stroke="currentColor" stroke-width="2"/>
+    </svg>
+    المفضلة
+  </h2>
+
+  <div class="fav-count">
+    عدد الإعلانات: <span id="favCount">{{ fav_count|default:0 }}</span>
+  </div>
+</div>
+
+<div id="favList" class="fav-grid">
+  {% if fav_items %}
+    {% for item in fav_items %}
+      <div class="fav-cell" data-fav-item="1">
+        {% include "partials/_item_card.html" with item=item %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div id="favEmpty" class="fav-empty">
+      <svg class="fav-empty-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+                 a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+                 l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+              stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <span>لا يوجد إعلانات في المفضلة حالياً</span>
+    </div>
+  {% endif %}
+</div>
+
+{% if fav_page_obj and fav_page_obj.paginator.num_pages > 1 %}
+  <div class="fav-pager">
+    {% if fav_page_obj.has_previous %}
+      <a class="fav-page-btn" href="?tab=fav&fav_page={{ fav_page_obj.previous_page_number }}">السابق</a>
+    {% endif %}
+
+    <span class="fav-page-mid">
+      صفحة {{ fav_page_obj.number }} من {{ fav_page_obj.paginator.num_pages }}
+    </span>
+
+    {% if fav_page_obj.has_next %}
+      <a class="fav-page-btn" href="?tab=fav&fav_page={{ fav_page_obj.next_page_number }}">التالي</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+<!-- Confirm Remove Favorite Modal -->
+<div id="confirmFavModal" class="fav-modal hidden" aria-hidden="true">
+  <div class="fav-modal__panel" role="dialog" aria-modal="true" aria-labelledby="favModalTitle">
+    <div class="fav-modal__icon">
+      <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+                 a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+                 l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+              stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <h3 id="favModalTitle" class="fav-modal__title">حذف من المفضلة</h3>
+    <p class="fav-modal__desc">هل أنت متأكد من حذف هذا الإعلان من المفضلة؟</p>
+
+    <div class="fav-modal__actions">
+      <button type="button" class="fav-btn fav-btn--ghost" data-fav-cancel>إلغاء</button>
+      <button type="button" class="fav-btn fav-btn--danger" data-fav-confirm>حذف</button>
+    </div>
+  </div>
+</div>

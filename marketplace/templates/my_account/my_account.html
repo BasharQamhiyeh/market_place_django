@@ -193,6 +193,14 @@
     window.__pointsTransactions = [];
   </script>
 
+  <script>
+    window.MYMSG_ENDPOINTS = {
+      conversations: "{% url 'api_my_conversations' %}",
+      messages: "{% url 'api_conversation_messages' 0 %}".replace("/0/", "/__ID__/"),
+      send: "{% url 'api_conversation_send' 0 %}".replace("/0/", "/__ID__/")
+    };
+  </script>
+
   <script defer src="{% static 'js/my_account/noti.js' %}"></script>
   <script defer src="{% static 'js/my_account/tabs.js' %}"></script>
 

@@ -25,7 +25,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, Q, Avg
+from django.db.models import Count, Q, Avg, Subquery
 from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.contrib.postgres.search import TrigramSimilarity
@@ -3512,6 +3512,39 @@ def my_account(request: HttpRequest):
             "detailUrl": (req.get_absolute_url() if hasattr(req, "get_absolute_url") else ""),
         })
 
+    # Favorites (items only) for the favorites tab
+    fav_qs = (
+        Favorite.objects
+        .filter(user=request.user, listing__type="item")
+        .select_related(
+            "listing",
+            "listing__user",
+            "listing__category",
+            "listing__city",
+            "listing__item",
+        )
+        .prefetch_related("listing__item__photos")
+        .order_by("-created_at")
+    )
+
+    paginator = Paginator(fav_qs, 12)
+    fav_page_number = request.GET.get("fav_page")
+    fav_page_obj = paginator.get_page(fav_page_number)
+
+    # Items for the card
+    fav_items_on_page = []
+    for fav in fav_page_obj.object_list:
+        # listing__item exists because Listing has related_name="item"
+        item = fav.listing.item
+
+        # ✅ make heart filled in _item_card.html
+        item.is_favorited = True
+
+        fav_items_on_page.append(item)
+
+    fav_count = paginator.count
+
+
     return render(
         request,
         "my_account/my_account.html",
@@ -3521,6 +3554,9 @@ def my_account(request: HttpRequest):
             "has_store": has_store,
             "my_ads": my_ads,
             "my_requests": my_requests,
+            "fav_items": fav_items_on_page,
+            "fav_count": fav_count,
+            "fav_page_obj": fav_page_obj,
         },
     )
 
@@ -3763,3 +3799,160 @@ def my_account_noti_mark_all_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return JsonResponse({"ok": True, "unread": 0})
 
+
+def _user_avatar_url(u):
+  # adapt to your real user image field if you have one
+  # try common names, fallback to static placeholder used in template
+  for attr in ["photo", "avatar", "image", "profile_photo"]:
+    f = getattr(u, attr, None)
+    try:
+      if f and getattr(f, "url", None):
+        return f.url
+    except Exception:
+      pass
+  return "/static/img/default-avatar.png"
+
+def _other_party(convo, me):
+  return convo.seller if convo.buyer_id == me.user_id else convo.buyer
+
+def _convo_type_and_title(convo):
+  # store conversation
+  if convo.store_id:
+    return ("store", "تواصل عام مع المتجر")
+
+  # listing conversation => item or request
+  listing = convo.listing
+  item = getattr(listing, "item", None) if listing else None
+  req = getattr(listing, "request", None) if listing else None
+
+  if item:
+    return ("ad", getattr(item, "title", "") or getattr(listing, "title", "") or "")
+  if req:
+    return ("request", getattr(req, "title", "") or getattr(listing, "title", "") or "")
+  return ("ad", getattr(listing, "title", "") or "")
+
+@login_required
+@require_GET
+def api_my_conversations(request):
+  me = request.user
+
+  last_msg_qs = (
+    Message.objects
+    .filter(conversation_id=OuterRef("pk"))
+    .order_by("-created_at")
+  )
+
+  qs = (
+    Conversation.objects
+    .filter(Q(buyer=me) | Q(seller=me))
+    .select_related("buyer", "seller", "listing", "store")
+    .annotate(
+      last_body=Subquery(last_msg_qs.values("body")[:1]),
+      last_time=Subquery(last_msg_qs.values("created_at")[:1]),
+      unread_count=Count(
+        "messages",
+        filter=Q(messages__is_read=False) & ~Q(messages__sender=me),
+        distinct=True
+      ),
+    )
+    .order_by("-last_time", "-created_at")
+  )
+
+  out = []
+  for c in qs:
+    other = _other_party(c, me)
+    ctype, title = _convo_type_and_title(c)
+
+    # display name
+    if c.store_id and getattr(c.store, "name", None):
+      name = c.store.name
+      img = getattr(getattr(c.store, "logo", None), "url", None) or _user_avatar_url(other)
+    else:
+      name = getattr(other, "username", None) or (f"{other.first_name} {other.last_name}".strip() or "مستخدم")
+      img = _user_avatar_url(other)
+
+    last_time = c.last_time
+    last_time_str = timezone.localtime(last_time).strftime("%I:%M %p") if last_time else ""
+
+    out.append({
+      "id": c.id,
+      "name": name,
+      "type": ctype,
+      "title": title,
+      "img": img,
+      "unreadCount": int(c.unread_count or 0),
+      "lastText": c.last_body or "لا توجد رسائل بعد",
+      "lastTime": last_time_str,
+    })
+
+  return JsonResponse({"conversations": out})
+
+
+@login_required
+@require_GET
+def api_conversation_messages(request, conversation_id):
+  me = request.user
+
+  convo = (
+    Conversation.objects
+    .select_related("buyer", "seller", "store", "listing")
+    .get(id=conversation_id)
+  )
+  if me not in [convo.buyer, convo.seller]:
+    return JsonResponse({"messages": []}, status=403)
+
+  other = _other_party(convo, me)
+
+  # mark unread as read
+  Message.objects.filter(conversation=convo, is_read=False).exclude(sender=me).update(is_read=True)
+
+  msgs = (
+    convo.messages
+    .select_related("sender")
+    .order_by("created_at")
+  )
+
+  other_avatar = _user_avatar_url(other)
+  data = []
+  for m in msgs:
+    data.append({
+      "from": "me" if m.sender_id == me.id else "them",
+      "text": m.body,
+      "time": timezone.localtime(m.created_at).strftime("%I:%M %p"),
+      "avatar": other_avatar,
+    })
+
+  return JsonResponse({"messages": data})
+
+
+@login_required
+@require_POST
+def api_conversation_send(request, conversation_id):
+  me = request.user
+
+  convo = (
+    Conversation.objects
+    .select_related("buyer", "seller")
+    .get(id=conversation_id)
+  )
+  if me not in [convo.buyer, convo.seller]:
+    return JsonResponse({"ok": False}, status=403)
+
+  try:
+    payload = json.loads(request.body.decode("utf-8"))
+  except Exception:
+    payload = {}
+
+  body = (payload.get("body") or "").strip()
+  if not body:
+    return JsonResponse({"ok": False, "error": "empty"}, status=400)
+
+  # keep your validation
+  from django.core.exceptions import ValidationError
+  try:
+    validate_no_links_or_html(body)
+  except ValidationError:
+    return JsonResponse({"ok": False, "error": "invalid"}, status=400)
+
+  Message.objects.create(conversation=convo, sender=me, body=body)
+  return JsonResponse({"ok": True})

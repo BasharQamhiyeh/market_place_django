@@ -105,6 +105,12 @@ urlpatterns = [
     path("my-account/noti/<int:pk>/read/", views.my_account_noti_mark_read, name="my_account_noti_mark_read"),
     path("my-account/noti/read-all/", views.my_account_noti_mark_all_read, name="my_account_noti_mark_all_read"),
 
+    path("api/my-account/conversations/", views.api_my_conversations, name="api_my_conversations"),
+    path("api/my-account/conversations/<int:conversation_id>/messages/", views.api_conversation_messages,
+         name="api_conversation_messages"),
+    path("api/my-account/conversations/<int:conversation_id>/send/", views.api_conversation_send,
+         name="api_conversation_send"),
+
 
     # path('api/', include('marketplace.api_urls')),
 ]
