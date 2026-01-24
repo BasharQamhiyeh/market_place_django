@@ -158,7 +158,7 @@
                 {% for msg in recent_messages %}
                   {% with convo=msg.conversation listing=msg.conversation.listing store=msg.conversation.store %}
 
-                    <a href="{% url 'chat_room' convo.id %}"
+                    <a href="{% url 'my_account' %}?tab=msgs&c={{ convo.id }}"
                        class="
                          dropdown-item
                          {% if store %} bg-blue-50 border-r-4 border-blue-400 {% endif %}
@@ -221,7 +221,7 @@
               </div>
 
               <div class="p-3 border-t">
-                <a href="{% url 'user_inbox' %}"
+                <a href="{% url 'my_account' %}?tab=msgs"
                    class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
                   فتح صندوق الرسائل
                 </a>

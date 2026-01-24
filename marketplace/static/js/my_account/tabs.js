@@ -2,6 +2,7 @@
    ✅ Mockup tabs controller (mobile sticky buttons)
    ✅ Persists active tab on refresh (localStorage + hash)
    ✅ Lazy-load notifications only when tab opens
+   ✅ Clears msgs deep-link (?tab=msgs&c=ID) when leaving msgs tab
 */
 
 (function () {
@@ -27,8 +28,35 @@
     }
   }
 
+  // ✅ NEW: remove deep-link params when user leaves msgs tab
+  function clearMsgsQueryParamsIfPresent() {
+    try {
+      const url = new URL(window.location.href);
+
+      const hadTabMsgs = url.searchParams.get("tab") === "msgs";
+      const hadC = url.searchParams.has("c");
+
+      if (!hadTabMsgs && !hadC) return;
+
+      // remove these so msgs tab doesn't auto-open old chat
+      if (hadTabMsgs) url.searchParams.delete("tab");
+      if (hadC) url.searchParams.delete("c");
+
+      const qs = url.searchParams.toString();
+      const next = url.pathname + (qs ? "?" + qs : "") + (url.hash || "");
+      history.replaceState(null, "", next);
+    } catch (e) {
+      // no-op: never break tabs if URL API not available
+    }
+  }
+
   function setActiveTab(tabKey, opts = {}) {
     const key = normalizeTabKey(tabKey);
+
+    // ✅ if leaving msgs, clear ?tab=msgs&c=... from URL
+    if (key !== "msgs") {
+      clearMsgsQueryParamsIfPresent();
+    }
 
     // buttons
     btns.forEach((b) => b.classList.toggle("active", b.dataset.tab === key));

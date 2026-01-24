@@ -6,6 +6,7 @@
    - No avatar fallback requests (avoid 404)
    - No duplicate showChat()
    - Delegated click always works
+   ✅ When returning to msgs tab, show list (not last opened chat)
 */
 
 let currentChatId = null;
@@ -84,7 +85,6 @@ function renderConversations(){
       ? `<span class="chat-item__badge chat-item__badge--unread">${c.unreadCount} جديد</span>`
       : `<span class="chat-item__badge chat-item__badge--read">مقروء</span>`;
 
-    // ✅ only render avatar if backend provides one (no fallback request)
     const imgUrl = (c.img || "").trim();
     const avatarHtml = imgUrl ? `<img class="chat-item__avatar" src="${imgUrl}" alt="">` : "";
 
@@ -150,13 +150,24 @@ function showChat(){
   }
 }
 
+/* ✅ NEW: reset UI when user comes back to msgs tab */
+function resetMsgsViewToList(){
+  currentChatId = null;
+
+  // clear header UI (optional but avoids showing stale name/type)
+  if($("chatUserName")) $("chatUserName").textContent = "";
+  if($("chatItemType")) $("chatItemType").innerHTML = "";
+  if($("chatUserImg")) $("chatUserImg").removeAttribute("src");
+
+  showMsgs();
+}
+
 function renderChat(messages){
   const area = $("chatArea");
   if(!area) return;
 
   area.innerHTML = (messages || []).map(m => {
     if(m.from === "them"){
-      // ✅ only render avatar if backend provided one
       const avatar = (m.avatar || "").trim();
       const avatarHtml = avatar ? `<img class="msg-avatar" src="${avatar}" alt="">` : "";
       return `
@@ -189,7 +200,6 @@ async function openChat(chatId){
   if($("chatUserName")) $("chatUserName").textContent = c?.name || "مستخدم";
   if($("chatItemType")) $("chatItemType").innerHTML = c ? typeLineHtml(c) : "";
 
-  // ✅ only set header image if provided
   if($("chatUserImg")){
     const img = (c?.img || "").trim();
     if(img) $("chatUserImg").src = img;
@@ -218,13 +228,11 @@ async function openChat(chatId){
     renderChat(msgs);
   }
 
-  // optimistic mark read in UI
   if(c){
     c.unreadCount = 0;
     renderConversations();
   }
 
-  // keep URL in sync
   const url = new URL(window.location.href);
   url.searchParams.set("tab", "msgs");
   url.searchParams.set("c", String(chatId));
@@ -249,7 +257,7 @@ async function sendMessage(){
       "X-CSRFToken": csrf || "",
       "X-Requested-With": "XMLHttpRequest",
     },
-    body: JSON.stringify({ body }) // ✅ IMPORTANT: views.py expects "body"
+    body: JSON.stringify({ body })
   });
 
   const data = await res.json().catch(() => ({}));
@@ -277,7 +285,6 @@ function wireFiltersOnce(){
   const btns = document.querySelectorAll(".chat-filter-btn");
   if(!btns.length) return;
 
-  // remove old handlers by cloning
   btns.forEach(btn => {
     const clone = btn.cloneNode(true);
     btn.parentNode.replaceChild(clone, btn);
@@ -296,13 +303,25 @@ function wireFiltersOnce(){
 function bootMessagesUI(){
   if(!$("conversationsList")) return false;
   if(!window.MYMSG_ENDPOINTS?.conversations) return false;
-  if(msgsBooted) return true;
+
+  // ✅ If already booted, don't rewire handlers,
+  // but DO reset view when returning to msgs tab (unless deep-link exists)
+  if(msgsBooted){
+    const deepId = getDeepLinkConversationId();
+    if(deepId) openChat(deepId);
+    else resetMsgsViewToList();
+    return true;
+  }
+
   msgsBooted = true;
 
   wireFiltersOnce();
 
   $("chatSearch")?.addEventListener("input", renderConversations);
-  $("chatBackBtn")?.addEventListener("click", showMsgs);
+  $("chatBackBtn")?.addEventListener("click", () => {
+    resetMsgsViewToList();
+    // NOTE: we do NOT change URL params here; tabs.js already clears them on leaving msgs
+  });
   $("chatSendBtn")?.addEventListener("click", sendMessage);
 
   $("chatInput")?.addEventListener("keydown", (e) => {
@@ -312,7 +331,7 @@ function bootMessagesUI(){
   loadConversations().then(() => {
     const deepId = getDeepLinkConversationId();
     if(deepId) openChat(deepId);
-    else showMsgs();
+    else resetMsgsViewToList();
   });
 
   return true;
