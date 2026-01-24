@@ -1,18 +1,19 @@
-/* static/js/my_account/messages.js
-   Fully fixed:
-   - Works even if tab HTML is injected later into #tabsViewport
-   - Works even if tab buttons are re-rendered
-   - Loads conversations ONLY when msgs tab becomes active (or already active on load)
-   - Prevents “empty list” when API returns data but container wasn't present yet
+/* static/js/my_account/msgs.js
+   - Uses your EXISTING views.py APIs:
+     conversations: api_my_conversations
+     messages: api_conversation_messages
+     send: api_conversation_send  (expects JSON key "body")
+   - No avatar fallback requests (avoid 404)
+   - No duplicate showChat()
+   - Delegated click always works
 */
 
 let currentChatId = null;
 let currentFilter = "all";
 let conversations = [];
+let msgsBooted = false;
 
-/* ---------------------------------------------------------
-   Helpers
---------------------------------------------------------- */
+function $(id){ return document.getElementById(id); }
 
 function getCookie(name){
   const value = `; ${document.cookie}`;
@@ -23,66 +24,36 @@ function getCookie(name){
 
 function fmtTime(str){ return str || ""; }
 
-function $(id){ return document.getElementById(id); }
-
 function isMsgsTabActive(){
   return $("tab-msgs")?.classList.contains("active");
 }
 
-/* ---------------------------------------------------------
-   Counters + Type line
---------------------------------------------------------- */
+function getDeepLinkConversationId(){
+  const raw = $("msgsBoot")?.dataset?.openConversation || "";
+  if(!raw) return null;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? String(n) : null;
+}
 
 function updateCounters(){
   const total = conversations.length;
   const unread = conversations.reduce((sum, c) => sum + (c.unreadCount > 0 ? 1 : 0), 0);
-
-  const totalEl = $("totalMsgs");
-  const unreadEl = $("unreadMsgs");
-  if(totalEl) totalEl.textContent = total;
-  if(unreadEl) unreadEl.textContent = unread;
+  if($("totalMsgs")) $("totalMsgs").textContent = total;
+  if($("unreadMsgs")) $("unreadMsgs").textContent = unread;
 }
 
 function typeLineHtml(c){
-  if(c.type === "ad"){
-    return `
-      <span style="color:#c2410c; font-weight:900; display:inline-flex; gap:6px; align-items:center;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M3 11v2a1 1 0 0 0 1 1h2l8 4V6l-8 4H4"
-                stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-          <path d="M14 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        بخصوص إعلان: ${c.title || ""}
-      </span>
-    `;
+  if(c?.type === "ad"){
+    return `<span style="color:#c2410c; font-weight:900;">بخصوص إعلان: ${c.title || ""}</span>`;
   }
-  if(c.type === "request"){
-    return `
-      <span style="color:#16a34a; font-weight:900; display:inline-flex; gap:6px; align-items:center;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
-          <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
-          <path d="M3 4h2l2.4 12h10.2l2-8H6"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        بخصوص طلب: ${c.title || ""}
-      </span>
-    `;
+  if(c?.type === "request"){
+    return `<span style="color:#16a34a; font-weight:900;">بخصوص طلب: ${c.title || ""}</span>`;
   }
-  return `
-    <span style="color:#2563eb; font-weight:900; display:inline-flex; gap:6px; align-items:center;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M3 9l1-5h16l1 5" stroke="currentColor" stroke-width="2"/>
-        <path d="M5 9v10h14V9" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      تواصل عام مع المتجر
-    </span>
-  `;
+  return `<span style="color:#2563eb; font-weight:900;">تواصل عام مع المتجر</span>`;
 }
 
-/* ---------------------------------------------------------
-   Render: Conversations list
---------------------------------------------------------- */
+function getConvLastText(c){ return (c?.last?.text || c?.lastText || ""); }
+function getConvLastTime(c){ return (c?.last?.time || c?.lastTime || ""); }
 
 function renderConversations(){
   const container = $("conversationsList");
@@ -96,8 +67,7 @@ function renderConversations(){
       !q ||
       (c.name || "").toLowerCase().includes(q) ||
       (c.title || "").toLowerCase().includes(q) ||
-      (c.lastText || "").toLowerCase().includes(q);
-
+      (getConvLastText(c) || "").toLowerCase().includes(q);
     return matchFilter && matchSearch;
   });
 
@@ -114,71 +84,71 @@ function renderConversations(){
       ? `<span class="chat-item__badge chat-item__badge--unread">${c.unreadCount} جديد</span>`
       : `<span class="chat-item__badge chat-item__badge--read">مقروء</span>`;
 
+    // ✅ only render avatar if backend provides one (no fallback request)
+    const imgUrl = (c.img || "").trim();
+    const avatarHtml = imgUrl ? `<img class="chat-item__avatar" src="${imgUrl}" alt="">` : "";
+
     return `
-      <div class="chat-item" data-chat-id="${c.id}">
-        <img class="chat-item__avatar" src="${c.img}" alt="">
+      <div class="chat-item" data-chat-id="${c.id}" style="cursor:pointer;">
+        ${avatarHtml}
         <div class="chat-item__body">
           <div class="chat-item__top">
-            <div class="chat-item__name">${c.name}</div>
-            <div class="chat-item__time">${fmtTime(c.lastTime)}</div>
+            <div class="chat-item__name">${c.name || "مستخدم"}</div>
+            <div class="chat-item__time">${fmtTime(getConvLastTime(c))}</div>
           </div>
           <div class="chat-item__type">${typeLineHtml(c)}</div>
-          <div class="chat-item__last">${c.lastText || "لا توجد رسائل بعد"}</div>
+          <div class="chat-item__last">${getConvLastText(c) || "لا توجد رسائل بعد"}</div>
         </div>
         ${badge}
       </div>
     `;
   }).join("");
 
-  // Use event listeners per item (safe, since list is small).
-  container.querySelectorAll(".chat-item").forEach(el => {
-    el.addEventListener("click", () => openChat(el.dataset.chatId));
-  });
-
   updateCounters();
 }
 
-/* ---------------------------------------------------------
-   Backend calls
---------------------------------------------------------- */
-
 async function loadConversations(){
-  // If tab content was removed from DOM by your tabs system, avoid useless fetch.
-  if(!$("conversationsList")) return;
-
   const res = await fetch(window.MYMSG_ENDPOINTS.conversations, { credentials:"same-origin" });
-  const data = await res.json();
-
+  const data = await res.json().catch(() => ({}));
   conversations = (data.conversations || []);
   renderConversations();
 }
 
 async function loadMessages(chatId){
   const url = window.MYMSG_ENDPOINTS.messages.replace("__ID__", chatId);
+
+  console.log("[msgs] loading messages:", url);
   const res = await fetch(url, { credentials:"same-origin" });
-  return await res.json();
+  console.log("[msgs] messages status:", res.status);
+
+  const data = await res.json().catch(() => ({}));
+  console.log("[msgs] messages payload keys:", Object.keys(data || {}));
+
+  return { res, data };
 }
 
-/* ---------------------------------------------------------
-   Chat view switching
---------------------------------------------------------- */
-
 function showMsgs(){
-  $("tab-chat")?.classList.remove("active");
-  $("tab-msgs")?.classList.add("active");
-
-  // When returning, re-render from cached convos (no refetch)
-  renderConversations();
+  const panel = $("chatPanel");
+  const list = $("conversationsList");
+  if(panel){
+    panel.hidden = true;
+    panel.setAttribute("hidden", "hidden");
+    panel.style.display = "none";
+  }
+  if(list) list.style.display = "block";
 }
 
 function showChat(){
-  $("tab-msgs")?.classList.remove("active");
-  $("tab-chat")?.classList.add("active");
-}
+  const panel = $("chatPanel");
+  const list = $("conversationsList");
 
-/* ---------------------------------------------------------
-   Render chat
---------------------------------------------------------- */
+  if(list) list.style.display = "none";
+  if(panel){
+    panel.hidden = false;
+    panel.removeAttribute("hidden");
+    panel.style.display = "block";
+  }
+}
 
 function renderChat(messages){
   const area = $("chatArea");
@@ -186,9 +156,12 @@ function renderChat(messages){
 
   area.innerHTML = (messages || []).map(m => {
     if(m.from === "them"){
+      // ✅ only render avatar if backend provided one
+      const avatar = (m.avatar || "").trim();
+      const avatarHtml = avatar ? `<img class="msg-avatar" src="${avatar}" alt="">` : "";
       return `
         <div class="msg-row them">
-          <img class="msg-avatar" src="${m.avatar}" alt="">
+          ${avatarHtml}
           <div class="msg-bubble">
             <p class="msg-text">${m.text}</p>
             <span class="msg-time">${fmtTime(m.time)}</span>
@@ -210,69 +183,101 @@ function renderChat(messages){
 }
 
 async function openChat(chatId){
-  const c = conversations.find(x => String(x.id) === String(chatId));
-  if(!c) return;
+  currentChatId = String(chatId);
 
-  currentChatId = chatId;
+  const c = conversations.find(x => String(x.id) === String(chatId)) || null;
+  if($("chatUserName")) $("chatUserName").textContent = c?.name || "مستخدم";
+  if($("chatItemType")) $("chatItemType").innerHTML = c ? typeLineHtml(c) : "";
 
-  if($("chatUserName")) $("chatUserName").textContent = c.name;
-  if($("chatUserImg")) $("chatUserImg").src = c.img;
-
-  const typeEl = $("chatItemType");
-  if(typeEl) typeEl.innerHTML = typeLineHtml(c);
+  // ✅ only set header image if provided
+  if($("chatUserImg")){
+    const img = (c?.img || "").trim();
+    if(img) $("chatUserImg").src = img;
+    else $("chatUserImg").removeAttribute("src");
+  }
 
   showChat();
 
-  const data = await loadMessages(chatId);
-  renderChat(data.messages || []);
+  const { res, data } = await loadMessages(chatId);
 
-  // optimistic mark as read in UI
-  c.unreadCount = 0;
-  renderConversations();
+  if(!res.ok){
+    const area = $("chatArea");
+    if(area){
+      area.innerHTML = `<div style="padding:24px;text-align:center;color:#ef4444;">فشل تحميل المحادثة (${res.status})</div>`;
+    }
+    return;
+  }
+
+  const msgs = data.messages || [];
+  if(!Array.isArray(msgs) || msgs.length === 0){
+    const area = $("chatArea");
+    if(area){
+      area.innerHTML = `<div style="padding:24px;text-align:center;color:#6b7280;">لا توجد رسائل بعد</div>`;
+    }
+  } else {
+    renderChat(msgs);
+  }
+
+  // optimistic mark read in UI
+  if(c){
+    c.unreadCount = 0;
+    renderConversations();
+  }
+
+  // keep URL in sync
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", "msgs");
+  url.searchParams.set("c", String(chatId));
+  window.history.replaceState({}, "", url.toString());
 }
-
-/* ---------------------------------------------------------
-   Send message
---------------------------------------------------------- */
 
 async function sendMessage(){
   const input = $("chatInput");
-  const text = (input?.value || "").trim();
-  if(!text || !currentChatId) return;
+  const body = (input?.value || "").trim();
+  if(!currentChatId || !body) return;
 
-  const csrf = getCookie("csrftoken");
   const url = window.MYMSG_ENDPOINTS.send.replace("__ID__", currentChatId);
+  const csrf = getCookie("csrftoken");
+
+  console.log("[msgs] sending:", url);
 
   const res = await fetch(url, {
     method:"POST",
     credentials:"same-origin",
     headers:{
       "Content-Type":"application/json",
-      "X-CSRFToken": csrf || ""
+      "X-CSRFToken": csrf || "",
+      "X-Requested-With": "XMLHttpRequest",
     },
-    body: JSON.stringify({ body: text })
+    body: JSON.stringify({ body }) // ✅ IMPORTANT: views.py expects "body"
   });
 
-  const data = await res.json();
-  if(!data.ok) return;
+  const data = await res.json().catch(() => ({}));
+  console.log("[msgs] send status:", res.status, data);
+
+  if(!res.ok || !data.ok){
+    const area = $("chatArea");
+    const msg =
+      data.error === "invalid" ? "ممنوع الروابط أو HTML" :
+      data.error === "empty" ? "الرسالة فارغة" :
+      "فشل إرسال الرسالة";
+    if(area){
+      area.insertAdjacentHTML("beforeend", `<div style="padding:12px;text-align:center;color:#ef4444;">${msg}</div>`);
+      area.scrollTop = area.scrollHeight;
+    }
+    return;
+  }
 
   input.value = "";
-
-  // reload messages + conversations
   await openChat(currentChatId);
   await loadConversations();
 }
 
-/* ---------------------------------------------------------
-   UI Wiring (robust)
---------------------------------------------------------- */
-
 function wireFiltersOnce(){
-  // If filters aren’t in DOM yet, skip.
   const btns = document.querySelectorAll(".chat-filter-btn");
   if(!btns.length) return;
 
-  // Remove old handlers by cloning (simple + safe)
+  // remove old handlers by cloning
   btns.forEach(btn => {
     const clone = btn.cloneNode(true);
     btn.parentNode.replaceChild(clone, btn);
@@ -288,24 +293,12 @@ function wireFiltersOnce(){
   });
 }
 
-/* ---------------------------------------------------------
-   Boot / Init logic
-   - This is the core fix for "API returns but list empty"
---------------------------------------------------------- */
-
-let msgsBooted = false;
-
 function bootMessagesUI(){
-  // DOM must exist
   if(!$("conversationsList")) return false;
-
-  // endpoints must exist
   if(!window.MYMSG_ENDPOINTS?.conversations) return false;
-
   if(msgsBooted) return true;
   msgsBooted = true;
 
-  // Wire events (safe, elements exist now)
   wireFiltersOnce();
 
   $("chatSearch")?.addEventListener("input", renderConversations);
@@ -316,15 +309,17 @@ function bootMessagesUI(){
     if(e.key === "Enter"){ e.preventDefault(); sendMessage(); }
   });
 
-  loadConversations();
+  loadConversations().then(() => {
+    const deepId = getDeepLinkConversationId();
+    if(deepId) openChat(deepId);
+    else showMsgs();
+  });
+
   return true;
 }
 
-// callable from tabs system
-window.initMyAccountMessages = function initMyAccountMessages(){
+window.initMyAccountMessages = function(){
   if(bootMessagesUI()) return;
-
-  // If HTML is injected after click, retry a few frames
   let tries = 0;
   const tick = () => {
     tries++;
@@ -334,33 +329,31 @@ window.initMyAccountMessages = function initMyAccountMessages(){
   requestAnimationFrame(tick);
 };
 
-/* ---------------------------------------------------------
-   Triggers: when msgs tab is opened/active
---------------------------------------------------------- */
-
-// 1) Delegated click: works even if .tab-btn is re-rendered
+// tab open trigger
 document.addEventListener("click", (e) => {
   const btn = e.target.closest('.tab-btn[data-tab="msgs"]');
   if(!btn) return;
-
-  // Wait one frame so your tab system can inject/activate the tab DOM
-  requestAnimationFrame(() => {
-    window.initMyAccountMessages?.();
-  });
+  requestAnimationFrame(() => window.initMyAccountMessages?.());
 });
 
-// 2) If tab already active on load
+// delegated click on conversation
+document.addEventListener("click", (e) => {
+  const item = e.target.closest("#tab-msgs .chat-item");
+  if(!item) return;
+
+  const chatId = item.dataset.chatId;
+  if(!chatId) return;
+
+  console.log("[msgs] clicked conversation:", chatId);
+  openChat(chatId);
+}, true);
+
 window.addEventListener("load", () => {
+  const params = new URLSearchParams(window.location.search);
+  if(params.get("tab") === "msgs"){
+    document.querySelector('.tab-btn[data-tab="msgs"]')?.click();
+  }
   if(isMsgsTabActive()){
     window.initMyAccountMessages?.();
   }
 });
-
-// 3) Optional: if your tabs system toggles active without click (e.g. programmatically)
-//    This watches for class changes and boots when #tab-msgs becomes active.
-const observer = new MutationObserver(() => {
-  if(isMsgsTabActive()){
-    window.initMyAccountMessages?.();
-  }
-});
-observer.observe(document.documentElement, { attributes:true, subtree:true, attributeFilter:["class"] });

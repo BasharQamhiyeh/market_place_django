@@ -48,7 +48,7 @@ from .models import (
     User,
     Request,
     Listing,
-    RequestAttributeValue, Store, StoreReview, StoreFollow
+    RequestAttributeValue, Store, StoreReview, StoreFollow, PointsTransaction
 )
 
 from .forms import (
@@ -61,6 +61,7 @@ from .forms import (
     RequestForm, SignupAfterOtpForm, UserRegistrationForm, StoreReviewForm
 )
 from .services.notifications import notify
+from .services.wallet import earn_points
 from .utils.service import recalc_store_rating
 
 # Local imports
@@ -2704,8 +2705,18 @@ def complete_signup(request):
             )
 
         if user.referred_by:
-            user.referred_by.points += REFERRAL_POINTS
-            user.referred_by.save()
+            earn_points(
+                user=user.referred_by,
+                amount=REFERRAL_POINTS,
+                reason="referral_reward",
+                meta={
+                    "action": "invite",
+                    "targetType": "user",
+                    "id": user.user_id,
+                    "title": f"{user.first_name} {user.last_name}".strip() or user.phone,
+                    "points": REFERRAL_POINTS,
+                },
+            )
 
             from .services.notifications import K_WALLET, S_REWARD
 
@@ -2920,22 +2931,7 @@ def user_logout(request):
     return redirect('home')
 
 
-from marketplace.services.promotions import buy_featured_with_points, NotEnoughPoints
-
-# @login_required
-# def feature_listing(request, listing_id):
-#     listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
-#
-#     DAYS = 7
-#     COST = 50  # set your business rule
-#
-#     try:
-#         buy_featured_with_points(user=request.user, listing=listing, days=DAYS, points_cost=COST)
-#         messages.success(request, f"تم تمييز الإعلان لمدة {DAYS} أيام.")
-#     except NotEnoughPoints:
-#         messages.error(request, "رصيد النقاط غير كافٍ.")
-#     return redirect("profile")  # or listing detail
-
+from marketplace.services.promotions import buy_featured_with_points, NotEnoughPoints, AlreadyFeatured
 
 FEATURE_PACKAGES = {3: 30, 7: 60, 14: 100}  # match mockup exactly
 
@@ -2968,6 +2964,8 @@ def feature_listing_api(request, listing_id):
         )
     except NotEnoughPoints:
         return JsonResponse({"ok": False, "error": "not_enough_points"}, status=400)
+    except AlreadyFeatured:
+        return JsonResponse({"ok": False, "error": "already_featured"}, status=400)
 
     # refresh listing cache updated by promo.activate()
     listing.refresh_from_db(fields=["featured_until"])
@@ -3799,18 +3797,26 @@ def my_account_noti_mark_all_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     return JsonResponse({"ok": True, "unread": 0})
 
+from django.templatetags.static import static
 
 def _user_avatar_url(u):
-  # adapt to your real user image field if you have one
-  # try common names, fallback to static placeholder used in template
-  for attr in ["photo", "avatar", "image", "profile_photo"]:
-    f = getattr(u, attr, None)
-    try:
-      if f and getattr(f, "url", None):
-        return f.url
-    except Exception:
-      pass
-  return "/static/img/default-avatar.png"
+    """
+    Return user avatar URL if it exists.
+    If user has no avatar → return empty string.
+    Frontend will handle fallback safely.
+    """
+    for attr in ("photo", "avatar", "image", "profile_photo"):
+        f = getattr(u, attr, None)
+        try:
+            if f and getattr(f, "url", None):
+                return f.url
+        except Exception:
+            pass
+
+    # ✅ no avatar → return empty string (NOT a static path)
+    return ""
+
+
 
 def _other_party(convo, me):
   return convo.seller if convo.buyer_id == me.user_id else convo.buyer
@@ -3916,7 +3922,7 @@ def api_conversation_messages(request, conversation_id):
   data = []
   for m in msgs:
     data.append({
-      "from": "me" if m.sender_id == me.id else "them",
+      "from": "me" if m.sender_id == me.pk else "them",
       "text": m.body,
       "time": timezone.localtime(m.created_at).strftime("%I:%M %p"),
       "avatar": other_avatar,
@@ -3935,8 +3941,8 @@ def api_conversation_send(request, conversation_id):
     .select_related("buyer", "seller")
     .get(id=conversation_id)
   )
-  if me not in [convo.buyer, convo.seller]:
-    return JsonResponse({"ok": False}, status=403)
+  if me.pk not in [convo.buyer_id, convo.seller_id]:
+      return JsonResponse({"messages": []}, status=403)
 
   try:
     payload = json.loads(request.body.decode("utf-8"))
@@ -3956,3 +3962,58 @@ def api_conversation_send(request, conversation_id):
 
   Message.objects.create(conversation=convo, sender=me, body=body)
   return JsonResponse({"ok": True})
+
+
+@login_required
+def api_wallet_summary(request):
+    user = request.user
+
+    txs = (
+        PointsTransaction.objects
+        .filter(user=user)
+        .only("kind", "delta", "reason", "meta", "created_at")
+        .order_by("-created_at")[:150]
+    )
+
+    def to_ui(tx):
+        if tx.kind == PointsTransaction.Kind.SPEND:
+            ui_type = "use"
+        elif tx.kind == PointsTransaction.Kind.EARN:
+            ui_type = "reward"
+        else:
+            ui_type = "reward" if tx.delta > 0 else "use"
+
+        meta = dict(tx.meta or {})
+
+        if tx.reason == "featured_listing":
+            meta.setdefault("action", "highlight")
+            meta.setdefault("targetType", "ad")
+            meta.setdefault("id", meta.get("listing_id"))
+            meta.setdefault("days", meta.get("days"))
+
+        if tx.reason == "buy_points":
+            ui_type = "buy"
+
+        text = ""
+        if tx.reason == "featured_listing":
+            text = "تمييز إعلان"
+        elif tx.reason == "referral_reward":
+            text = "مكافأة دعوة صديق"
+        elif tx.reason == "buy_points":
+            text = f"شراء نقاط — باقة {abs(int(tx.delta))} نقطة"
+        else:
+            text = tx.reason or ""
+
+        return {
+            "type": ui_type,
+            "text": text,
+            "amount": int(tx.delta),
+            "date": tx.created_at.date().isoformat(),
+            "meta": meta,
+        }
+
+    return JsonResponse({
+        "ok": True,
+        "points_balance": int(user.points),
+        "transactions": [to_ui(t) for t in txs],
+    })

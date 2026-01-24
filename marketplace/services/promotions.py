@@ -7,16 +7,39 @@ from marketplace.models import ListingPromotion, PromotionEvent, PointsTransacti
 class NotEnoughPoints(Exception):
     pass
 
+class AlreadyFeatured(Exception):
+    pass
 
 @transaction.atomic
 def buy_featured_with_points(*, user: User, listing: Listing, days: int = 7, points_cost: int = 50) -> ListingPromotion:
+    now = timezone.now()
+
     # lock user to prevent double spend
     user = User.objects.select_for_update().get(pk=user.pk)
 
-    print(user.points)
-    print(user.phone)
-    print(points_cost)
-    print("XXXXXXXXXXXXXXXXXXXXXXXXXXX")
+    # ✅ lock listing row to prevent concurrent promos
+    listing = Listing.objects.select_for_update().get(pk=listing.pk)
+
+    # ✅ expire stale active promos (if any) BEFORE creating a new one
+    stale_qs = ListingPromotion.objects.filter(
+        listing_id=listing.id,
+        kind=ListingPromotion.Kind.FEATURED,
+        status=ListingPromotion.Status.ACTIVE,
+        ends_at__lte=now,
+    )
+    if stale_qs.exists():
+        stale_qs.update(status=ListingPromotion.Status.EXPIRED, expired_at=now)
+
+    # ✅ block if still active (prevents DB unique constraint crash)
+    active_exists = ListingPromotion.objects.filter(
+        listing_id=listing.id,
+        kind=ListingPromotion.Kind.FEATURED,
+        status=ListingPromotion.Status.ACTIVE,
+        ends_at__gt=now,
+    ).exists()
+    if active_exists:
+        raise AlreadyFeatured()
+
     if user.points < points_cost:
         raise NotEnoughPoints()
 
@@ -28,7 +51,7 @@ def buy_featured_with_points(*, user: User, listing: Listing, days: int = 7, poi
         duration_days=days,
         points_cost=points_cost,
         paid_with_points=True,
-        paid_at=timezone.now(),
+        paid_at=now,
     )
     PromotionEvent.objects.create(promotion=promo, event="created", meta={"points_cost": points_cost, "days": days})
 
@@ -48,7 +71,8 @@ def buy_featured_with_points(*, user: User, listing: Listing, days: int = 7, poi
     PromotionEvent.objects.create(promotion=promo, event="points_spent", meta={"points_cost": points_cost})
 
     # activate (also updates listing.featured_until)
-    promo.activate()
+    promo.activate(start=now)
+
     PromotionEvent.objects.create(
         promotion=promo,
         event="activated",
@@ -56,3 +80,4 @@ def buy_featured_with_points(*, user: User, listing: Listing, days: int = 7, poi
     )
 
     return promo
+

@@ -4,6 +4,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
+from .my_account_messages_api import my_account_conversations_api, my_account_conversation_messages_api, \
+    my_account_send_message_api
 from .views import store_profile, start_store_conversation
 
 urlpatterns = [
@@ -111,8 +113,17 @@ urlpatterns = [
     path("api/my-account/conversations/<int:conversation_id>/send/", views.api_conversation_send,
          name="api_conversation_send"),
 
+    path("api/wallet/summary/", views.api_wallet_summary, name="api_wallet_summary")
+
+
 
     # path('api/', include('marketplace.api_urls')),
+]
+
+urlpatterns += [
+    path("api/my-account/messages/conversations/", my_account_conversations_api, name="my_account_conversations_api"),
+    path("api/my-account/messages/<int:conversation_id>/", my_account_conversation_messages_api, name="my_account_conversation_messages_api"),
+    path("api/my-account/messages/<int:conversation_id>/send/", my_account_send_message_api, name="my_account_send_message_api"),
 ]
 
 # ✅ Static & media for local dev

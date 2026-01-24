@@ -1,0 +1,207 @@
+{# templates/my_account/tabs/wallet.html #}
+{% load i18n %}
+
+<div class="wallet-tab">
+
+  <h2 class="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800">
+    <svg
+      class="w-7 h-7 text-orange-600"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="8" cy="8" r="6"/>
+      <path d="M18.09 10.37A6 6 0 1 1 10.37 18.09"/>
+      <path d="M7 6h1v4"/>
+      <path d="M16 13h1v4"/>
+    </svg>
+
+    المحفظة — نقاط ركن
+  </h2>
+
+  <div class="bg-orange-50 border border-orange-300 rounded-2xl p-6 text-center mb-6">
+    <h3 class="text-orange-700 font-bold text-xl mb-1">رصيد النقاط الحالي</h3>
+
+    <p class="text-5xl font-extrabold text-orange-600 tracking-wide flex items-center justify-center gap-3">
+      <span id="pointsBalance">0</span>
+
+      <svg
+        class="w-7 h-7 text-orange-600"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="8" cy="8" r="6"/>
+        <path d="M18.09 10.37A6 6 0 1 1 10.37 18.09"/>
+        <path d="M7 6h1v4"/>
+        <path d="M16 13h1v4"/>
+      </svg>
+    </p>
+
+    <p class="text-sm text-gray-600 mt-2">استخدم النقاط لتمييز الإعلانات أو الطلبات</p>
+  </div>
+
+  <div class="flex flex-col md:flex-row gap-4 justify-center mb-8">
+    <button type="button"
+            onclick="openBuyModal()"
+            class="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition w-full md:w-auto flex items-center justify-center gap-2">
+      شراء نقاط إضافية
+    </button>
+
+    <button type="button"
+            onclick="openInvitePage()"
+            class="px-6 py-3 border border-orange-300 text-orange-600 rounded-xl font-bold hover:bg-orange-50 transition w-full md:w-auto flex items-center justify-center gap-2">
+      دعوة الأصدقاء وكسب نقاط
+    </button>
+  </div>
+
+  <div id="invitePage" class="hidden">
+    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+      <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="3" y="8" width="18" height="13" rx="2"
+              stroke="currentColor" stroke-width="2"/>
+        <path d="M12 8V3M7 5h10"
+              stroke="currentColor" stroke-width="2"/>
+      </svg>
+      دعوة الأصدقاء
+    </h3>
+
+    <p class="text-gray-700 mb-4">
+      شارك رابط الإحالة مع أصدقائك. عند تسجيلهم تحصل على
+      <b class="text-orange-600">+30 نقطة عن كل صديق!</b>
+    </p>
+
+    <div class="flex justify-center my-5">
+      <div id="qrCode" class="p-4 bg-white border rounded-2xl shadow"></div>
+    </div>
+
+    <div class="bg-gray-100 border rounded-xl p-4 flex items-center justify-between mb-4 gap-3">
+      <span id="refLink"
+        class="text-sm text-gray-700 select-all break-all"
+        data-register-url="{% url 'register' %}"
+        data-referral-code="{{ request.user.referral_code|default:'' }}"></span>
+
+
+      <button type="button" onclick="copyRefLink()"
+              class="px-3 py-1 bg-orange-500 text-white rounded-lg whitespace-nowrap">
+        نسخ
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-3 mb-5">
+      <button type="button" onclick="shareRefLink()"
+              class="w-full py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700">
+        مشاركة الرابط
+      </button>
+    </div>
+
+    <button type="button" onclick="closeInvitePage()"
+            class="w-full py-3 border border-orange-300 rounded-xl hover:bg-orange-50">
+      <span class="inline-flex items-center gap-1">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"
+                stroke="currentColor" stroke-width="2"/>
+        </svg>
+        الرجوع
+      </span>
+    </button>
+  </div>
+
+  <h3 class="text-lg font-bold text-gray-800 mb-3 mt-10 flex items-center gap-2">
+    <svg class="w-5 h-5 text-gray-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="16" rx="2"
+            stroke="currentColor" stroke-width="2"/>
+      <path d="M7 8h10M7 12h10M7 16h6"
+            stroke="currentColor" stroke-width="2"/>
+    </svg>
+    سجل النقاط
+  </h3>
+
+  <!-- ✅ JS renders into this -->
+  <div id="pointsLog" class="space-y-4"></div>
+
+</div>
+
+<!-- نافذة شراء النقاط -->
+<div id="buyPointsModal"
+     class="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm hidden items-center justify-center"
+     onclick="closeBuyModal()">
+
+  <div class="bg-white w-[90%] max-w-md p-6 rounded-2xl shadow-2xl animate-fadeIn border-t-4 border-orange-500"
+       onclick="event.stopPropagation()">
+
+    <div class="flex items-start justify-between gap-3 mb-4">
+      <div class="flex items-center gap-2">
+        <svg class="w-6 h-6 text-orange-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12S6.34 22.25 12 22.25 22.25 17.66 22.25 12 17.66 1.75 12 1.75zm0 1.5a8.75 8.75 0 110 17.5 8.75 8.75 0 010-17.5z"/>
+          <path d="M12 6.75a.75.75 0 01.75.75v.25h.75a2.5 2.5 0 010 5h-1.5v.75h2a.75.75 0 010 1.5h-2V16a.75.75 0 01-1.5 0v-.25h-.75a.75.75 0 010-1.5h.75v-.75H10.5a2.5 2.5 0 010-5H12v-.25a.75.75 0 01.75-.75zM10.5 9.25a1 1 0 000 2H12v-2h-1.5zm2.25 2h1.5a1 1 0 000-2h-1.5v2z"/>
+        </svg>
+        <h2 class="text-xl font-bold text-gray-800">شراء نقاط إضافية</h2>
+      </div>
+
+      <button type="button"
+              onclick="closeBuyModal()"
+              class="shrink-0 rounded-full p-2 text-orange-600 hover:bg-orange-50 transition"
+              aria-label="إغلاق">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="buyNotice"
+         class="hidden mb-4 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-gray-800">
+      <div class="flex gap-3">
+        <svg class="w-5 h-5 text-orange-600 mt-0.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2.5a9.5 9.5 0 109.5 9.5A9.51 9.51 0 0012 2.5zm.75 14.25a.75.75 0 01-1.5 0v-5a.75.75 0 011.5 0zm0-8a.75.75 0 01-1.5 0v-1a.75.75 0 011.5 0z"/>
+        </svg>
+        <div>
+          <p class="font-semibold text-orange-700 mb-1">تنبيه</p>
+          <p>
+            الشراء غير مفعل في الوقت الحالي. لطلب شراء نقاط إضافية بإمكانك التواصل معنا عن طريق صفحة
+            <a href="/contact" class="font-semibold text-orange-700 underline hover:text-orange-800">اتصل بنا</a>.
+          </p>
+          <p>أو بإمكانك دعوة المزيد من الأصدقاء لكسب النقاط</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-3">
+      <div class="border border-gray-200 rounded-xl p-4 flex justify-between items-center cursor-pointer transition
+                  hover:border-orange-500 hover:bg-orange-50"
+           onclick="buyPointsDisabled(60)">
+        <span class="font-semibold text-gray-700">60 نقطة</span>
+        <span class="font-bold text-orange-600">3.00 د.أ</span>
+      </div>
+
+      <div class="border border-gray-200 rounded-xl p-4 flex justify-between items-center cursor-pointer transition
+                  hover:border-orange-500 hover:bg-orange-50"
+           onclick="buyPointsDisabled(120)">
+        <span class="font-semibold text-gray-700">120 نقطة</span>
+        <span class="font-bold text-orange-600">5.00 د.أ</span>
+      </div>
+
+      <div class="border border-gray-200 rounded-xl p-4 flex justify-between items-center cursor-pointer transition
+                  hover:border-orange-500 hover:bg-orange-50"
+           onclick="buyPointsDisabled(300)">
+        <span class="font-semibold text-gray-700">300 نقطة</span>
+        <span class="font-bold text-orange-600">10.00 د.أ</span>
+      </div>
+    </div>
+
+    <button type="button"
+            onclick="closeBuyModal()"
+            class="mt-6 w-full py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition">
+      إغلاق
+    </button>
+
+  </div>
+</div>

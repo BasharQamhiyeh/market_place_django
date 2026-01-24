@@ -201,6 +201,10 @@
     };
   </script>
 
+  <script>
+    window.WALLET_ENDPOINT = "{% url 'api_wallet_summary' %}";
+  </script>
+
   <script defer src="{% static 'js/my_account/noti.js' %}"></script>
   <script defer src="{% static 'js/my_account/tabs.js' %}"></script>
 
