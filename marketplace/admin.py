@@ -24,23 +24,45 @@ from .models import (
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview
 )
 
-# ======================================================
-# ✅ USER ADMIN — read-only view with search
-# ======================================================
+class UserAdminForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = "__all__"  # ✅ show everything (read-only except points)
+
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ("username", "first_name", "last_name", "phone", "email", "last_login", "is_active")
+    # ✅ 2) phone first column + clickable link uses the first column => phone
+    list_display = ("phone", "username", "first_name", "last_name", "email", "points", "last_login", "is_active")
     search_fields = ("first_name", "last_name", "username", "email", "phone")
     list_filter = ("is_active", "is_staff", "is_superuser")
 
+    form = UserAdminForm
+
+    # ✅ show all fields, but only points editable
+    def get_readonly_fields(self, request, obj=None):
+        # everything read-only except points
+        all_fields = [f.name for f in User._meta.fields]
+        return [f for f in all_fields if f != "points"]
+
+    # ✅ allow opening change page (needed)
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    # (optional) keep add/delete as you like
     def has_add_permission(self, request):
         return True
 
-    def has_change_permission(self, request, obj=None):
-        return False
-
     def has_delete_permission(self, request, obj=None):
         return True
+
+    # ✅ hard-block saving anything except points (in case of crafted POST)
+    def save_model(self, request, obj, form, change):
+        if change:
+            changed = set(form.changed_data or [])
+            if changed - {"points"}:
+                raise PermissionDenied("Only 'points' can be updated for users.")
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Store)
