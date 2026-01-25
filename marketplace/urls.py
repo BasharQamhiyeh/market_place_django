@@ -113,7 +113,10 @@ urlpatterns = [
     path("api/my-account/conversations/<int:conversation_id>/send/", views.api_conversation_send,
          name="api_conversation_send"),
 
-    path("api/wallet/summary/", views.api_wallet_summary, name="api_wallet_summary")
+    path("api/wallet/summary/", views.api_wallet_summary, name="api_wallet_summary"),
+
+    path("listing/<int:listing_id>/delete/", views.delete_listing_api, name="api_delete_listing"),
+
 
 
 

@@ -38,7 +38,12 @@
     }
   }
 
-  let requestToDelete = null;
+  // =========================================================
+  // ✅ Deletion state
+  // =========================================================
+  let requestToDelete = null;    // request id (UI)
+  let listingToDelete = null;    // ✅ listing id (backend delete)
+
   let highlightTargetRequestId = null;
   let republishTargetRequestId = null;
   let republishCost = 0;
@@ -100,7 +105,7 @@
   }
   if (!window.closeNoPointsModal) window.closeNoPointsModal = () => closeModal("noPointsModal");
 
-  // ---------- Close republish confirm (ensure exists globally) ----------
+  // ---------- Close republish confirm ----------
   if (!window.closeRepublishConfirmModal) {
     window.closeRepublishConfirmModal = () => {
       closeModal("republishConfirmModal");
@@ -110,7 +115,7 @@
   }
 
   /* =========================================================
-     ✅ Highlight helpers (match ads.js behavior)
+     ✅ Highlight helpers
   ========================================================= */
   function calcDaysLeftFromNowISO(isoDate) {
     if (!isoDate) return 0;
@@ -143,7 +148,7 @@
   }
 
   /* =========================================================
-     ✅ Republish UI helpers (match ads.js behavior)
+     ✅ Republish helpers
   ========================================================= */
   function parseISO(dateStr) {
     if (!dateStr) return null;
@@ -200,7 +205,6 @@
 
     if (!metaRow) return;
     const inlineSpans = metaRow.querySelectorAll("span.inline-flex.items-center.gap-1 > span");
-    // second span is date (same layout as ads)
     if (inlineSpans && inlineSpans.length >= 2) inlineSpans[1].textContent = formatted;
   }
 
@@ -221,7 +225,7 @@
   }
 
   /* =========================================================
-     ✅ Enable Edit/Delete always like ads.js
+     ✅ Enable Edit/Delete always
   ========================================================= */
   function enableEditDeleteAlways() {
     const list = getList();
@@ -240,36 +244,30 @@
      ✅ Highlight modal open (preserve SVG)
   ========================================================= */
   function openHighlightModalForRequest(id) {
-      highlightTargetRequestId = id;
-    
-      const bal = document.getElementById("highlightPointsBalance");
-      const title = document.getElementById("highlightModalTitle");
-      if (bal) bal.innerText = String(getPoints());
+    highlightTargetRequestId = id;
 
-      // ✅ لا تمسح الـSVG (innerHTML="") لأن هذا يقطع المرجع
-      if (title) {
-        // خذ نسخة من الـSVG من داخل العنوان
-        const svg = title.querySelector("svg");
+    const bal = document.getElementById("highlightPointsBalance");
+    const title = document.getElementById("highlightModalTitle");
+    if (bal) bal.innerText = String(getPoints());
 
-        // امسح النص فقط، وخلي الـSVG موجود
-        // الطريقة الآمنة: احذف كل الـtext nodes واترك الـsvg
-        title.childNodes.forEach((node) => {
-          if (node.nodeType === Node.TEXT_NODE) node.remove();
-        });
+    if (title) {
+      const svg = title.querySelector("svg");
 
-        // لو ما كان فيه svg لأي سبب، خلي العنوان نص فقط
-        if (!svg && title.childNodes.length === 0) {
-          title.textContent = "تمييز الطلب";
-        } else {
-          // أضف النص بعد الـSVG
-          title.appendChild(document.createTextNode(" تمييز الطلب"));
-        }
+      title.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) node.remove();
+      });
 
-        title.classList.add("text-orange-600");
+      if (!svg && title.childNodes.length === 0) {
+        title.textContent = "تمييز الطلب";
+      } else {
+        title.appendChild(document.createTextNode(" تمييز الطلب"));
       }
 
-      if (!openModal("highlightModal")) alert("highlightModal is missing in DOM.");
+      title.classList.add("text-orange-600");
     }
+
+    if (!openModal("highlightModal")) alert("highlightModal is missing in DOM.");
+  }
 
   if (!window.closeHighlightModal) window.closeHighlightModal = () => closeModal("highlightModal");
 
@@ -282,7 +280,6 @@
     window.__requestsSelectHighlightWrapped = true;
 
     window.selectHighlightPackage = async (days, cost) => {
-      // Not our modal? pass to ads.js handler
       if (!highlightTargetRequestId || !isRequestHighlightModal()) {
         if (typeof prevSelectHighlight === "function") return prevSelectHighlight(days, cost);
         return;
@@ -295,7 +292,6 @@
         return;
       }
 
-      // IMPORTANT: request row must have data-listing-id (we expect it equals req.id)
       const listingId = Number(row.dataset.listingId || 0);
       if (!listingId) {
         console.warn("[requests] Missing data-listing-id on request row", row);
@@ -311,7 +307,6 @@
         return;
       }
 
-      // Call backend same endpoint as ads
       let data = null;
       try {
         const res = await fetch(`/listing/${listingId}/feature/`, {
@@ -337,7 +332,6 @@
         console.warn("[requests] feature call error:", e);
       }
 
-      // ✅ backend success -> update UI like ads.js
       if (data && data.ok) {
         if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
 
@@ -360,7 +354,6 @@
         return;
       }
 
-      // fallback UI (backend missing)
       if (c) setPoints(pointsNow - c);
       row.dataset.featuredDaysLeft = String(Number(days));
       ensureFeatureBadge(row, Number(days));
@@ -414,6 +407,22 @@
   function openDeleteModalForRequest(id) {
     requestToDelete = id;
 
+    const row = getRow(id);
+    if (!row) {
+      console.warn("[requests] Missing request row for delete", id);
+      requestToDelete = null;
+      return;
+    }
+
+    const listingId = Number(row.dataset.listingId || 0);
+    if (!listingId) {
+      console.warn("[requests] Missing data-listing-id on request row", row);
+      requestToDelete = null;
+      return;
+    }
+
+    listingToDelete = listingId;
+
     if (!document.getElementById("deleteAdModal")) {
       alert("deleteAdModal is missing in DOM.");
       return;
@@ -445,6 +454,7 @@
   // share confirmDeleteAd without breaking ads.js
   const prevConfirmDeleteAd = window.confirmDeleteAd;
   window.confirmDeleteAd = async () => {
+    // ✅ Requests tab delete flow
     if (requestToDelete != null) {
       const select = document.getElementById("deleteReason");
       const other = document.getElementById("deleteReasonOther");
@@ -462,19 +472,24 @@
       const finalReason =
         reason === "other" && otherTxt.length ? otherTxt : select?.options?.[select.selectedIndex]?.text || "";
 
-      callBackend(`/request/${requestToDelete}/delete/`, { reason: finalReason });
+      // ✅ IMPORTANT: delete by LISTING id (not request id)
+      await callBackend(`/listing/${listingToDelete}/delete/`, { reason: finalReason });
 
-      const row = getRow(requestToDelete);
+      // ✅ IMPORTANT: remove row by LISTING id ONLY (no fallback to request id)
+      const row = document.querySelector(`.request-row[data-listing-id="${listingToDelete}"]`);
       if (row) row.remove();
+
       updateCount();
 
       closeModal("deleteAdModal");
       openSuccessModal(`تم حذف الطلب — السبب: ${finalReason}`, "✔️ تم الحذف");
 
+      listingToDelete = null;
       requestToDelete = null;
       return;
     }
 
+    // Not a request delete -> let ads.js handle
     if (typeof prevConfirmDeleteAd === "function") return prevConfirmDeleteAd();
   };
 
@@ -504,9 +519,7 @@
       return;
     }
 
-    // backend anyway
     callBackend(`/request/${republishTargetRequestId}/republish/`, {});
-
     setPoints(pointsNow - republishCost);
 
     closeModal("republishConfirmModal");
@@ -517,14 +530,14 @@
   }
 
   /* =========================================================
-     ✅ Backdrop close (same as ads.js)
+     ✅ Backdrop close
   ========================================================= */
   function wireBackdropClose() {
     document.getElementById("deleteAdModal")?.addEventListener("click", (e) => {
       if (e.target.id === "deleteAdModal") {
-        // if user clicks backdrop, just close
         closeModal("deleteAdModal");
         requestToDelete = null;
+        listingToDelete = null;
       }
     });
 
@@ -590,7 +603,6 @@
     if (action === "highlight") {
       if (status !== "active") return;
 
-      // same logic as ads.js (consider featuredExpiresAt)
       let daysLeft = featuredDays;
       if (!daysLeft && row.dataset.featuredExpiresAt) {
         daysLeft = calcDaysLeftFromNowISO(row.dataset.featuredExpiresAt);

@@ -363,6 +363,9 @@ class Listing(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_deleted = models.BooleanField(default=False, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
     approved_by = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name="approved_listings"
     )

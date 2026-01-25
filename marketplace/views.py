@@ -131,6 +131,7 @@ def item_detail_more_similar(request, item_id):
             listing__type="item",
             listing__is_active=True,
             listing__is_approved=True,
+            listing__is_deleted=False
         )
         .exclude(id=item.id)
         .select_related("listing__category", "listing__city", "listing__user")
@@ -176,6 +177,7 @@ def request_detail_more_similar(request, request_id):
             listing__type="request",
             listing__is_active=True,
             listing__is_approved=True,
+            listing__is_deleted=False
         )
         .exclude(id=request_obj.id)
         .select_related("listing__category", "listing__city", "listing__user")
@@ -209,6 +211,7 @@ def home_more_items(request):
             listing__type="item",
             listing__is_active=True,
             listing__is_approved=True,
+            listing__is_deleted=False
         )
         .select_related("listing__category", "listing__city", "listing__user")
         .prefetch_related("photos")
@@ -240,6 +243,7 @@ def home_more_requests(request):
             listing__type="request",
             listing__is_active=True,
             listing__is_approved=True,
+            listing__is_deleted=False
         )
         .select_related("listing__category", "listing__city", "listing__user")
         .order_by("-listing__created_at")
@@ -261,6 +265,7 @@ def home(request):
             listing__type="item",
             listing__is_active=True,
             listing__is_approved=True,
+            listing__is_deleted=False
         )
         .select_related("listing__category", "listing__city", "listing__user")
         .prefetch_related("photos")
@@ -285,6 +290,7 @@ def home(request):
             listing__type="request",
             listing__is_active=True,
             listing__is_approved=True,
+            listing__is_deleted=False
         )
         .select_related("listing__category", "listing__city", "listing__user")
         .order_by("-listing__created_at")[:limit]
@@ -362,6 +368,7 @@ def item_list(request):
             listing__type="item",
             listing__is_approved=True,
             listing__is_active=True,
+            listing__is_deleted=False,
             listing__featured_until__gt=now,
         )
         .select_related("listing", "listing__category", "listing__city", "listing__user")
@@ -377,6 +384,7 @@ def item_list(request):
         listing__type="item",
         listing__is_approved=True,
         listing__is_active=True,
+        listing__is_deleted=False
     )
 
     # ✅ ADD THIS: annotate base_qs (so every later queryset keeps it)
@@ -567,6 +575,7 @@ def request_list(request):
             listing__type="request",
             listing__is_approved=True,
             listing__is_active=True,
+            listing__is_deleted=False,
             listing__featured_until__gt=now,
         )
         .select_related("listing", "listing__category", "listing__city", "listing__user")
@@ -577,6 +586,7 @@ def request_list(request):
         listing__type="request",
         listing__is_approved=True,
         listing__is_active=True,
+        listing__is_deleted=False
     ).select_related(
         "listing", "listing__user", "listing__category", "listing__city"
     )
@@ -763,6 +773,7 @@ def item_detail(request, item_id):
                 listing__category=item.listing.category,
                 listing__is_approved=True,
                 listing__is_active=True,
+                listing__is_deleted=False
             )
             .exclude(id=item.id)
             .select_related("listing__category", "listing__city", "listing__user")
@@ -797,6 +808,7 @@ def item_detail(request, item_id):
                         id__in=ids,
                         listing__is_approved=True,
                         listing__is_active=True,
+                        listing__is_deleted=False
                     )
                     .exclude(id=item.id)
                     .select_related("listing__category", "listing__city", "listing__user")
@@ -941,6 +953,7 @@ def request_detail(request, request_id):
             listing__category=request_obj.listing.category,
             listing__is_approved=True,
             listing__is_active=True,
+            listing__is_deleted=False
         )
         .exclude(id=request_obj.id)
         .order_by("-listing__created_at")[:4]
@@ -2380,7 +2393,8 @@ def search_suggestions(request):
     items = Item.objects.filter(
         Q(listing__title__icontains=query),
         listing__is_approved=True,
-        listing__is_active=True
+        listing__is_active=True,
+        listing__is_deleted=False
     ).select_related("listing", "listing__category").prefetch_related("photos")[:6]
 
     for i in items:
@@ -2992,6 +3006,26 @@ def feature_listing_api(request, listing_id):
     })
 
 
+
+@login_required
+@require_POST
+def delete_listing_api(request, listing_id):
+    listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
+
+    # already deleted => idempotent
+    if getattr(listing, "is_deleted", False):
+        return JsonResponse({"ok": True, "already": True})
+
+    listing.is_deleted = True
+    listing.is_active = False  # مهم: ما يرجع يظهر بأي مكان
+    if hasattr(listing, "deleted_at"):
+        listing.deleted_at = timezone.now()
+
+    listing.save(update_fields=["is_deleted", "is_active"] + (["deleted_at"] if hasattr(listing, "deleted_at") else []))
+
+    return JsonResponse({"ok": True})
+
+
 from django.db.models import F
 
 def user_profile(request, user_id):
@@ -3405,7 +3439,7 @@ def my_account(request: HttpRequest):
     # -------------------------
     ads_qs = (
         Item.objects
-        .filter(listing__user=user, listing__type="item", listing__is_active=True)
+        .filter(listing__user=user, listing__type="item", listing__is_active=True, listing__is_deleted=False)
         .select_related("listing__category", "listing__city", "listing")
         .prefetch_related("photos")
         .order_by("-listing__created_at")
@@ -3424,7 +3458,8 @@ def my_account(request: HttpRequest):
 
         my_ads.append({
             # ids / text
-            "id": listing.id,
+            "id": it.id,
+            "listing_id": listing.id,
             "title": listing.title or "",
 
             # money
@@ -3461,7 +3496,7 @@ def my_account(request: HttpRequest):
     # -------------------------
     req_qs = (
         Request.objects
-        .filter(listing__user=user, listing__type="request")
+        .filter(listing__user=user, listing__type="request", listing__is_deleted=False)
         .select_related("listing__category", "listing__city", "listing")
         .order_by("-listing__created_at")
     )
@@ -3476,6 +3511,7 @@ def my_account(request: HttpRequest):
         my_requests.append({
             # ids / text
             "id": req.id,
+            "listing_id": req.listing.id,
             "title": (getattr(req, "title", "") or getattr(listing, "title", "") or ""),
 
             # money

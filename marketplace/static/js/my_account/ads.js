@@ -290,8 +290,11 @@
     // ✅ CALL BACKEND ANYWAY (even if view not implemented yet)
     if (adToDelete != null) {
       const row = getAdRow(adToDelete);
-      const listingId = Number(row?.dataset?.listingId || adToDelete);
-
+      const listingId = Number(row?.dataset?.listingId || 0);
+      if (!listingId) {
+        console.warn("[ads] Missing data-listing-id on ad row", row);
+        return;
+      }
       callBackend(`/listing/${listingId}/delete/`, { reason: finalReason });
     }
 
