@@ -87,6 +87,8 @@ urlpatterns = [
     path("request/create/", views.request_create, name="create_request"),
     path("requests/", views.request_list, name="request_list"),
     path("request/<int:request_id>/", views.request_detail, name="request_detail"),
+    path("request/<int:request_id>/edit/", views.request_edit, name="request_edit"),
+
 
     path("listing/<int:listing_id>/feature/", views.feature_listing_api, name="feature_listing_api"),
 

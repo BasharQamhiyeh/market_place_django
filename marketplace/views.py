@@ -1591,6 +1591,148 @@ def request_create(request):
     )
 
 
+@login_required
+@transaction.atomic
+def request_edit(request, request_id):
+    # ✅ Get Request through listing ownership
+    req = get_object_or_404(
+        Request.objects.select_related("listing", "listing__category", "listing__user"),
+        id=request_id,
+        listing__user=request.user,
+    )
+
+    listing = req.listing
+    category = listing.category
+
+    # =============================
+    # Category tree (for display only; locked in edit)
+    # =============================
+    lang = translation.get_language()
+    order_field = "name_ar" if lang == "ar" else "name_en"
+    top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
+
+    category_tree = build_category_tree(top_categories, lang)
+    category_tree_json = json.dumps(category_tree, ensure_ascii=False)
+
+    selected_path = get_selected_category_path(category)
+    selected_path_json = json.dumps(selected_path)
+
+    # =============================
+    # Form token (optional, like create)
+    # =============================
+    if "request_edit_form_token" not in request.session:
+        request.session["request_edit_form_token"] = str(uuid.uuid4())
+
+    # =============================
+    # POST
+    # =============================
+    if request.method == "POST":
+        token = request.POST.get("form_token")
+        session_token = request.session.get("request_edit_form_token")
+        if not token or token != session_token:
+            return HttpResponseBadRequest("Duplicate or invalid submission")
+
+        # consume token immediately to prevent double submit
+        del request.session["request_edit_form_token"]
+
+        # ✅ Security: prevent category tampering
+        posted_category = request.POST.get("category")
+        if posted_category and str(posted_category) != str(category.id):
+            return HttpResponseForbidden("Category cannot be changed.")
+
+        form = RequestForm(
+            request.POST,
+            category=category,
+            instance=listing,                 # edits Listing
+            initial={
+                "budget": req.budget,
+                "condition_preference": req.condition_preference,
+            }
+        )
+
+        if form.is_valid():
+            # 1) Save listing
+            listing = form.save(commit=False)
+            listing.is_approved = False
+            listing.was_edited = True
+            listing.show_phone = (request.POST.get("show_phone") == "on")
+            listing.save()
+
+            # 2) Save request-specific fields
+            req.budget = form.cleaned_data.get("budget")
+            req.condition_preference = form.cleaned_data.get("condition_preference")
+            req.save()
+
+            # 3) Rebuild attributes
+            RequestAttributeValue.objects.filter(request=req).delete()
+
+            for field_name, value in form.cleaned_data.items():
+                if not field_name.startswith("attr_"):
+                    continue
+                if field_name.endswith("_other"):
+                    continue
+
+                try:
+                    attr_id = int(field_name.split("_")[1])
+                except Exception:
+                    continue
+
+                # Multi-select
+                if isinstance(value, list):
+                    parts = []
+                    for v in value:
+                        if v == "__other__":
+                            other_text = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                            if other_text:
+                                parts.append(other_text)
+                        else:
+                            parts.append(str(v))
+                    final_value = ", ".join(parts) if parts else ""
+                else:
+                    if value == "__other__":
+                        final_value = form.cleaned_data.get(f"{field_name}_other", "").strip()
+                    else:
+                        final_value = str(value) if value is not None else ""
+
+                if final_value:
+                    RequestAttributeValue.objects.create(
+                        request=req,
+                        attribute_id=attr_id,
+                        value=final_value,
+                    )
+
+            # refresh token for next edit attempt
+            request.session["request_edit_form_token"] = str(uuid.uuid4())
+
+            return redirect("request_detail", request_id=req.id)  # or request_list
+
+        # invalid form -> new token
+        request.session["request_edit_form_token"] = str(uuid.uuid4())
+
+    else:
+        # GET form
+        form = RequestForm(
+            category=category,
+            instance=listing,
+            initial={
+                "budget": req.budget,
+                "condition_preference": req.condition_preference,
+            }
+        )
+
+    return render(
+        request,
+        "request_edit.html",
+        {
+            "form": form,
+            "req": req,
+            "listing": listing,
+            "selected_category": category,
+            "category_tree_json": category_tree_json,
+            "selected_category_path_json": selected_path_json,
+            "form_token": request.session.get("request_edit_form_token"),
+        },
+    )
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages

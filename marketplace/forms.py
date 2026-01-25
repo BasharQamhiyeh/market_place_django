@@ -558,22 +558,34 @@ class RequestForm(ListingBaseForm):
         fields = ["title", "description", "category", "city"]
 
     def __init__(self, *args, **kwargs):
+
         category = kwargs.pop("category", None)
         listing_instance = kwargs.get("instance", None)
 
         super().__init__(*args, **kwargs)
 
+        req = None
+        if listing_instance:
+            try:
+                req = listing_instance.request
+            except ObjectDoesNotExist:
+                req = None
+
+        if req:
+            # ✅ set BOTH: field.initial + form.initial
+            self.fields["budget"].initial = req.budget
+            self.initial["budget"] = req.budget
+
+            self.fields["condition_preference"].initial = req.condition_preference
+            self.initial["condition_preference"] = req.condition_preference
 
         # Existing attribute values
         existing = {}
-        if listing_instance and hasattr(listing_instance, "request"):
-            for av in listing_instance.request.attribute_values.all():
+        if req:
+            for av in req.attribute_values.all():
                 existing[av.attribute_id] = av.value
 
-        # Build dynamic fields (attributes optional)
-        build_dynamic_attribute_fields(
-            self, category, existing, is_request=True
-        )
+        build_dynamic_attribute_fields(self, category, existing, is_request=True)
 
 class StoreReviewForm(forms.ModelForm):
     class Meta:

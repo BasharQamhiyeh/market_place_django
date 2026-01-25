@@ -352,3 +352,20 @@ body {
 .text-orange-600 {
     color: var(--rukn-orange) !important;
 }
+
+/* Same as items: lock category tree UI */
+.category-locked,
+.category-locked * {
+  cursor: not-allowed !important;
+}
+
+.category-locked .input-field {
+  background: #f9fafb;          /* subtle disabled look */
+  opacity: 0.95;
+}
+
+/* Optional: show "blocked" icon feeling on hover */
+.category-locked:hover {
+  outline: 2px dashed rgba(239, 68, 68, 0.35); /* red-ish */
+  outline-offset: 6px;
+}

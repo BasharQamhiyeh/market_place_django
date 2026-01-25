@@ -103,8 +103,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // category
   const levelsRoot = document.getElementById("category-levels");
+  const lockCategoryEl = document.getElementById("lockCategoryEdit");
+    const LOCK_CATEGORY = !!lockCategoryEl;
+
+    if (levelsRoot && LOCK_CATEGORY) {
+      levelsRoot.addEventListener("click", (e) => {
+        if (e.isTrusted) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+
+      levelsRoot.addEventListener("keydown", (e) => {
+        if (e.isTrusted) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }, true);
+    }
+
   const categoryIdInput = document.getElementById("categoryIdInput");
   const attributeFields = document.getElementById("attribute-fields");
+  const listingIdEl = document.getElementById("listingId");
+  const listingTypeEl = document.getElementById("listingType"); // "request"
+
 
   // condition
   const newBtn = document.getElementById("newBtn");
@@ -430,32 +452,38 @@ document.addEventListener("DOMContentLoaded", () => {
   let attrsFetchController = null;
 
   async function loadAttributesForCategory(categoryId) {
-    const tpl = attributeFields?.getAttribute("data-url-template");
-    if (!tpl || !attributeFields || !categoryId) return;
+      const tpl = attributeFields?.getAttribute("data-url-template");
+      if (!tpl || !attributeFields || !categoryId) return;
 
-    attributeFields.innerHTML = "";
+      attributeFields.innerHTML = "";
 
-    if (attrsFetchController) attrsFetchController.abort();
-    attrsFetchController = new AbortController();
+      if (attrsFetchController) attrsFetchController.abort();
+      attrsFetchController = new AbortController();
 
-    const url = tpl.replace(/0\/?$/, `${categoryId}/`);
+      const baseUrl = tpl.replace(/0\/?$/, `${categoryId}/`);
 
-    try {
-      const resp = await fetch(url, {
-        credentials: "same-origin",
-        signal: attrsFetchController.signal,
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-      });
-      if (!resp.ok) return;
+      const qs = new URLSearchParams();
+      if (listingIdEl && (listingIdEl.value || "").trim()) qs.set("listing_id", listingIdEl.value.trim());
+      if (listingTypeEl && (listingTypeEl.value || "").trim()) qs.set("kind", listingTypeEl.value.trim());
 
-      attributeFields.innerHTML = await resp.text();
+      const url = qs.toString() ? `${baseUrl}?${qs.toString()}` : baseUrl;
 
-      stripRequiredFromAttributeFields(); // ✅ add (prevents Chrome popup)
-      initAttributeLogic(attributeFields);
-    } catch (err) {
-      if (err && err.name === "AbortError") return;
+      try {
+        const resp = await fetch(url, {
+          credentials: "same-origin",
+          signal: attrsFetchController.signal,
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        if (!resp.ok) return;
+
+        attributeFields.innerHTML = await resp.text();
+        stripRequiredFromAttributeFields();
+        initAttributeLogic(attributeFields);
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
     }
-  }
+
 
   function createSearchableLevel(levelIndex, nodes, labelText) {
     const wrap = document.createElement("div");
@@ -671,12 +699,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!budgetField.value) {
-      e.preventDefault();
-      showErrorAfter(budgetField, "الرجاء إدخال الميزانية القصوى للمنتج المطلوب");
-      unlockSubmit();
-      return;
+    // ✅ Budget optional (validate only if provided)
+    if (budgetField && (budgetField.value || "").trim()) {
+      const v = Number(budgetField.value);
+      if (Number.isNaN(v) || v < 0) {
+        e.preventDefault();
+        showErrorAfter(budgetField, "الرجاء إدخال ميزانية صحيحة");
+        unlockSubmit();
+        return;
+      }
     }
+
 
     if (!citySelect.value) {
       e.preventDefault();
@@ -693,11 +726,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     lockSubmit();
-    openOverlay(successPopup);
-
-    const redirectUrl = form.getAttribute("data-redirect-url") || "";
-    if (redirectUrl) {
-      setTimeout(() => { window.location.href = redirectUrl; }, 12000);
-    }
   });
 });

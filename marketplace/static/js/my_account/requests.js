@@ -560,19 +560,21 @@
     const list = getList();
     if (!list) return;
 
-    // 1) Intercept EDIT link
+    // 1) EDIT link => just navigate (GET)
     const editLink = e.target.closest("a.pill-blue");
     if (editLink && list.contains(editLink)) {
+      // إذا الرابط مش موجود أو فاضي، لا تعمل شي
+      const href = (editLink.getAttribute("href") || "").trim();
+      if (!href || href === "#") return;
+
+      // لا تمنع الافتراضي إلا إذا بدك تضمن التنقل بنفسك
       e.preventDefault();
       e.stopPropagation();
 
-      const row = editLink.closest(".request-row[data-req-id]");
-      const id = Number(row?.getAttribute("data-req-id") || 0);
-
-      callBackend(`/request/${id}/edit/`, {});
-      openSuccessModal("زر التعديل يعمل (بدون تحديث) — سيتم ربطه لاحقاً.", "✏️ تعديل");
+      window.location.href = href;  // ✅ يفتح صفحة التعديل (GET)
       return;
     }
+
 
     // 2) Action buttons
     const btn = e.target.closest("[data-action]");

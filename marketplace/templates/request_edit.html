@@ -1,0 +1,418 @@
+{# templates/request_create.html #}
+{% extends "base.html" %}
+{% load static i18n form_extras %}
+
+{% block title %}ركن — إضافة طلب شراء{% endblock %}
+
+{% block base_css %}
+<link rel="stylesheet" href="{% static 'css/post-request.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+  <div class="min-h-screen flex flex-col py-10 lg:py-16">
+
+    <!-- Header -->
+    <header class="max-w-5xl mx-auto w-full mb-6">
+      <div class="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-4">
+        <div class="text-center lg:text-right">
+          <p class="text-[12px] tracking-[0.2em] uppercase text-[var(--rukn-orange)] mb-1 font-semibold">
+            إضافة طلب شراء
+          </p>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">
+            أضف طلب الشراء الخاص بك في ركن
+          </h1>
+          <p class="text-xs md:text-sm text-[var(--muted)] mt-1">
+            املأ التفاصيل ليصل طلبك إلى البائعين المهتمّين خلال دقائق.
+          </p>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-2 bg-white/80 border border-orange-100 rounded-full px-4 py-2 shadow-sm">
+          <span class="text-xl">📝</span>
+          <span class="text-xs text-[var(--muted)]">
+            طلب واضح + تفاصيل دقيقة = عروض أفضل
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Grid -->
+    <main class="max-w-5xl mx-auto mt-2 mb-10 w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr),minmax(260px,1fr)] gap-8 lg:gap-10">
+
+        <!-- LEFT -->
+        <section class="container-box p-6 sm:p-8">
+          {% if form.non_field_errors %}
+            <div class="mb-4 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
+              <span>⚠️</span> <span>{{ form.non_field_errors }}</span>
+            </div>
+          {% endif %}
+
+          <form id="addRequestForm"
+                method="POST"
+                class="space-y-3"
+                data-redirect-url="{% url 'request_list' %}"
+                data-single-submit>
+            {% csrf_token %}
+            <input type="hidden" name="form_token" value="{{ form_token }}">
+
+
+            <!-- SECTION 1 -->
+            <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+              <span class="section-step">١</span>
+              <span>تفاصيل الطلب</span>
+            </h3>
+
+            <div class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4">
+
+              <!-- Title -->
+              <div>
+                <label class="label">أضف عنواناً لطلبك</label>
+                <input type="text"
+                       name="title"
+                       id="requestTitle"
+                       placeholder="مثلاً: أحتاج لابتوب HP جديد أو سيارة تويوتا كورولا"
+                       class="input-field"
+                       value="{{ form.title.value|default_if_none:'' }}">
+                {% if form.title.errors %}<p class="field-error js-error">{{ form.title.errors }}</p>{% endif %}
+              </div>
+
+              <!-- Category (Hierarchical like item_create) -->
+              <div>
+                <input type="hidden" id="lockCategoryEdit" value="1">
+
+                <div id="category-levels"
+                     class="flex flex-col gap-3 category-locked"
+                     title="لا يمكن تغيير القسم بعد نشر الطلب. إذا اخترت قسمًا خاطئًا، احذف الطلب وأنشئ طلبًا جديدًا.">
+                </div>
+
+                <input type="hidden"
+                       name="category"
+                       id="categoryIdInput"
+                       value="{% if selected_category %}{{ selected_category.id }}{% else %}{{ form.category.value|default_if_none:'' }}{% endif %}">
+                {% if form.category.errors %}<p class="field-error js-error">{{ form.category.errors }}</p>{% endif %}
+              </div>
+
+              <script id="category-tree-data" type="application/json">
+                {{ category_tree_json|default:"[]"|safe }}
+              </script>
+              <script id="selected-category-path" type="application/json">
+                {{ selected_category_path_json|default:"[]"|safe }}
+              </script>
+
+              <!-- DYNAMIC ATTRIBUTES -->
+                <input type="hidden" id="listingId" value="{{ listing.id }}">
+                <input type="hidden" id="listingType" value="request">
+              <div id="attribute-fields" data-url-template="{% url 'item_attributes_partial' 0 %}">
+                {% include "partials/item_attributes.html" with form=form %}
+              </div>
+
+            </div>
+
+            <!-- SECTION 2 -->
+            <div class="pt-9">
+              <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+                <span class="section-step">٢</span>
+                <span>تفاصيل المنتج المطلوب</span>
+              </h3>
+
+              <div class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 mt-3">
+
+                <!-- Condition (3 states) -->
+                <div>
+                  <label class="label">حالة المنتج المطلوب</label>
+
+                  <div id="conditionBox"
+                       class="flex border border-gray-200 bg-white overflow-hidden rounded-2xl w-full sm:w-80 text-sm">
+                    <button id="newBtn" type="button" class="flex-1 py-2.5 font-bold">جديد</button>
+                    <button id="usedBtn" type="button" class="flex-1 py-2.5 font-bold">مستعمل</button>
+                    <button id="anyBtn" type="button" class="flex-1 py-2.5 font-bold">لا يهم</button>
+                  </div>
+
+                  <input type="hidden"
+                         id="conditionValue"
+                         name="condition_preference"
+                         value="{% if form.condition_preference.value %}{{ form.condition_preference.value }}{% else %}any{% endif %}">
+                  {% if form.condition_preference.errors %}<p class="field-error js-error">{{ form.condition_preference.errors }}</p>{% endif %}
+                </div>
+
+                <!-- Description -->
+                <div>
+                  <label class="label">الوصف</label>
+                  <textarea id="desc"
+                            name="description"
+                            rows="4"
+                            placeholder="اشرح المواصفات التي تبحث عنها، مثل الحجم، اللون، الموديل، سنة الصنع، أو أي تفاصيل مهمة أخرى"
+                            class="input-field text-sm">{{ form.description.value|default_if_none:'' }}</textarea>
+                  {% if form.description.errors %}<p class="field-error js-error">{{ form.description.errors }}</p>{% endif %}
+
+                  <button type="button" id="aiBtn"
+                          class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 w-full sm:w-auto justify-center text-sm">
+                    توليد وصف الطلب بالذكاء الصناعي
+                  </button>
+                </div>
+
+                <!-- Budget -->
+                <div>
+                  <label class="label">الميزانية الأعلى (د.أ)</label>
+                  {{ form.budget|add_class:"input-field text-sm" }}
+                  {% if form.budget.errors %}<p class="field-error js-error">{{ form.budget.errors }}</p>{% endif %}
+                </div>
+
+                <script>
+                  // force ID for JS validation
+                  document.addEventListener("DOMContentLoaded", () => {
+                    const budget = document.querySelector('input[name="budget"]');
+                    if (budget) budget.id = "budgetField";
+                  });
+                </script>
+
+              </div>
+            </div>
+
+            <!-- SECTION 3 -->
+            <div class="pt-9">
+              <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+                <span class="section-step">٣</span>
+                <span>الموقع وطرق التواصل</span>
+              </h3>
+
+              <div class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 mt-3">
+
+                <!-- City dropdown (mockup style) -->
+                <div class="relative">
+                  <label class="label">المدينة</label>
+
+                  <input id="cityInput"
+                         type="text"
+                         readonly
+                         placeholder="اختر المدينة"
+                         class="input-field cursor-pointer text-sm"
+                         value="{% if form.city.value %}{% for v,lbl in form.city.field.choices %}{% if v == form.city.value %}{{ lbl }}{% endif %}{% endfor %}{% endif %}">
+
+                  <select id="citySelect" name="city" class="hidden">
+                    {% for value, label in form.city.field.choices %}
+                      <option value="{{ value }}" {% if form.city.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <div id="cityList" class="absolute z-[9999] mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-lg hidden">
+                    <div class="p-2 border-b border-orange-100">
+                      <input id="citySearch" type="text" placeholder="🔍 بحث..." class="w-full border border-gray-200 rounded-lg py-1.5 px-3 text-sm">
+                    </div>
+                    <ul id="cityOptions" class="max-h-52 overflow-y-auto text-sm">
+                      {% for value, label in form.city.field.choices %}
+                        {% if value %}
+                          <li class="p-2 hover:bg-green-50 cursor-pointer" data-value="{{ value }}">{{ label }}</li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+
+                  {% if form.city.errors %}<p class="field-error js-error">{{ form.city.errors }}</p>{% endif %}
+                </div>
+
+                <!-- Show phone -->
+                <div class="mt-4 pt-4 border-t border-dashed border-gray-200">
+                  <label class="label">طريقة التواصل</label>
+                  <div class="bg-gray-100/75 rounded-xl px-3 py-3 sm:px-4 sm:py-3">
+                    <label class="flex items-center gap-3 cursor-pointer select-none">
+                      <input
+                          type="checkbox"
+                          name="show_phone"
+                          class="w-5 h-5 accent-[var(--rukn-orange)]"
+                          {% if form.is_bound %}
+                            {% if form.data.show_phone %}checked{% endif %}
+                          {% else %}
+                            {% if form.instance.show_phone %}checked{% endif %}
+                          {% endif %}
+                        >
+                      <span class="font-semibold text-gray-800 text-sm">إظهار رقم الهاتف في الطلب</span>
+                    </label>
+                    <p class="text-xs text-[var(--muted)] mt-1 pr-7 leading-relaxed">
+                      في حال تفعيل هذا الخيار، سيتم عرض رقم هاتفك للبائعين المهتمّين لتسهيل التواصل المباشر حول طلب الشراء.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- SECTION 4 -->
+            <div class="pt-9">
+              <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+                <span class="section-step">٤</span>
+                <span>شروط النشر</span>
+              </h3>
+
+              <div id="termsBox" class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 text-sm">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xl">📜</span>
+                  <div><p class="label">ملخص الشروط</p></div>
+                </div>
+
+                <nav id="termsNav" class="flex-row gap-1 text-[8px] sm:text-xs mb-2 overflow-x-auto sm:py-3 sm:px-1 py-2 px-1 rounded-2xl bg-gray-100/75">
+                  <button type="button" class="nav-link active" data-tab="accuracy">صحة البيانات</button>
+                  <button type="button" class="nav-link" data-tab="legal">محتوى آمن</button>
+                  <button type="button" class="nav-link" data-tab="language">آداب النشر</button>
+                  <button type="button" class="nav-link" data-tab="management">مسؤولية المستخدم</button>
+                </nav>
+
+                <div id="termsScroll" class="text-xs leading-relaxed rounded-xl bg-gray-100/75 px-4 pb-4 pt-2">
+                  <div class="term-panel active" data-tab="accuracy">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">صحة البيانات</h6>
+                    <p class="mb-2">
+                      يلتزم مستخدم المنصة بإدخال بيانات صحيحة ودقيقة وغير مضللة في طلب الشراء، بما في ذلك نوع المنتج وحالته المطلوبة والميزانية ووسائل التواصل.
+                      أي تحريف متعمّد قد يؤدي إلى إيقاف الطلب أو حذف الحساب وفق سياسة منصة ركن.
+                    </p>
+                  </div>
+
+                  <div class="term-panel hidden" data-tab="legal">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">محتوى آمن</h6>
+                    <p class="mb-2">
+                      يُحظر استخدام المنصة لطلب منتجات أو خدمات مخالفة للقوانين أو الأنظمة المعمول بها، أو تنتهك الحقوق الفكرية أو الخصوصية أو أي حقوق نظامية للغير.
+                      ويحق لمنصة ركن حذف أي طلب من هذا النوع دون مسؤولية عليها.
+                    </p>
+                  </div>
+
+                  <div class="term-panel hidden" data-tab="language">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">آداب النشر</h6>
+                    <p class="mb-2">
+                      يجب الالتزام باستخدام لغة محترمة ولائقة في الطلب والوصف والرسائل، ويُمنع استخدام الألفاظ المسيئة أو العنصرية أو أي محتوى مهين أو غير أخلاقي.
+                    </p>
+                  </div>
+
+                  <div class="term-panel hidden" data-tab="management">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">مسؤولية المستخدم</h6>
+                    <p class="mb-2">
+                      يلتزم المستخدم بتحديث أو حذف طلب الشراء في حال لم يعد بحاجة للمنتج أو تم التعاقد مع بائع مناسب.
+                      وتحتفظ منصة ركن بالحق في تعديل أو إخفاء أو حذف أي طلب مخالف لهذه الشروط.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="pt-3 mt-2 border-t border-gray-200 space-y-2">
+                  <label class="flex items-start gap-3 cursor-pointer select-none">
+                    <input type="checkbox" id="acceptTerms" name="accept_terms" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
+                    <span class="text-gray-700 leading-relaxed text-xs sm:text-sm">
+                      أؤكد أنني قرأت وفهمت شروط نشر طلب الشراء أعلاه، وأوافق على الالتزام بها.
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <p class="text-[10px] sm:text-xs text-gray-500 leading-relaxed mt-2 px-3">
+                بالنقر على <strong>"إرسال الطلب"</strong>، فإنك تقر وتوافق على
+                <a href="#" id="openTerms" class="underline hover:no-underline text-[var(--rukn-orange)]">شروط الاستخدام</a>
+                و
+                <a href="#" id="openPrivacy" class="underline hover:no-underline text-[var(--rukn-orange)]">سياسة الخصوصية</a>.
+              </p>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-4 text-center">
+              <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full sm:w-1/2" data-submit-btn>
+                إرسال الطلب
+              </button>
+            </div>
+
+          </form>
+        </section>
+
+        <!-- RIGHT -->
+        <aside class="space-y-5">
+          <section class="container-box p-5 sm:p-6 h-fit lg:sticky lg:top-0">
+            <div class="relative z-10 pt-4">
+              <h2 class="text-xl font-bold text-[var(--rukn-orange)] mb-4 text-center lg:text-right flex items-center gap-2 justify-center lg:justify-start">
+                💡 نصائح لطلب ناجح
+              </h2>
+
+              <div class="space-y-3 text-sm text-[var(--muted)]">
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">🎯 حدد ما تريد بدقة</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">كلما كان طلبك أوضح، حصلت على عروض أنسب.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">📝 وصف واضح ومختصر</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">اذكر المواصفات والشروط المهمة مثل الموديل واللون.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">💰 ميزانية منطقية</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">ضع ميزانية واقعية لزيادة فرص حصولك على عروض مناسبة.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">📍 موقع واضح</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">اختيار المدينة الصحيحة يساعد البائعين القريبين منك.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">⏱️ تفاعل سريع</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">الرد السريع يزيد احتمالية الوصول لصفقة أفضل.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">✅ وضوح الشروط</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">وضح التسليم/الدفع وأي شروط إضافية لتجنب سوء الفهم.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- Success Popup -->
+    <div id="successPopup" class="success-popup-bg hidden">
+      <div class="success-popup">
+        <div class="flex flex-col items-center mb-4">
+          <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-[var(--rukn-orange)] text-3xl mb-3">✓</div>
+          <h2 class="text-lg font-extrabold text-gray-900 mb-1">تم إرسال طلبك بنجاح</h2>
+          <p class="text-sm text-gray-500 text-center leading-relaxed">
+            شكرًا لك! تم إرسال طلب الشراء الخاص بك وسيتمكن البائعون من الاطلاع عليه وتقديم عروضهم المناسبة.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terms Popup -->
+    <div id="termsPopup" class="popup-bg hidden">
+      <div class="popup-box">
+        <h2 class="text-lg font-bold text-[var(--rukn-orange)] mb-4 text-center">الشروط والأحكام</h2>
+        <div class="popup-content text-sm leading-relaxed text-gray-800">
+          <ol class="list-decimal pr-5 space-y-4 text-sm leading-relaxed text-gray-800">
+            <li><span class="font-semibold">نطاق التطبيق:</span> منصة "ركن" تعمل داخل المملكة الأردنية الهاشمية وتخضع للقوانين المعمول بها.</li>
+            <li><span class="font-semibold">محتوى الطلبات:</span> يمنع طلب أي سلع أو خدمات مخالفة للقانون أو الأنظمة.</li>
+            <li><span class="font-semibold">المسؤولية:</span> ركن منصة وسيطة وليست مسؤولة عن جودة السلع أو وفاء الأطراف.</li>
+          </ol>
+        </div>
+        <button id="closeTerms" class="w-full mt-4 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#15803d] transition">
+          إغلاق
+        </button>
+      </div>
+    </div>
+
+    <!-- Privacy Popup -->
+    <div id="privacyPopup" class="popup-bg hidden">
+      <div class="popup-box max-h-[80vh]">
+        <h2 class="text-lg font-bold text-[var(--rukn-orange)] mb-3 text-center">سياسة الخصوصية</h2>
+        <div class="popup-content text-sm leading-relaxed text-gray-800">
+          <ol class="list-decimal pr-5 space-y-4 text-sm leading-relaxed text-gray-800">
+            <li><span class="font-semibold">جمع البيانات:</span> نجمع بيانات مثل الاسم/الهاتف/المدينة لتحسين الخدمة.</li>
+            <li><span class="font-semibold">عرض البيانات:</span> قد يظهر رقم الهاتف إذا فعّلت خيار إظهاره.</li>
+            <li><span class="font-semibold">الحماية:</span> نبذل جهوداً معقولة لحماية بيانات المستخدمين.</li>
+          </ol>
+        </div>
+        <button id="closePrivacy" class="w-full mt-4 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#15803d] transition">
+          إغلاق
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+  {{ block.super }}
+  <script src="{% static 'js/post-request-django.js' %}"></script>
+{% endblock %}
