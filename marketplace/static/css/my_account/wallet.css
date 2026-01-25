@@ -1,6 +1,13 @@
 /* static/css/my_account/wallet.css */
 
-/* Match mockup: tab-wallet had a stronger gray border */
+/* ✅ match mockup border on the tab card */
+#tab-wallet.tab-content,
+#tab-wallet,
+.wallet-tab{
+  /* keep your UI consistent if wrapper differs */
+}
+
+/* If your actual wrapper is #tab-wallet.tab-content (as in mockup) */
 #tab-wallet.tab-content{
   border-color:#6b7280; /* gray-500 */
 }
@@ -52,11 +59,49 @@
   justify-content:space-between;
 }
 
-/* modal fade */
+/* modal fade (same as mockup) */
 @keyframes fadeIn {
   from { opacity:0; transform:translateY(8px); }
   to   { opacity:1; transform:translateY(0); }
 }
 .animate-fadeIn{
   animation: fadeIn .18s ease-out both;
+}
+
+/* ✅ mockup: dates appear orange */
+.wallet-tab .timeline-date{
+  font-weight:800;
+  color:#ea580c !important;  /* orange-600 */
+  font-size:14px;
+  padding:6px 2px;
+}
+
+
+/* ✅ mockup pills */
+.wallet-tab .status-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 10px;          /* أكثر مثل الموكاب */
+  border-radius:9999px;
+  font-weight:700;           /* mockup looks like bold not extra-black */
+  font-size:12px;
+  line-height:1;
+  border:1px solid transparent;
+}
+
+.wallet-tab .pill-blue{
+  background:#eff6ff;
+  color:#2563eb;
+  border-color:#bfdbfe;
+}
+.wallet-tab .pill-green{
+  background:#ecfdf5;
+  color:#16a34a;
+  border-color:#bbf7d0;
+}
+.wallet-tab .pill-red{
+  background:#fef2f2;
+  color:#dc2626;
+  border-color:#fecaca;
 }

@@ -64,49 +64,62 @@
     return t.text || "";
   }
 
-  function getTxIcon(type, meta) {
-    if (type === "reward") {
+  function getTxIcon(type, meta){
+        console.log(type);
+        console.log(meta);
+      /* 🎁 مكافأة */
+      if (type === "reward") {
+        return `
+          <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="8" width="18" height="13" rx="2"
+                  stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8V3M7 5h10"
+                  stroke="currentColor" stroke-width="2"/>
+            <path d="M3 13h18"
+                  stroke="currentColor" stroke-width="2"/>
+          </svg>
+        `;
+      }
+
+      /* 🔄 إعادة نشر */
+      if (meta?.action === "republish") {
+        const color =
+          meta.targetType === "ad"
+            ? "text-orange-600"
+            : "text-green-600";
+
+        return `
+          <svg class="w-5 h-5 ${color}" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12a9 9 0 1 1-3-6.7"
+                  stroke="currentColor" stroke-width="2"/>
+            <path d="M21 3v6h-6"
+                  stroke="currentColor" stroke-width="2"/>
+          </svg>
+        `;
+      }
+
+      /* 📢 إعلان */
+      if (meta?.targetType === "ad") return `
+        <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l3 6 7 1-5 4 1 7-6-3-6 3 1-7-5-4 7-1z"
+                stroke="currentColor" stroke-width="2"/>
+        </svg>`;
+
+      /* 🛒 طلب */
+      if (meta?.targetType === "request") return `
+        <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l3 6 7 1-5 4 1 7-6-3-6 3 1-7-5-4 7-1z"
+                stroke="currentColor" stroke-width="2"/>
+        </svg>`;
+
+      /* 💳 افتراضي (شراء مثلاً) */
       return `
-        <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <rect x="3" y="8" width="18" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
-          <path d="M12 8V3M7 5h10" stroke="currentColor" stroke-width="2"/>
-          <path d="M3 13h18" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      `;
+        <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="7" width="18" height="10"
+                stroke="currentColor" stroke-width="2"/>
+        </svg>`;
     }
 
-    if (meta && meta.action === "republish") {
-      const color = meta.targetType === "ad" ? "text-orange-600" : "text-green-600";
-      return `
-        <svg class="w-5 h-5 ${color}" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M21 12a9 9 0 1 1-3-6.7" stroke="currentColor" stroke-width="2"/>
-          <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      `;
-    }
-
-    if (meta && meta.targetType === "ad") {
-      return `
-        <svg class="w-5 h-5 text-orange-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2l3 6 7 1-5 4 1 7-6-3-6 3 1-7-5-4 7-1z" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      `;
-    }
-
-    if (meta && meta.targetType === "request") {
-      return `
-        <svg class="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 2l3 6 7 1-5 4 1 7-6-3-6 3 1-7-5-4 7-1z" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      `;
-    }
-
-    return `
-      <svg class="w-5 h-5 text-blue-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="3" y="7" width="18" height="10" stroke="currentColor" stroke-width="2"/>
-      </svg>
-    `;
-  }
 
   function getTxBadge(type) {
     if (type === "buy") return `<span class="status-badge pill-blue">شراء</span>`;
@@ -261,7 +274,7 @@
     if (notice) notice.classList.add("hidden");
   };
 
-  window.buyPointsDisabled = function () {
+  window.buyPointsDisabled = function (_points) {
     const notice = document.getElementById("buyNotice");
     if (!notice) return;
     notice.classList.remove("hidden");
