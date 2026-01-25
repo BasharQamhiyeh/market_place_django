@@ -42,6 +42,7 @@
                 {% endif %}
               "
               data-req-id="{{ req.id }}"
+              data-listing-id="{{ req.id }}"
               data-status="{{ req.status|default:'active' }}"
               data-featured-days-left="{{ req.featuredDaysLeft|default:0 }}"
               data-last-republish="{{ req.lastRepublishAt|default:'' }}"

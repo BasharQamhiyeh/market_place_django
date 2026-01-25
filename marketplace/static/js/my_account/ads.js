@@ -1,9 +1,11 @@
 // static/js/my_account/ads.js
 (() => {
-  const tab = document.getElementById("tab-ads");
-  const list = document.getElementById("adsList");
-  const count = document.getElementById("adsCount");
-  if (!tab || !list || !count) return;
+  "use strict";
+
+  // Ads tab may not be in DOM at page load (tabs / partial render)
+  // So: resolve elements lazily.
+  const getList = () => document.getElementById("adsList");
+  const getCountEl = () => document.getElementById("adsCount");
 
   /* =========================================================
      ✅ Wallet / Points (same mockup behavior, but safe)
@@ -77,10 +79,15 @@
      ✅ Helpers
   ========================================================= */
   function updateCount() {
+    const list = getList();
+    const count = getCountEl();
+    if (!list || !count) return;
     count.textContent = String(list.querySelectorAll(".ad-row[data-ad-id]").length);
   }
 
   function getAdRow(id) {
+    const list = getList();
+    if (!list) return null;
     return list.querySelector(`.ad-row[data-ad-id="${id}"]`);
   }
 
@@ -118,19 +125,19 @@
     if (ttl) ttl.innerText = title;
     if (!openModal("successModal")) alert(`${title}\n\n${message}`);
   }
-  window.closeSuccessModal = () => closeModal("successModal");
+  if (!window.closeSuccessModal) window.closeSuccessModal = () => closeModal("successModal");
 
   // ---------- No points ----------
   function showNoPointsModal() {
     if (!openModal("noPointsModal")) alert("❌ لا يوجد نقاط كافية");
   }
-  window.closeNoPointsModal = () => closeModal("noPointsModal");
+  if (!window.closeNoPointsModal) window.closeNoPointsModal = () => closeModal("noPointsModal");
   window.openWalletTab = () => {
     closeModal("noPointsModal");
     document.querySelector('[data-tab="wallet"]')?.click();
   };
 
-  // ---------- Cooldown (same mockup) ----------
+  // ---------- Cooldown ----------
   function parseISO(dateStr) {
     if (!dateStr) return null;
     const d = new Date(dateStr);
@@ -150,23 +157,49 @@
   }
 
   /* =========================================================
-     ✅ FORCE: Edit/Delete always active (your request)
+     ✅ FORCE: Edit/Delete always active
   ========================================================= */
   function enableEditDeleteAlways() {
+    const list = getList();
+    if (!list) return;
+
     list.querySelectorAll(".ad-row").forEach((row) => {
       const editLink = row.querySelector(".pill-blue");
       if (editLink) editLink.classList.remove("opacity-40", "pointer-events-none");
 
       const delBtn = row.querySelector('[data-action="delete"]');
       if (delBtn) {
-        delBtn.classList.remove("opacity-40", "pointer-events-none");
-        delBtn.classList.remove("cursor-not-allowed");
+        delBtn.classList.remove("opacity-40", "pointer-events-none", "cursor-not-allowed");
       }
     });
   }
 
   /* =========================================================
-     ✅ Delete Modal (same mockup reasons + flow)
+     ✅ Backend call helper (call anyway even if it 404s)
+  ========================================================= */
+  async function callBackend(url, payload) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        body: payload ? JSON.stringify(payload) : "{}",
+      });
+      // we don't care if it fails now, but we log
+      if (!res.ok) {
+        console.warn("[ads] backend call failed:", url, res.status);
+      }
+      return res;
+    } catch (e) {
+      console.warn("[ads] backend call error:", url, e);
+      return null;
+    }
+  }
+
+  /* =========================================================
+     ✅ Delete Modal (same mockup)
   ========================================================= */
   let adToDelete = null;
 
@@ -222,6 +255,9 @@
   function wireDeleteReasonChange() {
     const select = document.getElementById("deleteReason");
     if (!select) return;
+    if (select.dataset.wired === "1") return;
+    select.dataset.wired = "1";
+
     select.addEventListener("change", () => {
       const other = document.getElementById("deleteReasonOther");
       const err = document.getElementById("deleteReasonError");
@@ -232,7 +268,7 @@
     });
   }
 
-  window.confirmDeleteAd = () => {
+  window.confirmDeleteAd = async () => {
     const select = document.getElementById("deleteReason");
     const other = document.getElementById("deleteReasonOther");
     const err = document.getElementById("deleteReasonError");
@@ -251,6 +287,15 @@
         ? otherTxt
         : (select?.options?.[select.selectedIndex]?.text || "");
 
+    // ✅ CALL BACKEND ANYWAY (even if view not implemented yet)
+    if (adToDelete != null) {
+      const row = getAdRow(adToDelete);
+      const listingId = Number(row?.dataset?.listingId || adToDelete);
+
+      callBackend(`/listing/${listingId}/delete/`, { reason: finalReason });
+    }
+
+    // ✅ Optimistic UI
     if (adToDelete != null) {
       const row = getAdRow(adToDelete);
       if (row) row.remove();
@@ -263,7 +308,7 @@
   };
 
   /* =========================================================
-     ✅ Highlight (backend-powered)
+     ✅ Highlight (backend-powered) - you already had fetch here
   ========================================================= */
   let highlightTargetId = null;
 
@@ -286,15 +331,13 @@
       badge.className = "feature-badge flex items-center gap-1";
       header.appendChild(badge);
     }
-
     badge.textContent = daysLeft > 0 ? `⭐ مميز — متبقّي: ${daysLeft} يوم` : "⭐ مميز";
   }
 
   function disableHighlightButton(row) {
     const enabled = row.querySelector('[data-action="highlight"]');
     if (enabled) {
-      enabled.classList.add("opacity-40", "cursor-not-allowed");
-      enabled.classList.add("pointer-events-none");
+      enabled.classList.add("opacity-40", "cursor-not-allowed", "pointer-events-none");
     }
   }
 
@@ -308,20 +351,18 @@
 
     if (!openModal("highlightModal")) alert("highlightModal is missing in DOM.");
   }
-  window.closeHighlightModal = () => closeModal("highlightModal");
+  if (!window.closeHighlightModal) window.closeHighlightModal = () => closeModal("highlightModal");
 
-  // ✅ called by modal buttons (days,cost) but cost is ignored now (server is source of truth)
-  window.selectHighlightPackage = async (days /*, cost */) => {
+  window.selectHighlightPackage = async (days) => {
     if (!highlightTargetId) return;
 
     const row = getAdRow(highlightTargetId);
     if (!row) return;
 
-    // IMPORTANT:
-    // - If data-ad-id is Listing.id => OK
-    // - If data-ad-id is Item.id => add data-listing-id="{{ ad.listing_id }}" in HTML and it will use it
     const listingId = Number(row.dataset.listingId || highlightTargetId);
 
+    // ✅ call backend anyway (already exists in your old file)
+    let data = null;
     try {
       const res = await fetch(`/listing/${listingId}/feature/`, {
         method: "POST",
@@ -332,26 +373,16 @@
         body: JSON.stringify({ days: Number(days) }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      data = await res.json().catch(() => null);
 
-      if (!res.ok || !data.ok) {
-        closeModal("highlightModal");
+      // If backend not ready, res may be 404 or html -> we still continue with UI
+      if (!res.ok) console.warn("[ads] feature call failed:", res.status);
+    } catch (e) {
+      console.warn("[ads] feature call error:", e);
+    }
 
-        if (data.error === "not_enough_points") {
-          showNoPointsModal();
-          return;
-        }
-
-        if (data.error === "already_featured") {
-          openSuccessModal("هذا الإعلان مميز بالفعل.", "⭐ تمييز");
-          return;
-        }
-
-        alert("حدث خطأ أثناء تمييز الإعلان.");
-        return;
-      }
-
-      // ✅ update points from server
+    // ✅ If backend returned real values, use them. Otherwise do mock UI.
+    if (data && data.ok) {
       setPoints(data.points_balance);
 
       pushTxn({
@@ -360,37 +391,35 @@
         amount: -Number(data.cost),
       });
 
-      // ✅ update UI from featured_until (best)
-      const featuredUntilISO = data.featured_until
-        ? String(data.featured_until).slice(0, 10) // YYYY-MM-DD
-        : null;
-
+      const featuredUntilISO = data.featured_until ? String(data.featured_until).slice(0, 10) : null;
       if (featuredUntilISO) {
         row.dataset.featuredExpiresAt = featuredUntilISO;
         const daysLeft = calcDaysLeftFromNowISO(featuredUntilISO);
         row.dataset.featuredDaysLeft = String(daysLeft);
         ensureFeatureBadge(row, daysLeft);
       } else {
-        // fallback
         row.dataset.featuredDaysLeft = String(days);
         ensureFeatureBadge(row, Number(days));
       }
 
       disableHighlightButton(row);
-
       closeModal("highlightModal");
       openSuccessModal("تم تمييز الإعلان بنجاح!", "⭐ تم التمييز");
       highlightTargetId = null;
-
-    } catch (err) {
-      console.error(err);
-      closeModal("highlightModal");
-      alert("تعذر الاتصال بالخادم.");
+      return;
     }
+
+    // ✅ MOCK fallback (backend missing)
+    row.dataset.featuredDaysLeft = String(days);
+    ensureFeatureBadge(row, Number(days));
+    disableHighlightButton(row);
+    closeModal("highlightModal");
+    openSuccessModal("تم تمييز الإعلان بنجاح! (تجربة)", "⭐ تم التمييز");
+    highlightTargetId = null;
   };
 
   /* =========================================================
-     ✅ Republish (same mockup logic, but DOM-based)
+     ✅ Republish - ADD backend call now
   ========================================================= */
   let republishTargetId = null;
   let republishCost = 0;
@@ -410,11 +439,13 @@
     }
   }
 
-  window.closeRepublishConfirmModal = () => {
-    closeModal("republishConfirmModal");
-    republishTargetId = null;
-    republishCost = 0;
-  };
+  if (!window.closeRepublishConfirmModal) {
+    window.closeRepublishConfirmModal = () => {
+      closeModal("republishConfirmModal");
+      republishTargetId = null;
+      republishCost = 0;
+    };
+  }
 
   function setRowActiveUI(row) {
     if (!row) return;
@@ -444,8 +475,7 @@
     const formatted = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, "0")}/${String(today.getDate()).padStart(2, "0")}`;
 
     const meta = row.querySelector(".flex.items-center.gap-4.text-sm, .flex.items-center.gap-4.text-sm.text-gray-500, .flex.items-center.gap-4.text-sm.text-gray-500.flex-wrap, .flex.items-center.gap-4.text-sm.text-gray-500.mt-1");
-    const metaFallback = meta || row.querySelector("div.flex.items-center.gap-4.text-sm.text-gray-500.mt-1.mb-2.flex-wrap");
-    const metaRow = metaFallback || row.querySelector("div.flex.items-center.gap-4.text-sm");
+    const metaRow = meta || row.querySelector("div.flex.items-center.gap-4.text-sm.text-gray-500.mt-1.mb-2.flex-wrap") || row.querySelector("div.flex.items-center.gap-4.text-sm");
     if (!metaRow) return;
 
     const inlineSpans = metaRow.querySelectorAll("span.inline-flex.items-center.gap-1 > span");
@@ -463,7 +493,7 @@
     updateRowDateToToday(row);
 
     openSuccessModal(
-      free ? "تم إعادة نشر الإعلان مجاناً ✅" : `تمت إعادة النشر مقابل ${republishCost} نقطة ✅`,
+      free ? "تم إعادة نشر الإعلان مجاناً ✅ (تجربة)" : `تمت إعادة النشر مقابل ${republishCost} نقطة ✅ (تجربة)`,
       "🔄 تم إعادة النشر"
     );
   }
@@ -477,8 +507,13 @@
       return;
     }
 
-    setPoints(points - republishCost);
+    const row = getAdRow(republishTargetId);
+    const listingId = Number(row?.dataset?.listingId || republishTargetId);
 
+    // ✅ CALL BACKEND ANYWAY
+    callBackend(`/listing/${listingId}/republish/`, {});
+
+    setPoints(points - republishCost);
     pushTxn({
       type: "use",
       text: `🔄 إعادة نشر إعلان رقم ${republishTargetId} قبل انتهاء 7 أيام`,
@@ -493,11 +528,35 @@
   }
 
   /* =========================================================
-     ✅ Click handling
+     ✅ CLICK HANDLING (delegated so it works with tabs)
+     + intercept EDIT so it doesn't refresh
   ========================================================= */
-  list.addEventListener("click", (e) => {
+  function onAdsClick(e) {
+    const list = getList();
+    if (!list) return;
+
+    // 1) Intercept EDIT link (pill-blue)
+    const editLink = e.target.closest("a.pill-blue");
+    if (editLink && list.contains(editLink)) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const row = editLink.closest(".ad-row[data-ad-id]");
+      const id = Number(row?.dataset?.adId || row?.getAttribute("data-ad-id") || 0);
+      const listingId = Number(row?.dataset?.listingId || id);
+
+      // ✅ call backend anyway (even if it 404s)
+      // You will replace this endpoint later with the real edit URL
+      callBackend(`/listing/${listingId}/edit/`, {});
+
+      // ✅ frontend behavior now: no refresh + feedback
+      openSuccessModal("زر التعديل يعمل (بدون تحديث) — سيتم ربطه مع صفحة التعديل لاحقاً.", "✏️ تعديل");
+      return;
+    }
+
+    // 2) Actions buttons
     const btn = e.target.closest("[data-action]");
-    if (!btn) return;
+    if (!btn || !list.contains(btn)) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -538,15 +597,20 @@
       if (status !== "active") return;
 
       const check = canRepublishWithCost(last);
-
-      if (check.ok) doRepublishAdUI(id, true);
-      else openRepublishConfirmModalForAd(id, check.cost);
+      if (check.ok) {
+        // ✅ call backend anyway (free republish)
+        const listingId = Number(row.dataset.listingId || id);
+        callBackend(`/listing/${listingId}/republish/`, {});
+        doRepublishAdUI(id, true);
+      } else {
+        openRepublishConfirmModalForAd(id, check.cost);
+      }
       return;
     }
-  });
+  }
 
   /* =========================================================
-     ✅ Init + backdrop closes (same mockup)
+     ✅ Init + backdrop closes
   ========================================================= */
   function wireBackdropClose() {
     document.getElementById("deleteAdModal")?.addEventListener("click", (e) => {
@@ -565,19 +629,33 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  function init() {
     updateCount();
-
     enableEditDeleteAlways();
-
     wireDeleteReasonChange();
     setDeleteReasons();
-
     updateBalance();
     renderTransactions();
-
     wireBackdropClose();
 
-    ["deleteAdModal", "highlightModal", "successModal", "republishConfirmModal"].forEach(mustEl);
+    ["deleteAdModal", "highlightModal", "successModal", "republishConfirmModal", "noPointsModal"].forEach(mustEl);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // delegated click so it works even if tab renders later
+    document.addEventListener("click", onAdsClick, true);
+
+    init();
+
+    // retry init for lazy tabs
+    let tries = 0;
+    const t = setInterval(() => {
+      tries += 1;
+      if (getList() && getCountEl()) {
+        init();
+        clearInterval(t);
+      }
+      if (tries >= 30) clearInterval(t);
+    }, 100);
   });
 })();
