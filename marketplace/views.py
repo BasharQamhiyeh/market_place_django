@@ -1226,8 +1226,31 @@ def item_create(request):
 @login_required
 def item_attributes_partial(request, category_id):
     category = get_object_or_404(Category, id=category_id)
-    # Empty form just to build attribute fields for that category
-    form = ItemForm(category=category)
+
+    # JS sends these (or they can be absent on "create")
+    kind = (request.GET.get("kind") or "").strip().lower()   # "item" or "request"
+    listing_id = (request.GET.get("listing_id") or "").strip()
+
+    item_instance = None
+    request_instance = None
+
+    if listing_id:
+        listing = get_object_or_404(Listing, id=listing_id, user=request.user)
+
+        # if kind missing, trust listing.type
+        kind = kind or listing.type
+
+        if kind == "request":
+            request_instance = getattr(listing, "request", None)
+        else:
+            item_instance = getattr(listing, "item", None)
+
+    # Build correct form (and pass instance for edit so values can be prefilled)
+    if kind == "request":
+        form = RequestForm(category=category, instance=request_instance)
+    else:
+        form = ItemForm(category=category, instance=item_instance)
+
     return render(request, "partials/item_attributes.html", {"form": form})
 
 
@@ -1263,7 +1286,9 @@ def item_edit(request, item_id):
         # -----------------------------
         # 1. Save LISTING
         # -----------------------------
+        form.cleaned_data["category"] = item.listing.category
         listing = form.save(commit=False)
+        listing.category = item.listing.category
         listing.is_approved = False
         listing.was_edited = True
         listing.save()
@@ -1567,101 +1592,6 @@ def request_create(request):
 
 
 
-# Category form (simple)
-class CategoryForm(forms.ModelForm):
-    parent = forms.ModelChoiceField(
-        queryset=Category.objects.all(),
-        required=False,
-        label="Parent Category",
-        help_text="Optional — leave blank if this is a top-level category.",
-    )
-
-    class Meta:
-        model = Category
-        fields = ['name_en', 'name_ar', 'description', 'parent']
-
-
-@staff_member_required
-def create_category(request):
-    if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            category = form.save()
-            messages.success(request, f'Category "{category}" created successfully!')
-            return redirect('category_list')
-    else:
-        form = CategoryForm()
-
-    return render(request, 'category_create.html', {'form': form})
-
-
-# Optional: list categories (for admins)
-@staff_member_required
-def category_list(request):
-    # Fetch all top-level categories (parent=None)
-    categories = Category.objects.filter(parent__isnull=True).prefetch_related('subcategories')
-
-    return render(request, 'category_list.html', {
-        'categories': categories,
-    })
-
-# Form to create a new attribute for a category
-class AttributeForm(forms.ModelForm):
-    class Meta:
-        model = Attribute
-        fields = ['name_en', 'name_ar', 'input_type', 'is_required']
-
-@staff_member_required
-def category_detail(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    attributes = category.attributes.all()
-
-    attribute_form = AttributeForm()
-    option_form = AttributeOptionForm()
-
-    # Handle adding a new attribute
-    if request.method == 'POST' and 'add_attribute' in request.POST:
-        attribute_form = AttributeForm(request.POST)
-        if attribute_form.is_valid():
-            attr = attribute_form.save(commit=False)
-            attr.category = category  # auto assign
-            attr.save()
-            messages.success(request, f"Attribute '{str(attr)}' added successfully!")
-            return redirect('category_detail', category_id=category.id)
-
-    # Handle adding a new option
-    if request.method == 'POST' and 'add_option' in request.POST:
-        attribute_id = request.POST.get('attribute_id')
-        value_en = request.POST.get('value_en')
-        value_ar = request.POST.get('value_ar')
-
-        if attribute_id and value_en and value_ar:
-            attribute = get_object_or_404(Attribute, id=attribute_id)
-            AttributeOption.objects.create(
-                attribute=attribute,
-                value_en=value_en,
-                value_ar=value_ar
-            )
-            messages.success(request, f"Option added to {str(attribute)}!")
-            return redirect('category_detail', category_id=category.id)
-        else:
-            messages.error(request, "Please enter both English and Arabic values.")
-
-    return render(request, 'category_detail.html', {
-        'category': category,
-        'attributes': attributes,
-        'attribute_form': attribute_form,
-        'option_form': option_form,
-    })
-
-
-
-class AttributeOptionForm(forms.ModelForm):
-    class Meta:
-        model = AttributeOption
-        fields = ['value_en', 'value_ar', 'attribute']
-
-
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -1890,6 +1820,7 @@ def user_inbox(request):
 
 
 @login_required
+@transaction.atomic
 def item_edit(request, item_id):
     # Load item with listing and ensure ownership
     item = get_object_or_404(
@@ -1901,7 +1832,25 @@ def item_edit(request, item_id):
     listing = item.listing
     category = listing.category
 
-    # Initial values for listing + item + attributes
+    # =============================
+    # Category tree JSON (same as create)  ✅ MUST be before render
+    # =============================
+    lang = translation.get_language()
+    order_field = "name_ar" if lang == "ar" else "name_en"
+    top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
+
+    category_tree = build_category_tree(top_categories, lang)
+    category_tree_json = json.dumps(category_tree, ensure_ascii=False)
+
+    selected_path = get_selected_category_path(category)
+    selected_path_json = json.dumps(selected_path, ensure_ascii=False)
+
+    # token for page (GET/POST)
+    request.session["item_edit_form_token"] = str(uuid.uuid4())
+
+    # =============================
+    # Initial values
+    # =============================
     initial = {
         "title": listing.title,
         "description": listing.description,
@@ -1910,18 +1859,16 @@ def item_edit(request, item_id):
         "condition": item.condition,
     }
 
-    # Dynamic attributes -> must match "attr_<id>"
-    attribute_initial = {
-        f"attr_{av.attribute_id}": av.value
-        for av in item.attribute_values.all()
-    }
+    # (Optional) keep this; form __init__ already loads existing attribute values,
+    # but this won't hurt if your ItemForm fields rely on initial.
+    attribute_initial = {f"attr_{av.attribute_id}": av.value for av in item.attribute_values.all()}
     initial.update(attribute_initial)
 
     form = ItemForm(
         request.POST or None,
         request.FILES or None,
-        instance=listing,      # Model = Listing
-        category=category,     # For dynamic attributes
+        instance=listing,
+        category=category,
         initial=initial,
     )
 
@@ -1930,6 +1877,7 @@ def item_edit(request, item_id):
         listing = form.save(commit=False)
         listing.is_approved = False
         listing.was_edited = True
+        listing.show_phone = (request.POST.get("show_phone") == "on")  # ✅ keep phone toggle
         listing.save()
 
         # Save item fields
@@ -1940,35 +1888,58 @@ def item_edit(request, item_id):
         # Delete photos
         for key in request.POST:
             if key.startswith("delete_photo_"):
-                pid = key.split("_")[-1]
-                ItemPhoto.objects.filter(id=pid, item=item).delete()
-
-        # Attributes
-        ItemAttributeValue.objects.filter(item=item).delete()
-        for key, value in request.POST.items():
-            if key.startswith("attr_") and not key.endswith("_other"):
                 try:
-                    attr_id = int(key.split("_")[1])
+                    pid = int(key.split("_")[-1])
                 except ValueError:
                     continue
+                ItemPhoto.objects.filter(id=pid, item=item).delete()
 
+        # =============================
+        # Attributes  ✅ use cleaned_data (supports multi-select/tags/checkbox)
+        # =============================
+        ItemAttributeValue.objects.filter(item=item).delete()
+
+        for field_name, value in form.cleaned_data.items():
+            if not field_name.startswith("attr_"):
+                continue
+            if field_name.endswith("_other"):
+                continue
+
+            try:
+                attr_id = int(field_name.split("_")[1])
+            except Exception:
+                continue
+
+            if value is None or value == "":
+                continue
+
+            # Multi-select
+            if isinstance(value, list):
+                parts = []
+                for v in value:
+                    if v == "__other__":
+                        other_text = (form.cleaned_data.get(f"{field_name}_other") or "").strip()
+                        if other_text:
+                            parts.append(other_text)
+                    else:
+                        parts.append(str(v))
+                final_value = ", ".join(parts) if parts else ""
+            else:
                 if value == "__other__":
-                    value = request.POST.get(f"{key}_other", "")
+                    final_value = (form.cleaned_data.get(f"{field_name}_other") or "").strip()
+                else:
+                    final_value = str(value).strip()
 
-                value = value.strip()
-                if value:
-                    ItemAttributeValue.objects.create(
-                        item=item,
-                        attribute_id=attr_id,
-                        value=value,
-                    )
+            if final_value:
+                ItemAttributeValue.objects.create(
+                    item=item,
+                    attribute_id=attr_id,
+                    value=final_value,
+                )
 
         # New photos
         new_images = request.FILES.getlist("images")
-        created_photos = [
-            ItemPhoto.objects.create(item=item, image=img)
-            for img in new_images
-        ]
+        created_photos = [ItemPhoto.objects.create(item=item, image=img) for img in new_images]
 
         # Main photo logic
         selected_existing = request.POST.get("selected_main_photo")
@@ -2019,8 +1990,25 @@ def item_edit(request, item_id):
             "form": form,
             "item": item,
             "category": category,
+            "top_categories": top_categories,
+            "categories": top_categories,
+            "selected_category": category,
+            "category_tree_json": category_tree_json,
+            "selected_category_path_json": selected_path_json,
+            "form_token": request.session["item_edit_form_token"],
+            "existing_photos": item.photos.all().order_by("-is_main", "id"),
         },
     )
+
+
+@staff_member_required
+def category_list(request):
+    # Fetch all top-level categories (parent=None)
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related('subcategories')
+
+    return render(request, 'category_list.html', {
+        'categories': categories,
+    })
 
 
 @login_required

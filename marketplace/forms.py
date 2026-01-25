@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import translation
 from django.forms import ClearableFileInput
 from django.contrib.auth.forms import PasswordChangeForm
@@ -253,7 +254,7 @@ class MultipleFileInput(ClearableFileInput):
 class ListingBaseForm(forms.ModelForm):
     class Meta:
         model = Listing
-        fields = ["title", "description", "category", "city"]
+        fields = ["title", "description", "category", "city", "show_phone"]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 4}),
         }
@@ -472,7 +473,7 @@ class ItemForm(ListingBaseForm):
 
     class Meta(ListingBaseForm.Meta):
         model = Listing
-        fields = ["title", "description", "category", "city"]
+        fields = ["title", "description", "category", "city", "show_phone"]
 
     def __init__(self, *args, **kwargs):
         category = kwargs.pop("category", None)
@@ -480,10 +481,25 @@ class ItemForm(ListingBaseForm):
 
         super().__init__(*args, **kwargs)
 
+        item = None
+        if listing_instance:
+            try:
+                item = listing_instance.item  # may raise if no item
+            except ObjectDoesNotExist:
+                item = None
+
+        if item:
+            # ✅ Set BOTH: field.initial + form.initial (template uses either)
+            self.fields["price"].initial = item.price
+            self.initial["price"] = item.price
+
+            self.fields["condition"].initial = item.condition
+            self.initial["condition"] = item.condition
+
         # Existing attribute values
         existing = {}
-        if listing_instance and hasattr(listing_instance, "item"):
-            for av in listing_instance.item.attribute_values.all():
+        if item:
+            for av in item.attribute_values.all():
                 existing[av.attribute_id] = av.value
 
         build_dynamic_attribute_fields(self, category, existing, is_request=False)
@@ -546,6 +562,7 @@ class RequestForm(ListingBaseForm):
         listing_instance = kwargs.get("instance", None)
 
         super().__init__(*args, **kwargs)
+
 
         # Existing attribute values
         existing = {}

@@ -538,22 +538,10 @@
     const list = getList();
     if (!list) return;
 
-    // 1) Intercept EDIT link (pill-blue)
+    // 1) EDIT link: allow navigation to /items/<id>/edit/
     const editLink = e.target.closest("a.pill-blue");
     if (editLink && list.contains(editLink)) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const row = editLink.closest(".ad-row[data-ad-id]");
-      const id = Number(row?.dataset?.adId || row?.getAttribute("data-ad-id") || 0);
-      const listingId = Number(row?.dataset?.listingId || id);
-
-      // ✅ call backend anyway (even if it 404s)
-      // You will replace this endpoint later with the real edit URL
-      callBackend(`/listing/${listingId}/edit/`, {});
-
-      // ✅ frontend behavior now: no refresh + feedback
-      openSuccessModal("زر التعديل يعمل (بدون تحديث) — سيتم ربطه مع صفحة التعديل لاحقاً.", "✏️ تعديل");
+      // ما تمنعش التنقل — خلّي المتصفح يفتح الرابط
       return;
     }
 

@@ -1,472 +1,391 @@
+{# item_create.html #}
 {% extends "base.html" %}
 {% load static i18n form_extras %}
 
 {% block base_css %}
-<link rel="stylesheet" href="{% static 'css/add_ad.css' %}">
-<style>
-  :root {
-    --rukn-orange: #ff7a18;
-    --muted: #6b7280;
-  }
-
-  .upload-preview {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    border-radius: .75rem;
-    overflow: hidden;
-    border: 2px dashed var(--rukn-orange);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    transition: .3s;
-  }
-
-  .upload-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .upload-preview.main {
-    border: 3px solid var(--rukn-orange);
-    box-shadow: 0 0 10px rgba(255, 122, 24, 0.5);
-  }
-
-  .upload-preview.main::after {
-    content: "⭐ الصورة الرئيسية";
-    position: absolute;
-    bottom: 0;
-    inset-inline: 0;
-    background: rgba(255, 122, 24, 0.9);
-    color: #fff;
-    font-size: 12px;
-    text-align: center;
-    padding: 2px 0;
-  }
-
-  @media (min-width: 640px) {
-    .upload-preview {
-      width: 150px;
-      height: 150px;
-    }
-  }
-
-  .upload-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--rukn-orange) !important;
-    color: white !important;
-    padding: 10px 16px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 700;
-    transition: .3s;
-  }
-
-  .upload-btn:hover {
-    transform: scale(1.05);
-  }
-
-  .existing-photo.main {
-    border: 3px solid var(--rukn-orange) !important;
-    box-shadow: 0 0 10px rgba(255, 122, 24, 0.5);
-  }
-
-  .existing-photo {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: .75rem;
-    border: 2px solid #ddd;
-    cursor: pointer;
-    transition: .2s;
-  }
-
-  .existing-photo:hover {
-    transform: scale(1.03);
-    border-color: #aaa;
-  }
-
-  .tip-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .tip-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  }
-</style>
+<link rel="stylesheet" href="{% static 'css/post-ad.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="px-4 sm:px-0">
+  <div class="min-h-screen flex flex-col py-10 lg:py-16">
 
-<div class="max-w-5xl mx-auto px-4 py-10">
+    <!-- Header -->
+    <header class="max-w-5xl mx-auto w-full mb-6">
+      <div class="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-4">
+        <div class="text-center lg:text-right">
+          <p class="text-[12px] tracking-[0.2em] uppercase text-[var(--rukn-orange)] mb-1 font-semibold">
+            تعديل إعلان
+          </p>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">
+            عدّل إعلانك في ركن
+          </h1>
+          <p class="text-xs md:text-sm text-[var(--muted)] mt-1">
+            عدّل التفاصيل ثم احفظ لإرسال إعلانك للمراجعة مجددًا.
+          </p>
+        </div>
 
-  <!-- HEADER -->
-  <header class="text-center mb-8">
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-[var(--rukn-orange)] drop-shadow-sm mb-2">
-      تعديل الإعلان
-    </h1>
-    <p class="text-[var(--muted)] text-sm sm:text-base font-medium">
-      عدّل بيانات إعلانك ثم احفظ التغييرات
-    </p>
-  </header>
-
-  <!-- MAIN CARD -->
-  <div class="bg-white shadow-xl rounded-2xl p-6 md:p-8 border border-orange-200">
-
-    {% if form.non_field_errors %}
-      <div class="mb-4 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
-        <span>⚠️</span> <span>{{ form.non_field_errors }}</span>
+        <div class="hidden sm:flex items-center gap-2 bg-white/80 border border-orange-100 rounded-full px-4 py-2 shadow-sm">
+          <span class="text-xl">🛒</span>
+          <span class="text-xs text-[var(--muted)]">
+            إعلان واضح + صور جيدة = فرص بيع أعلى
+          </span>
+        </div>
       </div>
-    {% endif %}
+    </header>
 
-    <form method="POST" enctype="multipart/form-data" id="itemForm">
-      {% csrf_token %}
+    <!-- Grid -->
+    <main class="max-w-5xl mx-auto mt-2 mb-10 w-full">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,3fr),minmax(260px,1fr)] gap-8 lg:gap-10">
 
-      <input type="hidden" name="selected_main_photo" id="selected_main_photo" value="">
-      <input type="hidden" name="main_photo_index" id="main_photo_index" value="">
+        <!-- LEFT -->
+        <section class="container-box p-6 sm:p-8">
+          {% if form.non_field_errors %}
+            <div class="mb-4 text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
+              <span>⚠️</span> <span>{{ form.non_field_errors }}</span>
+            </div>
+          {% endif %}
 
-      <!-- TITLE -->
-      <div class="mb-6">
-        <label class="block font-semibold mb-2">عنوان الإعلان</label>
-        <input type="text" name="title" id="id_title"
-               class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none"
-               value="{{ form.title.value|default_if_none:'' }}"
-               placeholder="مثلاً: لابتوب HP جديد">
-        {% if form.title.errors %}
-          <p class="text-red-600 text-xs mt-1">{{ form.title.errors }}</p>
-        {% endif %}
-      </div>
+          <form id="addAdForm" method="POST" enctype="multipart/form-data" class="space-y-3" data-redirect-url="{% url 'item_list' %}" data-single-submit>
+            {% csrf_token %}
+            <input type="hidden" name="form_token" value="{{ form_token }}">
 
-      <!-- EXISTING PHOTOS -->
-      <div class="mb-6">
-        <label class="block font-semibold mb-3">الصور الحالية</label>
-        <div class="flex flex-wrap gap-3" id="existingPhotos">
-          {% for photo in item.photos.all %}
-            <div class="relative">
-              <img src="{{ photo.image.url }}"
-                   data-photo-id="{{ photo.id }}"
-                   class="existing-photo {% if photo.is_main %}main{% endif %}">
-              <button type="submit" name="delete_photo_{{ photo.id }}"
-                      class="absolute top-0 right-0 bg-red-600 text-white text-xs rounded-full px-2 py-0.5 transform translate-x-1/3 -translate-y-1/3">
-                ×
+            <!-- SECTION 1 -->
+            <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+              <span class="section-step">١</span>
+              <span>تفاصيل الإعلان</span>
+            </h3>
+
+            <div class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4">
+
+              <!-- TITLE -->
+              <div>
+                <label class="label">أضف عنوان لإعلانك</label>
+                <input type="text"
+                       name="title"
+                       id="adTitle"
+                       placeholder="مثلاً: لابتوب HP جديد"
+                       class="input-field"
+                       value="{{ form.title.value|default_if_none:'' }}">
+                {% if form.title.errors %}<p class="field-error js-error">{{ form.title.errors }}</p>{% endif %}
+              </div>
+
+              <!-- CATEGORY (Hierarchical like mockup: parent -> sub -> sub) -->
+              <div>
+                <input type="hidden" id="lockCategoryEdit" value="1">
+
+                <div id="category-levels"
+                     class="flex flex-col gap-3 category-locked"
+                     title="لا يمكن تغيير القسم بعد نشر الإعلان. إذا اخترت قسمًا خاطئًا، احذف الإعلان وأنشئ إعلانًا جديدًا.">
+                </div>
+                <input type="hidden"
+                   name="category"
+                   id="categoryIdInput"
+                   value="{{ category.id }}">
+                {% if form.category.errors %}<p class="field-error js-error">{{ form.category.errors }}</p>{% endif %}
+              </div>
+
+              <script id="category-tree-data" type="application/json">
+                {{ category_tree_json|default:"[]"|safe }}
+              </script>
+              <script id="selected-category-path" type="application/json">
+                {{ selected_category_path_json|default:"[]"|safe }}
+              </script>
+
+              <!-- DYNAMIC ATTRIBUTES -->
+                <input type="hidden" id="listingId" value="{{ listing.id }}">
+                <input type="hidden" id="listingType" value="{{ listing.type }}">
+                <!-- DYNAMIC ATTRIBUTES -->
+                <div id="attribute-fields">
+                  {% include "partials/item_attributes.html" with form=form %}
+                </div>
+
+
+              <!-- PHOTOS -->
+              <div>
+                <label class="label">أضف صور</label>
+
+                <div id="imageDropzone"
+                     class="border-2 border-dashed border-orange-300 bg-orange-50/40 rounded-2xl p-6 sm:p-12 flex flex-col items-center justify-center text-center cursor-pointer">
+                  <div class="text-4xl mb-2">📸</div>
+                  <p class="font-semibold text-gray-800 mb-1 text-sm">أضف صور منتجك</p>
+                  <p class="text-xs text-[var(--muted)] mb-3 max-w-md leading-relaxed">
+                    يمكنك إضافة أكثر من صورة، واضغط على صورة لتعيينها كـ
+                    <span class="text-[var(--rukn-orange)] font-semibold">صورة رئيسية</span>.
+                  </p>
+                  <span class="upload-btn">اختيار الصور</span>
+                </div>
+
+                <input id="imageInput" name="images" type="file" accept="image/*" multiple class="hidden">
+                <input type="hidden" name="main_photo_index" id="main_photo_index" value="">
+
+                <div id="previewContainer" class="flex flex-wrap gap-3 mt-3"></div>
+
+                {% if existing_photos %}
+                  <div class="mt-4">
+                    <p class="text-sm font-bold text-gray-700 mb-2">الصور الحالية</p>
+
+                    <input type="hidden" name="selected_main_photo" id="selected_main_photo"
+                           value="{% for p in existing_photos %}{% if p.is_main %}{{ p.id }}{% endif %}{% endfor %}">
+
+                    <div id="existingPhotos" class="flex flex-wrap gap-3">
+                      {% for p in existing_photos %}
+                        <div class="upload-preview {% if p.is_main %}main{% endif %}" data-photo-id="{{ p.id }}">
+                          <img src="{{ p.image.url }}" alt="photo">
+                          <button type="button" class="js-remove-existing" data-photo-id="{{ p.id }}">✕</button>
+                        </div>
+
+                        <input type="checkbox" class="hidden"
+                               name="delete_photo_{{ p.id }}"
+                               id="delete_photo_{{ p.id }}">
+                      {% endfor %}
+                    </div>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                      اضغط على صورة لتعيينها كرئيسية، واضغط ✕ لحذفها.
+                    </p>
+                  </div>
+                {% endif %}
+
+
+
+
+                {% if form.images.errors %}<p class="field-error js-error">{{ form.images.errors }}</p>{% endif %}
+              </div>
+            </div>
+
+            <!-- SECTION 2 -->
+            <div class="pt-9">
+              <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+                <span class="section-step">٢</span>
+                <span>تفاصيل المنتج أو الخدمة</span>
+              </h3>
+
+              <div class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 mt-3">
+
+                <!-- CONDITION -->
+                <div>
+                  <label class="label">حالة المنتج</label>
+
+                  <div id="conditionBox"
+                       class="flex border border-gray-200 bg-white overflow-hidden rounded-2xl w-full sm:w-64 text-sm">
+                    <button id="newBtn" type="button" class="flex-1 py-2.5 font-bold">جديد</button>
+                    <button id="usedBtn" type="button" class="flex-1 py-2.5 font-bold">مستعمل</button>
+                  </div>
+
+                  <input type="hidden" id="conditionValue" name="condition" value="{% if form.condition.value %}{{ form.condition.value }}{% else %}new{% endif %}">
+                  {% if form.condition.errors %}<p class="field-error js-error">{{ form.condition.errors }}</p>{% endif %}
+                </div>
+
+                <!-- DESCRIPTION -->
+                <div>
+                  <label class="label">الوصف</label>
+                  <textarea id="desc"
+                            name="description"
+                            rows="4"
+                            placeholder="اكتب وصفاً موجزاً وواضحاً للمنتج"
+                            class="input-field text-sm">{{ form.description.value|default_if_none:'' }}</textarea>
+                  {% if form.description.errors %}<p class="field-error js-error">{{ form.description.errors }}</p>{% endif %}
+
+                  <button type="button" id="aiBtn"
+                          class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 w-full sm:w-auto justify-center text-sm">
+                    توليد الوصف بالذكاء الصناعي
+                  </button>
+                </div>
+
+                <!-- PRICE -->
+                <div>
+                  <label class="label">السعر (د.أ)</label>
+                  {{ form.price|add_class:"input-field text-sm" }}
+                  {% if form.price.errors %}<p class="field-error js-error">{{ form.price.errors }}</p>{% endif %}
+                </div>
+
+                <script>
+                  // force ID for JS validation
+                  document.addEventListener("DOMContentLoaded", () => {
+                    const price = document.querySelector('input[name="price"]');
+                    if (price) price.id = "priceInput";
+                  });
+                </script>
+
+              </div>
+            </div>
+
+            <!-- SECTION 3 -->
+            <div class="pt-9">
+              <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+                <span class="section-step">٣</span>
+                <span>الموقع وطرق التواصل</span>
+              </h3>
+
+              <div class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 mt-3">
+
+                <!-- CITY (mockup style dropdown + hidden real select value) -->
+                <div class="relative">
+                  <label class="label">المدينة</label>
+
+                  <input id="cityInput"
+                         type="text"
+                         readonly
+                         placeholder="اختر المدينة"
+                         class="input-field cursor-pointer text-sm"
+                         value="{% if form.city.value %}{% for v,lbl in form.city.field.choices %}{% if v == form.city.value %}{{ lbl }}{% endif %}{% endfor %}{% endif %}">
+
+                  <select id="citySelect" name="city" class="hidden">
+                    {% for value, label in form.city.field.choices %}
+                      <option value="{{ value }}" {% if form.city.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+
+                  <div id="cityList" class="absolute z-[9999] mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-lg hidden">
+                    <div class="p-2 border-b border-orange-100">
+                      <input id="citySearch" type="text" placeholder="🔍 بحث..." class="w-full border border-gray-200 rounded-lg py-1.5 px-3 text-sm">
+                    </div>
+                    <ul id="cityOptions" class="max-h-52 overflow-y-auto text-sm">
+                      {% for value, label in form.city.field.choices %}
+                        {% if value %}
+                          <li class="p-2 hover:bg-orange-50 cursor-pointer" data-value="{{ value }}">{{ label }}</li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+
+                  {% if form.city.errors %}<p class="field-error js-error">{{ form.city.errors }}</p>{% endif %}
+                </div>
+
+                <!-- SHOW PHONE -->
+                <div class="mt-4 pt-4 border-t border-dashed border-gray-200">
+                  <label class="label">تفضيلات التواصل</label>
+                  <div class="bg-gray-100/75 rounded-xl px-3 py-3 sm:px-4 sm:py-3">
+                    <label class="flex items-center gap-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        name="show_phone"
+                        class="w-5 h-5 accent-[var(--rukn-orange)]"
+                        {% if form.is_bound %}
+                          {% if form.data.show_phone %}checked{% endif %}
+                        {% else %}
+                          {% if form.instance.show_phone %}checked{% endif %}
+                        {% endif %}
+                      >
+                      <span class="font-semibold text-gray-800 text-sm">إظهار رقم الهاتف في الإعلان</span>
+                    </label>
+                    <p class="text-xs text-[var(--muted)] mt-1 pr-7 leading-relaxed">
+                      في حال تفعيل هذا الخيار، سيتم عرض رقم هاتفك للمشترين المهتمّين لتسهيل التواصل المباشر.
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- TERMS -->
+            <div class="pt-9">
+              <div id="termsBox" class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 text-sm">
+                <nav id="termsNav" class="flex-row gap-1 text-[8px] sm:text-xs mb-2 overflow-x-auto sm:py-3 sm:px-1 py-2 px-1 rounded-2xl bg-gray-100/75">
+                  <button type="button" class="nav-link active" data-tab="accuracy">صحة البيانات</button>
+                  <button type="button" class="nav-link" data-tab="legal">محتوى آمن</button>
+                  <button type="button" class="nav-link" data-tab="language">آداب النشر</button>
+                  <button type="button" class="nav-link" data-tab="management">مسؤولية المُعلن</button>
+                </nav>
+
+                <div id="termsScroll" class="text-xs leading-relaxed rounded-xl bg-gray-100/75 px-4 pb-4 pt-2">
+                  <div class="term-panel active" data-tab="accuracy">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">صحة البيانات</h6>
+                    <p class="mb-2">يلتزم المُعلن بإدخال بيانات صحيحة، دقيقة، وغير مضللة عن المنتج أو الخدمة، بما في ذلك
+                    الوصف، الحالة، السعر، ووسائل التواصل. وأي إخفاء أو تحريف متعمد للمعلومات قد يؤدي إلى
+                    إيقاف أو حذف الإعلان دون إشعار، مع إمكانية حظر حساب المُعلن وفق سياسة منصة ركن.</p>
+                  </div>
+                  <div class="term-panel hidden" data-tab="legal">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">محتوى آمن</h6>
+                    <p class="mb-2">يُحظر استخدام المنصة لنشر أي إعلان يتضمن منتجات أو خدمات مخالفة للقوانين أو الأنظمة
+                    المعمول بها، أو تنتهك الحقوق الفكرية أو الخصوصية أو أي حقوق نظامية للغير. كما يُمنع
+                    نشر أي محتوى يتضمن احتيالاً، أو ترويجاً لسلع أو خدمات محظورة نظاماً. ويحق
+                    لمنصة ركن حذف أي إعلان من هذا النوع دون مسؤولية عليها.</p>
+                  </div>
+                  <div class="term-panel hidden" data-tab="language">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">آداب النشر</h6>
+                    <p class="mb-2">يجب أن يلتزم المُعلن باستخدام لغة محترمة ولائقة في العنوان والوصف والرسائل،
+                    ويُمنع استخدام الألفاظ المسيئة، العنصرية، أو أي محتوى مهين أو غير أخلاقي. كما يُمنع
+                    تضمين أي إشارات دينية أو سياسية أو قد تُسبب إساءة للغير.</p>
+                  </div>
+                  <div class="term-panel hidden" data-tab="management">
+                    <h6 class="font-bold text-gray-800 text-sm mb-1">مسؤولية المُعلن</h6>
+                    <p class="mb-2">يلتزم المُعلن بتحديث أو حذف الإعلان فور بيع المنتج أو تغير حالته بشكل جوهري. وتحتفظ
+                    منصة ركن بالحق في تعديل أو إخفاء أو حذف أي إعلان ترى أنه مخالف لهذه الشروط أو يسيء
+                    لتجربة المستخدمين، دون أي التزام بالتعويض.</p>
+                  </div>
+                </div>
+
+                <label class="flex items-start gap-3 cursor-pointer select-none pt-3 mt-2 border-t border-gray-200">
+                  <input type="checkbox" id="acceptTerms" name="accept_terms" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
+                  <span class="text-gray-700 leading-relaxed text-xs sm:text-sm">
+                    أؤكد أنني قرأت وفهمت شروط نشر الإعلان أعلاه، وأوافق على الالتزام بها.
+                  </span>
+                </label>
+              </div>
+
+              <p class="text-[10px] sm:text-xs text-gray-500 leading-relaxed mt-2 px-3">
+                بالنقر على <strong>"نشر الإعلان"</strong>، فإنك تقر وتوافق على الشروط.
+              </p>
+            </div>
+
+            <!-- SUBMIT -->
+            <div class="pt-4 text-center">
+              <button type="submit" class="submit-btn mt-2 px-10 py-3 text-base w-full sm:w-1/2" data-submit-btn>
+                تعديل الإعلان
               </button>
             </div>
-          {% empty %}
-            <p class="text-gray-500 text-sm">لا توجد صور حالياً.</p>
-          {% endfor %}
-        </div>
-      </div>
 
-      <!-- ADD NEW PHOTOS -->
-      <div class="mb-6">
-        <label class="block font-semibold mb-3">إضافة صور جديدة</label>
+          </form>
+        </section>
 
-        <!-- Hidden Django input -->
-        <div class="hidden">
-          {{ form.images }}
-        </div>
+        <!-- RIGHT -->
+        <aside class="space-y-5">
+          <section class="container-box p-5 sm:p-6 h-fit lg:sticky lg:top-0">
+            <div class="relative z-10 pt-4">
+              <h2 class="text-xl font-bold text-[var(--rukn-orange)] mb-4 text-center lg:text-right flex items-center gap-2 justify-center lg:justify-start">
+                💡 نصائح لإعلان ناجح
+              </h2>
 
-        <!-- Preview -->
-        <div id="previewContainer" class="flex flex-wrap gap-3 mb-3"></div>
-
-        <p id="imageHint"
-           class="text-xs text-[var(--muted)] mt-1 text-center sm:text-right hidden">
-          اضغط على الصورة لاختيارها كـ
-          <span class="text-[var(--rukn-orange)] font-semibold">الصورة الرئيسية</span>
-        </p>
-
-        <!-- Button -->
-        <label for="id_images" class="upload-btn mt-3 inline-flex cursor-pointer">
-          <span>إضافة صور</span>
-        </label>
-
-        {% if form.images.errors %}
-          <p class="text-red-600 text-xs mt-2">{{ form.images.errors }}</p>
-        {% endif %}
-      </div>
-
-      <!-- CATEGORY (fixed, not editable) -->
-      <div class="mb-6">
-        <label class="block font-semibold mb-2">القسم</label>
-        <input type="text"
-               class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 bg-gray-100 cursor-not-allowed"
-               value="{{ category }}"
-               disabled>
-        <input type="hidden" name="category" value="{{ category.id }}">
-      </div>
-
-      <!-- DYNAMIC ATTRIBUTES -->
-      <div id="attribute-fields" class="mb-6">
-        {% for field in form %}
-          {% if field.name|slice:":5" == "attr_" %}
-            <div class="mb-4">
-              <label class="block font-semibold mb-2">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}
-                <p class="text-red-600 text-xs mt-1">{{ field.errors }}</p>
-              {% endif %}
-
-              {% with other_name=field.name|add:"_other" %}
-                {% if other_name in form.fields %}
-                  {% with other_field=form|getitem:other_name %}
-                    <div class="mt-3">
-                      <label class="block font-semibold mb-2">{{ other_field.label }}</label>
-                      {{ other_field }}
-                      {% if other_field.errors %}
-                        <p class="text-red-600 text-xs mt-1">{{ other_field.errors }}</p>
-                      {% endif %}
-                    </div>
-                  {% endwith %}
-                {% endif %}
-              {% endwith %}
+              <div class="space-y-3 text-sm text-[var(--muted)]">
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">📸 صور جذابة</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">التقط صورًا واضحة من زوايا متعددة لعرض المنتج بأفضل شكل.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">🖋️ عنوان واضح</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">اختر عنوانًا دقيقًا يصف منتجك باحترافية.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">📃 وصف صادق</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">اشرح تفاصيل المنتج ومميزاته بوضوح وصدق لتكسب ثقة المشتري.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">💰 سعر مناسب</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">حدد سعرًا عادلًا بناءً على حالة المنتج والأسعار في السوق.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">📍 موقع دقيق</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">اختيار المدينة الصحيحة يساعد على وصول إعلانك للفئة المناسبة.</p>
+                </div>
+                <div class="tip-card p-3 text-right">
+                  <div class="font-semibold text-gray-800 mb-1 text-sm">⏱️ الرد السريع</div>
+                  <p class="leading-relaxed text-xs sm:text-sm">تفاعل سريع مع الرسائل يزيد من فرص البيع ويظهر جديتك.</p>
+                </div>
+              </div>
             </div>
-          {% endif %}
-        {% endfor %}
+          </section>
+        </aside>
+
       </div>
+    </main>
 
-      <!-- DESCRIPTION -->
-      <div class="mb-6">
-        <label class="block font-semibold mb-2">الوصف</label>
-        <textarea id="id_description"
-                  name="description"
-                  rows="4"
-                  class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none"
-                  placeholder="اكتب وصفاً موجزاً وواضحاً للمنتج">{{ form.description.value|default_if_none:'' }}</textarea>
-        {% if form.description.errors %}
-          <p class="text-red-600 text-xs mt-1">{{ form.description.errors }}</p>
-        {% endif %}
-
-        <button type="button" id="aiBtn"
-                class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-orange)] text-white rounded-lg font-semibold shadow hover:scale-105 transition w-full sm:w-auto justify-center">
-          توليد الوصف بالذكاء الصناعي
-        </button>
-      </div>
-
-      <!-- CONDITION -->
-      <div class="mb-6">
-        <label class="block font-semibold mb-3">حالة المنتج</label>
-
-        <div id="conditionToggle"
-             class="flex border border-gray-200 shadow-sm bg-white overflow-hidden rounded-2xl w-full sm:w-64">
-          <button type="button"
-                  data-value="new"
-                  class="flex-1 py-2.5 text-sm font-bold">
-            جديد
-          </button>
-          <button type="button"
-                  data-value="used"
-                  class="flex-1 py-2.5 text-sm font-bold">
-            مستعمل
-          </button>
-        </div>
-
-        <div class="hidden">
-          {{ form.condition }}
-        </div>
-
-        {% if form.condition.errors %}
-          <p class="text-red-600 text-xs mt-1">{{ form.condition.errors }}</p>
-        {% endif %}
-      </div>
-
-      <!-- PRICE + CITY -->
-      <div class="flex flex-col gap-6 mb-6">
-        <!-- PRICE -->
-        <div>
-          <label class="font-semibold mb-2 block">السعر (د.أ)</label>
-          <input type="number" step="0.01"
-                 name="price"
-                 id="id_price"
-                 value="{{ form.price.value|default_if_none:'' }}"
-                 class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none"
-                 placeholder="مثلاً: 150">
-          {% if form.price.errors %}
-            <p class="text-red-600 text-xs mt-1">{{ form.price.errors }}</p>
-          {% endif %}
-        </div>
-
-        <!-- CITY -->
-        <div>
-          <label class="font-semibold mb-2 block">المدينة</label>
-          <select name="city"
-                  class="w-full border-2 border-[var(--rukn-orange)] rounded-xl py-2.5 px-3 focus:ring-2 focus:ring-orange-200 focus:outline-none">
-            {% for value, label in form.city.field.choices %}
-              <option value="{{ value }}" {% if form.city.value == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-          </select>
-
-          {% if form.city.errors %}
-            <p class="text-red-600 text-xs mt-1">{{ form.city.errors }}</p>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- CONTACT INFO (same as create) -->
-      <div class="mb-4">
-        <label class="font-semibold mb-2 block">معلومات التواصل</label>
-        <p class="text-sm text-gray-500 mb-2">
-          رقم هاتفك المسجل سيتم عرضه حسب إعدادات الخصوصية في حسابك.
-        </p>
-      </div>
-
-      <div class="mb-6">
-        <label class="flex items-center gap-3 cursor-pointer select-none">
-          <input type="checkbox" name="show_phone"
-                 class="w-5 h-5 accent-[var(--rukn-orange)] rounded-lg">
-          <span class="font-semibold text-gray-700">إظهار رقم الهاتف في الإعلان</span>
-        </label>
-        <p class="text-xs text-[var(--muted)] mt-1 pr-8">
-          في حال تفعيله، سيتم عرض رقمك للمشترين لتسهيل التواصل مباشرة.
-        </p>
-      </div>
-
-      <!-- SUBMIT -->
-      <div class="mt-8 text-center">
-        <button type="submit"
-                class="px-8 py-3 bg-[var(--rukn-orange)] text-white font-bold text-lg rounded-3xl shadow-md hover:scale-105 transition w-full sm:w-auto">
-          حفظ التغييرات
-        </button>
-      </div>
-
-    </form>
   </div>
-
-  <!-- (Optional) Tips section – you can keep or remove -->
-  <section class="bg-gradient-to-b from-orange-50 to-white rounded-2xl p-8 mt-10 shadow-lg border border-orange-300">
-    <h2 class="text-2xl font-bold text-[var(--rukn-orange)] mb-8 text-center flex items-center justify-center gap-2">
-      💡 نصائح لإعلان ناجح
-    </h2>
-    <!-- same tip cards as create... -->
-  </section>
-
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  // ---------------- IMAGE PREVIEW + MAIN (NEW PHOTOS) ----------------
-  const imageInput = document.getElementById("id_images");
-  const previewContainer = document.getElementById("previewContainer");
-  const mainIndexInput = document.getElementById("main_photo_index");
-  const imageHint = document.getElementById("imageHint");
-
-  if (imageInput && previewContainer) {
-    imageInput.addEventListener("change", function () {
-      const files = Array.from(this.files || []);
-      previewContainer.innerHTML = "";
-
-      if (files.length > 0 && imageHint) {
-        imageHint.classList.remove("hidden");
-      } else if (imageHint) {
-        imageHint.classList.add("hidden");
-      }
-
-      files.forEach((file, idx) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const div = document.createElement("div");
-          div.className = "upload-preview cursor-pointer";
-          div.dataset.index = String(idx);
-          div.innerHTML = `<img src="${e.target.result}" alt="">`;
-
-          div.addEventListener("click", () => {
-            document.querySelectorAll(".upload-preview").forEach((p) => p.classList.remove("main"));
-            div.classList.add("main");
-            mainIndexInput.value = String(idx);
-            document.getElementById("selected_main_photo").value = "";
-          });
-
-          previewContainer.appendChild(div);
-
-          if (idx === 0 && !mainIndexInput.value) {
-            div.classList.add("main");
-            mainIndexInput.value = "0";
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-  }
-
-  // ---------------- EXISTING PHOTO MAIN SELECTION ----------------
-  document.addEventListener("click", function (e) {
-    const img = e.target.closest(".existing-photo");
-    if (!img) return;
-    document.querySelectorAll(".existing-photo").forEach((p) => p.classList.remove("main"));
-    img.classList.add("main");
-    document.getElementById("selected_main_photo").value = img.dataset.photoId;
-    document.getElementById("main_photo_index").value = "";
-  });
-
-  // ---------------- CONDITION TOGGLE ----------------
-  const conditionToggle = document.getElementById("conditionToggle");
-  const conditionRadios = document.querySelectorAll("input[name='condition']");
-
-  function setCondition(value) {
-    conditionRadios.forEach(r => { r.checked = (r.value === value); });
-    if (!conditionToggle) return;
-    const buttons = conditionToggle.querySelectorAll("button[data-value]");
-    buttons.forEach(btn => {
-      if (btn.dataset.value === value) {
-        btn.classList.remove("text-[var(--muted)]", "bg-white");
-        btn.classList.add("text-white", "bg-[var(--rukn-orange)]");
-      } else {
-        btn.classList.remove("text-white", "bg-[var(--rukn-orange)]");
-        btn.classList.add("text-[var(--muted)]", "bg-white");
-      }
-    });
-  }
-
-  if (conditionToggle && conditionRadios.length) {
-    let initial = "used";
-    conditionRadios.forEach(r => { if (r.checked) initial = r.value; });
-    setCondition(initial);
-
-    conditionToggle.querySelectorAll("button[data-value]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const val = btn.dataset.value || "used";
-        setCondition(val);
-      });
-    });
-  }
-
-  // ---------------- "OTHER" OPTION FOR ATTRIBUTES ----------------
-  document.addEventListener("change", function (e) {
-    const target = e.target;
-    if (!target.name || !target.name.startsWith("attr_")) return;
-    if (target.tagName.toLowerCase() !== "select") return;
-
-    const otherName = target.name + "_other";
-    const otherField = document.querySelector(`[name="${otherName}"]`);
-    if (!otherField) return;
-
-    const wrapper = otherField.closest("div");
-    if (!wrapper) return;
-
-    if (target.value === "__other__") {
-      wrapper.style.display = "";
-    } else {
-      wrapper.style.display = "none";
-      otherField.value = "";
-    }
-  });
-
-  // Show already-selected "__other__" fields on load
-  document.querySelectorAll("select[name^='attr_']").forEach(select => {
-    const otherName = select.name + "_other";
-    const otherField = document.querySelector(`[name="${otherName}"]`);
-    if (!otherField) return;
-    const wrapper = otherField.closest("div");
-    if (!wrapper) return;
-    wrapper.style.display = (select.value === "__other__") ? "" : "none";
-  });
-});
-</script>
+  {{ block.super }}
+  <script src="{% static 'js/post-ad-django.js' %}"></script>
 {% endblock %}

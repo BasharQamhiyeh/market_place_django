@@ -24,10 +24,10 @@ urlpatterns = [
     path("requests/<int:request_id>/more-similar/", views.request_detail_more_similar, name="request_detail_more_similar"),
 
 
-    # --- Categories & Attributes ---
+    # # --- Categories & Attributes ---
     path('categories/', views.category_list, name='category_list'),
-    path('categories/create/', views.create_category, name='category_create'),
-    path('categories/<int:category_id>/', views.category_detail, name='category_detail'),
+    # path('categories/create/', views.create_category, name='category_create'),
+    # path('categories/<int:category_id>/', views.category_detail, name='category_detail'),
 
     # --- Messaging ---
     path('messages/<int:item_id>/', views.start_conversation, name='start_conversation'),
@@ -38,7 +38,7 @@ urlpatterns = [
 
 
     # --- Item Management ---
-    path('item/edit/<int:item_id>/', views.item_edit, name='item_edit'),
+    path('item/<int:item_id>/edit/', views.item_edit, name='item_edit'),
     path('item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
     path('item/<int:item_id>/cancel/', views.cancel_item, name='cancel_item'),
     path('item/<int:item_id>/edit/', views.item_edit, name='item_edit'),

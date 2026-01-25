@@ -95,9 +95,64 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewContainer = document.getElementById("previewContainer");
   const mainPhotoIndexInput = document.getElementById("main_photo_index");
 
+  // ===== Edit page (existing photos) =====
+  const existingPhotos = document.getElementById("existingPhotos"); // container for current photos (optional)
+  const selectedMainPhotoInput = document.getElementById("selected_main_photo"); // hidden input (optional)
+
+    // ✅ init: if template didn't set selected_main_photo, read it from the DOM
+    if (existingPhotos && selectedMainPhotoInput) {
+      if (!(selectedMainPhotoInput.value || "").trim()) {
+        const mainBox = existingPhotos.querySelector(".upload-preview.main[data-photo-id]");
+        if (mainBox) selectedMainPhotoInput.value = mainBox.getAttribute("data-photo-id") || "";
+      }
+    }
+
   const levelsRoot = document.getElementById("category-levels");
+
+    // ✅ Lock category change on edit page BUT allow auto-prefill (programmatic clicks)
+    const lockCategoryEl = document.getElementById("lockCategoryEdit");
+    const LOCK_CATEGORY = !!lockCategoryEl;
+
+    if (levelsRoot && LOCK_CATEGORY) {
+      // Block ONLY user interactions, not JS .click() used for prefill
+      levelsRoot.addEventListener(
+        "click",
+        (e) => {
+          if (e.isTrusted) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+        true
+      );
+
+      levelsRoot.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.isTrusted) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+        true
+      );
+    }
+
+
+
   const categoryIdInput = document.getElementById("categoryIdInput");
   const attributeFields = document.getElementById("attribute-fields");
+
+    const listingIdEl = document.getElementById("listingId");
+    const listingTypeEl = document.getElementById("listingType"); // "item" or "request"
+
+    // ✅ Edit page: if attributes already rendered with initial values, remember current category
+    if (attributeFields && attributeFields.querySelector(".attr-block") && categoryIdInput?.value) {
+      attributeFields.dataset.currentCategory = String(categoryIdInput.value);
+      attributeFields.dataset.hasInitial = "1";
+    }
+    const KEEP_INITIAL_ATTRS = !!(attributeFields && attributeFields.dataset.hasInitial === "1");
+
 
   const descField = document.getElementById("desc");
   const aiBtn = document.getElementById("aiBtn");
@@ -357,15 +412,80 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       div.addEventListener("click", () => {
-        setMainIndex(idx);
-        renderPreviews();
-      });
+          setMainIndex(idx);
+
+          // ✅ new main chosen => clear existing main selection + remove its UI highlight
+          if (selectedMainPhotoInput) selectedMainPhotoInput.value = "";
+          if (existingPhotos) {
+            existingPhotos.querySelectorAll(".upload-preview.main").forEach(el => el.classList.remove("main"));
+          }
+
+          renderPreviews();
+        });
+
+
 
       div.appendChild(img);
       div.appendChild(btn);
       previewContainer.appendChild(div);
     });
   }
+
+    // ===== Existing photos: choose main (edit) =====
+    // ===== Existing photos (edit): same UI as new previews =====
+  if (existingPhotos && selectedMainPhotoInput) {
+    existingPhotos.addEventListener("click", (e) => {
+      const removeBtn = e.target.closest(".js-remove-existing");
+      if (removeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const pid = removeBtn.getAttribute("data-photo-id");
+        if (!pid) return;
+
+        // tick the hidden checkbox so backend deletes it
+        const cb = document.getElementById(`delete_photo_${pid}`);
+        if (cb) cb.checked = true;
+
+        // remove preview from UI
+        const box = existingPhotos.querySelector(`.upload-preview[data-photo-id="${pid}"]`);
+        if (box) box.remove();
+
+        // if we removed the selected main, clear it
+        if ((selectedMainPhotoInput.value || "") === String(pid)) {
+          selectedMainPhotoInput.value = "";
+        }
+
+        // if nothing selected as main anymore, try to select first remaining existing photo
+        const first = existingPhotos.querySelector(".upload-preview[data-photo-id]");
+        if (first && !selectedMainPhotoInput.value) {
+          const firstId = first.getAttribute("data-photo-id");
+          selectedMainPhotoInput.value = firstId || "";
+          first.classList.add("main");
+        }
+
+        return;
+      }
+
+      const box = e.target.closest(".upload-preview[data-photo-id]");
+      if (!box) return;
+
+      // set main on existing
+      existingPhotos.querySelectorAll(".upload-preview").forEach(p => p.classList.remove("main"));
+      box.classList.add("main");
+
+      const pid = box.getAttribute("data-photo-id");
+      selectedMainPhotoInput.value = pid || "";
+
+      // if main chosen from existing => clear main index of new uploads
+      if (mainPhotoIndexInput) mainPhotoIndexInput.value = "";
+
+      // remove "main" highlight from new previews if any
+      renderPreviews();
+    });
+  }
+
+
 
   imageDropzone?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -452,12 +572,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const tpl = attributeFields?.getAttribute("data-url-template");
     if (!tpl || !attributeFields || !categoryId) return;
 
-    attributeFields.innerHTML = "";
+    if (!KEEP_INITIAL_ATTRS) attributeFields.innerHTML = "";
 
     if (attrsFetchController) attrsFetchController.abort();
     attrsFetchController = new AbortController();
 
-    const url = tpl.replace(/0\/?$/, `${categoryId}/`);
+    const baseUrl = tpl.replace(/0\/?$/, `${categoryId}/`);
+
+    const qs = new URLSearchParams();
+
+    // ✅ pass listing_id + kind so backend can load correct instance (item/request)
+    if (listingIdEl && (listingIdEl.value || "").trim()) qs.set("listing_id", listingIdEl.value.trim());
+    if (listingTypeEl && (listingTypeEl.value || "").trim()) qs.set("kind", listingTypeEl.value.trim());
+
+    const url = qs.toString() ? `${baseUrl}?${qs.toString()}` : baseUrl;
 
     try {
       const resp = await fetch(url, {
@@ -554,7 +682,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (children.length) {
           categoryIdInput.value = "";
-          if (attributeFields) attributeFields.innerHTML = "";
+
+          // ✅ لا تمسح الـ attributes المعبّاية في صفحة التعديل أثناء بناء المسار
+          if (attributeFields && !KEEP_INITIAL_ATTRS) attributeFields.innerHTML = "";
+
           if (attrsFetchController) attrsFetchController.abort();
 
           const nextLabel = nodeChildLabel(node) || "القسم الفرعي";
@@ -563,9 +694,30 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+
+
         setHint("");
-        categoryIdInput.value = nodeId(node) || "";
-        if (categoryIdInput.value) await loadAttributesForCategory(categoryIdInput.value);
+        const newCatId = nodeId(node) || "";
+        categoryIdInput.value = newCatId;
+
+        // ✅ if we already have initial attributes rendered for same category (edit page), don't reload
+        if (
+          attributeFields &&
+          attributeFields.dataset.hasInitial === "1" &&
+          attributeFields.dataset.currentCategory === newCatId &&
+          attributeFields.querySelector(".attr-block")
+        ) {
+          return;
+        }
+
+        if (attributeFields) {
+          attributeFields.dataset.currentCategory = newCatId;
+          attributeFields.dataset.hasInitial = "0";
+        }
+
+        if (newCatId) await loadAttributesForCategory(newCatId);
+
+
       });
     });
 
@@ -610,10 +762,16 @@ document.addEventListener("DOMContentLoaded", () => {
       showErrorAfter(titleInput, "الرجاء إدخال عنوان الإعلان قبل توليد الوصف");
       return;
     }
-    if (!filesState.length) {
-      showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان قبل توليد الوصف");
+
+    const hasNewImages = filesState.length > 0;
+    const hasExistingImages = !!(existingPhotos && existingPhotos.querySelector(".upload-preview[data-photo-id]"));
+
+    if (!hasNewImages && !hasExistingImages) {
+      showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
       return;
     }
+
+
 
     const condTxt = conditionVal?.value === "used" ? "مستعمل بحالة جيدة" : "جديد وغير مستخدم";
     descField.value =
@@ -653,19 +811,33 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!filesState.length) {
+    const hasNewImages = filesState.length > 0;
+    const hasExistingImages = !!(
+      existingPhotos &&
+      existingPhotos.querySelector(".upload-preview[data-photo-id]")
+    );
+
+    if (!hasNewImages && !hasExistingImages) {
       e.preventDefault();
       showErrorBelow(imageDropzone, "الرجاء إضافة صور للإعلان");
       unlockSubmit();
       return;
     }
 
-    if (mainPhotoIndexInput.value === "") {
+
+
+
+    const hasMainNew = mainPhotoIndexInput && mainPhotoIndexInput.value !== "";
+    const hasMainExisting = selectedMainPhotoInput && (selectedMainPhotoInput.value || "").trim() !== "";
+
+    // In edit: allow existing main or new main
+    if (!hasMainNew && !hasMainExisting) {
       e.preventDefault();
       showErrorBelow(previewContainer, "الرجاء اختيار صورة رئيسية");
       unlockSubmit();
       return;
     }
+
 
     if (!descField.value.trim()) {
       e.preventDefault();
@@ -688,12 +860,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!acceptTerms.checked) {
+    // ✅ Always require accepting terms (create + edit)
+    if (!acceptTerms) {
       e.preventDefault();
-      showErrorBelow(termsBox, "الرجاء الموافقة على الشروط قبل النشر");
+      alert("Checkbox acceptTerms is missing from the page HTML.");
       unlockSubmit();
       return;
     }
+
+    if (!acceptTerms.checked) {
+      e.preventDefault();
+      showErrorBelow(termsBox || acceptTerms, "الرجاء الموافقة على الشروط قبل الحفظ");
+      unlockSubmit();
+      return;
+    }
+
 
     isSubmitting = true;
 

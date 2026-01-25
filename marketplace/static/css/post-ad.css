@@ -420,3 +420,38 @@ body {
     }
 
 
+/* ============================= */
+/* 🔒 Locked category (edit)     */
+/* ============================= */
+
+.category-locked {
+  opacity: 0.6;
+  cursor: not-allowed;
+  position: relative;
+}
+
+/* Force all children to look disabled */
+.category-locked * {
+  cursor: not-allowed !important;
+}
+
+/* Subtle red hover feedback */
+.category-locked:hover {
+  outline: 2px dashed #ef4444; /* red-500 */
+  outline-offset: 6px;
+}
+
+/* Optional: small 🚫 badge */
+.category-locked::after {
+  content: "🚫 لا يمكن تغيير القسم";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  background: #fee2e2; /* red-100 */
+  color: #991b1b;      /* red-800 */
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+

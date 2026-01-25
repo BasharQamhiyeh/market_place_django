@@ -89,11 +89,15 @@
               </script>
 
               <!-- DYNAMIC ATTRIBUTES -->
-                <div id="attribute-fields" data-url-template="{% url 'item_attributes_partial' 0 %}">
+                <input type="hidden" id="listingId" value="{{ item.listing.id }}">
+                <input type="hidden" id="listingType" value="item">
+                <div id="attribute-fields"
+                   data-url-template="{% url 'item_attributes_partial' 0 %}"
+                   data-item-id="{{ item.id }}">
                   {% for field in form %}
                     {% if field.name|slice:":5" == "attr_" %}
                       <div class="mt-3 attr-block"
-                           data-field-name="{{ field.name }}"
+                           data-field-name="{{ field.html_name }}"
                            data-required="{% if field.field.required %}1{% else %}0{% endif %}">
                         <label class="label">{{ field.label }}</label>
                         {{ field }}
