@@ -65,8 +65,6 @@
   }
 
   function getTxIcon(type, meta){
-        console.log(type);
-        console.log(meta);
       /* 🎁 مكافأة */
       if (type === "reward") {
         return `
