@@ -3,6 +3,7 @@
    ✅ Persists active tab on refresh (localStorage + hash)
    ✅ Lazy-load notifications only when tab opens
    ✅ Clears msgs deep-link (?tab=msgs&c=ID) when leaving msgs tab
+   ✅ Supports #tab-info links and opens page from TOP
 */
 
 (function () {
@@ -22,13 +23,11 @@
   }
 
   function maybeLoadTabExtras(tabKey) {
-    // ✅ Lazy-load notifications
     if (tabKey === "noti" && window.__ruknLoadNotiTab) {
       window.__ruknLoadNotiTab();
     }
   }
 
-  // ✅ NEW: remove deep-link params when user leaves msgs tab
   function clearMsgsQueryParamsIfPresent() {
     try {
       const url = new URL(window.location.href);
@@ -38,25 +37,19 @@
 
       if (!hadTabMsgs && !hadC) return;
 
-      // remove these so msgs tab doesn't auto-open old chat
       if (hadTabMsgs) url.searchParams.delete("tab");
       if (hadC) url.searchParams.delete("c");
 
       const qs = url.searchParams.toString();
       const next = url.pathname + (qs ? "?" + qs : "") + (url.hash || "");
       history.replaceState(null, "", next);
-    } catch (e) {
-      // no-op: never break tabs if URL API not available
-    }
+    } catch (e) {}
   }
 
   function setActiveTab(tabKey, opts = {}) {
     const key = normalizeTabKey(tabKey);
 
-    // ✅ if leaving msgs, clear ?tab=msgs&c=... from URL
-    if (key !== "msgs") {
-      clearMsgsQueryParamsIfPresent();
-    }
+    if (key !== "msgs") clearMsgsQueryParamsIfPresent();
 
     // buttons
     btns.forEach((b) => b.classList.toggle("active", b.dataset.tab === key));
@@ -65,7 +58,6 @@
     panes.forEach((k) => {
       const el = document.getElementById("tab-" + k);
       if (!el) return;
-
       const isActive = k === key;
       el.classList.toggle("active", isActive);
       el.classList.toggle("hidden", !isActive);
@@ -76,51 +68,62 @@
       saveBtn.style.display = key === "info" ? "inline-flex" : "none";
     }
 
-    // persist selected tab (unless disabled)
     if (!opts.skipStore) {
-      try {
-        localStorage.setItem(STORAGE_KEY, key);
-      } catch (e) {}
+      try { localStorage.setItem(STORAGE_KEY, key); } catch (e) {}
     }
 
-    // optional: reflect in URL hash
+    // IMPORTANT: replaceState does NOT cause scroll-jump
     if (!opts.skipHash) {
-      // keep it stable (no scroll jump if you don’t have anchors)
       history.replaceState(null, "", "#tab-" + key);
     }
 
-    // run tab-specific behavior after it becomes active
     maybeLoadTabExtras(key);
+
+    if (opts.forceTop) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => window.scrollTo(0, 0));
+      });
+    }
   }
 
   // bind click
   btns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      const key = normalizeTabKey(btn.dataset.tab || "info");
-      setActiveTab(key);
+      setActiveTab(btn.dataset.tab || "info");
     });
   });
 
   function readInitialTab() {
+    // 0) forced from inline script (highest priority)
+    if (window.__MYACCOUNT_FORCED_TAB) {
+      const k = normalizeTabKey(window.__MYACCOUNT_FORCED_TAB);
+      window.__MYACCOUNT_FORCED_TAB = null;
+      return { key: k, forced: true };
+    }
+
     // 1) from URL hash: #tab-noti OR #noti
     const h = (window.location.hash || "").replace("#", "").trim();
     if (h) {
-      if (h.startsWith("tab-")) return normalizeTabKey(h.slice(4));
-      return normalizeTabKey(h);
+      if (h.startsWith("tab-")) return { key: normalizeTabKey(h.slice(4)), forced: false };
+      return { key: normalizeTabKey(h), forced: false };
     }
 
     // 2) from localStorage
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return normalizeTabKey(saved);
+      if (saved) return { key: normalizeTabKey(saved), forced: false };
     } catch (e) {}
 
     // 3) from existing active button in HTML
-    const initialFromDom =
-      btns.find((b) => b.classList.contains("active"))?.dataset.tab;
-    return normalizeTabKey(initialFromDom || "info");
+    const initialFromDom = btns.find((b) => b.classList.contains("active"))?.dataset.tab;
+    return { key: normalizeTabKey(initialFromDom || "info"), forced: false };
   }
 
   // initial
-  setActiveTab(readInitialTab(), { skipStore: true, skipHash: true });
+  const init = readInitialTab();
+  setActiveTab(init.key, {
+    skipStore: true,
+    skipHash: false,   // restore #tab-... (no scroll jump)
+    forceTop: init.forced
+  });
 })();

@@ -22,7 +22,20 @@
   <link rel="stylesheet" href="{% static 'css/my_account/wallet.css' %}">
 {% endblock %}
 
+
 {% block content %}
+<script>
+  (function () {
+    const h = window.location.hash || "";
+    if (h.startsWith("#tab-")) {
+      // store forced tab for tabs.js (more reliable than hash/localStorage)
+      window.__MYACCOUNT_FORCED_TAB = h.slice(5); // "info", "ads", ...
+      try { history.scrollRestoration = "manual"; } catch (e) {}
+      // remove hash so browser doesn't anchor-jump
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  })();
+</script>
 <div class="bg-gray-50" dir="rtl" lang="ar">
   <div id="myAccountRoot"
        data-has-store="{% if store %}1{% else %}0{% endif %}"
