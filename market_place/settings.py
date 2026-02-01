@@ -281,7 +281,8 @@ CSRF_COOKIE_SECURE = False
 
 CSRF_TRUSTED_ORIGINS = [
     "https://market-place-rhjg.onrender.com",
-    "http://localhost:8000"
+    "http://localhost:8000",
+    "https://web-production-c250.up.railway.app",
 ]
 
 
