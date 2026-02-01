@@ -21,7 +21,8 @@ from django.utils import timezone
 from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
-    City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview
+    City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
+    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection
 )
 
 class UserAdminForm(forms.ModelForm):
@@ -1396,12 +1397,43 @@ class MessageAdmin(admin.ModelAdmin):
     receiver_display.short_description = "Receiver"
 
 
-# @admin.register(Favorite)
-# class FavoriteAdmin(admin.ModelAdmin):
-#     list_display = ("user", "item", "created_at")
-#     list_filter = ("created_at",)
-#     search_fields = ("user__username", "item__title")
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("full_name", "subject", "contact_method", "is_resolved", "created_at")
+    list_filter = ("subject", "contact_method", "is_resolved", "created_at")
+    search_fields = ("full_name", "message", "phone", "email")
+    ordering = ("-created_at",)
+    readonly_fields = ("full_name", "subject", "contact_method", "phone", "email", "message", "created_at")
 
+
+@admin.register(FAQCategory)
+class FAQCategoryAdmin(admin.ModelAdmin):
+    list_display = ("key", "name_ar", "icon", "order", "is_active")
+    list_editable = ("order", "is_active", "icon")
+    search_fields = ("key", "name_ar")
+    ordering = ("order", "id")
+
+
+@admin.register(FAQQuestion)
+class FAQQuestionAdmin(admin.ModelAdmin):
+    list_display = ("question_ar", "category", "order", "is_active")
+    list_filter = ("category", "is_active")
+    list_editable = ("order", "is_active")
+    search_fields = ("question_ar", "answer_ar")
+    ordering = ("category__order", "order", "id")
+
+class PrivacyPolicySectionInline(admin.TabularInline):
+    model = PrivacyPolicySection
+    extra = 0
+    fields = ("order", "heading_ar", "body_ar", "is_active")
+    ordering = ("order",)
+
+@admin.register(PrivacyPolicyPage)
+class PrivacyPolicyPageAdmin(admin.ModelAdmin):
+    list_display = ("title_ar", "is_active", "published_at", "updated_at")
+    list_filter = ("is_active",)
+    search_fields = ("title_ar", "subtitle_ar")
+    inlines = [PrivacyPolicySectionInline]
 
 
 @admin.register(IssuesReport)
@@ -1461,3 +1493,5 @@ admin.site.get_app_list = custom_get_app_list.__get__(admin.site, admin.AdminSit
 admin.site.site_header = "Rokon Administration"
 admin.site.index_title = "Control Panel"
 admin.site.site_title = "Rokon Admin"
+
+

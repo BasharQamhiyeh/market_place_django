@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}ركن | الأسئلة المتكررة - مركز المساعدة{% endblock %}
+
+{% block base_css %}
+  {{ block.super }}
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root { --rukn-orange:#ff7a18; --rukn-orange-light:#fff5ed; --slate-800:#1e293b; }
+    body { font-family:'Cairo',sans-serif; background-color:#fcfcfd; color:#1e293b; }
+    .orange-gradient { background:linear-gradient(135deg,#ff7a18 0%,#ff9d52 100%); }
+    .pro-shadow { box-shadow:0 20px 50px -12px rgba(0,0,0,.05); }
+
+    .faq-item { transition:all .3s ease; border:1px solid #f1f5f9; }
+    .faq-item.active { border-color:var(--rukn-orange); background-color:#fff; }
+    .faq-content { max-height:0; overflow:hidden; transition:max-height .3s ease-out; }
+    .faq-item.active .faq-content { max-height:700px; }
+    .faq-item.active .chevron-icon { transform:rotate(180deg); color:var(--rukn-orange); }
+
+    .cat-pill { transition:all .3s ease; }
+    .cat-pill.active { background-color:var(--rukn-orange); color:#fff; box-shadow:0 4px 12px rgba(255,122,24,.2); }
+
+    svg { position: static !important; display:block; }
+    @media (max-width:1024px){ main{ overflow-x:visible; } }
+
+    .rukn-btn {
+      background-color:#ff7a18; color:#fff; border:none; border-radius:14px;
+      padding:14px 22px; font-family:inherit; font-size:.9rem; font-weight:800;
+      cursor:pointer; transition:transform .25s ease, box-shadow .25s ease;
+      box-shadow:0 10px 25px rgba(255,122,24,.25);
+    }
+    .rukn-btn:hover { transform:scale(1.06); box-shadow:0 14px 30px rgba(255,122,24,.35); }
+    .rukn-btn:focus { outline:none; }
+
+    .section-anchor { scroll-margin-top:100px; }
+    .faq-section { transition:border .35s ease, box-shadow .35s ease; background-color:#fff !important; }
+    .faq-section.section-active {
+      border:2px solid var(--rukn-orange);
+      box-shadow:0 18px 40px -14px rgba(255,122,24,.28), 0 6px 18px -10px rgba(0,0,0,.06);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+
+  <header class="orange-gradient pt-24 pb-40 px-4 text-center text-white">
+    <div class="max-w-4xl mx-auto relative z-10">
+      <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tight">كيف يمكننا مساعدتك؟</h1>
+      <p class="text-lg md:text-xl opacity-95 font-bold max-w-2xl mx-auto leading-relaxed italic">
+        هنا تجد إجابات شاملة لكل ما يدور في ذهنك حول استخدام منصة ركن.
+      </p>
+    </div>
+    <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl pointer-events-none"></div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 -mt-24 pb-32 relative z-20">
+    <div class="grid lg:grid-cols-4 gap-8 items-start">
+
+      <!-- Sidebar -->
+      <aside class="hidden lg:block lg:col-span-1 space-y-4 sticky top-1">
+        <div class="bg-white rounded-[2.5rem] p-6 pro-shadow border border-slate-50">
+          <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 mr-2">
+            <i data-lucide="list-filter" class="w-5 h-5 text-orange-500"></i> الأقسام
+          </h3>
+
+          <div class="flex flex-col gap-2">
+            {% for cat in faq_categories %}
+              <button
+                class="cat-pill {% if forloop.first %}active{% endif %} w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500"
+                data-target="{{ cat.key }}">
+                {{ cat.name_ar }}
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+          <h4 class="font-black mb-4">ما الذي تبحث عنه؟</h4>
+          <p class="text-slate-400 text-xs font-bold leading-loose mb-6">اختر الخطوة المناسبة وسنرشدك مباشرة</p>
+
+          <div class="grid grid-cols-1 gap-3 text-sm font-black">
+            <a href="#account" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
+              <i data-lucide="user"></i> إنشاء حساب
+            </a>
+            <a href="#ads" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
+              <i data-lucide="megaphone"></i> أضف إعلانك
+            </a>
+            <a href="#requests" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
+              <i data-lucide="clipboard-list"></i> أضف طلبك
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main FAQ -->
+      <div class="lg:col-span-3 space-y-12">
+        {% for cat in faq_categories %}
+          <section id="{{ cat.key }}" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+            <div class="space-y-4">
+              <div class="flex items-center gap-4 mb-6">
+                <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+                <div class="flex items-center gap-3">
+                  <i data-lucide="{{ cat.icon|default:'circle-help' }}" class="w-6 h-6 text-orange-500"></i>
+                  <h3 class="text-2xl font-black text-slate-800">{{ cat.name_ar }}</h3>
+                </div>
+              </div>
+
+              {% for q in cat.active_questions %}
+                <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+                  <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                    <span class="font-black text-slate-700">{{ q.question_ar }}</span>
+                    <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+                  </button>
+                  <div class="faq-content">
+                    <div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                      {{ q.answer_ar }}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Mobile CTA -->
+    <div class="lg:hidden mt-12 px-4">
+      <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+        <h4 class="font-black mb-4">ما الذي تبحث عنه؟</h4>
+        <p class="text-slate-400 text-xs font-bold leading-loose mb-6">اختر الخطوة المناسبة وسنرشدك مباشرة</p>
+        <div class="grid grid-cols-1 gap-3 text-sm font-black">
+          <a href="#account" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="user"></i> إنشاء حساب</a>
+          <a href="#ads" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="megaphone"></i> أضف إعلانك</a>
+          <a href="#requests" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="clipboard-list"></i> أضف طلبك</a>
+        </div>
+      </div>
+    </div>
+
+    <section class="py-24 px-6">
+      <div class="max-w-7xl mx-auto bg-orange-500 rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-20 -mb-20"></div>
+        <div class="relative z-10 text-white">
+          <h2 class="text-4xl md:text-6xl font-black mb-8 leading-tight">لم تجد إجابتك؟</h2>
+          <p class="text-orange-50 font-medium text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">
+            فريق ركن جاهز للرد على استفساراتك الخاصة بشكل مباشر.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="{% url 'contact_support' %}"
+               class="bg-white text-orange-500 font-black px-12 py-5 rounded-2xl text-xl border border-orange-400 hover:scale-105 transition-transform inline-block">
+              تواصل مع الدعم الفني
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    if (window.lucide) lucide.createIcons();
+
+    // Accordion
+    document.querySelectorAll('.faq-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        trigger.parentElement.classList.toggle('active');
+      });
+    });
+
+    // Sidebar pill click -> scroll
+    document.querySelectorAll('.cat-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const targetId = pill.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId);
+        if (!targetElement) return;
+
+        const y = targetElement.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      });
+    });
+
+    // Active pill + active section on scroll
+    const sections = Array.from(document.querySelectorAll('.faq-section'));
+    const pillsById = new Map(Array.from(document.querySelectorAll('.cat-pill')).map(p => [p.getAttribute('data-target'), p]));
+
+    const setActiveById = (id) => {
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      const pill = pillsById.get(id);
+      if (pill) pill.classList.add('active');
+    };
+
+    const setActiveSection = (id) => {
+      sections.forEach(sec => {
+        sec.classList.toggle('section-active', sec.id === id);
+      });
+    };
+
+    window.addEventListener('load', () => {
+      const first = sections[0]?.id;
+      if (first) setActiveSection(first);
+    });
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        const scrollY = window.pageYOffset + 160;
+        let current = sections[0]?.id;
+
+        for (const sec of sections) {
+          if (sec.offsetTop <= scrollY) current = sec.id;
+        }
+        if (current) {
+          setActiveById(current);
+          setActiveSection(current);
+        }
+      });
+    }, { passive: true });
+  </script>
+
+{% endblock %}

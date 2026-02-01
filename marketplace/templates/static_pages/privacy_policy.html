@@ -1,0 +1,304 @@
+{# templates/static_pages/privacy_policy.html #}
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}ركن | سياسة الخصوصية - أمان بياناتك أولويتنا{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ركن | سياسة الخصوصية - أمان بياناتك أولويتنا</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  {# إذا Tailwind و lucide محمّلين من base.html احذف هذول السطرين لتجنب التكرار #}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --rukn-orange: #ff7a18;
+      --rukn-orange-light: #fff5ed;
+      --slate-800: #1e293b;
+    }
+    body {
+      font-family: "Cairo", sans-serif;
+      background-color: #fcfcfd;
+      color: #1e293b;
+      scroll-behavior: smooth;
+    }
+    .orange-gradient {
+      background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+    }
+    .hero-shape {
+      border-radius: 0 0 100px 100px;
+    }
+    .pro-shadow {
+      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+    }
+    .icon-box {
+      background: var(--rukn-orange-light);
+      color: var(--rukn-orange);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      margin-bottom: 1rem;
+    }
+    /* Sidebar Pill */
+    .nav-pill {
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-pill.active {
+      background-color: var(--rukn-orange);
+      color: white !important;
+      box-shadow: 0 10px 20px -5px rgba(255, 122, 24, 0.3);
+    }
+    .section-anchor {
+      scroll-margin-top: 100px;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: var(--rukn-orange); border-radius: 10px; }
+
+    /* Prevent size shift on scroll */
+    .sidebar-fixed,
+    .sidebar-fixed * {
+      box-sizing: border-box;
+    }
+
+    .sidebar-fixed {
+      width: 100%;
+      will-change: transform;
+      transform: translateZ(0);
+    }
+
+    .nav-pill {
+      min-height: 48px;
+      line-height: 1.25rem;
+    }
+
+    /* Section Highlight (Border + Shadow only) */
+    .section-anchor {
+      transition: border 0.35s ease, box-shadow 0.35s ease;
+      background-color: white !important;
+    }
+
+    .section-anchor.section-active {
+      border: 2px solid var(--rukn-orange);
+      background-color: white !important;
+      box-shadow:
+        0 18px 40px -14px rgba(255, 122, 24, 0.28),
+        0 6px 18px -10px rgba(0, 0, 0, 0.06);
+    }
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <!-- HERO SECTION (keep ai_studio look) -->
+  <header class="orange-gradient pt-24 pb-40 px-4 text-center text-white">
+    <div class="max-w-4xl mx-auto relative z-10">
+      <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tight">
+        {{ page.title_ar }}
+      </h1>
+      <p class="text-lg md:text-xl opacity-95 font-bold max-w-2xl mx-auto leading-relaxed italic">
+        {{ page.subtitle_ar }}
+      </p>
+    </div>
+    <!-- Decoration -->
+    <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl pointer-events-none"></div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 -mt-24 pb-32">
+    <div class="grid lg:grid-cols-4 gap-8 items-start">
+
+      <!-- SIDEBAR NAVIGATION -->
+      <aside class="hidden lg:block lg:col-span-1 space-y-4 sticky top-1">
+        <div class="sidebar-fixed bg-white rounded-[2.5rem] p-6 pro-shadow border border-slate-50">
+
+          <div class="bg-white rounded-[2.5rem] p-6 pro-shadow border border-slate-50
+              w-full max-h-[calc(100vh-140px)] overflow-auto">
+
+            <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 mr-2">
+              <i data-lucide="list" class="w-5 h-5 text-orange-500"></i> الفهرس
+            </h3>
+
+            <div class="flex flex-col gap-2">
+              {# sections: queryset/list from DB: each has anchor_key, title_ar #}
+              {% for s in sections %}
+                <a href="#{{ s.anchor_key }}"
+                   class="nav-pill {% if forloop.first %}active{% endif %} w-full px-4 py-3 rounded-2xl font-bold text-sm text-slate-500">
+                  {{ s.nav_title_ar|default:s.title_ar }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mt-6 bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+            <div class="flex items-center gap-3">
+              <i data-lucide="shield-check" class="w-20 h-20 text-green-400"></i>
+              <p class="text-sm font-bold text-slate-200">
+                {{ page.sidebar_note_ar }}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- CONTENT SECTIONS -->
+      <div class="lg:col-span-3 space-y-8">
+
+        {% for s in sections %}
+          <section id="{{ s.anchor_key }}"
+                   class="section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+
+            <!-- icon + title -->
+            <div class="flex items-center gap-3 mb-6">
+              <i data-lucide="{{ s.icon|default:'info' }}" class="w-6 h-6 text-[#ff7a18]"></i>
+              <h2 class="text-2xl font-black">{{ s.title_ar }}</h2>
+            </div>
+
+            {# نوع القسم: "text" فقط #}
+            {% if s.body_ar %}
+              <p class="text-slate-500 text-lg leading-loose font-bold{% if s.lead %} mb-6{% endif %}">
+                {{ s.body_ar }}
+              </p>
+            {% endif %}
+
+            {# نوع القسم: قائمة نقاط (مثل قسم جمع المعلومات في الموكاب) #}
+            {% if s.intro_ar %}
+              <p class="text-slate-500 text-lg leading-loose font-bold mb-6">
+                {{ s.intro_ar }}
+              </p>
+            {% endif %}
+
+            {% if s.items and s.items|length %}
+              <ul class="space-y-4">
+                {% for it in s.items %}
+                  <li class="flex gap-4">
+                    <div class="w-2 h-2 bg-[#ff7a18] rounded-full mt-3"></div>
+                    <p class="text-slate-500 font-bold">
+                      {% if it.title_ar %}
+                        <span class="text-slate-800">{{ it.title_ar }}:</span>
+                      {% endif %}
+                      {{ it.text_ar }}
+                    </p>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            {# سطر التلميح البرتقالي (مثل: "أمانك هو جوهر عملنا...") #}
+            {% if s.note_ar %}
+              <p class="text-[#ff7a18] text-sm font-black flex items-center gap-2 mt-6">
+                <i data-lucide="check-circle" class="w-4 h-4"></i> {{ s.note_ar }}
+              </p>
+            {% endif %}
+
+          </section>
+        {% endfor %}
+
+      </div>
+    </div>
+
+    <!-- MOBILE: Shield note -->
+    <div class="lg:hidden mt-12 px-4">
+      <div class="mt-6 bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+        <div class="flex items-center gap-3">
+          <i data-lucide="shield-check" class="w-20 h-20 text-green-400"></i>
+          <p class="text-sm font-bold text-slate-200">
+            {{ page.sidebar_note_ar }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <section class="py-24 px-6">
+      <div class="max-w-7xl mx-auto bg-orange-500 rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-20 -mb-20"></div>
+
+        <div class="relative z-10 text-white">
+          <h2 class="text-4xl md:text-6xl font-black mb-8 leading-tight">
+            {{ page.cta_title_ar }}
+          </h2>
+          <p class="text-orange-50 font-medium text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">
+            {{ page.cta_subtitle_ar }}
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="{{ page.cta_url|default:'#' }}"
+               class="bg-white text-orange-500 font-black px-12 py-5 rounded-2xl text-xl border border-orange-400 hover:scale-105 transition-transform inline-block">
+              {{ page.cta_button_ar }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const sections = document.querySelectorAll('.section-anchor');
+    const navPills = document.querySelectorAll('.nav-pill');
+
+    function setActive(id) {
+      // تمييز القسم
+      sections.forEach(section => {
+        section.classList.remove('section-active');
+        if (section.id === id) {
+          section.classList.add('section-active');
+        }
+      });
+
+      // تمييز العنصر في السايدبار
+      navPills.forEach(pill => {
+        pill.classList.remove('active');
+        if (pill.getAttribute('href') === `#${id}`) {
+          pill.classList.add('active');
+        }
+      });
+    }
+
+    function updateActiveSection() {
+      let currentSectionId = sections[0]?.id; // الافتراضي: أول قسم
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 150 && rect.bottom >= 150) {
+          currentSectionId = section.id;
+        }
+      });
+      if (currentSectionId) setActive(currentSectionId);
+    }
+
+    window.addEventListener('load', () => {
+      if (sections.length) setActive(sections[0].id);
+    });
+
+    window.addEventListener('scroll', updateActiveSection, { passive: true });
+
+    navPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const id = pill.getAttribute('href').replace('#', '');
+        setActive(id);
+      });
+    });
+  </script>
+
+</body>
+</html>
+{% endblock %}

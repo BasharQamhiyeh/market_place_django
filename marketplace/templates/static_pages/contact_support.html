@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}ركن | تواصل معنا - الدعم الفني{% endblock %}
+
+{# Minimal: keep mockup assets/styles local to this page (like we did before) #}
+{% block base_css %}
+  {{ block.super }}
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --rukn-orange: #ff7a18;
+      --rukn-orange-light: #fff5ed;
+      --slate-800: #1e293b;
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #fcfcfd;
+      color: #1e293b;
+    }
+
+    .orange-gradient {
+      background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+    }
+
+    .pro-shadow {
+      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* استايل المدخلات الاحترافي */
+    .premium-input {
+      background: #f8fafc;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .premium-input:focus {
+      background: #ffffff;
+      border-color: var(--rukn-orange);
+      box-shadow: 0 10px 20px -10px rgba(255, 122, 24, 0.2);
+      outline: none;
+    }
+
+    .input-error {
+      border-color: #ef4444 !important;
+      background: #fef2f2;
+    }
+
+    /* راديو بوتون مطور */
+    .subject-card {
+      position: relative;
+      cursor: pointer;
+    }
+    .subject-card input {
+      position: absolute;
+      opacity: 0;
+    }
+    .subject-card .inner {
+      display: block;
+      padding: 1rem;
+      border: 2px solid #f1f5f9;
+      border-radius: 1.25rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+      background: white;
+    }
+    .subject-card input:checked + .inner {
+      border-color: var(--rukn-orange);
+      background: var(--rukn-orange-light);
+      color: var(--rukn-orange);
+      transform: scale(1.02);
+    }
+
+    /* تبديل طريقة التواصل */
+    .method-toggle {
+      background: #f1f5f9;
+      padding: 0.4rem;
+      border-radius: 1rem;
+      display: flex;
+      gap: 0.4rem;
+    }
+    .method-toggle button {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      font-weight: 800;
+      font-size: 0.875rem;
+      transition: 0.3s;
+      background: white;
+      color: #64748b; /* slate-500 */
+    }
+    .method-toggle button.active {
+      border: 2px solid #f1f5f9;
+      border-radius: 1.25rem;
+      background: var(--rukn-orange-light);
+      color: var(--rukn-orange);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-color: var(--rukn-orange);
+    }
+
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .email-input {
+      direction: ltr;
+      text-align: left;
+    }
+
+    .box-error {
+      border: 2px solid #ef4444 !important;
+      background: transparent !important;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+
+  <!-- HERO BANNER -->
+  <section class="orange-gradient pt-24 pb-40 px-4 text-center text-white">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-4xl md:text-6xl font-black mb-4">يسعدنا دائماً سماع صوتك</h1>
+      <p class="text-lg opacity-90 font-bold italic">فريق دعم ركن متواجد لمساعدتك في أي وقت.</p>
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-4 -mt-24 pb-20">
+    <div class="grid lg:grid-cols-3 gap-8">
+
+      <!-- FORM SIDE (Column 1 & 2) -->
+      <div class="lg:col-span-2 space-y-8">
+        <section class="bg-white rounded-[2.5rem] p-8 md:p-12 pro-shadow border border-slate-50">
+          <div class="flex items-center gap-4 mb-10">
+            <div class="w-12 h-12 orange-gradient rounded-2xl flex items-center justify-center text-white shadow-lg">
+              <i data-lucide="mail-plus" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="text-2xl font-black text-slate-800">أرسل رسالة مباشرة</h2>
+              <p class="text-slate-400 text-sm font-bold">سنقوم بالرد عليك في أقل من 24 ساعة.</p>
+            </div>
+          </div>
+
+          {# Django POST + CSRF + action #}
+          <form id="contactForm" method="post" action="{% url 'contact_support' %}" class="space-y-8" novalidate>
+            {% csrf_token %}
+
+            <!-- Name -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="text-sm font-black text-slate-700 mr-2 flex items-center gap-2">
+                  <i data-lucide="user" class="w-4 h-4 text-orange-500"></i> الاسم الكامل
+                </label>
+                <input id="fullName" name="full_name" type="text" placeholder="مثلاً: يزن منصور" class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800">
+                <p id="nameError" class="text-xs text-red-500 font-bold hidden">يرجى إدخال اسمك الحقيقي</p>
+              </div>
+
+              <!-- Subject Picker -->
+              <div id="subjectContainer" class="p-4 rounded-2xl border border-slate-200 bg-white">
+                <div class="space-y-2">
+                  <label class="text-sm font-black text-slate-700 mr-2 flex items-center gap-2 mb-3">
+                    <i data-lucide="layers" class="w-4 h-4 text-orange-500"></i> موضوع الرسالة
+                  </label>
+                  <div id="subjectBox" class="grid grid-cols-2 gap-3">
+                    <label class="subject-card">
+                      <input type="radio" name="subject" value="account">
+                      <span class="inner">مشكلة حساب</span>
+                    </label>
+                    <label class="subject-card">
+                      <input type="radio" name="subject" value="suggestion">
+                      <span class="inner">اقتراح</span>
+                    </label>
+                    <label class="subject-card">
+                      <input type="radio" name="subject" value="complaint">
+                      <span class="inner">شكوى</span>
+                    </label>
+                    <label class="subject-card">
+                      <input type="radio" name="subject" value="other">
+                      <span class="inner">أخرى</span>
+                    </label>
+                  </div>
+                  <p id="subjectError" class="text-xs text-red-500 font-bold hidden">يرجى اختيار القسم</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Method Toggle -->
+            <div id="contactContainer" class="p-4 rounded-2xl border border-slate-200 bg-white space-y-4">
+              <div id="contactBox" class="space-y-4">
+                <label class="text-sm font-black text-slate-700 mr-2 flex items-center gap-2">
+                  <i data-lucide="phone-call" class="w-4 h-4 text-orange-500"></i> طريقة التواصل المفضلة
+                </label>
+
+                <div class="method-toggle max-w-sm">
+                  <button type="button" id="phoneBtn" class="text-slate-500">رقم الهاتف</button>
+                  <button type="button" id="emailBtn" class="text-slate-500">البريد الإلكتروني</button>
+                </div>
+                <p id="methodError" class="text-sm text-red-600 mt-1 hidden">يرجى اختيار طريقة التواصل</p>
+
+                {# IMPORTANT: give it name so Django receives it #}
+                <input type="hidden" id="contactMethod" name="contact_method" value="">
+
+                <!-- Dynamic Fields -->
+                <div id="phoneField" class="hidden">
+                  <input id="phone" name="phone" type="tel" placeholder="07xxxxxxxx" class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800 tracking-widest">
+                  <p id="phoneError" class="text-xs text-red-500 font-bold mt-2 hidden">رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام</p>
+                </div>
+
+                <div id="emailField" class="hidden">
+                  <input id="email" name="email" type="text" placeholder="example@mail.com" class="premium-input email-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800 tracking-widest">
+                  <p id="emailError" class="text-xs text-red-500 font-bold mt-2 hidden">صيغة البريد الإلكتروني يجب أن تكون صحيحة مثال : example@email.com</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Message Body -->
+            <div class="space-y-2">
+              <label class="text-sm font-black text-slate-700 mr-2 flex items-center gap-2">
+                <i data-lucide="message-circle" class="w-4 h-4 text-orange-500"></i> تفاصيل الرسالة
+              </label>
+              <textarea id="message" name="message" rows="5" placeholder="اكتب لنا ما يدور في ذهنك..." class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800"></textarea>
+              <p id="messageError" class="text-xs text-red-500 font-bold hidden">لا يمكن إرسال رسالة فارغة</p>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center pt-4">
+              <button type="submit"
+                class="orange-gradient px-14 py-5 rounded-2xl text-white font-black text-lg shadow-xl hover:scale-[1.03] transition">
+                إرسال الرسالة الآن
+              </button>
+            </div>
+
+          </form>
+        </section>
+      </div>
+
+      <!-- INFO SIDE (Column 3) -->
+      <div class="space-y-6">
+        <!-- Social Support Card (Modified to Professional Grey) -->
+        <section class="bg-slate-700 rounded-[2.5rem] p-8 text-white pro-shadow relative overflow-hidden">
+          <div class="relative z-10">
+            <h3 class="text-xl font-black mb-6">دعم سريع عبر</h3>
+            <div class="space-y-5">
+              <a href="#" class="flex items-center gap-4 group">
+                <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-[#ff7a18] transition-colors">
+                  <svg class="w-8 h-8 text-white group-hover:text-white" viewBox="0 0 32 32" fill="none"
+                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                    <path fill="currentColor"
+                      d="M19.11 17.23c-.18-.09-1.06-.52-1.22-.58-.16-.06-.28-.09-.4.09-.12.18-.46.58-.56.7-.1.12-.2.14-.38.05-.18-.09-.75-.28-1.43-.88-.53-.47-.89-1.05-1-1.23-.1-.18-.01-.27.08-.36.08-.08.18-.2.27-.3.09-.1.12-.18.18-.3.06-.12.03-.23-.01-.32-.04-.09-.4-.97-.55-1.33-.15-.36-.3-.31-.4-.31h-.35c-.12 0-.32.05-.49.23-.17.18-.65.63-.65 1.54 0 .91.67 1.79.76 1.91.09.12 1.32 2.02 3.2 2.83.45.19.8.3 1.07.38.45.14.86.12 1.18.07.36-.05 1.06-.43 1.21-.85.15-.42.15-.78.11-.85-.04-.07-.16-.12-.34-.21z" />
+                    <path fill="currentColor"
+                      d="M16.02 5.33c-5.9 0-10.7 4.8-10.7 10.7 0 1.87.5 3.69 1.46 5.29L5.2 26.67l5.5-1.53c1.55.85 3.29 1.3 5.08 1.3h.01c5.9 0 10.7-4.8 10.7-10.7 0-2.86-1.11-5.55-3.13-7.57a10.64 10.64 0 0 0-7.34-2.84zm6.23 17.06c-1.66 1.66-3.87 2.58-6.22 2.58h-.01c-1.62 0-3.2-.44-4.58-1.27l-.33-.2-3.26.91.9-3.17-.21-.33a9.21 9.21 0 0 1-1.4-4.9c0-2.35.92-4.56 2.58-6.22a8.74 8.74 0 0 1 6.23-2.58c2.35 0 4.56.92 6.22 2.58A8.74 8.74 0 0 1 24.83 16c0 2.35-.92 4.56-2.58 6.39z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">واتساب</p>
+                  <p class="text-sm font-black tracking-widest">962790000000</p>
+                </div>
+              </a>
+
+              <a href="#" class="flex items-center gap-4 group">
+                <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-[#ff7a18] transition-colors">
+                  <i data-lucide="instagram" class="w-5 h-5 text-white group-hover:text-white"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">إنستغرام</p>
+                  <p class="text-sm font-black">Rokon.jo</p>
+                </div>
+              </a>
+
+              <a href="#" class="flex items-center gap-4 group">
+                <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-[#ff7a18] transition-colors">
+                  <i data-lucide="facebook" class="w-5 h-5 text-white group-hover:text-white"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">فيسبوك</p>
+                  <p class="text-sm font-black">RokonJo</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <!-- Deco icon -->
+          <i data-lucide="headphones" class="absolute -bottom-6 -left-6 w-32 h-32 opacity-10 -rotate-12"></i>
+        </section>
+
+        <!-- Quick FAQ Card -->
+        <section class="bg-white rounded-[2.5rem] p-8 pro-shadow border border-slate-50">
+          <h3 class="text-lg font-black text-slate-800 mb-6">أسئلة شائعة</h3>
+          <div class="space-y-4">
+            <div class="p-4 bg-slate-50 rounded-2xl">
+              <p class="text-xs font-black text-[#ff7a18] mb-1">هل يمكنني استعادة كلمة المرور ؟</p>
+              <p class="text-[10px] text-slate-500 font-bold">نعم، يمكنك استعادة كلمة المرور بسهولة من خلال خيار “نسيت كلمة المرور”، واتباع التعليمات الإرشادية.</p>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-2xl">
+              <p class="text-xs font-black text-[#ff7a18] mb-1">لماذا لم يظهر إعلاني مباشرة ؟</p>
+              <p class="text-[10px] text-slate-500 font-bold">قد يخضع الإعلان للمراجعة قبل نشره للتأكد من مطابقته للشروط.</p>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-2xl">
+              <p class="text-xs font-black text-[#ff7a18] mb-1">هل ركن مسؤول عن البيع ؟</p>
+              <p class="text-[10px] text-slate-500 font-bold">لا، ركن منصة وسيطة لعرض الإعلانات والطلبات فقط، ولا يتحمل مسؤولية عمليات البيع أو الاتفاقات بين المستخدمين.</p>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-2xl">
+              <p class="text-xs font-black text-[#ff7a18] mb-1">تم إيقاف حسابي ما السبب ؟</p>
+              <p class="text-[10px] text-slate-500 font-bold">قد يتم إيقاف الحساب في حال مخالفة شروط الاستخدام أو نشر محتوى مخالف. يمكنك التواصل مع الدعم لمعرفة السبب وتقديم طلب مراجعة.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- SUCCESS TOAST (Premium Style) -->
+  <div id="successPopup" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] hidden">
+    <div class="glass-effect px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border-2 border-green-500">
+      <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
+        <i data-lucide="check" class="w-6 h-6"></i>
+      </div>
+      <div class="text-right">
+        <p class="font-black text-slate-800">تم الإرسال بنجاح!</p>
+        <p class="text-xs text-slate-500 font-bold">شكراً لتواصلك، سنرد عليك قريباً.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // تهيئة الأيقونات
+    if (window.lucide) lucide.createIcons();
+
+    const form = document.getElementById("contactForm");
+
+    const fullName = document.getElementById("fullName");
+    const nameError = document.getElementById("nameError");
+
+    const message = document.getElementById("message");
+    const messageError = document.getElementById("messageError");
+
+    const subjectContainer = document.getElementById("subjectContainer");
+    const subjectError = document.getElementById("subjectError");
+
+    const contactContainer = document.getElementById("contactContainer");
+    const methodError = document.getElementById("methodError");
+
+    const phoneField = document.getElementById("phoneField");
+    const phone = document.getElementById("phone");
+    const phoneError = document.getElementById("phoneError");
+
+    const phoneBtn = document.getElementById("phoneBtn");
+
+    const emailField = document.getElementById("emailField");
+    const email = document.getElementById("email");
+    const emailError = document.getElementById("emailError");
+
+    const emailBtn = document.getElementById("emailBtn");
+
+    const contactMethodInput = document.getElementById("contactMethod");
+
+    // حالة البداية
+    phoneField.classList.add("hidden");
+    emailField.classList.add("hidden");
+    contactMethodInput.value = "";
+
+    function resetContactMethod(){
+      contactMethodInput.value = "";
+
+      phoneBtn.classList.remove("active","bg-orange-500","text-white");
+      emailBtn.classList.remove("active","bg-orange-500","text-white");
+
+      phoneBtn.classList.add("text-slate-500","bg-white");
+      emailBtn.classList.add("text-slate-500","bg-white");
+
+      phoneField.classList.add("hidden");
+      emailField.classList.add("hidden");
+
+      removeBoxError(contactContainer, methodError);
+      removeError(phone, phoneError);
+      removeError(email, emailError);
+    }
+
+    function selectMethod(method){
+      contactMethodInput.value = method;
+
+      removeBoxError(subjectContainer, subjectError);
+      removeBoxError(contactContainer, methodError);
+
+      if(method === "phone"){
+        phoneBtn.classList.add("bg-orange-500","text-white");
+        phoneBtn.classList.remove("text-gray-600","bg-white");
+
+        emailBtn.classList.remove("bg-orange-500","text-white");
+        emailBtn.classList.add("text-gray-600","bg-white");
+
+        phoneField.classList.remove("hidden");
+        emailField.classList.add("hidden");
+        removeError(email,emailError);
+
+      }else{
+        emailBtn.classList.add("bg-orange-500","text-white");
+        emailBtn.classList.remove("text-gray-600","bg-white");
+
+        phoneBtn.classList.remove("bg-orange-500","text-white");
+        phoneBtn.classList.add("text-gray-600","bg-white");
+
+        emailField.classList.remove("hidden");
+        phoneField.classList.add("hidden");
+        removeError(phone,phoneError);
+      }
+    }
+
+    phoneBtn.addEventListener("click",()=>selectMethod("phone"));
+    emailBtn.addEventListener("click",()=>selectMethod("email"));
+
+    function addBoxError(box, errorEl){
+      box.classList.add("box-error");
+      errorEl.classList.remove("hidden");
+      box.scrollIntoView({behavior:"smooth", block:"center"});
+    }
+
+    function removeBoxError(box, errorEl){
+      box.classList.remove("box-error");
+      errorEl.classList.add("hidden");
+    }
+
+    function addError(el, errorEl){
+      el.classList.add("input-error");
+      errorEl.classList.remove("hidden");
+      el.scrollIntoView({behavior:"smooth", block:"center"});
+      if(el.tagName !== "DIV") el.focus();
+    }
+
+    function removeError(el,errorEl){
+      el.classList.remove("input-error");
+      errorEl.classList.add("hidden");
+    }
+
+    // إزالة الخطأ عند الكتابة أو الاختيار
+    fullName.addEventListener("input",()=>removeError(fullName,nameError));
+    message.addEventListener("input",()=>removeError(message,messageError));
+    phone.addEventListener("input",()=>{
+      phone.value = phone.value.replace(/\D/g,"").slice(0,10);
+      removeError(phone,phoneError);
+    });
+    email.addEventListener("input",()=>removeError(email,emailError));
+    document.querySelectorAll('[name="subject"]').forEach(r=>r.addEventListener("change",()=>removeBoxError(subjectContainer, subjectError)));
+
+    // التحقق عند الإرسال: نمنع فقط عند الخطأ — وإلا نترك POST يروح لـ Django
+    form.addEventListener("submit",(e)=>{
+      if(!fullName.value.trim()) { e.preventDefault(); return addError(fullName,nameError); }
+      if(!document.querySelector('[name="subject"]:checked')) { e.preventDefault(); return addBoxError(subjectContainer, subjectError); }
+
+      const method = contactMethodInput.value;
+      if(!method) { e.preventDefault(); return addBoxError(contactContainer, methodError); }
+
+      if(method === "phone"){
+        if(!/^07\d{8}$/.test(phone.value)) { e.preventDefault(); return addError(phone,phoneError); }
+      }else{
+        if(!/^[^@]+@[^@]+\.[^@]+$/.test(email.value)) { e.preventDefault(); return addError(email,emailError); }
+      }
+
+      if(!message.value.trim()) { e.preventDefault(); return addError(message,messageError); }
+    });
+
+    // إذا رجعنا من السيرفر بنجاح (redirect to done page) نعرض التوست
+    {% if submitted %}
+    document.addEventListener("DOMContentLoaded", () => {
+      const successPopup = document.getElementById("successPopup");
+      if (successPopup) {
+        successPopup.classList.remove("hidden");
+        setTimeout(()=>successPopup.classList.add("hidden"),2000);
+      }
+    });
+    {% endif %}
+  </script>
+
+{% endblock %}

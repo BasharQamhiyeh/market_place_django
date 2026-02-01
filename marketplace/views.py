@@ -30,6 +30,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.contrib.postgres.search import TrigramSimilarity
 from django.urls import reverse
+from django.views.generic import TemplateView
 
 from .models import (
     City,
@@ -48,7 +49,8 @@ from .models import (
     User,
     Request,
     Listing,
-    RequestAttributeValue, Store, StoreReview, StoreFollow, PointsTransaction
+    RequestAttributeValue, Store, StoreReview, StoreFollow, PointsTransaction, ContactMessage, FAQCategory,
+    PrivacyPolicyPage
 )
 
 from .forms import (
@@ -2570,7 +2572,7 @@ def subscribe(request):
 
 
 def contact(request):
-    return render(request, "contact.html")
+    return render(request, "contact_support.html")
 
 
 @login_required
@@ -4183,3 +4185,107 @@ def api_wallet_summary(request):
         "points_balance": int(user.points),
         "transactions": [to_ui(t) for t in txs],
     })
+
+
+def about(request):
+    return render(request, "static_pages/about.html")
+
+
+@require_http_methods(["GET", "POST"])
+def contact_support(request):
+    if request.method == "POST":
+        full_name = (request.POST.get("full_name") or "").strip()
+        subject = (request.POST.get("subject") or "").strip()
+        contact_method = (request.POST.get("contact_method") or "").strip()
+        phone = (request.POST.get("phone") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        message_body = (request.POST.get("message") or "").strip()
+
+        # minimal server-side validation
+        if not full_name or not message_body or subject not in dict(ContactMessage.SUBJECT_CHOICES) or contact_method not in dict(ContactMessage.METHOD_CHOICES):
+            return render(request, "static_pages/contact_support.html", {"submit_error": True})
+
+        if contact_method == "phone":
+            if not phone.startswith("07") or len(phone) != 10 or not phone.isdigit():
+                return render(request, "static_pages/contact_support.html", {"submit_error": True})
+            email = ""
+        else:
+            try:
+                validate_email(email)
+            except ValidationError:
+                return render(request, "static_pages/contact_support.html", {"submit_error": True})
+            phone = ""
+
+        ContactMessage.objects.create(
+            full_name=full_name,
+            subject=subject,
+            contact_method=contact_method,
+            phone=phone or None,
+            email=email or None,
+            message=message_body,
+        )
+
+        # redirect to avoid resubmission on refresh
+        return redirect("contact_support_done")
+
+    return render(request, "static_pages/contact_support.html")
+
+
+def contact_support_done(request):
+    return render(request, "static_pages/contact_support.html", {"submitted": True})
+
+
+
+class FAQView(TemplateView):
+    template_name = "static_pages/faq.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        categories = (
+            FAQCategory.objects
+            .filter(is_active=True)
+            .prefetch_related(
+                # only active questions; ordered by model Meta ordering
+                "questions"
+            )
+        )
+
+        # Filter out inactive questions in python (simple and readable).
+        # If you prefer pure DB filtering, I can give you a Prefetch(...) version too.
+        cat_list = []
+        for c in categories:
+            qs = [q for q in c.questions.all() if q.is_active]
+            if qs:
+                c._active_questions = qs  # attach
+                cat_list.append(c)
+
+        ctx["faq_categories"] = cat_list
+        return ctx
+
+
+class WhyRuknView(TemplateView):
+    template_name = "static_pages/why_rukn.html"
+
+
+class PrivacyPolicyView(TemplateView):
+    template_name = "static_pages/privacy_policy.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        page = (
+            PrivacyPolicyPage.objects
+            .prefetch_related("sections")
+            .filter(is_active=True)
+            .first()
+        )
+
+        if page:
+            sections = [s for s in page.sections.all() if s.is_active]
+        else:
+            sections = []
+
+        ctx["policy_page"] = page
+        ctx["policy_sections"] = sections
+        return ctx

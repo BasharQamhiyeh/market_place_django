@@ -899,3 +899,135 @@ def delete_itemphoto_file(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
 
+
+class ContactMessage(models.Model):
+    SUBJECT_CHOICES = [
+        ("account", "مشكلة حساب"),
+        ("suggestion", "اقتراح"),
+        ("complaint", "شكوى"),
+        ("other", "أخرى"),
+    ]
+
+    METHOD_CHOICES = [
+        ("phone", "رقم الهاتف"),
+        ("email", "البريد الإلكتروني"),
+    ]
+
+    full_name = models.CharField(max_length=200)
+    subject = models.CharField(max_length=20, choices=SUBJECT_CHOICES)
+
+    contact_method = models.CharField(max_length=10, choices=METHOD_CHOICES)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # optional: admin workflow
+    is_resolved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.full_name} - {self.get_subject_display()} - {self.created_at:%Y-%m-%d}"
+
+
+class FAQCategory(models.Model):
+    """
+    Represents a section/type in the FAQ page (about, account, ads, requests, safety, issues).
+    """
+    key = models.SlugField(
+        max_length=32,
+        unique=True,
+        help_text="Unique key used in template anchors. Example: about, account, ads..."
+    )
+    name_ar = models.CharField(max_length=120)
+    icon = models.CharField(
+        max_length=40,
+        blank=True,
+        default="circle-help",
+        help_text="Lucide icon name, e.g. info, user-cog, megaphone..."
+    )
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    @property
+    def active_questions(self):
+        # if you have related_name="questions" use that, otherwise use faqquestion_set
+        rel = getattr(self, "questions", None)
+        if rel is None:
+            rel = self.faqquestion_set
+        return rel.filter(is_active=True).order_by("order", "id")
+
+    def __str__(self) -> str:
+        return self.name_ar
+
+
+class FAQQuestion(models.Model):
+    category = models.ForeignKey(FAQCategory, on_delete=models.CASCADE, related_name="questions")
+    question_ar = models.CharField(max_length=255)
+    answer_ar = models.TextField()
+    order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["category__order", "order", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.category.key}: {self.question_ar[:60]}"
+
+
+
+class PrivacyPolicyPage(models.Model):
+    """
+    صفحة سياسة الخصوصية (نسخ Versioning).
+    نخلي نسخة واحدة Active فقط، والأدمن يقدر ينشئ نسخة جديدة ويخليها Active.
+    """
+    title_ar = models.CharField(max_length=200, default="سياسة الخصوصية")
+    subtitle_ar = models.CharField(
+        max_length=300,
+        blank=True,
+        default="نوضح هنا كيف نجمع بياناتك ونستخدمها ونحميها داخل منصة ركن."
+    )
+
+    is_active = models.BooleanField(default=True)
+    published_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-is_active", "-published_at"]
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if self.is_active:
+                PrivacyPolicyPage.objects.exclude(pk=self.pk).update(is_active=False)
+
+
+    def __str__(self) -> str:
+        status = "ACTIVE" if self.is_active else "draft"
+        return f"{self.title_ar} ({status})"
+
+
+class PrivacyPolicySection(models.Model):
+    page = models.ForeignKey(
+        PrivacyPolicyPage,
+        on_delete=models.CASCADE,
+        related_name="sections",
+    )
+    order = models.PositiveIntegerField(default=1)
+
+    heading_ar = models.CharField(max_length=200)
+    body_ar = models.TextField(help_text="اكتب النص العربي (يمكنك استخدام أسطر جديدة).")
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.order}. {self.heading_ar}"
+
+
+

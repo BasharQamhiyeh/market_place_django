@@ -9,6 +9,14 @@ from .my_account_messages_api import my_account_conversations_api, my_account_co
 from .views import store_profile, start_store_conversation
 
 urlpatterns = [
+    # --- Static ---
+    path('about/', views.about, name='about'),
+    path("contact-support/", views.contact_support, name="contact_support"),
+    path("contact-support/done/", views.contact_support_done, name="contact_support_done"),
+    path("faq/", views.FAQView.as_view(), name="faq"),
+    path("why-rukn/", views.WhyRuknView.as_view(), name="why_rukn"),
+    path("privacy/", views.PrivacyPolicyView.as_view(), name="privacy_policy"),
+
     # --- Auth ---
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
@@ -76,8 +84,6 @@ urlpatterns = [
 
     # --- Newsletter ---
     path('subscribe/', views.subscribe, name='subscribe'),  # ✅ new
-
-    path('contact/', views.contact, name='contact'),
 
     path("reports/create/", views.create_issue_report_ajax, name="create_issue_report_ajax"),
 

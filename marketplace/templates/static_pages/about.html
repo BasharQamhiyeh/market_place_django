@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% block title %}ركن | القصة، الرؤية، والمستقبل{% endblock %}
+{% block content %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ركن | القصة، الرؤية، والمستقبل</title>
+
+    <!-- الخطوط -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- أيقونات Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --rukn-orange: #ff7a18;
+            --rukn-orange-dark: #e66a15;
+            --rukn-orange-light: #fff5ed;
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-600: #475569;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #ffffff;
+            color: var(--slate-800);
+            scroll-behavior: smooth;
+        }
+
+        .orange-gradient {
+            background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+        }
+
+        .pro-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hover-up {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+            .hover-up:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 30px 60px -15px rgba(255, 122, 24, 0.2);
+            }
+
+        .text-gradient {
+            background: linear-gradient(to left, var(--slate-900), var(--rukn-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* أنيميشن الدخول */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .section-spacing {
+            padding-top: 100px;
+            padding-bottom: 100px;
+        }
+    </style>
+
+
+
+
+    <!-- =================== HERO SECTION =================== -->
+    <section class="relative pt-40 pb-32 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+            <div class="animate-in" style="animation-delay: 0.1s">
+                <span class="inline-block px-4 py-2 rounded-full bg-orange-50 text-[#ff7a18] text-xs font-black uppercase tracking-widest mb-6 border border-orange-100">
+                    القصة الأردنية للتحول الرقمي
+                </span>
+                <h1 class="text-5xl md:text-7xl font-black text-slate-900 leading-[1.1] mb-8">
+                    أكثر من مجرد <br> <span class="text-gradient">سوق إعلانات.</span>
+                </h1>
+                <p class="text-xl text-slate-600 leading-relaxed mb-10 font-medium">
+                    ركن هو نتاج رؤية شبابية أردنية لدمج التكنولوجيا بحياتنا اليومية بشكل أبسط. نحن نبني جسوراً من الثقة بين البائع والمشتري عبر تجربة استخدام لا مثيل لها.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="{% url 'home' %}" class="orange-gradient text-white px-10 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-orange-200 hover:translate-y-[-2px] transition">
+                      ابدأ استكشاف قصتنا
+                    </a>
+                    <a href="#" class="bg-white border-2 border-slate-100 text-slate-800 px-10 py-5 rounded-2xl font-black text-lg hover:bg-slate-50 transition">
+                      تصفح الأقسام
+                    </a>
+                </div>
+            </div>
+
+            <div class="relative animate-in" style="animation-delay: 0.3s">
+                <div class="rounded-[3rem] overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700">
+                    <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1200" alt="team" class="w-full h-full object-cover">
+                </div>
+                <!-- Impact Badge -->
+                <div class="absolute -bottom-8 -left-8 glass-card p-8 rounded-3xl shadow-2xl border border-white z-20 max-w-[240px]">
+                    <p class="text-4xl font-black text-[#ff7a18] mb-1">+200K</p>
+                    <p class="text-xs font-bold text-slate-500 leading-tight tracking-wide">مستخدم يثقون بمنصة ركن شهرياً في الأردن</p>
+                </div>
+            </div>
+        </div>
+        <!-- Decorations -->
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-50 rounded-full blur-[120px] -z-10 opacity-60"></div>
+    </section>
+
+    <!-- =================== OUR STORY (Detailed Content) =================== -->
+    <section id="our-story" class="section-spacing bg-slate-50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                <div class="order-2 lg:order-1">
+                    <div class="grid grid-cols-2 gap-4">
+                        <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?w=600" class="rounded-3xl shadow-lg mt-12" alt="office">
+                        <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=600" class="rounded-3xl shadow-lg" alt="tech">
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <h2 class="text-4xl font-black text-slate-900 mb-8">البداية كانت من <span class="text-[#ff7a18]">عمان..</span></h2>
+                    <div class="space-y-6 text-slate-600 text-lg leading-loose font-medium">
+                        <p>
+                            انطلقت فكرة "ركن" من رغبة حقيقية في حل مشكلة العشوائية في الإعلانات المبوبة. وجدنا أن المواطن الأردني يستحق منصة تحترم خصوصيته، وتوفر له دقة متناهية في البحث، وسرعة في التواصل.
+                        </p>
+                        <p>
+                            لقد قمنا ببناء ركن من الصفر، مع التركيز على كل "ركن" في حياة المستخدم الأردني؛ من تأمين مسكنه، إلى شراء سيارته، وحتى العثور على مفقوداته أو ترويج متجره الصغير.
+                        </p>
+                        <p>
+                            نحن نؤمن أن التكنولوجيا ليست مجرد أكواد برمجية، بل هي وسيلة لتحسين جودة الحياة، وتسهيل التجارة المحلية، ودعم أصحاب الأعمال الصغيرة في المملكة.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================== VISION & MISSION (Interactive Cards) =================== -->
+    <section class="section-spacing">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl font-black text-slate-900 mb-4">أهدافنا تتجاوز الحاضر</h2>
+                <p class="text-slate-500 font-bold max-w-2xl mx-auto">نحن هنا لنضع المعايير الجديدة للإعلانات المبوبة في الشرق الأوسط.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="hover-up bg-white p-10 rounded-[2.5rem] border border-slate-100 pro-shadow">
+                    <div class="w-16 h-16 orange-gradient rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg">
+                        <i data-lucide="eye" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black mb-4">رؤيتنا</h3>
+                    <p class="text-slate-500 font-bold leading-relaxed text-sm">
+                        أن نصبح المنصة الرقمية الأكثر موثوقية واستخداماً في الأردن، والوجهة الأولى لأي عملية بيع أو شراء تتم بضغطة زر.
+                    </p>
+                </div>
+                <!-- Card 2 -->
+                <div class="hover-up bg-white p-10 rounded-[2.5rem] border border-slate-100 pro-shadow">
+                    <div class="w-16 h-16 orange-gradient rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg">
+                        <i data-lucide="target" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black mb-4">مهمتنا</h3>
+                    <p class="text-slate-500 font-bold leading-relaxed text-sm">
+                        تمكين المستخدمين من خلال تكنولوجيا ذكية وسهلة الوصول، تضمن السرعة في التواصل والدقة في النتائج والأمان في التعامل.
+                    </p>
+                </div>
+                <!-- Card 3 -->
+                <div class="hover-up bg-white p-10 rounded-[2.5rem] border border-slate-100 pro-shadow">
+                    <div class="w-16 h-16 orange-gradient rounded-2xl flex items-center justify-center text-white mb-8 shadow-lg">
+                        <i data-lucide="shield-check" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black mb-4">قيمنا</h3>
+                    <p class="text-slate-500 font-bold leading-relaxed text-sm">
+                        النزاهة، الابتكار المستمر، والالتزام المطلق بخدمة المستخدم الأردني قبل كل شيء. الثقة هي عملتنا الحقيقية.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================== WHY RUKN (Features Detail) =================== -->
+    <section class="section-spacing bg-slate-900 text-white rounded-[4rem] mx-4 md:mx-10">
+        <div class="max-w-7xl mx-auto px-10">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-black mb-10 leading-tight">لماذا يختار الجميع <br> <span class="text-[#ff7a18]">منصة ركن؟</span></h2>
+                    <div class="space-y-8">
+                        <div class="flex gap-6">
+                            <div class="w-14 h-14 shrink-0 bg-white/10 rounded-2xl flex items-center justify-center text-[#ff7a18]">
+                                <i data-lucide="zap" class="w-7 h-7"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-black mb-2">سرعة استجابة فائقة</h4>
+                                <p class="text-slate-400 text-sm font-bold">تكنولوجيا ركن مبنية على أحدث الخوادم لضمان تصفح سلس جداً حتى في أضعف شبكات الإنترنت.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div class="w-14 h-14 shrink-0 bg-white/10 rounded-2xl flex items-center justify-center text-[#ff7a18]">
+                                <i data-lucide="layout-grid" class="w-7 h-7"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-black mb-2">تصنيفات دقيقة وذكية</h4>
+                                <p class="text-slate-400 text-sm font-bold">نظام فلترة متقدم يساعدك على الوصول لما تريد في ثوانٍ، دون الغرق في إعلانات غير ذات صلة.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div class="w-14 h-14 shrink-0 bg-white/10 rounded-2xl flex items-center justify-center text-[#ff7a18]">
+                                <i data-lucide="message-circle" class="w-7 h-7"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xl font-black mb-2">تواصل مباشر وآمن</h4>
+                                <p class="text-slate-400 text-sm font-bold">نظام محادثات داخلي مشفر يحمي خصوصيتك ويسمح لك بالتفاوض والإتمام بكل سهولة.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative hidden lg:block">
+                    <div class="bg-gradient-to-br from-white/10 to-transparent p-12 rounded-[3rem] border border-white/10 backdrop-blur-lg">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-16 h-16 rounded-full bg-orange-500 overflow-hidden border-4 border-white/20">
+                                <img src="https://i.pravatar.cc/100?img=32" alt="ceo">
+                            </div>
+                            <div>
+                                <p class="font-black text-lg text-white">"ركن هو المكان الذي يلتقي فيه الأردنيون لتبادل المنفعة، وهو ليس مجرد موقع إلكتروني ، بل هو مجتمع متكامل."</p>
+                                <p class="text-[#ff7a18] text-xs font-black uppercase mt-1">فريق التطوير في ركن</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
+                                <p class="text-2xl font-black text-white">99.9%</p>
+                                <p class="text-[10px] text-slate-400 font-black">وقت استقرار المنصة</p>
+                            </div>
+                            <div class="bg-white/5 p-6 rounded-2xl border border-white/10">
+                                <p class="text-2xl font-black text-white">4.9/5</p>
+                                <p class="text-[10px] text-slate-400 font-black">تقييم تجربة المستخدم</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- =================== TIMELINE / MILESTONES =================== -->
+    <section class="section-spacing">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-black text-slate-900 mb-4">مسيرتنا حتى الآن</h2>
+                <div class="w-20 h-1.5 orange-gradient mx-auto rounded-full"></div>
+            </div>
+
+            <div class="relative border-r-2 border-slate-100 mr-10 md:mr-0 md:border-r-0 md:flex md:justify-between items-start gap-10 space-y-12 md:space-y-0">
+                <!-- Step 1 -->
+                <div class="relative pr-8 md:pr-0 md:text-center flex-1">
+                    <div class="absolute -right-2 top-0 md:relative md:right-0 md:mx-auto w-4 h-4 rounded-full bg-[#ff7a18] shadow-[0_0_0_8px_rgba(255,122,24,0.1)] mb-6"></div>
+                    <h4 class="text-xl font-black text-slate-800 mb-2">2024 - التأسيس</h4>
+                    <p class="text-sm text-slate-500 font-bold leading-relaxed">إطلاق النسخة التجريبية الأولى من قلب العاصمة عمان بمشاركة أكثر من 100 متجر محلي.</p>
+                </div>
+                <!-- Step 2 -->
+                <div class="relative pr-8 md:pr-0 md:text-center flex-1">
+                    <div class="absolute -right-2 top-0 md:relative md:right-0 md:mx-auto w-4 h-4 rounded-full bg-[#ff7a18] shadow-[0_0_0_8px_rgba(255,122,24,0.1)] mb-6"></div>
+                    <h4 class="text-xl font-black text-slate-800 mb-2">2025 - الانتشار</h4>
+                    <p class="text-sm text-slate-500 font-bold leading-relaxed">تجاوز حاجز الـ 100 ألف مستخدم نشط، وإطلاق أقسام متخصصة كالمفقودات ودليل المتاجر.</p>
+                </div>
+                <!-- Step 3 -->
+                <div class="relative pr-8 md:pr-0 md:text-center flex-1">
+                    <div class="absolute -right-2 top-0 md:relative md:right-0 md:mx-auto w-4 h-4 rounded-full bg-[#ff7a18] shadow-[0_0_0_8px_rgba(255,122,24,0.1)] mb-6"></div>
+                    <h4 class="text-xl font-black text-slate-800 mb-2">2026 - التميز</h4>
+                    <p class="text-sm text-slate-500 font-bold leading-relaxed">تحديث الهوية البصرية وإدخال تقنيات الذكاء الاصطناعي في البحث وتصنيف الإعلانات.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+	<section class="py-24 px-6">
+      <div class="max-w-7xl mx-auto bg-orange-500 rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-20 -mb-20"></div>
+
+        <div class="relative z-10 text-white">
+          <h2 class="text-4xl md:text-6xl font-black mb-8 leading-tight">
+           كن جزءاً من قصة نجاحنا
+          </h2>
+          <p class="text-orange-50 font-medium text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">
+            انضم اليوم إلى آلاف الأردنيين الذين وجدوا في ركن "ركنهم" الآمن للتجارة والتواصل.
+
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="#"
+               class="bg-white text-orange-600 font-black px-12 py-5 rounded-2xl text-xl hover:scale-105 transition-transform inline-block"
+               data-open-login-modal>
+              إنشاء حساب مجاني
+            </a>
+            <a href="{% url 'home' %}" class="bg-orange-600 text-white font-black px-12 py-5 rounded-2xl text-xl hover:scale-105 transition-transform inline-block">
+              تصفح الإعلانات
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+        // تهيئة الأيقونات
+        lucide.createIcons();
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const btn = document.querySelector('[data-open-login-modal]');
+        if (!btn) return;
+
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          // Try common patterns: Bootstrap modal or your custom modal
+          const modal = document.getElementById("loginModal") || document.getElementById("authModal");
+          if (!modal) {
+            // fallback: go to login page if modal isn't present on this page
+            window.location.href = "{% url 'login' %}";
+            return;
+          }
+
+          // Bootstrap 5 support (if you use it)
+          if (window.bootstrap?.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modal).show();
+            return;
+          }
+
+          // Generic fallback for custom modals
+          modal.classList.remove("hidden");
+          modal.style.display = "block";
+          modal.setAttribute("aria-hidden", "false");
+        });
+      });
+    </script>
+
+{% endblock %}
