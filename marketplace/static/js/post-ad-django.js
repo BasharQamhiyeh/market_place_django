@@ -204,35 +204,39 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!attrsRoot) return;
 
     function syncOtherForBlock(block) {
-      const otherWrap = block.querySelector(".other-wrapper");
-      if (!otherWrap) return;
+  const otherWrap = block.querySelector(".other-wrapper");
+  if (!otherWrap) return;
 
-      const name = block.dataset.fieldName;
-      if (!name) return;
+  const name = block.dataset.fieldName;
+  if (!name) return;
 
-      // ✅ لا تستخدم :scope > * … خليها تبحث داخل البلوك كله
-      const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
-      const selects = Array.from(block.querySelectorAll(`select[name="${CSS.escape(name)}"]`));
+  const otherInput = otherWrap.querySelector("input, textarea, select");
+  const otherHasText = !!(otherInput && (otherInput.value || "").trim());
 
-      let show = false;
+  // detect if "__other__" is selected NOW (never force it here)
+  let isOtherSelected = false;
 
-      if (inputs.length) {
-        show = inputs.some(i => i.checked && i.value === "__other__");
-      } else if (selects.length) {
-        show = selects.some(s => (s.value || "") === "__other__");
-      }
-
-      // ✅ نفس سلوك الـ item الحالي (يدعم style=display:none)
-      otherWrap.style.display = show ? "block" : "none";
-      otherWrap.classList.toggle("hidden", !show);
-
-      if (show) {
-        const otherInput = otherWrap.querySelector("input, textarea, select");
-        if (otherInput && typeof otherInput.focus === "function") {
-          setTimeout(() => otherInput.focus(), 0);
-        }
-      }
+  const sel = block.querySelector(`select[name="${CSS.escape(name)}"]`);
+  if (sel) {
+    if (sel.multiple) {
+      isOtherSelected = Array.from(sel.selectedOptions).some(o => o.value === "__other__");
+    } else {
+      isOtherSelected = (sel.value || "") === "__other__";
     }
+  } else {
+    const inputs = Array.from(block.querySelectorAll(`input[name="${CSS.escape(name)}"]`));
+    isOtherSelected = inputs.some(i => i.checked && i.value === "__other__");
+  }
+
+  // show/hide OTHER field only based on selection
+  otherWrap.style.display = isOtherSelected ? "block" : "none";
+  otherWrap.classList.toggle("hidden", !isOtherSelected);
+
+  // if user selected other, keep whatever value exists visible/editable
+  // if user selected something else, KEEP the value but just hide it (so they can change without deleting)
+}
+
+
 
 
     attrsRoot.querySelectorAll(".attr-block").forEach(block => {
@@ -256,7 +260,40 @@ document.addEventListener("DOMContentLoaded", () => {
       }, true);
 
       block.dataset.bound = "1";
-      syncOtherForBlock(block);
+
+// ✅ PREFILL ONCE: if OTHER input has text, select "__other__" ONCE at page load
+if (block.dataset.otherInitDone !== "1") {
+  const otherWrap = block.querySelector(".other-wrapper");
+  const otherInput = otherWrap?.querySelector("input, textarea, select");
+  const otherHasText = !!(otherInput && (otherInput.value || "").trim());
+
+  if (otherHasText) {
+    const name = block.dataset.fieldName;
+
+    // If select exists
+    const sel = block.querySelector(`select[name="${CSS.escape(name)}"]`);
+    if (sel) {
+      if (sel.multiple) {
+        const opt = Array.from(sel.options).find(o => o.value === "__other__");
+        if (opt) opt.selected = true;
+      } else {
+        sel.value = "__other__";
+      }
+    } else {
+      // Radio/checkbox: check "__other__"
+      const otherChoice = block.querySelector(
+        `input[name="${CSS.escape(name)}"][value="__other__"]`
+      );
+      if (otherChoice) otherChoice.checked = true;
+    }
+  }
+
+  block.dataset.otherInitDone = "1";
+}
+
+syncOtherForBlock(block);
+
+
     });
 
     if (!attrsRoot.dataset.otherBound) {

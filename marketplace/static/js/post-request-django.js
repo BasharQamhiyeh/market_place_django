@@ -699,16 +699,22 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // ✅ Budget optional (validate only if provided)
-    if (budgetField && (budgetField.value || "").trim()) {
-      const v = Number(budgetField.value);
-      if (Number.isNaN(v) || v < 0) {
-        e.preventDefault();
-        showErrorAfter(budgetField, "الرجاء إدخال ميزانية صحيحة");
-        unlockSubmit();
-        return;
-      }
+    // ✅ Budget REQUIRED
+    if (!budgetField || !((budgetField.value || "").trim())) {
+      e.preventDefault();
+      showErrorAfter(budgetField || titleInput, "الرجاء إدخال الميزانية");
+      unlockSubmit();
+      return;
     }
+
+    const v = Number(budgetField.value);
+    if (Number.isNaN(v) || v < 0) {
+      e.preventDefault();
+      showErrorAfter(budgetField, "الرجاء إدخال ميزانية صحيحة");
+      unlockSubmit();
+      return;
+    }
+
 
 
     if (!citySelect.value) {

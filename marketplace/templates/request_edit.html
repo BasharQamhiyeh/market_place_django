@@ -1,6 +1,6 @@
 {# templates/request_create.html #}
 {% extends "base.html" %}
-{% load static i18n form_extras %}
+{% load static i18n l10n form_extras %}
 
 {% block title %}ركن — إضافة طلب شراء{% endblock %}
 
@@ -155,17 +155,23 @@
                 <!-- Budget -->
                 <div>
                   <label class="label">الميزانية الأعلى (د.أ)</label>
-                  {{ form.budget|add_class:"input-field text-sm" }}
+                  <input type="number" step="0.01"
+                         name="budget"
+                         id="budgetField"
+                         placeholder="الميزانية المتوقعة (اختياري)"
+                         class="input-field text-sm"
+                         value="{{ form.budget.value|default_if_none:''|unlocalize }}">
                   {% if form.budget.errors %}<p class="field-error js-error">{{ form.budget.errors }}</p>{% endif %}
+
                 </div>
 
-                <script>
-                  // force ID for JS validation
-                  document.addEventListener("DOMContentLoaded", () => {
-                    const budget = document.querySelector('input[name="budget"]');
-                    if (budget) budget.id = "budgetField";
-                  });
-                </script>
+<!--                <script>-->
+<!--                  // force ID for JS validation-->
+<!--                  document.addEventListener("DOMContentLoaded", () => {-->
+<!--                    const budget = document.querySelector('input[name="budget"]');-->
+<!--                    if (budget) budget.id = "budgetField";-->
+<!--                  });-->
+<!--                </script>-->
 
               </div>
             </div>

@@ -1,6 +1,6 @@
 {# item_create.html #}
 {% extends "base.html" %}
-{% load static i18n form_extras %}
+{% load static i18n l10n form_extras %}
 
 {% block base_css %}
 <link rel="stylesheet" href="{% static 'css/post-ad.css' %}">
@@ -196,17 +196,25 @@
                 <!-- PRICE -->
                 <div>
                   <label class="label">السعر (د.أ)</label>
-                  {{ form.price|add_class:"input-field text-sm" }}
+                  <input type="number" step="0.01"
+                         name="price"
+                         id="priceInput"
+                         placeholder="مثلاً: 150"
+                         class="input-field text-sm"
+                         value="{{ form.price.value|default_if_none:''|unlocalize }}">
                   {% if form.price.errors %}<p class="field-error js-error">{{ form.price.errors }}</p>{% endif %}
                 </div>
 
-                <script>
-                  // force ID for JS validation
-                  document.addEventListener("DOMContentLoaded", () => {
-                    const price = document.querySelector('input[name="price"]');
-                    if (price) price.id = "priceInput";
-                  });
-                </script>
+
+
+
+<!--                <script>-->
+<!--                  // force ID for JS validation-->
+<!--                  document.addEventListener("DOMContentLoaded", () => {-->
+<!--                    const price = document.querySelector('input[name="price"]');-->
+<!--                    if (price) price.id = "priceInput";-->
+<!--                  });-->
+<!--                </script>-->
 
               </div>
             </div>

@@ -1655,6 +1655,7 @@ def request_edit(request, request_id):
         if form.is_valid():
             # 1) Save listing
             listing = form.save(commit=False)
+            listing.category = category
             listing.is_approved = False
             listing.was_edited = True
             listing.show_phone = (request.POST.get("show_phone") == "on")
