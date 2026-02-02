@@ -624,16 +624,13 @@ class ItemAdmin(admin.ModelAdmin):
     # Import Items (Excel + ZIP) — stores external_id ✅
     # -----------------------------
     def import_excel_view(self, request):
-        """
-        FINAL VERSION — adapted to Listing model.
-        Adds 3-level category tree: Category → Sub Category → Sub Category 2
-        Creates missing categories/cities based on Arabic name (case-insensitive).
-        Fully working ZIP + URL photos.
-        """
         import os, tempfile, zipfile, openpyxl, requests
         from django.core.files.base import ContentFile
         from django.db import IntegrityError
         from django.db.models import Q
+        from django.contrib.auth import get_user_model
+
+        UserModel = get_user_model()
 
         if request.method == "POST":
             excel_file = request.FILES.get("excel_file")
@@ -663,27 +660,45 @@ class ItemAdmin(admin.ModelAdmin):
                 s = str(v).strip()
                 return s if s else None
 
+            # ✅ phone cleaner for Excel values
+            def clean_phone(v):
+                s = clean_str(norm(v))
+                if not s:
+                    return None
+                for ch in [" ", "\t", "\n", "\r", "-", "(", ")", ".", "/"]:
+                    s = s.replace(ch, "")
+                return s or None
+
+            def find_user_by_phone(phone_raw):
+                """
+                Match by exact phone OR by digits suffix (helps if Excel differs in country code formatting).
+                """
+                phone = clean_phone(phone_raw)
+                if not phone:
+                    return None
+
+                digits = "".join(ch for ch in phone if ch.isdigit())
+                q = Q(phone=phone)
+                if digits and len(digits) >= 7:
+                    q |= Q(phone__endswith=digits)
+
+                return UserModel.objects.filter(q).first()
+
             # ---------------------------
             # HELPERS (AR name = source of truth)
             # ---------------------------
             def get_or_create_category_by_ar(name_ar, parent=None):
-                """
-                Find by name_ar (case-insensitive). If missing, create.
-                Ensure parent is set correctly.
-                """
                 name_ar = clean_str(name_ar)
                 if not name_ar:
                     return None
 
                 cat = Category.objects.filter(name_ar__iexact=name_ar).first()
                 if cat:
-                    # enforce parent match
                     if (parent and cat.parent_id != parent.id) or (not parent and cat.parent_id is not None):
                         cat.parent = parent
                         cat.save(update_fields=["parent"])
                     return cat
 
-                # create (handle unique collisions safely)
                 try:
                     return Category.objects.create(
                         name_ar=name_ar,
@@ -691,7 +706,6 @@ class ItemAdmin(admin.ModelAdmin):
                         parent=parent,
                     )
                 except IntegrityError:
-                    # someone else created it or unique collision (eg different casing)
                     cat = Category.objects.filter(name_ar__iexact=name_ar).first()
                     if cat and ((parent and cat.parent_id != parent.id) or (not parent and cat.parent_id is not None)):
                         cat.parent = parent
@@ -699,9 +713,6 @@ class ItemAdmin(admin.ModelAdmin):
                     return cat
 
             def get_or_create_city_by_ar(name_ar):
-                """
-                Find by city.name_ar (case-insensitive). If missing, create.
-                """
                 name_ar = clean_str(name_ar)
                 if not name_ar:
                     return None
@@ -750,6 +761,8 @@ class ItemAdmin(admin.ModelAdmin):
 
             created = updated = failed = added_photos = 0
             no_photo = []
+            skipped_missing_user = 0
+            missing_user_rows = []  # keep a few examples
 
             # ============================================================
             # 1️⃣ EXCEL IMPORT
@@ -772,16 +785,29 @@ class ItemAdmin(admin.ModelAdmin):
                 price_col = col("price")
 
                 cat_col = col("category")
-                subcat_col = col("sub category") or col("subcategory")  # supports both
+                subcat_col = col("sub category") or col("subcategory")
                 subcat2_col = col("sub category 2") or col("subcategory 2") or col("sub_category_2")
 
                 city_col = col("city")
                 img_col = col("image")
 
+                # ✅ REQUIRED: column in Excel is "User Mobile Number"
+                user_mobile_col = col("user mobile number")
+
                 for row in sheet.iter_rows(min_row=2, values_only=True):
                     try:
                         external_id = norm(row[id_col]) if id_col is not None else None
                         if not external_id:
+                            continue
+
+                        # ✅ find the owner user from Excel (skip row if user missing)
+                        phone_raw = row[user_mobile_col] if user_mobile_col is not None else None
+                        owner_user = find_user_by_phone(phone_raw)
+
+                        if not owner_user:
+                            skipped_missing_user += 1
+                            if len(missing_user_rows) < 20:
+                                missing_user_rows.append(f"{external_id}:{clean_phone(phone_raw) or 'NO_PHONE'}")
                             continue
 
                         title = clean_str(row[name_col]) if name_col is not None else None
@@ -817,15 +843,16 @@ class ItemAdmin(admin.ModelAdmin):
                         item = Item.objects.filter(external_id=external_id).first()
 
                         if not item:
+                            # ✅ create as pending first; will be activated only if photo exists
                             listing = Listing.objects.create(
                                 type="item",
-                                user=request.user,
+                                user=owner_user,
                                 title=title,
                                 description=desc or "",
                                 category=assigned_category,
                                 city=city,
-                                is_active=True,
-                                is_approved=True,
+                                is_active=False,
+                                is_approved=False,
                             )
 
                             item = Item.objects.create(
@@ -847,15 +874,13 @@ class ItemAdmin(admin.ModelAdmin):
                             listing.description = desc or ""
                             listing.category = assigned_category
                             listing.city = city
-                            listing.user = request.user
-                            listing.is_active = True
-                            listing.is_approved = True
-                            listing.save()
+                            listing.user = owner_user
+                            # keep activation decision for after photos check
+                            listing.save(update_fields=["title", "description", "category", "city", "user"])
 
                         # ======================================================
                         # PHOTOS — EXACT OLD BEHAVIOR
                         # ======================================================
-                        image_found = False
                         ext_lower = external_id.lower()
 
                         # ---- ZIP ----
@@ -869,7 +894,6 @@ class ItemAdmin(admin.ModelAdmin):
                                                 c = ContentFile(img.read())
                                                 c.name = f"{external_id}_{fn}"
                                                 ItemPhoto.objects.create(item=item, image=c)
-                                            image_found = True
                                             added_photos += 1
                                         except:
                                             pass
@@ -888,13 +912,19 @@ class ItemAdmin(admin.ModelAdmin):
                                         c.name = unique_name
 
                                         ItemPhoto.objects.create(item=item, image=c)
-                                        image_found = True
                                         added_photos += 1
                                 except Exception as e:
                                     print("URL DOWNLOAD ERROR:", url, e)
                                     pass
 
-                        if not image_found:
+                        # ✅ Activation/approval rule:
+                        # If item has >= 1 photo (existing or newly added) => active+approved
+                        has_photo = ItemPhoto.objects.filter(item=item).exists()
+                        listing.is_active = bool(has_photo)
+                        listing.is_approved = bool(has_photo)
+                        listing.save(update_fields=["is_active", "is_approved"])
+
+                        if not has_photo:
                             no_photo.append(external_id)
 
                     except Exception as e:
@@ -912,6 +942,8 @@ class ItemAdmin(admin.ModelAdmin):
                     for i in Item.objects.exclude(external_id__isnull=True).exclude(external_id__exact="")
                 }
 
+                activated_listing_ids = set()
+
                 for root, _, files in os.walk(photos_dir):
                     for fn in files:
                         low = fn.lower()
@@ -924,8 +956,13 @@ class ItemAdmin(admin.ModelAdmin):
                                         c.name = fn
                                         ItemPhoto.objects.create(item=item, image=c)
                                     added_photos += 1
+                                    activated_listing_ids.add(item.listing_id)
                                 except:
                                     failed += 1
+
+                # ✅ ZIP-only activation: any listing that got at least one new photo becomes active+approved
+                if activated_listing_ids:
+                    Listing.objects.filter(id__in=activated_listing_ids).update(is_active=True, is_approved=True)
 
             # -----------------------
             # Cleanup
@@ -935,10 +972,14 @@ class ItemAdmin(admin.ModelAdmin):
                     os.remove(p)
 
             msg = f"✅ Done. {created} created, {updated} updated, {failed} failed."
+            if skipped_missing_user:
+                msg += f" ⛔️ {skipped_missing_user} skipped (user not found by 'User Mobile Number')."
+                if missing_user_rows:
+                    msg += " Examples: " + ", ".join(missing_user_rows[:10])
             if added_photos:
                 msg += f" {added_photos} photos added."
             if no_photo:
-                msg += f" ⚠️ {len(no_photo)} items no photos."
+                msg += f" ⚠️ {len(no_photo)} items pending (no photos)."
 
             self.message_user(request, msg, level=messages.SUCCESS)
             return redirect("../")
