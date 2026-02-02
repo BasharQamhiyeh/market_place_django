@@ -13,7 +13,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.admin.views.decorators import staff_member_required
 
 # Django HTTP / views
-from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, HttpRequest
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse, HttpRequest, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
@@ -738,7 +738,19 @@ def request_list(request):
 #     ITEM DETAIL VIEW
 # ============================
 def item_detail(request, item_id):
-    item = get_object_or_404(Item, id=item_id)
+    item = get_object_or_404(
+        Item.objects.select_related("listing", "listing__user", "listing__category"),
+        id=item_id
+    )
+
+    # ✅ Block public access to unapproved/inactive/deleted items (allow owner + staff)
+    listing = item.listing
+    is_own_listing = request.user.is_authenticated and (listing.user_id == request.user.user_id)
+    is_staff = request.user.is_authenticated and request.user.is_staff
+
+    if not (listing.is_approved and listing.is_active and not listing.is_deleted):
+        if not (is_own_listing or is_staff):
+            raise Http404()
 
     breadcrumb_categories = []
     cat = getattr(item.listing, "category", None)
@@ -910,6 +922,15 @@ def item_detail(request, item_id):
 
 def request_detail(request, request_id):
     request_obj = get_object_or_404(Request, id=request_id)
+
+    listing = request_obj.listing
+    is_owner = request.user.is_authenticated and (listing.user_id == request.user.user_id)
+    is_staff = request.user.is_authenticated and request.user.is_staff
+
+    # ✅ Block public access to unapproved/inactive/deleted items
+    if not (listing.is_approved and listing.is_active and not listing.is_deleted):
+        if not (is_owner or is_staff):
+            raise Http404()
 
     breadcrumb_categories = []
     cat = getattr(request_obj.listing, "category", None)
@@ -1163,7 +1184,7 @@ def item_create(request):
             )
 
             messages.success(request, "✅ Your ad was submitted (pending review).")
-            return redirect("item_list")
+            return redirect("my_account")
 
         # -----------------------------
         # Form invalid
@@ -1411,7 +1432,7 @@ def item_edit(request, item_id):
             listing=listing,
         )
 
-        return redirect("item_detail", item_id=item.id)
+        return redirect("my_account")
 
     return render(
         request,
@@ -1545,7 +1566,7 @@ def request_create(request):
             )
 
             messages.success(request, "✅ Your request was submitted (pending review).")
-            return redirect("request_list")
+            return redirect("my_account")
 
         request.session["item_create_form_token"] = str(uuid.uuid4())
 
@@ -1707,7 +1728,7 @@ def request_edit(request, request_id):
             # refresh token for next edit attempt
             request.session["request_edit_form_token"] = str(uuid.uuid4())
 
-            return redirect("request_detail", request_id=req.id)  # or request_list
+            return redirect("my_account")
 
         # invalid form -> new token
         request.session["request_edit_form_token"] = str(uuid.uuid4())
@@ -2126,7 +2147,7 @@ def item_edit(request, item_id):
             listing=listing,
         )
 
-        return redirect("item_detail", item_id=item.id)
+        return redirect("my_account")
 
     return render(
         request,
