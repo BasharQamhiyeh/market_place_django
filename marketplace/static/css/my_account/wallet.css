@@ -68,40 +68,51 @@
   animation: fadeIn .18s ease-out both;
 }
 
-/* ✅ mockup: dates appear orange */
-.wallet-tab .timeline-date{
-  font-weight:800;
-  color:#ea580c !important;  /* orange-600 */
-  font-size:14px;
-  padding:6px 2px;
+/* ================================
+   ✅ PHASE 1 CRITICAL FIX
+   Wallet Timeline Date - Darker Orange
+================================ */
+
+/* ✅ mockup: wallet timeline dates use DARKER orange (#ea580c) not standard orange (#ff7a18) */
+.wallet-tab .timeline-date,
+#tab-wallet .timeline-date {
+  font-weight: 800 !important;      /* Mockup uses 800, not 900 */
+  color: #ea580c !important;        /* ✅ DARKER orange-600, not standard orange */
+  font-size: 14px !important;       /* Mockup uses 14px, not 15px */
+  padding: 6px 2px;
 }
 
-
-/* ✅ mockup pills */
-.wallet-tab .status-badge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:4px 10px;          /* أكثر مثل الموكاب */
-  border-radius:9999px;
-  font-weight:700;           /* mockup looks like bold not extra-black */
-  font-size:12px;
-  line-height:1;
-  border:1px solid transparent;
+/* ✅ mockup wallet pills - ensure proper styling */
+.wallet-tab .status-badge,
+#tab-wallet .status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;          /* Slightly more than base */
+  border-radius: 9999px;
+  font-weight: 700;           /* mockup looks like bold not extra-black */
+  font-size: 12px;
+  line-height: 1;
+  border: 1px solid transparent;
 }
 
-.wallet-tab .pill-blue{
-  background:#eff6ff;
-  color:#2563eb;
-  border-color:#bfdbfe;
+.wallet-tab .pill-blue,
+#tab-wallet .pill-blue {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
 }
-.wallet-tab .pill-green{
-  background:#ecfdf5;
-  color:#16a34a;
-  border-color:#bbf7d0;
+
+.wallet-tab .pill-green,
+#tab-wallet .pill-green {
+  background: #ecfdf5;
+  color: #16a34a;
+  border-color: #bbf7d0;
 }
-.wallet-tab .pill-red{
-  background:#fef2f2;
-  color:#dc2626;
-  border-color:#fecaca;
+
+.wallet-tab .pill-red,
+#tab-wallet .pill-red {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
 }

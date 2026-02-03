@@ -1,9 +1,14 @@
 /* static/css/my_account/requests.css */
 
-/* ✅ Category badge - Positioned closer to content, GREEN theme */
+/* ================================
+   ✅ PHASE 1 CRITICAL FIX
+   Request Category Badge - GREEN Theme
+================================ */
+
+/* ✅ Category badge - GREEN theme (to match request color scheme) */
 #tab-requests .req-cat-badge {
   position: absolute;
-  top: 16px;  /* Lower position - closer to content */
+  top: 16px;  /* Lower position than ads (16px vs 8px) - closer to content */
   right: 16px;
   z-index: 10;
   display: inline-flex;
@@ -11,21 +16,40 @@
   justify-content: center;
   padding: 4px 10px;
   border-radius: 10px;
-  font-weight: 800;
+  font-weight: 900;         /* ✅ 900 (extrabold) to match mockup */
   font-size: 12px;
   background: #fff;
   border: 1px solid #16a34a; /* ✅ GREEN border (--rukn-green) */
   color: #16a34a;            /* ✅ GREEN text (--rukn-green) */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
 }
 
 /* Request header spacing */
-#tab-requests .req-header {
+#tab-requests .req-header,
+#tab-requests .request-row .ad-header {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 6px;
+}
+
+/* Ensure request ID styling matches */
+#tab-requests .ad-id {
+  background: transparent;
+  padding: 0;
+  color: #374151;
+  font-weight: 900;         /* ✅ 900 not 700 */
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#tab-requests .ad-id span {
+  color: #dc2626;          /* Red color for request ID number */
+  font-weight: 900;
 }
 
 /* Mobile: actions in 2 columns like ads */
@@ -40,4 +64,10 @@
     min-width: 0 !important;
     width: 100% !important;
   }
+}
+
+/* Ensure request cards have proper spacing */
+#tab-requests .request-row {
+  position: relative;
+  padding-top: 6px; /* Extra space for category badge */
 }

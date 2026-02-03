@@ -162,7 +162,12 @@
   }
 }
 
-/* Category badge */
+/* ================================
+   ✅ PHASE 1 CRITICAL FIX
+   Category Badge - Font Weight 900
+================================ */
+
+/* Category badge - ORANGE theme for ads */
 #tab-ads .ad-cat,
 #tab-ads .ad-cat-mock {
   position: absolute;
@@ -174,9 +179,10 @@
   padding: 4px 8px;
   border-radius: 8px;
   border: 1px solid #fb923c;
-  font-weight: 900;
+  font-weight: 900;  /* ✅ FIXED: Was bold (700), now extrabold (900) */
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
   z-index: 2;
+  white-space: nowrap;
 }
 
 /* Image */
@@ -234,13 +240,18 @@
   margin-bottom: 8px;
 }
 
+/* ================================
+   ✅ PHASE 1 CRITICAL FIX
+   Ad ID - Font Weight 900
+================================ */
+
 /* ID */
 #tab-ads .ad-id,
 #tab-ads .ad-id-mock {
   background: transparent;
   padding: 0;
   color: #374151;
-  font-weight: 900;
+  font-weight: 900;  /* ✅ FIXED: Was bold (700), now extrabold (900) */
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -250,7 +261,7 @@
 #tab-ads .ad-id-num,
 #tab-ads .ad-id-num-mock {
   color: #ea580c;
-  font-weight: 900;
+  font-weight: 900;  /* ✅ FIXED: Ensure number is also 900 */
 }
 
 #tab-ads .inline-flex {

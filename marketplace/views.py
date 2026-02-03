@@ -3587,7 +3587,7 @@ def _fmt_date(dt):
 def translate_condition(condition):
     """Translate condition_preference to Arabic"""
     conditions_map = {
-        "any": "أي حالة",
+        "any": " لا يهم جديد أو مستعمل",
         "new": "جديد",
         "used": "مستعمل",
     }
