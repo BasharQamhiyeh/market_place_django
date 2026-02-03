@@ -3,36 +3,36 @@
 
 <div class="requests-tab">
 
-  <!-- Header (match ads mockup style) -->
+  <!-- Header -->
   <div class="flex items-center justify-between gap-2 md:gap-3 mb-5 flex-nowrap">
     <h2 class="text-base md:text-xl font-bold flex items-center gap-2 text-gray-800 truncate">
-      <svg class="w-7 h-7 text-orange-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2"/>
+      <svg class="w-7 h-7 text-green-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+        <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
+        <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
       جميع الطلبات
     </h2>
 
     <div class="flex items-center gap-1.5 md:gap-3 shrink-0">
-      <div class="px-2.5 py-1 md:px-4 md:py-1.5 bg-orange-100 text-orange-700 border border-orange-300 rounded-lg md:rounded-xl font-bold text-xs md:text-sm whitespace-nowrap">
+      <div class="px-2.5 py-1 md:px-4 md:py-1.5 bg-green-100 text-green-700 border border-green-300 rounded-lg md:rounded-xl font-bold text-xs md:text-sm whitespace-nowrap">
         عدد الطلبات:
         <span id="requestsCount">{% if my_requests %}{{ my_requests|length }}{% else %}0{% endif %}</span>
       </div>
 
-      {# TODO: replace with your real add-request url #}
-      <a href="#"
-         class="px-3 py-1.5 md:px-4 md:py-2 bg-orange-500 text-white rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-orange-600 transition shadow whitespace-nowrap">
+      <a href="{% url 'create_request' %}"
+         class="px-3 py-1.5 md:px-4 md:py-2 bg-green-500 text-white rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-green-600 transition shadow whitespace-nowrap">
         أضف طلب
       </a>
     </div>
   </div>
 
-  <!-- IMPORTANT: id="requestsList" MUST exist -->
+  <!-- Requests List -->
   <div id="requestsList" class="space-y-4">
     {% if my_requests %}
       {% for req in my_requests %}
 
-        <div class="request-row flex flex-col md:flex-row items-start md:items-center gap-5 p-4 rounded-2xl shadow-sm
+        <div class="request-row relative flex flex-col md:flex-row items-start md:items-center gap-5 p-4 pt-6 rounded-2xl shadow-sm
                 {% if req.status == 'pending' %}
                   bg-yellow-50 border border-yellow-300
                 {% elif req.status == 'rejected' %}
@@ -49,10 +49,15 @@
               data-edit-url="{{ req.editUrl|default:'' }}"
         >
 
-          <!-- Body (no photo column) -->
+          <!-- ✅ Category Badge - Top Right (Absolute) -->
+          <span class="req-cat-badge">
+            {{ req.category|default:"بدون قسم" }}
+          </span>
+
+          <!-- Body -->
           <div class="flex-1 w-full">
             <!-- header line: id + status + featured -->
-            <div class="req-header flex items-center gap-3 flex-wrap mb-2">
+            <div class="req-header">
 
               <span class="flex items-center gap-1 text-gray-700 font-bold">
                 <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -60,7 +65,7 @@
                   <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="2"/>
                 </svg>
                 رقم الطلب:
-                <span class="text-orange-600">{{ req.id }}</span>
+                <span class="text-red-600">{{ req.id }}</span>
               </span>
 
               {% if req.status == "active" %}
@@ -99,19 +104,17 @@
                   <span class="feature-badge">⭐ مميز</span>
                 {% endif %}
               {% endif %}
-
-              <!-- category badge like mockup (right side when space) -->
-              <span class="req-cat-badge ms-auto">
-                {{ req.category|default:"بدون قسم" }}
-              </span>
             </div>
 
             <!-- title + budget -->
             <div class="flex items-center gap-3 mb-2 flex-wrap">
               <h3 class="font-bold text-lg text-gray-800">{{ req.title }}</h3>
-              <span class="text-orange-600 font-extrabold text-2xl leading-none">
-                {{ req.budget|default:"—" }} د.أ
-              </span>
+              {% if req.budget %}
+                <div class="flex items-center gap-2">
+                  <span class="text-orange-600 font-extrabold text-2xl leading-none">الميزانية:</span>
+                  <span class="text-orange-600 font-extrabold text-2xl leading-none">{{ req.budget }} د.أ</span>
+                </div>
+              {% endif %}
             </div>
 
             <!-- meta line -->
@@ -162,7 +165,7 @@
             {% endif %}
           </div>
 
-          <!-- Actions (same pills) -->
+          <!-- Actions -->
           <div class="flex flex-col gap-2 w-full md:w-auto">
 
             {# EDIT #}
@@ -170,7 +173,6 @@
                data-action="edit"
                data-id="{{ req.id }}"
                class="px-4 py-2 pill-blue text-sm relative group
-                      {% if req.status == 'pending' %}opacity-40 pointer-events-none{% endif %}
                       {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
                {% if req.featuredDaysLeft|default:0 > 0 %}
                  title="لا يمكنك تعديل الطلب لأنه مميز"
@@ -199,7 +201,6 @@
                     data-action="delete"
                     data-id="{{ req.id }}"
                     class="px-4 py-2 pill-red text-sm relative group
-                           {% if req.status == 'pending' %}opacity-40 pointer-events-none{% endif %}
                            {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
                     {% if req.featuredDaysLeft|default:0 > 0 %}
                       title="لا يمكنك حذف الطلب لأنه مميز"
@@ -223,7 +224,7 @@
               {% endif %}
             </button>
 
-            {# REPUBLISH (unchanged) #}
+            {# REPUBLISH #}
             <button type="button"
                     class="px-4 py-2 pill-green text-sm {% if req.status != 'active' %}opacity-40 pointer-events-none{% endif %}"
                     data-action="republish"
@@ -237,7 +238,7 @@
               إعادة نشر
             </button>
 
-            {# HIGHLIGHT (unchanged) #}
+            {# HIGHLIGHT #}
             {% if req.status != "active" or req.featuredDaysLeft|default:0 > 0 %}
               <button type="button" class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">
                 <span class="inline-flex items-center gap-1">

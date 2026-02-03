@@ -39,16 +39,15 @@
   }
 
   // =========================================================
-  // ✅ Deletion state
+  // ✅ State management
   // =========================================================
   let requestToDelete = null;    // request id (UI)
-  let listingToDelete = null;    // ✅ listing id (backend delete)
+  let listingToDelete = null;    // listing id (backend delete)
 
   let highlightTargetRequestId = null;
   let republishTargetRequestId = null;
   let republishCost = 0;
 
-  // Only handle selectHighlightPackage when highlight title == "تمييز الطلب"
   const isRequestHighlightModal = () => {
     const t = document.getElementById("highlightModalTitle");
     const txt = (t?.innerText || t?.textContent || "").trim();
@@ -89,7 +88,194 @@
     m.classList.remove("flex");
   }
 
-  // ---------- Success ----------
+  /* =========================================================
+     ✅ Helper functions for row state
+  ========================================================= */
+  function isFeaturedRow(row) {
+    return Number(row?.dataset?.featuredDaysLeft || "0") > 0;
+  }
+
+  function isPendingRow(row) {
+    return (row?.dataset?.status || "").toLowerCase() === "pending";
+  }
+
+  function isActiveRow(row) {
+    return (row?.dataset?.status || "").toLowerCase() === "active";
+  }
+
+  function isRejectedRow(row) {
+    return (row?.dataset?.status || "").toLowerCase() === "rejected";
+  }
+
+  /* =========================================================
+     ✅ APPLY ACTION STATES - THE THREE RULES
+
+     RULE 1: If pending → only edit & delete enabled
+     RULE 2: If featured → NO actions allowed (all disabled)
+     RULE 3: If active and not featured → all actions enabled
+  ========================================================= */
+  function applyActionStates() {
+    const list = getList();
+    if (!list) return;
+
+    list.querySelectorAll(".request-row").forEach((row) => {
+      const status = (row.dataset.status || "").toLowerCase();
+      const featured = isFeaturedRow(row);
+
+      const editLink = row.querySelector('a[data-action="edit"]');
+      const delBtn = row.querySelector('button[data-action="delete"]');
+      const republishBtn = row.querySelector('button[data-action="republish"]');
+      // Find highlight button - it might not have data-action if disabled in template
+      const highlightBtn = row.querySelector('button[data-action="highlight"]') ||
+                          Array.from(row.querySelectorAll('button')).find(btn => {
+                            const text = (btn.textContent || '').trim();
+                            return text === 'تمييز' || btn.classList.contains('pill-orange');
+                          });
+
+      // Reset all buttons to enabled state first
+      [editLink, delBtn, republishBtn, highlightBtn].forEach(btn => {
+        if (!btn) return;
+        // IMPORTANT: Remove pointer-events-none so tooltips can work!
+        btn.classList.remove("opacity-40", "cursor-not-allowed", "pointer-events-none");
+        btn.removeAttribute("aria-disabled");
+        btn.removeAttribute("title");
+
+        // Remove any existing tooltip spans
+        const existingTooltip = btn.querySelector('.tooltip-span');
+        if (existingTooltip) existingTooltip.remove();
+
+        // Remove relative and group classes if they were added
+        btn.classList.remove("relative", "group");
+      });
+
+      // Ensure highlight button has proper data attributes
+      if (highlightBtn && !highlightBtn.hasAttribute('data-action')) {
+        highlightBtn.setAttribute('data-action', 'highlight');
+        const reqId = row.dataset.reqId;
+        if (reqId) highlightBtn.setAttribute('data-id', reqId);
+      }
+
+      // ========================================
+      // RULE 2: If featured → disable ALL actions
+      // ========================================
+      if (featured) {
+        if (editLink) {
+          editLink.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          editLink.setAttribute("aria-disabled", "true");
+          editLink.setAttribute("title", "لا يمكنك تعديل الطلب لأنه مميز");
+
+          // Add tooltip span
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك تعديل الطلب لأنه مميز</span>';
+          editLink.appendChild(tooltip);
+        }
+
+        if (delBtn) {
+          delBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          delBtn.setAttribute("aria-disabled", "true");
+          delBtn.setAttribute("title", "لا يمكنك حذف الطلب لأنه مميز");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك حذف الطلب لأنه مميز</span>';
+          delBtn.appendChild(tooltip);
+        }
+
+        if (republishBtn) {
+          republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          republishBtn.setAttribute("aria-disabled", "true");
+          republishBtn.setAttribute("title", "لا يمكن إعادة نشر طلب مميز");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة نشر طلب مميز</span>';
+          republishBtn.appendChild(tooltip);
+        }
+
+        if (highlightBtn) {
+          highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          highlightBtn.setAttribute("aria-disabled", "true");
+          highlightBtn.setAttribute("title", "الطلب مميز بالفعل");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">الطلب مميز بالفعل</span>';
+          highlightBtn.appendChild(tooltip);
+        }
+        return;
+      }
+
+      // ========================================
+      // RULE 1: If pending → only edit & delete enabled
+      // ========================================
+      if (status === "pending") {
+        if (republishBtn) {
+          // Note: NO pointer-events-none so hover tooltip works!
+          republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          republishBtn.setAttribute("aria-disabled", "true");
+          republishBtn.setAttribute("title", "لا يمكن إعادة النشر أثناء المراجعة");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة النشر أثناء المراجعة</span>';
+          republishBtn.appendChild(tooltip);
+        }
+
+        if (highlightBtn) {
+          // Note: NO pointer-events-none so hover tooltip works!
+          highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          highlightBtn.setAttribute("aria-disabled", "true");
+          highlightBtn.setAttribute("title", "لا يمكن التمييز أثناء المراجعة");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن التمييز أثناء المراجعة</span>';
+          highlightBtn.appendChild(tooltip);
+        }
+        return;
+      }
+
+      // ========================================
+      // If rejected → disable republish & highlight
+      // ========================================
+      if (status === "rejected") {
+        if (republishBtn) {
+          // Note: NO pointer-events-none so hover tooltip works!
+          republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          republishBtn.setAttribute("aria-disabled", "true");
+          republishBtn.setAttribute("title", "لا يمكن إعادة نشر طلب مرفوض");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة نشر طلب مرفوض</span>';
+          republishBtn.appendChild(tooltip);
+        }
+
+        if (highlightBtn) {
+          // Note: NO pointer-events-none so hover tooltip works!
+          highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
+          highlightBtn.setAttribute("aria-disabled", "true");
+          highlightBtn.setAttribute("title", "لا يمكن تمييز طلب مرفوض");
+
+          const tooltip = document.createElement("span");
+          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن تمييز طلب مرفوض</span>';
+          highlightBtn.appendChild(tooltip);
+        }
+        return;
+      }
+
+      // ========================================
+      // RULE 3: If active and not featured → all actions enabled
+      // (already reset above, nothing to do)
+      // ========================================
+    });
+  }
+
+  // =========================================================
+  // ✅ Success / No points
+  // =========================================================
   function openSuccessModal(message, title = "تم التنفيذ بنجاح") {
     const msg = document.getElementById("successMsg");
     const ttl = document.getElementById("successTitle");
@@ -99,13 +285,11 @@
   }
   if (!window.closeSuccessModal) window.closeSuccessModal = () => closeModal("successModal");
 
-  // ---------- No points ----------
   function showNoPointsModal() {
     if (!openModal("noPointsModal")) alert("❌ لا يوجد نقاط كافية");
   }
   if (!window.closeNoPointsModal) window.closeNoPointsModal = () => closeModal("noPointsModal");
 
-  // ---------- Close republish confirm ----------
   if (!window.closeRepublishConfirmModal) {
     window.closeRepublishConfirmModal = () => {
       closeModal("republishConfirmModal");
@@ -139,12 +323,6 @@
       header.appendChild(badge);
     }
     badge.textContent = daysLeft > 0 ? `⭐ مميز — متبقّي: ${daysLeft} يوم` : "⭐ مميز";
-  }
-
-  function disableHighlightButton(row) {
-    const btn = row.querySelector('[data-action="highlight"]');
-    if (!btn) return;
-    btn.classList.add("opacity-40", "cursor-not-allowed", "pointer-events-none");
   }
 
   /* =========================================================
@@ -217,27 +395,12 @@
 
     setRowActiveUI(row);
     updateRowDateToToday(row);
+    applyActionStates(); // Re-apply rules after republish
 
     openSuccessModal(
-      free ? "تم إعادة نشر الطلب مجاناً ✅" : `تمت إعادة النشر مقابل ${republishCost} نقطة ✅ (تجربة)`,
+      free ? "تم إعادة نشر الطلب مجاناً ✅" : `تمت إعادة النشر مقابل ${republishCost} نقطة ✅`,
       "🔄 تم إعادة النشر"
     );
-  }
-
-  /* =========================================================
-     ✅ Enable Edit/Delete always
-  ========================================================= */
-  function enableEditDeleteAlways() {
-    const list = getList();
-    if (!list) return;
-
-    list.querySelectorAll(".request-row").forEach((row) => {
-      const editLink = row.querySelector(".pill-blue");
-      if (editLink) editLink.classList.remove("opacity-40", "pointer-events-none");
-
-      const delBtn = row.querySelector('[data-action="delete"]');
-      if (delBtn) delBtn.classList.remove("opacity-40", "pointer-events-none", "cursor-not-allowed");
-    });
   }
 
   /* =========================================================
@@ -346,7 +509,7 @@
           ensureFeatureBadge(row, Number(days));
         }
 
-        disableHighlightButton(row);
+        applyActionStates(); // Re-apply rules after featuring
 
         closeModal("highlightModal");
         openSuccessModal("تم تمييز الطلب بنجاح!", "⭐ تم التمييز");
@@ -357,7 +520,7 @@
       if (c) setPoints(pointsNow - c);
       row.dataset.featuredDaysLeft = String(Number(days));
       ensureFeatureBadge(row, Number(days));
-      disableHighlightButton(row);
+      applyActionStates(); // Re-apply rules
 
       closeModal("highlightModal");
       openSuccessModal("تم تمييز الطلب بنجاح! (تجربة)", "⭐ تم التمييز");
@@ -451,10 +614,8 @@
     openModal("deleteAdModal");
   }
 
-  // share confirmDeleteAd without breaking ads.js
   const prevConfirmDeleteAd = window.confirmDeleteAd;
   window.confirmDeleteAd = async () => {
-    // ✅ Requests tab delete flow
     if (requestToDelete != null) {
       const select = document.getElementById("deleteReason");
       const other = document.getElementById("deleteReasonOther");
@@ -472,10 +633,8 @@
       const finalReason =
         reason === "other" && otherTxt.length ? otherTxt : select?.options?.[select.selectedIndex]?.text || "";
 
-      // ✅ IMPORTANT: delete by LISTING id (not request id)
       await callBackend(`/listing/${listingToDelete}/delete/`, { reason: finalReason });
 
-      // ✅ IMPORTANT: remove row by LISTING id ONLY (no fallback to request id)
       const row = document.querySelector(`.request-row[data-listing-id="${listingToDelete}"]`);
       if (row) row.remove();
 
@@ -489,7 +648,6 @@
       return;
     }
 
-    // Not a request delete -> let ads.js handle
     if (typeof prevConfirmDeleteAd === "function") return prevConfirmDeleteAd();
   };
 
@@ -554,58 +712,95 @@
   }
 
   /* =========================================================
-     ✅ Click handling (delegated)
+     ✅ CLICK HANDLING - Enforce the three rules
   ========================================================= */
   function onRequestsClick(e) {
     const list = getList();
     if (!list) return;
 
-    // 1) EDIT link => just navigate (GET)
-    const editLink = e.target.closest("a.pill-blue");
-    if (editLink && list.contains(editLink)) {
-      // إذا الرابط مش موجود أو فاضي، لا تعمل شي
-      const href = (editLink.getAttribute("href") || "").trim();
-      if (!href || href === "#") return;
+    // Handle EDIT link
+    const edit = e.target.closest('a[data-action="edit"]');
+    if (edit && list.contains(edit)) {
+      const id = Number(edit.getAttribute("data-id"));
+      const row = getRow(id);
 
-      // لا تمنع الافتراضي إلا إذا بدك تضمن التنقل بنفسك
-      e.preventDefault();
-      e.stopPropagation();
+      // Check if disabled
+      if (edit.getAttribute("aria-disabled") === "true") {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
 
-      window.location.href = href;  // ✅ يفتح صفحة التعديل (GET)
+      // RULE 2: Block if featured
+      if (isFeaturedRow(row)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // RULE 1: Allow if pending (edit is allowed)
+      // RULE 3: Allow if active and not featured
+      // (let it navigate normally)
       return;
     }
 
-
-    // 2) Action buttons
+    // Handle action buttons
     const btn = e.target.closest("[data-action]");
     if (!btn || !list.contains(btn)) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (btn.classList.contains("pointer-events-none")) return;
 
     const action = btn.getAttribute("data-action");
     const id = Number(btn.getAttribute("data-id"));
     if (!id) return;
 
+    // Check if button is disabled (aria-disabled instead of pointer-events-none)
+    if (btn.getAttribute("aria-disabled") === "true") {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
     const row = getRow(id);
     if (!row) return;
 
-    const status = row.dataset.status || "";
-    const featuredDays = Number(row.dataset.featuredDaysLeft || "0");
+    const status = (row.dataset.status || "").toLowerCase();
+    const featured = isFeaturedRow(row);
     const last = row.dataset.lastRepublish || "";
 
+    // ========================================
+    // DELETE button
+    // ========================================
     if (action === "delete") {
-      if (status === "pending") return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      // RULE 2: Block if featured
+      if (featured) return;
+
+      // RULE 1: Allow if pending
+      // RULE 3: Allow if active and not featured
+
       openDeleteModalForRequest(id);
       return;
     }
 
+    // ========================================
+    // HIGHLIGHT button
+    // ========================================
     if (action === "highlight") {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // RULE 2: Block if featured
+      if (featured) return;
+
+      // RULE 1: Block if pending (highlight not allowed)
+      if (status === "pending") return;
+
+      // Only allow if active
       if (status !== "active") return;
 
-      let daysLeft = featuredDays;
+      // Check if already featured (double check)
+      let daysLeft = Number(row.dataset.featuredDaysLeft || "0");
       if (!daysLeft && row.dataset.featuredExpiresAt) {
         daysLeft = calcDaysLeftFromNowISO(row.dataset.featuredExpiresAt);
         row.dataset.featuredDaysLeft = String(daysLeft);
@@ -616,7 +811,20 @@
       return;
     }
 
+    // ========================================
+    // REPUBLISH button
+    // ========================================
     if (action === "republish") {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // RULE 2: Block if featured
+      if (featured) return;
+
+      // RULE 1: Block if pending (republish not allowed)
+      if (status === "pending") return;
+
+      // Only allow if active
       if (status !== "active") return;
 
       const check = canRepublishWithCost(last);
@@ -626,12 +834,16 @@
       } else {
         openRepublishConfirmModalForRequest(id, check.cost);
       }
+      return;
     }
   }
 
+  /* =========================================================
+     ✅ Init + backdrop closes
+  ========================================================= */
   function init() {
     updateCount();
-    enableEditDeleteAlways();
+    applyActionStates(); // ✅ Apply the three rules on init
     wireDeleteReasonChangeOnce();
     wireBackdropClose();
 
@@ -642,7 +854,6 @@
     document.addEventListener("click", onRequestsClick, true);
     init();
 
-    // retry init for lazy tab render
     let tries = 0;
     const t = setInterval(() => {
       tries += 1;

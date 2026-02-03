@@ -752,6 +752,14 @@ def item_detail(request, item_id):
         if not (is_own_listing or is_staff):
             raise Http404()
 
+    # ✅ Increment views (once per session per item)
+    session_key = f"item_viewed_{item_id}"
+    if not request.session.get(session_key):
+        from django.db.models import F
+        Listing.objects.filter(pk=listing.pk).update(views_count=F("views_count") + 1)
+        request.session[session_key] = True
+        listing.refresh_from_db(fields=["views_count"])
+
     breadcrumb_categories = []
     cat = getattr(item.listing, "category", None)
     while cat:
@@ -931,6 +939,14 @@ def request_detail(request, request_id):
     if not (listing.is_approved and listing.is_active and not listing.is_deleted):
         if not (is_owner or is_staff):
             raise Http404()
+
+    # ✅ Increment views (once per session per request)
+    session_key = f"request_viewed_{request_id}"
+    if not request.session.get(session_key):
+        from django.db.models import F
+        Listing.objects.filter(pk=listing.pk).update(views_count=F("views_count") + 1)
+        request.session[session_key] = True
+        listing.refresh_from_db(fields=["views_count"])
 
     breadcrumb_categories = []
     cat = getattr(request_obj.listing, "category", None)
@@ -3568,6 +3584,15 @@ def _fmt_date(dt):
     return dt.strftime("%Y/%m/%d")
 
 
+def translate_condition(condition):
+    """Translate condition_preference to Arabic"""
+    conditions_map = {
+        "any": "أي حالة",
+        "new": "جديد",
+        "used": "مستعمل",
+    }
+    return conditions_map.get(condition, condition or "—")
+
 @require_GET
 @login_required
 def my_account(request: HttpRequest):
@@ -3624,8 +3649,8 @@ def my_account(request: HttpRequest):
             "date": _fmt_date(getattr(listing, "created_at", None)),
 
             # stats (keep as-is)
-            "views": 0,
-            "favCount": 0,
+            "views": getattr(listing, "views_count", 0) or 0,
+            "favCount": Favorite.objects.filter(listing=listing).count(),
 
             # media
             "image": image_url,
@@ -3673,11 +3698,10 @@ def my_account(request: HttpRequest):
 
             # meta
             "city": getattr(getattr(listing, "city", None), "name", "") or str(getattr(listing, "city", "") or ""),
-            "condition": getattr(req, "condition_preference", "") or "",
+            "condition": translate_condition(getattr(req, "condition_preference", "")),
             "date": _fmt_date(getattr(listing, "created_at", None)),
 
-            # stats (keep as-is)
-            "views": getattr(listing, "views", 0) or 0,
+            "views": getattr(listing, "views", 0) or 0,  # ❌ WRONG - uses non-existent field
 
             # moderation/status
             "status": _status_from_listing(listing),
@@ -4311,3 +4335,5 @@ class PrivacyPolicyView(TemplateView):
         ctx["policy_page"] = page
         ctx["policy_sections"] = sections
         return ctx
+
+

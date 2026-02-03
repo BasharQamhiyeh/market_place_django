@@ -384,6 +384,8 @@ class Listing(models.Model):
 
     followers_notified = models.BooleanField(default=False)
 
+    views_count = models.PositiveIntegerField(default=0, db_index=True)
+
     @property
     def is_featured(self):
         until = self.featured_until
