@@ -16,7 +16,7 @@ ALLOWED_HOSTS = ['*']
 # Cloudinary (must be early)
 # ---------------------------------------------------
 IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
-CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME', 'dljrdisnq')
 CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 USE_CLOUDINARY = IS_RENDER and all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
