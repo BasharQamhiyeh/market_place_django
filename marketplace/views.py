@@ -3198,6 +3198,8 @@ def delete_listing_api(request, listing_id):
 
 from django.db.models import F
 
+from django.shortcuts import get_object_or_404, render
+
 def user_profile(request, user_id):
     seller = get_object_or_404(User, pk=user_id, is_active=True)
 
@@ -3208,16 +3210,26 @@ def user_profile(request, user_id):
         request.session[session_key] = True
         # seller.refresh_from_db(fields=["views_count"])
 
-    listings = (
+    # ✅ IMPORTANT:
+    # The template includes the card with `item=l.item`
+    # So we MUST return Listing objects, but only those that actually have a related Item.
+    listings_qs = (
         Listing.objects
-        .filter(user=seller, is_active=True, is_approved=True, type="item")
+        .filter(
+            user=seller,
+            is_active=True,
+            is_approved=True,
+            type="item",
+            item__isnull=False,          # ✅ excludes broken listings (no Item)
+        )
         .select_related("category", "city", "user")
-        .order_by("-published_at")[:30]
+        .prefetch_related("item")       # ✅ avoid extra queries when template accesses l.item
+        .order_by("-published_at")
     )
 
-    listings_count = Listing.objects.filter(
-        user=seller, is_active=True, is_approved=True, type="item"
-    ).count()
+    listings = list(listings_qs[:30])
+
+    listings_count = listings_qs.count()
 
     def _root_category(cat):
         while cat and cat.parent_id:
@@ -3225,6 +3237,7 @@ def user_profile(request, user_id):
         return cat
 
     for l in listings:
+        # ✅ No need to touch l.item.listing/category; Listing already has category/city
         root = _root_category(getattr(l, "category", None))
         l.root_category_id = root.id if root else ""
 
@@ -3249,10 +3262,9 @@ def user_profile(request, user_id):
 
     avatar_url = seller.profile_photo.url if getattr(seller, "profile_photo", None) else None
 
-
     ctx = {
         "seller": seller,
-        "listings": listings,
+        "listings": listings,                 # ✅ still listings (so l.item works in template)
         "listings_count": listings_count,
         "categories": categories,
         "cities": cities,
@@ -3263,6 +3275,7 @@ def user_profile(request, user_id):
         "avatar_url": avatar_url,
     }
     return render(request, "user_profile.html", ctx)
+
 
 
 def store_profile(request, store_id):
