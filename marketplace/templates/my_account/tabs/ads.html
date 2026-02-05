@@ -47,7 +47,7 @@
              data-listing-id="{{ ad.listing_id }}"
              data-status="{{ ad.status }}"
             data-featured-days-left="{{ ad.featuredDaysLeft|default:0 }}"
-            data-last-republish="{{ ad.lastRepublishAt|default:'' }}"
+            data-last-republish="{{ ad.published_at|default:ad.created_at}}"
             data-edit-url="{{ ad.editUrl|default:'' }}"
         >
 
@@ -113,8 +113,6 @@
               {% if ad.featured %}
                 {% if ad.featuredDaysLeft and ad.featuredDaysLeft > 0 %}
                   <span class="feature-badge flex items-center gap-1">⭐ مميز — متبقّي: {{ ad.featuredDaysLeft }} يوم</span>
-                {% else %}
-                  <span class="feature-badge">⭐ مميز</span>
                 {% endif %}
               {% endif %}
             </div>
@@ -138,7 +136,7 @@
                   <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
                   <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
                 </svg>
-                <span>{{ ad.date|default:"—" }}</span>
+                <span>{{ ad.published_at|default:ad.created_at|default:"—" }}</span>
               </span>
 
               <span class="inline-flex items-center gap-1">

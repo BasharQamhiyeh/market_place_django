@@ -271,7 +271,7 @@ def home(request):
         )
         .select_related("listing__category", "listing__city", "listing__user")
         .prefetch_related("photos")
-        .order_by("-listing__created_at")[:limit]
+        .order_by("-listing__published_at")[:limit]
     )
 
     from django.db.models import Exists, OuterRef
@@ -295,7 +295,7 @@ def home(request):
             listing__is_deleted=False
         )
         .select_related("listing__category", "listing__city", "listing__user")
-        .order_by("-listing__created_at")[:limit]
+        .order_by("-listing__published_at")[:limit]
     )
 
     categories = (
@@ -387,7 +387,7 @@ def item_list(request):
         listing__is_approved=True,
         listing__is_active=True,
         listing__is_deleted=False
-    )
+    ).order_by("-listing__featured_until")
 
     # ✅ ADD THIS: annotate base_qs (so every later queryset keeps it)
     if fav_exists is not None:
@@ -591,7 +591,7 @@ def request_list(request):
         listing__is_deleted=False
     ).select_related(
         "listing", "listing__user", "listing__category", "listing__city"
-    )
+    ).order_by("-listing__featured_until")
 
     selected_category = None
 
@@ -799,7 +799,7 @@ def item_detail(request, item_id):
             )
             .exclude(id=item.id)
             .select_related("listing__category", "listing__city", "listing__user")
-            .order_by("-listing__created_at")[:4]
+            .order_by("-listing__published_at")[:4]
         )
 
     similar_items = fallback_similar()
@@ -834,7 +834,7 @@ def item_detail(request, item_id):
                     )
                     .exclude(id=item.id)
                     .select_related("listing__category", "listing__city", "listing__user")
-                    .order_by("-listing__created_at")[:4]
+                    .order_by("-listing__published_at")[:4]
                 )
 
                 if es_items.exists():
@@ -995,7 +995,7 @@ def request_detail(request, request_id):
             listing__is_deleted=False
         )
         .exclude(id=request_obj.id)
-        .order_by("-listing__created_at")[:4]
+        .order_by("-listing__published_at")[:4]
     )
 
     requester = request_obj.listing.user
@@ -3115,7 +3115,7 @@ def user_logout(request):
     return redirect('home')
 
 
-from marketplace.services.promotions import buy_featured_with_points, NotEnoughPoints, AlreadyFeatured
+from marketplace.services.promotions import buy_featured_with_points, spend_points, NotEnoughPoints, AlreadyFeatured
 
 FEATURE_PACKAGES = {3: 30, 7: 60, 14: 100}  # match mockup exactly
 
@@ -3212,7 +3212,7 @@ def user_profile(request, user_id):
         Listing.objects
         .filter(user=seller, is_active=True, is_approved=True, type="item")
         .select_related("category", "city", "user")
-        .order_by("-created_at")[:30]
+        .order_by("-published_at")[:30]
     )
 
     listings_count = Listing.objects.filter(
@@ -3282,7 +3282,7 @@ def store_profile(request, store_id):
         Listing.objects
         .filter(user=store.owner, is_active=True, is_approved=True, type="item")
         .select_related("category", "city", "user")
-        .order_by("-created_at")[:30]
+        .order_by("-published_at")[:30]
     )
 
     listings_count = Listing.objects.filter(
@@ -3621,7 +3621,7 @@ def my_account(request: HttpRequest):
         .filter(listing__user=user, listing__type="item", listing__is_active=True, listing__is_deleted=False)
         .select_related("listing__category", "listing__city", "listing")
         .prefetch_related("photos")
-        .order_by("-listing__created_at")
+        .order_by("-listing__published_at")
     )
 
     my_ads = []
@@ -3646,7 +3646,8 @@ def my_account(request: HttpRequest):
 
             # meta
             "city": str(listing.city) if listing.city else "",
-            "date": _fmt_date(getattr(listing, "created_at", None)),
+            "created_at": _fmt_date(getattr(listing, "created_at", None)),
+            "published_at": _fmt_date(getattr(listing, "published_at", None)),
 
             # stats (keep as-is)
             "views": getattr(listing, "views_count", 0) or 0,
@@ -3677,7 +3678,7 @@ def my_account(request: HttpRequest):
         Request.objects
         .filter(listing__user=user, listing__type="request", listing__is_deleted=False)
         .select_related("listing__category", "listing__city", "listing")
-        .order_by("-listing__created_at")
+        .order_by("-listing__published_at")
     )
 
     my_requests = []
@@ -3699,7 +3700,8 @@ def my_account(request: HttpRequest):
             # meta
             "city": getattr(getattr(listing, "city", None), "name", "") or str(getattr(listing, "city", "") or ""),
             "condition": translate_condition(getattr(req, "condition_preference", "")),
-            "date": _fmt_date(getattr(listing, "created_at", None)),
+            "created_at": _fmt_date(getattr(listing, "created_at", None)),
+            "published_at": _fmt_date(getattr(listing, "published_at", None)),
 
             "views": getattr(listing, "views", 0) or 0,  # ❌ WRONG - uses non-existent field
 
@@ -4337,3 +4339,80 @@ class PrivacyPolicyView(TemplateView):
         return ctx
 
 
+@login_required
+@require_POST
+def republish_listing_api(request, listing_id):
+    """
+    Republish a listing (ad or request).
+    - Free if ≥7 days since last republish
+    - Costs 20 points if <7 days
+    """
+    listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
+
+    # ✅ Block if featured
+    if listing.featured_until and listing.featured_until > timezone.now():
+        return JsonResponse({
+            "ok": False,
+            "error": "cannot_republish_featured"
+        }, status=400)
+
+    # ✅ Block if not active/approved
+    if not listing.is_approved or not listing.is_active:
+        return JsonResponse({
+            "ok": False,
+            "error": "listing_not_active"
+        }, status=400)
+
+    now = timezone.now()
+    last_publish = listing.published_at or listing.created_at
+    days_since = (now.date() - last_publish.date()).days
+
+    if days_since >= 7:
+        cost = 0
+    else:
+        cost = 20
+
+        # ✅ Use the new spend_points function
+        try:
+            spend_points(
+                user=request.user,
+                amount=cost,
+                reason="republish_listing",
+                meta={
+                    "listing_id": listing.id,
+                    "listing_title": listing.title,
+                    "days_since_last": days_since,
+                }
+            )
+        except NotEnoughPoints:
+            return JsonResponse({
+                "ok": False,
+                "error": "not_enough_points"
+            }, status=400)
+
+        # Notify
+        from .services.notifications import K_WALLET, S_USED
+
+        notify(
+            user=request.user,
+            kind=K_WALLET,
+            status=S_USED,
+            title="تم خصم نقاط",
+            body=f"تم خصم {cost} نقطة مقابل إعادة نشر \"{listing.title}\" قبل انتهاء 7 أيام.",
+            listing=listing,
+        )
+
+    # ✅ Update published_at to NOW
+    listing.published_at = now
+    listing.is_active = True
+    listing.save(update_fields=["published_at", "is_active"])
+
+    request.user.refresh_from_db(fields=["points"])
+
+    return JsonResponse({
+        "ok": True,
+        "cost": cost,
+        "free": (cost == 0),
+        "points_balance": request.user.points,
+        "published_at": listing.published_at.isoformat(),
+    })

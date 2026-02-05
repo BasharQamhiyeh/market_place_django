@@ -125,8 +125,7 @@ urlpatterns = [
 
     path("listing/<int:listing_id>/delete/", views.delete_listing_api, name="api_delete_listing"),
 
-
-
+    path('listing/<int:listing_id>/republish/', views.republish_listing_api, name='republish_listing'),
 
     # path('api/', include('marketplace.api_urls')),
 ]

@@ -81,3 +81,44 @@ def buy_featured_with_points(*, user: User, listing: Listing, days: int = 7, poi
 
     return promo
 
+
+# ✅ NEW: General spend_points function for non-promotion purposes (like republishing)
+@transaction.atomic
+def spend_points(*, user: User, amount: int, reason: str, meta: dict = None) -> PointsTransaction:
+    """
+    Deduct points from user for general purposes (republish, etc.)
+
+    Args:
+        user: User to deduct points from
+        amount: Number of points to deduct (positive integer)
+        reason: Reason code (e.g., "republish_listing")
+        meta: Optional metadata dict
+
+    Returns:
+        PointsTransaction record
+
+    Raises:
+        NotEnoughPoints: If user doesn't have enough points
+    """
+    # lock user to prevent double spend
+    user = User.objects.select_for_update().get(pk=user.pk)
+
+    if user.points < amount:
+        raise NotEnoughPoints()
+
+    # deduct points
+    user.points -= amount
+    user.save(update_fields=["points"])
+
+    # create transaction record
+    txn = PointsTransaction.objects.create(
+        user=user,
+        kind=PointsTransaction.Kind.SPEND,
+        delta=-amount,
+        balance_after=user.points,
+        reason=reason,
+        ref_promotion=None,  # no promotion for general spending
+        meta=meta or {},
+    )
+
+    return txn

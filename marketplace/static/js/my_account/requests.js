@@ -38,11 +38,8 @@
     }
   }
 
-  // =========================================================
-  // ✅ State management
-  // =========================================================
-  let requestToDelete = null;    // request id (UI)
-  let listingToDelete = null;    // listing id (backend delete)
+  let requestToDelete = null;
+  let listingToDelete = null;
 
   let highlightTargetRequestId = null;
   let republishTargetRequestId = null;
@@ -88,9 +85,6 @@
     m.classList.remove("flex");
   }
 
-  /* =========================================================
-     ✅ Helper functions for row state
-  ========================================================= */
   function isFeaturedRow(row) {
     return Number(row?.dataset?.featuredDaysLeft || "0") > 0;
   }
@@ -107,13 +101,6 @@
     return (row?.dataset?.status || "").toLowerCase() === "rejected";
   }
 
-  /* =========================================================
-     ✅ APPLY ACTION STATES - THE THREE RULES
-
-     RULE 1: If pending → only edit & delete enabled
-     RULE 2: If featured → NO actions allowed (all disabled)
-     RULE 3: If active and not featured → all actions enabled
-  ========================================================= */
   function applyActionStates() {
     const list = getList();
     if (!list) return;
@@ -125,46 +112,36 @@
       const editLink = row.querySelector('a[data-action="edit"]');
       const delBtn = row.querySelector('button[data-action="delete"]');
       const republishBtn = row.querySelector('button[data-action="republish"]');
-      // Find highlight button - it might not have data-action if disabled in template
       const highlightBtn = row.querySelector('button[data-action="highlight"]') ||
                           Array.from(row.querySelectorAll('button')).find(btn => {
                             const text = (btn.textContent || '').trim();
                             return text === 'تمييز' || btn.classList.contains('pill-orange');
                           });
 
-      // Reset all buttons to enabled state first
       [editLink, delBtn, republishBtn, highlightBtn].forEach(btn => {
         if (!btn) return;
-        // IMPORTANT: Remove pointer-events-none so tooltips can work!
         btn.classList.remove("opacity-40", "cursor-not-allowed", "pointer-events-none");
         btn.removeAttribute("aria-disabled");
         btn.removeAttribute("title");
 
-        // Remove any existing tooltip spans
         const existingTooltip = btn.querySelector('.tooltip-span');
         if (existingTooltip) existingTooltip.remove();
 
-        // Remove relative and group classes if they were added
         btn.classList.remove("relative", "group");
       });
 
-      // Ensure highlight button has proper data attributes
       if (highlightBtn && !highlightBtn.hasAttribute('data-action')) {
         highlightBtn.setAttribute('data-action', 'highlight');
         const reqId = row.dataset.reqId;
         if (reqId) highlightBtn.setAttribute('data-id', reqId);
       }
 
-      // ========================================
-      // RULE 2: If featured → disable ALL actions
-      // ========================================
       if (featured) {
         if (editLink) {
           editLink.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           editLink.setAttribute("aria-disabled", "true");
           editLink.setAttribute("title", "لا يمكنك تعديل الطلب لأنه مميز");
 
-          // Add tooltip span
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
           tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك تعديل الطلب لأنه مميز</span>';
@@ -206,12 +183,8 @@
         return;
       }
 
-      // ========================================
-      // RULE 1: If pending → only edit & delete enabled
-      // ========================================
       if (status === "pending") {
         if (republishBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
           republishBtn.setAttribute("title", "لا يمكن إعادة النشر أثناء المراجعة");
@@ -223,7 +196,6 @@
         }
 
         if (highlightBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
           highlightBtn.setAttribute("title", "لا يمكن التمييز أثناء المراجعة");
@@ -236,12 +208,8 @@
         return;
       }
 
-      // ========================================
-      // If rejected → disable republish & highlight
-      // ========================================
       if (status === "rejected") {
         if (republishBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
           republishBtn.setAttribute("title", "لا يمكن إعادة نشر طلب مرفوض");
@@ -253,7 +221,6 @@
         }
 
         if (highlightBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
           highlightBtn.setAttribute("title", "لا يمكن تمييز طلب مرفوض");
@@ -265,17 +232,9 @@
         }
         return;
       }
-
-      // ========================================
-      // RULE 3: If active and not featured → all actions enabled
-      // (already reset above, nothing to do)
-      // ========================================
     });
   }
 
-  // =========================================================
-  // ✅ Success / No points
-  // =========================================================
   function openSuccessModal(message, title = "تم التنفيذ بنجاح") {
     const msg = document.getElementById("successMsg");
     const ttl = document.getElementById("successTitle");
@@ -298,9 +257,6 @@
     };
   }
 
-  /* =========================================================
-     ✅ Highlight helpers
-  ========================================================= */
   function calcDaysLeftFromNowISO(isoDate) {
     if (!isoDate) return 0;
     const today = new Date();
@@ -325,23 +281,19 @@
     badge.textContent = daysLeft > 0 ? `⭐ مميز — متبقّي: ${daysLeft} يوم` : "⭐ مميز";
   }
 
-  /* =========================================================
-     ✅ Republish helpers
-  ========================================================= */
   function parseISO(dateStr) {
     if (!dateStr) return null;
     const d = new Date(dateStr);
     return isNaN(d.getTime()) ? null : d;
   }
+
   function daysBetween(dateStr) {
-    const d = parseISO(dateStr);
-    if (!d) return 9999;
-    const a = new Date(d);
-    a.setHours(0, 0, 0, 0);
-    const b = new Date();
-    b.setHours(0, 0, 0, 0);
-    return Math.floor((b - a) / 86400000);
-  }
+      const d = parseISO(dateStr);
+      if (!d) return 0; // ✅ missing => NOT free => show confirm modal (paid)
+      const a = new Date(d); a.setHours(0, 0, 0, 0);
+      const b = new Date();  b.setHours(0, 0, 0, 0);
+      return Math.floor((b - a) / 86400000);
+    }
   function canRepublishWithCost(lastRepublishAt) {
     const days = daysBetween(lastRepublishAt);
     if (days >= 7) return { ok: true, cost: 0, daysLeft: 0 };
@@ -386,26 +338,25 @@
     if (inlineSpans && inlineSpans.length >= 2) inlineSpans[1].textContent = formatted;
   }
 
-  function doRepublishRequestUI(id, free) {
-    const row = getRow(id);
-    if (!row) return;
+  function doRepublishRequestUI(id, free, cost = 0) {
+      const row = getRow(id);
+      if (!row) return;
 
-    const iso = new Date().toISOString().split("T")[0];
-    row.dataset.lastRepublish = iso;
+      const iso = new Date().toISOString().split("T")[0];
+      row.dataset.lastRepublish = iso;
 
-    setRowActiveUI(row);
-    updateRowDateToToday(row);
-    applyActionStates(); // Re-apply rules after republish
+      setRowActiveUI(row);
+      updateRowDateToToday(row);
+      applyActionStates();
 
-    openSuccessModal(
-      free ? "تم إعادة نشر الطلب مجاناً ✅" : `تمت إعادة النشر مقابل ${republishCost} نقطة ✅`,
-      "🔄 تم إعادة النشر"
-    );
-  }
+      openSuccessModal(
+        free ? "تم إعادة نشر الطلب مجاناً ✅" : `تمت إعادة النشر مقابل ${Number(cost)} نقطة ✅`,
+        "🔄 تم إعادة النشر"
+      );
+    }
 
-  /* =========================================================
-     ✅ Highlight modal open (preserve SVG)
-  ========================================================= */
+
+
   function openHighlightModalForRequest(id) {
     highlightTargetRequestId = id;
 
@@ -434,9 +385,6 @@
 
   if (!window.closeHighlightModal) window.closeHighlightModal = () => closeModal("highlightModal");
 
-  /* =========================================================
-     ✅ selectHighlightPackage wrapper (Requests only)
-  ========================================================= */
   const prevSelectHighlight = window.selectHighlightPackage;
 
   if (!window.__requestsSelectHighlightWrapped) {
@@ -509,7 +457,7 @@
           ensureFeatureBadge(row, Number(days));
         }
 
-        applyActionStates(); // Re-apply rules after featuring
+        applyActionStates();
 
         closeModal("highlightModal");
         openSuccessModal("تم تمييز الطلب بنجاح!", "⭐ تم التمييز");
@@ -520,7 +468,7 @@
       if (c) setPoints(pointsNow - c);
       row.dataset.featuredDaysLeft = String(Number(days));
       ensureFeatureBadge(row, Number(days));
-      applyActionStates(); // Re-apply rules
+      applyActionStates();
 
       closeModal("highlightModal");
       openSuccessModal("تم تمييز الطلب بنجاح! (تجربة)", "⭐ تم التمييز");
@@ -528,9 +476,6 @@
     };
   }
 
-  /* =========================================================
-     ✅ Delete modal (shared modal)
-  ========================================================= */
   function setDeleteReasonsForRequest() {
     const select = document.getElementById("deleteReason");
     if (!select) return;
@@ -651,9 +596,6 @@
     if (typeof prevConfirmDeleteAd === "function") return prevConfirmDeleteAd();
   };
 
-  /* =========================================================
-     ✅ Republish
-  ========================================================= */
   function openRepublishConfirmModalForRequest(id, cost) {
     republishTargetRequestId = id;
     republishCost = Number(cost);
@@ -667,29 +609,39 @@
     if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
   }
 
-  function confirmRepublishNow() {
-    if (!republishTargetRequestId) return;
+  async function confirmRepublishNow() {
+      if (!republishTargetRequestId) return;
 
-    const pointsNow = getPoints();
-    if (pointsNow < republishCost) {
+      const pointsNow = getPoints();
+      if (pointsNow < republishCost) {
+        closeModal("republishConfirmModal");
+        showNoPointsModal();
+        return;
+      }
+
+      const row = getRow(republishTargetRequestId);
+      const listingId = Number(row?.dataset?.listingId || republishTargetRequestId);
+
+      const res = await callBackend(`/listing/${listingId}/republish/`, {});
+      const data = await res?.json().catch(() => null);
+
+      if (!res || !res.ok || !data || data.ok !== true) {
+        closeModal("republishConfirmModal");
+        const err = data?.error;
+        if (err === "not_enough_points") return showNoPointsModal();
+        return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
+      }
+
+      if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+
       closeModal("republishConfirmModal");
-      showNoPointsModal();
-      return;
+      doRepublishRequestUI(republishTargetRequestId, data.free === true, data.cost);
+
+      republishTargetRequestId = null;
+      republishCost = 0;
     }
 
-    callBackend(`/request/${republishTargetRequestId}/republish/`, {});
-    setPoints(pointsNow - republishCost);
 
-    closeModal("republishConfirmModal");
-    doRepublishRequestUI(republishTargetRequestId, false);
-
-    republishTargetRequestId = null;
-    republishCost = 0;
-  }
-
-  /* =========================================================
-     ✅ Backdrop close
-  ========================================================= */
   function wireBackdropClose() {
     document.getElementById("deleteAdModal")?.addEventListener("click", (e) => {
       if (e.target.id === "deleteAdModal") {
@@ -711,40 +663,30 @@
     });
   }
 
-  /* =========================================================
-     ✅ CLICK HANDLING - Enforce the three rules
-  ========================================================= */
-  function onRequestsClick(e) {
+  async function onRequestsClick(e) {
     const list = getList();
     if (!list) return;
 
-    // Handle EDIT link
     const edit = e.target.closest('a[data-action="edit"]');
     if (edit && list.contains(edit)) {
       const id = Number(edit.getAttribute("data-id"));
       const row = getRow(id);
 
-      // Check if disabled
       if (edit.getAttribute("aria-disabled") === "true") {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
-      // RULE 2: Block if featured
       if (isFeaturedRow(row)) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
-      // RULE 1: Allow if pending (edit is allowed)
-      // RULE 3: Allow if active and not featured
-      // (let it navigate normally)
       return;
     }
 
-    // Handle action buttons
     const btn = e.target.closest("[data-action]");
     if (!btn || !list.contains(btn)) return;
 
@@ -752,7 +694,6 @@
     const id = Number(btn.getAttribute("data-id"));
     if (!id) return;
 
-    // Check if button is disabled (aria-disabled instead of pointer-events-none)
     if (btn.getAttribute("aria-disabled") === "true") {
       e.preventDefault();
       e.stopPropagation();
@@ -766,40 +707,26 @@
     const featured = isFeaturedRow(row);
     const last = row.dataset.lastRepublish || "";
 
-    // ========================================
-    // DELETE button
-    // ========================================
     if (action === "delete") {
       e.preventDefault();
       e.stopPropagation();
 
-      // RULE 2: Block if featured
       if (featured) return;
-
-      // RULE 1: Allow if pending
-      // RULE 3: Allow if active and not featured
 
       openDeleteModalForRequest(id);
       return;
     }
 
-    // ========================================
-    // HIGHLIGHT button
-    // ========================================
     if (action === "highlight") {
       e.preventDefault();
       e.stopPropagation();
 
-      // RULE 2: Block if featured
       if (featured) return;
 
-      // RULE 1: Block if pending (highlight not allowed)
       if (status === "pending") return;
 
-      // Only allow if active
       if (status !== "active") return;
 
-      // Check if already featured (double check)
       let daysLeft = Number(row.dataset.featuredDaysLeft || "0");
       if (!daysLeft && row.dataset.featuredExpiresAt) {
         daysLeft = calcDaysLeftFromNowISO(row.dataset.featuredExpiresAt);
@@ -811,39 +738,42 @@
       return;
     }
 
-    // ========================================
-    // REPUBLISH button
-    // ========================================
     if (action === "republish") {
       e.preventDefault();
       e.stopPropagation();
 
-      // RULE 2: Block if featured
       if (featured) return;
 
-      // RULE 1: Block if pending (republish not allowed)
       if (status === "pending") return;
 
-      // Only allow if active
       if (status !== "active") return;
 
       const check = canRepublishWithCost(last);
       if (check.ok) {
-        callBackend(`/request/${id}/republish/`, {});
-        doRepublishRequestUI(id, true);
-      } else {
-        openRepublishConfirmModalForRequest(id, check.cost);
-      }
+          const listingId = Number(row.dataset.listingId || id);
+
+          const res = await callBackend(`/listing/${listingId}/republish/`, {});
+          const data = await res?.json().catch(() => null);
+
+          if (!res || !res.ok || !data || data.ok !== true) {
+            const err = data?.error;
+            if (err === "not_enough_points") return showNoPointsModal();
+            return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
+          }
+
+          if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+          doRepublishRequestUI(id, data.free === true, data.cost);
+        } else {
+          openRepublishConfirmModalForRequest(id, check.cost);
+        }
+
       return;
     }
   }
 
-  /* =========================================================
-     ✅ Init + backdrop closes
-  ========================================================= */
   function init() {
     updateCount();
-    applyActionStates(); // ✅ Apply the three rules on init
+    applyActionStates();
     wireDeleteReasonChangeOnce();
     wireBackdropClose();
 

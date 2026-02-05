@@ -155,20 +155,58 @@
   /* =========================================================
      ✅ Cooldown
   ========================================================= */
-  function parseISO(dateStr) {
+  function parseDate(dateStr) {
     if (!dateStr) return null;
+
+    // Try ISO format first: 2025-01-15 or 2025-01-15T10:30:00
+    if (dateStr.includes('-')) {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) return d;
+    }
+
+    // Try slash formats: 2025/01/15 or 15/01/2025
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+
+      // If first part is 4 digits, assume YYYY/MM/DD
+      if (parts[0].length === 4) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // Otherwise assume DD/MM/YYYY (Arabic/European format)
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        if (!isNaN(d.getTime())) return d;
+      }
+    }
+
+    // Fallback to native parsing
     const d = new Date(dateStr);
     return isNaN(d.getTime()) ? null : d;
   }
+
   function daysBetween(dateStr) {
-    const d = parseISO(dateStr);
-    if (!d) return 9999;
-    const a = new Date(d); a.setHours(0, 0, 0, 0);
-    const b = new Date();  b.setHours(0, 0, 0, 0);
-    return Math.floor((b - a) / 86400000);
+    const d = parseDate(dateStr);
+    if (!d) {
+      console.warn('[ads] Could not parse date:', dateStr);
+      return 0; // treat missing/invalid as "today" => NOT free => show paid confirm modal
+    }
+
+    const a = new Date(d);
+    a.setHours(0, 0, 0, 0);
+    const b = new Date();
+    b.setHours(0, 0, 0, 0);
+    const days = Math.floor((b - a) / 86400000);
+
+    console.log('[ads] Date calculation:', { dateStr, parsed: d, daysAgo: days });
+    return days;
   }
+
   function canRepublishWithCost(lastRepublishAt) {
     const days = daysBetween(lastRepublishAt);
+    console.log('[ads] Republish check:', { lastRepublishAt, days, free: days >= 7 });
+
     if (days >= 7) return { ok: true, cost: 0, daysLeft: 0 };
     return { ok: false, cost: 20, daysLeft: 7 - days };
   }
@@ -191,46 +229,36 @@
       const editLink = row.querySelector('a[data-action="edit"]');
       const delBtn = row.querySelector('button[data-action="delete"]');
       const republishBtn = row.querySelector('button[data-action="republish"]');
-      // Find highlight button - it might not have data-action if disabled in template
       const highlightBtn = row.querySelector('button[data-action="highlight"]') ||
                           Array.from(row.querySelectorAll('button')).find(btn => {
                             const text = (btn.textContent || '').trim();
                             return text === 'تمييز' || btn.classList.contains('pill-orange');
                           });
 
-      // Reset all buttons to enabled state first
       [editLink, delBtn, republishBtn, highlightBtn].forEach(btn => {
         if (!btn) return;
-        // IMPORTANT: Remove pointer-events-none so tooltips can work!
         btn.classList.remove("opacity-40", "cursor-not-allowed", "pointer-events-none");
         btn.removeAttribute("aria-disabled");
         btn.removeAttribute("title");
 
-        // Remove any existing tooltip spans
         const existingTooltip = btn.querySelector('.tooltip-span');
         if (existingTooltip) existingTooltip.remove();
 
-        // Remove relative and group classes if they were added
         btn.classList.remove("relative", "group");
       });
 
-      // Ensure highlight button has proper data attributes
       if (highlightBtn && !highlightBtn.hasAttribute('data-action')) {
         highlightBtn.setAttribute('data-action', 'highlight');
         const adId = row.dataset.adId;
         if (adId) highlightBtn.setAttribute('data-id', adId);
       }
 
-      // ========================================
-      // RULE 2: If featured → disable ALL actions
-      // ========================================
       if (featured) {
         if (editLink) {
           editLink.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           editLink.setAttribute("aria-disabled", "true");
           editLink.setAttribute("title", "لا يمكنك تعديل الإعلان لأنه مميز");
 
-          // Add tooltip span
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
           tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك تعديل الإعلان لأنه مميز</span>';
@@ -272,12 +300,8 @@
         return;
       }
 
-      // ========================================
-      // RULE 1: If pending → only edit & delete enabled
-      // ========================================
       if (status === "pending") {
         if (republishBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
           republishBtn.setAttribute("title", "لا يمكن إعادة النشر أثناء المراجعة");
@@ -289,7 +313,6 @@
         }
 
         if (highlightBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
           highlightBtn.setAttribute("title", "لا يمكن التمييز أثناء المراجعة");
@@ -302,12 +325,8 @@
         return;
       }
 
-      // ========================================
-      // If rejected → disable republish & highlight
-      // ========================================
       if (status === "rejected") {
         if (republishBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
           republishBtn.setAttribute("title", "لا يمكن إعادة نشر إعلان مرفوض");
@@ -319,7 +338,6 @@
         }
 
         if (highlightBtn) {
-          // Note: NO pointer-events-none so hover tooltip works!
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
           highlightBtn.setAttribute("title", "لا يمكن تمييز إعلان مرفوض");
@@ -331,11 +349,6 @@
         }
         return;
       }
-
-      // ========================================
-      // RULE 3: If active and not featured → all actions enabled
-      // (already reset above, nothing to do)
-      // ========================================
     });
   }
 
@@ -467,12 +480,10 @@
         ? otherTxt
         : (select?.options?.[select.selectedIndex]?.text || "");
 
-    // Call backend to delete the listing
     if (listingToDelete) {
       await callBackend(`/listing/${listingToDelete}/delete/`, { reason: finalReason });
     }
 
-    // Remove the row from UI
     const row = document.querySelector(`.ad-row[data-listing-id="${listingToDelete}"]`);
     if (row) row.remove();
 
@@ -577,17 +588,16 @@
         ensureFeatureBadge(row, Number(days));
       }
 
-      applyActionStates(); // Re-apply rules after featuring
+      applyActionStates();
       closeModal("highlightModal");
       openSuccessModal("تم تمييز الإعلان بنجاح!", "⭐ تم التمييز");
       highlightTargetId = null;
       return;
     }
 
-    // Fallback (mock mode)
     row.dataset.featuredDaysLeft = String(days);
     ensureFeatureBadge(row, Number(days));
-    applyActionStates(); // Re-apply rules
+    applyActionStates();
     closeModal("highlightModal");
     openSuccessModal("تم تمييز الإعلان بنجاح! (تجربة)", "⭐ تم التمييز");
     highlightTargetId = null;
@@ -657,85 +667,111 @@
     if (inlineSpans && inlineSpans.length >= 2) inlineSpans[1].textContent = formatted;
   }
 
-  function doRepublishAdUI(id, free) {
-    const row = getAdRow(id);
-    if (!row) return;
+  function doRepublishAdUI(id, free, cost = 0, publishedAtISO = "") {
+      const row = getAdRow(id);
+      if (!row) return;
 
-    const iso = new Date().toISOString().split("T")[0];
-    row.dataset.lastRepublish = iso;
+      const iso = publishedAtISO
+        ? String(publishedAtISO).slice(0, 10)
+        : new Date().toISOString().split("T")[0];
 
-    setRowActiveUI(row);
-    updateRowDateToToday(row);
-    applyActionStates(); // Re-apply rules after republish
+      row.dataset.lastRepublish = iso;
 
-    openSuccessModal(
-      free ? "تم إعادة نشر الإعلان مجاناً ✅" : `تمت إعادة النشر مقابل ${republishCost} نقطة ✅`,
-      "🔄 تم إعادة النشر"
-    );
-  }
+      setRowActiveUI(row);
+      updateRowDateToToday(row);
+      applyActionStates();
 
-  function confirmRepublishNow() {
-    if (!republishTargetId) return;
-
-    if (points < republishCost) {
-      closeModal("republishConfirmModal");
-      showNoPointsModal();
-      return;
+      openSuccessModal(
+        free ? "تم إعادة نشر الإعلان مجاناً ✅" : `تمت إعادة النشر مقابل ${Number(cost)} نقطة ✅`,
+        "🔄 تم إعادة النشر"
+      );
     }
 
-    const row = getAdRow(republishTargetId);
-    const listingId = Number(row?.dataset?.listingId || republishTargetId);
 
-    callBackend(`/listing/${listingId}/republish/`, {});
 
-    setPoints(points - republishCost);
-    pushTxn({
-      type: "use",
-      text: `🔄 إعادة نشر إعلان رقم ${republishTargetId} قبل انتهاء 7 أيام`,
-      amount: -republishCost,
-    });
+  async function confirmRepublishNow() {
+      if (!republishTargetId) return;
 
-    closeModal("republishConfirmModal");
-    doRepublishAdUI(republishTargetId, false);
+      // (keep your client-side pre-check if you want, but backend is source of truth)
+      if (points < republishCost) {
+        closeModal("republishConfirmModal");
+        showNoPointsModal();
+        return;
+      }
 
-    republishTargetId = null;
-    republishCost = 0;
-  }
+      const row = getAdRow(republishTargetId);
+      const listingId = Number(row?.dataset?.listingId || republishTargetId);
+
+      const res = await callBackend(`/listing/${listingId}/republish/`, {});
+      const data = await res?.json().catch(() => null);
+
+      // ✅ show user-facing error instead of silent fail
+      if (!res || !res.ok || !data || data.ok !== true) {
+        closeModal("republishConfirmModal");
+
+        const err = data?.error;
+        if (err === "not_enough_points") return showNoPointsModal();
+
+        // optional: make a small error modal/toast later; for now reuse success modal as error
+        return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
+      }
+
+      // ✅ backend is authoritative
+      if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+
+      if (data.cost && Number(data.cost) > 0) {
+        pushTxn({
+          type: "use",
+          text: `🔄 إعادة نشر إعلان رقم ${republishTargetId} قبل انتهاء 7 أيام`,
+          amount: -Number(data.cost),
+        });
+      } else {
+        pushTxn({
+          type: "info",
+          text: `🔄 إعادة نشر إعلان رقم ${republishTargetId} مجاناً`,
+          amount: 0,
+        });
+      }
+
+      closeModal("republishConfirmModal");
+
+      if (data?.published_at) row.dataset.lastRepublish = String(data.published_at).slice(0, 10);
+
+      doRepublishAdUI(republishTargetId, data.free === true, data.cost);
+
+
+      republishTargetId = null;
+      republishCost = 0;
+    }
+
 
   /* =========================================================
      ✅ CLICK HANDLING - Enforce the three rules
   ========================================================= */
-  function onAdsClick(e) {
+  async function onAdsClick(e) {
     const list = getList();
     if (!list) return;
 
-    // Handle EDIT link
     const edit = e.target.closest('a[data-action="edit"]');
     if (edit && list.contains(edit)) {
       const id = Number(edit.getAttribute("data-id"));
       const row = getAdRow(id);
 
-      // Check if disabled
       if (edit.getAttribute("aria-disabled") === "true") {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
-      // RULE 2: Block if featured
       if (isFeaturedRow(row)) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
-      // RULE 1: Allow if pending (edit is allowed)
-      // RULE 3: Allow if active and not featured
-      // (let it navigate normally)
       return;
     }
 
-    // Handle action buttons
     const btn = e.target.closest("[data-action]");
     if (!btn || !list.contains(btn)) return;
 
@@ -743,7 +779,6 @@
     const id = Number(btn.getAttribute("data-id"));
     if (!id) return;
 
-    // Check if button is disabled (aria-disabled instead of pointer-events-none)
     if (btn.getAttribute("aria-disabled") === "true") {
       e.preventDefault();
       e.stopPropagation();
@@ -755,42 +790,33 @@
 
     const status = (row.dataset.status || "").toLowerCase();
     const featured = isFeaturedRow(row);
-    const last = row.dataset.lastRepublish || "";
+    // 🔧 FIX: Use published_at as fallback when lastRepublish is not set
+    const last = row.dataset.lastRepublish || row.dataset.publishedAt || "";
 
-    // ========================================
-    // DELETE button
-    // ========================================
+        console.log(row.dataset.lastRepublish);
+        console.log(row.dataset.publishedAt);
+        console.log("XXXXXXXXXX");
+
     if (action === "delete") {
       e.preventDefault();
       e.stopPropagation();
 
-      // RULE 2: Block if featured
       if (featured) return;
-
-      // RULE 1: Allow if pending
-      // RULE 3: Allow if active and not featured
 
       openDeleteModalForAd(id);
       return;
     }
 
-    // ========================================
-    // HIGHLIGHT button
-    // ========================================
     if (action === "highlight") {
       e.preventDefault();
       e.stopPropagation();
 
-      // RULE 2: Block if featured
       if (featured) return;
 
-      // RULE 1: Block if pending (highlight not allowed)
       if (status === "pending") return;
 
-      // Only allow if active
       if (status !== "active") return;
 
-      // Check if already featured (double check)
       let daysLeft = Number(row.dataset.featuredDaysLeft || "0");
       if (!daysLeft && row.dataset.featuredExpiresAt) {
         daysLeft = calcDaysLeftFromNowISO(row.dataset.featuredExpiresAt);
@@ -802,30 +828,43 @@
       return;
     }
 
-    // ========================================
-    // REPUBLISH button
-    // ========================================
     if (action === "republish") {
       e.preventDefault();
       e.stopPropagation();
 
-      // RULE 2: Block if featured
       if (featured) return;
 
-      // RULE 1: Block if pending (republish not allowed)
       if (status === "pending") return;
 
-      // Only allow if active
       if (status !== "active") return;
+
 
       const check = canRepublishWithCost(last);
       if (check.ok) {
-        const listingId = Number(row.dataset.listingId || id);
-        callBackend(`/listing/${listingId}/republish/`, {});
-        doRepublishAdUI(id, true);
-      } else {
-        openRepublishConfirmModalForAd(id, check.cost);
-      }
+          const listingId = Number(row.dataset.listingId || id);
+
+          const res = await callBackend(`/listing/${listingId}/republish/`, {});
+          const data = await res?.json().catch(() => null);
+
+          if (!res || !res.ok || !data || data.ok !== true) {
+            const err = data?.error;
+            if (err === "not_enough_points") return showNoPointsModal();
+            return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
+          }
+
+          if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+          pushTxn(
+              (data.cost && Number(data.cost) > 0)
+                ? { type: "use",  text: `🔄 إعادة نشر إعلان رقم ${id} قبل انتهاء 7 أيام`, amount: -Number(data.cost) }
+                : { type: "info", text: `🔄 إعادة نشر إعلان رقم ${id} مجاناً`, amount: 0 }
+            );
+
+          if (data?.published_at) row.dataset.lastRepublish = String(data.published_at).slice(0, 10);
+          doRepublishAdUI(id, data.free === true, data.cost);
+        } else {
+          openRepublishConfirmModalForAd(id, check.cost);
+        }
+
       return;
     }
   }
@@ -852,7 +891,7 @@
 
   function init() {
     updateCount();
-    applyActionStates(); // ✅ Apply the three rules on init
+    applyActionStates();
     wireDeleteReasonChange();
     updateBalance();
     renderTransactions();
