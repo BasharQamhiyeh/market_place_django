@@ -1,0 +1,615 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}تصفح الأقسام - ركن{% endblock %}
+
+{% block page_css %}
+<style>
+    :root {
+        --rukn-orange: #ff7a18;
+        --rukn-orange-dark: #e66a15;
+        --rukn-orange-light: #fff5ed;
+    }
+
+    body {
+        font-family: 'Cairo', sans-serif;
+        background-color: #fcfcfc;
+        color: #1f2937;
+    }
+
+    /* Ad Section Styling */
+    .ad-swiper {
+        width: 100%;
+        height: 300px;
+        border-radius: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .ad-swiper {
+            height: 180px;
+        }
+    }
+
+    /* Category Navigation */
+    .main-cat-btn {
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+    }
+
+    .main-cat-btn.active {
+        color: var(--rukn-orange);
+        border-bottom-color: var(--rukn-orange);
+        background-color: var(--rukn-orange-light);
+    }
+
+    /* Sub-sub categories animation */
+    .expandable-content {
+        max-height: 80px;
+        overflow: hidden;
+        transition: max-height 0.5s cubic-bezier(0, 1, 0, 1);
+    }
+
+    .expandable-content.expanded {
+        max-height: 2000px;
+        transition: max-height 0.8s ease-in-out;
+    }
+
+    .orange-gradient {
+        background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+    }
+
+    /* Professional shadow */
+    .pro-shadow {
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* ===== Image Ad Banner ===== */
+    .ad-banner-wrap {
+        border-radius: 26px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 22px 55px rgba(15,23,42,.14);
+        background: #fff;
+    }
+
+    .ad-banner-wrap::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(900px 240px at 20% 0%, rgba(255,122,24,.20), transparent 55%), 
+                    radial-gradient(900px 240px at 80% 0%, rgba(22,163,74,.12), transparent 55%);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .ad-banner-img {
+        width: 100%;
+        height: 210px;
+        object-fit: cover;
+        display: block;
+        transform: scale(1.02);
+    }
+
+    @media (min-width:640px) {
+        .ad-banner-img {
+            height: 260px;
+        }
+    }
+
+    @media (min-width:1024px) {
+        .ad-banner-img {
+            height: 290px;
+        }
+    }
+
+    .ad-banner-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background: linear-gradient(90deg, rgba(17,24,39,.78), rgba(17,24,39,.20) 55%, rgba(17,24,39,.06));
+        display: flex;
+        align-items: flex-end;
+        padding: 18px;
+    }
+
+    @media (min-width:640px) {
+        .ad-banner-overlay {
+            padding: 24px;
+        }
+    }
+
+    .ad-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,.94);
+        border: 1px solid rgba(255,255,255,.35);
+        box-shadow: 0 14px 34px rgba(0,0,0,.18);
+        backdrop-filter: blur(8px);
+    }
+
+    .ad-cta a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-weight: 900;
+        font-size: 13px;
+        transition: .2s;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .ad-cta .btn-primary {
+        background: var(--rukn-orange);
+        color: #fff;
+    }
+
+    .ad-cta .btn-primary:hover {
+        background: #e06600;
+    }
+
+    .ad-cta .btn-ghost {
+        background: #fff;
+        color: #111827;
+        border: 1px solid rgba(255,122,24,.22);
+    }
+
+    .ad-cta .btn-ghost:hover {
+        background: #fff6ef;
+    }
+
+    .ad-banner-slides {
+        position: relative;
+    }
+
+    .ad-slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity .45s ease, transform .45s ease;
+        transform: scale(1.02);
+    }
+
+    .ad-slide.is-active {
+        opacity: 1;
+        position: relative;
+        transform: scale(1.02);
+    }
+
+    .ad-dots {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 14px;
+        z-index: 3;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        pointer-events: auto;
+    }
+
+    @media (min-width:640px) {
+        .ad-dots {
+            bottom: 16px;
+        }
+    }
+
+    .ad-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.55);
+        border: 1px solid rgba(255,255,255,.35);
+        box-shadow: 0 10px 20px rgba(0,0,0,.18);
+        transition: transform .2s ease, background .2s ease, width .2s ease;
+    }
+
+    .ad-dot:hover {
+        transform: scale(1.15);
+    }
+
+    .ad-dot.is-active {
+        width: 26px;
+        background: rgba(255,255,255,.92);
+    }
+
+    #mainCategoryNav {
+        white-space: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        touch-action: pan-x;
+        cursor: grab;
+    }
+
+    #mainCategoryNav::-webkit-scrollbar {
+        display: none;
+    }
+
+    #mainCategoryNav.cursor-grabbing {
+        cursor: grabbing;
+    }
+
+    .main-cat-btn:focus {
+        outline: none;
+    }
+
+    .main-cat-btn:focus-visible {
+        outline: none;
+    }
+
+    .main-cat-btn img {
+        flex-shrink: 0;
+    }
+
+    .main-cat-btn {
+        flex-shrink: 0;
+    }
+
+    /* تأثير التحريك وتغيير الإطار عند تمرير الماوس على القسم الفرعي */
+    .sub-category-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid transparent;
+    }
+
+    .sub-category-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--rukn-orange);
+        background-color: #fff;
+        box-shadow: 0 15px 30px rgba(255, 122, 24, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="Breadcrumb" class="text-sm text-gray-500">
+        <ol class="flex items-center gap-2 mb-6">
+            <li><a href="{% url 'home' %}" class="hover:text-[var(--rukn-orange)] transition">الرئيسية</a></li>
+            <li class="text-gray-400">›</li>
+            <li><a href="#" class="hover:text-[var(--rukn-orange)] transition font-extrabold">جميع الأقسام</a></li>
+        </ol>
+    </nav>
+
+    <!-- ===== Image Advertisement Banner (3 ads + dots) ===== -->
+    <section class="mb-6">
+        <div class="ad-banner-wrap" id="adBanner">
+            <div class="relative">
+                <div class="ad-banner-slides">
+                    <img class="ad-banner-img ad-slide is-active"
+                         src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1600&auto=format&fit=crop"
+                         alt="مساحة إعلانية 1" />
+                    <img class="ad-banner-img ad-slide"
+                         src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1600&auto=format&fit=crop"
+                         alt="مساحة إعلانية 2" />
+                    <img class="ad-banner-img ad-slide"
+                         src="https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=1600&auto=format&fit=crop"
+                         alt="مساحة إعلانية 3" />
+                </div>
+
+                <div class="ad-banner-overlay">
+                    <div class="w-full flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
+                        <div class="text-white">
+                            <h2 id="bannerTitle" class="mt-2 sm:mt-3 text-[18px] leading-snug sm:text-2xl font-extrabold">
+                                عروض نهاية السنة — خصومات قوية على الإلكترونيات
+                            </h2>
+                            <p id="bannerDesc" class="mt-1.5 sm:mt-2 text-[12.5px] sm:text-sm text-white/90 max-w-2xl leading-relaxed">
+                                مساحة إعلانية قابلة للاستبدال بصورة (Banner) — تصميم أنيق بدون صندوق الصفحة.
+                            </p>
+                        </div>
+
+                        <div class="ad-cta ad-cta-corner">
+                            <a id="bannerPrimary" href="#" class="btn-primary">تسوّق الآن</a>
+                            <a id="bannerSecondary" href="#" class="btn-ghost">تفاصيل</a>
+                        </div>
+
+                        <div class="ad-dots" role="tablist" aria-label="Banner slider">
+                            <button class="ad-dot is-active" type="button" data-idx="0" aria-label="إعلان 1"></button>
+                            <button class="ad-dot" type="button" data-idx="1" aria-label="إعلان 2"></button>
+                            <button class="ad-dot" type="button" data-idx="2" aria-label="إعلان 3"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="mb-6 flex justify-between items-end">
+        <div>
+            <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                <span class="w-2 h-6 bg-[#ff7a18] rounded-full"></span>
+                تصفح حسب الفئة
+            </h3>
+            <span class="text-sm text-slate-500 italic sm:mt-0 mt-5">اختر قسمك المفضل لمشاهدة التفاصيل</span>
+        </div>
+    </div>
+
+    <!-- ====== MAIN CATEGORIES SELECTION ====== -->
+    <section class="mb-10 relative">
+        <!-- سهم يمين -->
+        <button id="catRight"
+                class="absolute right-0 top-1/2 -translate-y-1/2
+                       bg-white shadow rounded-full w-9 h-9
+                       flex items-center justify-center z-10
+                       hover:bg-orange-50 text-orange-500">
+            ▶
+        </button>
+
+        <div id="mainCategoryWrapper" class="overflow-x-hidden">
+            <div id="mainCategoryNav" class="flex gap-2 border-b border-gray-100 px-12">
+                <!-- سيتم إنشاؤها بواسطة JS -->
+            </div>
+        </div>
+
+        <!-- سهم يسار -->
+        <button id="catLeft"
+                class="absolute left-0 top-1/2 -translate-y-1/2
+                       bg-white shadow rounded-full w-9 h-9
+                       flex items-center justify-center z-10
+                       hover:bg-orange-50 text-orange-500">
+            ◀
+        </button>
+    </section>
+
+    <!-- ====== CONTENT AREA ====== -->
+    <section id="categoryContent" class="space-y-12">
+        <!-- سيتم إنشاؤها بواسطة JS -->
+    </section>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script>
+    /* ================= Banner Slider ================= */
+    (function initBanner() {
+        const banner = document.getElementById("adBanner");
+        if (!banner) return;
+
+        const slides = [...banner.querySelectorAll(".ad-slide")];
+        const dots = [...banner.querySelectorAll(".ad-dot")];
+
+        const ads = [
+            {
+                title: "عروض نهاية السنة — خصومات قوية على الإلكترونيات",
+                desc: "مساحة إعلانية قابلة للاستبدال بصورة (Banner) — تصميم أنيق بدون صندوق الصفحة.",
+                primaryText: "تسوّق الآن", primaryHref: "#",
+                secondaryText: "تفاصيل", secondaryHref: "#"
+            },
+            {
+                title: "إعلان مميز — أجهزة ولابتوبات بأسعار منافسة",
+                desc: "اعرض إعلانك هنا للوصول إلى آلاف الزوار يومياً على ركن.",
+                primaryText: "احجز الإعلان", primaryHref: "#",
+                secondaryText: "تواصل معنا", secondaryHref: "#"
+            },
+            {
+                title: "عقارات وعروض إيجار — فرص محدودة",
+                desc: "أضف عقارك الآن أو تصفّح أحدث العروض في منطقتك.",
+                primaryText: "استعرض العقارات", primaryHref: "#",
+                secondaryText: "أضف إعلان", secondaryHref: "#"
+            }
+        ];
+
+        const tEl = document.getElementById("bannerTitle");
+        const dEl = document.getElementById("bannerDesc");
+        const pEl = document.getElementById("bannerPrimary");
+        const sEl = document.getElementById("bannerSecondary");
+
+        function show(idx) {
+            slides.forEach((s, i) => s.classList.toggle("is-active", i === idx));
+            dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+            const a = ads[idx];
+            if (tEl) tEl.textContent = a.title;
+            if (dEl) dEl.textContent = a.desc;
+            if (pEl) { pEl.textContent = a.primaryText; pEl.href = a.primaryHref; }
+            if (sEl) { sEl.textContent = a.secondaryText; sEl.href = a.secondaryHref; }
+        }
+
+        let idx = Math.floor(Math.random() * slides.length);
+        show(idx);
+
+        dots.forEach(btn => btn.addEventListener("click", () => {
+            idx = parseInt(btn.dataset.idx || "0", 10);
+            show(idx);
+        }));
+
+        setInterval(() => {
+            idx = (idx + 1) % slides.length;
+            show(idx);
+        }, 2500);
+    })();
+
+    // بيانات الأقسام من Django
+    const categories = {{ categories|safe }};
+
+    let activeMainId = categories.length > 0 ? categories[0].id : null;
+
+    function init() {
+        renderNav();
+        renderContent();
+    }
+
+    function renderNav() {
+        const nav = document.getElementById("mainCategoryNav");
+
+        nav.innerHTML = categories.map(cat => `
+            <button
+                type="button"
+                tabindex="-1"
+                onclick="setActive('${cat.id}')"
+                onmousedown="event.preventDefault()"
+                class="main-cat-btn
+                       flex flex-col items-center
+                       gap-2
+                       py-4 px-3
+                       min-w-[150px]
+                       max-w-[150px]
+                       font-bold
+                       text-sm
+                       transition
+                       text-center
+                       ${activeMainId === cat.id ? 'active' : 'text-gray-600'}">
+
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg">
+                    <img src="${cat.icon}"
+                         class="w-full h-full object-contain rounded-2xl"
+                         alt="${cat.title}">
+                </div>
+
+                <span class="text-center leading-tight line-clamp-2">
+                    ${cat.title}
+                </span>
+            </button>
+        `).join("");
+    }
+
+    function setActive(id) {
+        if (id === activeMainId) return;
+
+        activeMainId = id;
+
+        document.querySelectorAll(".main-cat-btn").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        const activeBtn = document.querySelector(`.main-cat-btn[onclick*="${id}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add("active");
+        }
+
+        renderContent();
+        window.scrollTo({ top: 370, behavior: 'smooth' });
+    }
+
+    function renderContent() {
+        const container = document.getElementById("categoryContent");
+        const cat = categories.find(c => c.id === activeMainId);
+
+        if (!cat) return;
+
+        container.innerHTML = `
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg">
+                    <img src="${cat.icon}" class="w-full h-full object-contain rounded-2xl" alt="${cat.title}">
+                </div>
+                <div>
+                    <h2 class="text-2xl font-extrabold text-gray-800">${cat.title}</h2>
+                    <p class="text-gray-500 text-sm">تصفح أفضل العروض في قسم ${cat.title}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                ${cat.subs.map((sub, index) => `
+                    <div class="sub-category-card bg-white rounded-3xl p-6 pro-shadow flex flex-col cursor-pointer">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-16 h-16 rounded-2xl flex items-center justify-center">
+                                <img src="${sub.icon}" class="w-full h-full object-contain rounded-2xl" alt="${sub.title}">
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">${sub.title}</h3>
+                        </div>
+
+                        <div id="sub-content-${activeMainId}-${index}" class="expandable-content relative">
+                            <div class="flex flex-wrap gap-2 pb-4">
+                                ${sub.levels.map(level => `
+                                    <a href="{% url 'item_list' %}?category=${sub.id}" 
+                                       class="bg-gray-50 hover:bg-[#fff5ed] hover:text-[#ff7a18] transition border border-gray-100 px-4 py-2 rounded-xl text-sm font-semibold text-gray-600">
+                                        ${level}
+                                    </a>
+                                `).join("")}
+                            </div>
+                            <div class="overlay-gradient absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                        </div>
+
+                        <button onclick="toggleExpand(${index}, this)" 
+                                class="mt-4 text-[#ff7a18] font-bold text-sm flex items-center gap-1 hover:underline">
+                            <span>عرض المزيد</span>
+                            <svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    function toggleExpand(index, btn) {
+        const content = document.getElementById(`sub-content-${activeMainId}-${index}`);
+        const overlay = content.querySelector('.overlay-gradient');
+        const icon = btn.querySelector('svg');
+        const text = btn.querySelector('span');
+
+        content.classList.toggle('expanded');
+
+        if (content.classList.contains('expanded')) {
+            overlay.style.display = 'none';
+            text.innerText = 'عرض أقل';
+            icon.style.transform = 'rotate(180deg)';
+        } else {
+            overlay.style.display = 'block';
+            text.innerText = 'عرض المزيد';
+            icon.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // تشغيل عند التحميل
+    document.addEventListener("DOMContentLoaded", () => {
+        init();
+
+        const nav = document.getElementById("mainCategoryNav");
+        const amount = 260;
+        const isRTL = document.documentElement.dir === "rtl";
+
+        document.getElementById("catRight").addEventListener("click", () => {
+            nav.scrollBy({
+                left: isRTL ? amount : -amount,
+                behavior: "smooth"
+            });
+        });
+
+        document.getElementById("catLeft").addEventListener("click", () => {
+            nav.scrollBy({
+                left: isRTL ? -amount : amount,
+                behavior: "smooth"
+            });
+        });
+
+        // Drag scrolling
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        nav.addEventListener("mousedown", (e) => {
+            isDown = true;
+            nav.classList.add("cursor-grabbing");
+            startX = e.pageX - nav.offsetLeft;
+            scrollLeft = nav.scrollLeft;
+        });
+
+        nav.addEventListener("mouseleave", () => {
+            isDown = false;
+            nav.classList.remove("cursor-grabbing");
+        });
+
+        nav.addEventListener("mouseup", () => {
+            isDown = false;
+            nav.classList.remove("cursor-grabbing");
+        });
+
+        nav.addEventListener("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - nav.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            nav.scrollLeft = scrollLeft - walk;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+<div id="resultsWrap">
+  <span id="storesHint" class="text-sm text-slate-500 italic sm:mt-0 mt-1">
+    {% if total_count == 0 %}
+      لا توجد متاجر
+    {% elif q or selected_categories %}
+      يوجد {{ total_count }} متجر في نتائج البحث
+    {% else %}
+      بإمكانك تحميل المزيد لعرض عدد أكبر من المتاجر
+    {% endif %}
+  </span>
+
+  <div id="noResults" class="{% if stores %}hidden{% endif %} text-center py-20 text-slate-400">
+    <div class="text-5xl mb-4">🔍</div>
+    <p class="text-lg font-bold mb-1">لا توجد نتائج مطابقة</p>
+    <p class="text-sm">جرّب كلمة بحث أو تصنيف آخر</p>
+  </div>
+
+  <div id="storesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+    {% include "partials/stores_grid.html" %}
+  </div>
+
+  {% if has_more %}
+  <div class="text-center mt-12">
+    <button id="loadMoreBtn"
+            class="btn-orange px-10 py-3 rounded-xl font-bold"
+            hx-get="{% url 'stores_list' %}"
+            hx-include="#storesFiltersForm"
+            hx-vals='{"page":"{{ page_obj.number|add:1 }}"}'
+            hx-target="#resultsWrap"
+            hx-swap="outerHTML"
+            hx-push-url="true">
+      تحميل المزيد من المتاجر
+    </button>
+  </div>
+  {% endif %}
+</div>

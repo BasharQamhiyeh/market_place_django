@@ -4426,3 +4426,161 @@ def republish_listing_api(request, listing_id):
         "points_balance": request.user.points,
         "published_at": listing.published_at.isoformat(),
     })
+
+
+# ✅ ADD THIS VIEW TO YOUR views.py FILE (after store_profile function)
+
+# ✅ ADD THIS VIEW TO YOUR views.py FILE (after store_profile function)
+
+def _stores_queryset_and_context(request):
+    q = (request.GET.get("q") or "").strip()
+    selected_categories = request.GET.getlist("categories")
+
+    stores_qs = (
+        Store.objects
+        .filter(is_active=True)
+        .select_related("owner", "city")
+    )
+
+    if q:
+        stores_qs = stores_qs.filter(
+            Q(name__icontains=q) |
+            Q(description__icontains=q) |
+            Q(specialty__icontains=q)
+        )
+
+    if selected_categories:
+        stores_qs = stores_qs.filter(
+            owner__listings__category_id__in=selected_categories,
+            owner__listings__type="item",
+            owner__listings__is_active=True,
+            owner__listings__is_approved=True,
+            owner__listings__is_deleted=False
+        ).distinct()
+
+    stores_qs = stores_qs.annotate(
+        followers_count=Count("followers", distinct=True),
+        ads_count=Count(
+            "owner__listings",
+            filter=Q(
+                owner__listings__type="item",
+                owner__listings__is_active=True,
+                owner__listings__is_approved=True,
+                owner__listings__is_deleted=False
+            ),
+            distinct=True
+        )
+    ).order_by("-rating_avg", "-rating_count", "-created_at")
+
+    PAGE_SIZE = 12
+    paginator = Paginator(stores_qs, PAGE_SIZE)
+    page_number = request.GET.get("page") or "1"
+    page_obj = paginator.get_page(page_number)
+
+    categories = (
+        Category.objects
+        .filter(
+            parent__isnull=True,
+            listings__type="item",
+            listings__is_active=True,
+            listings__is_approved=True,
+            listings__is_deleted=False,
+            listings__user__store__isnull=False,
+            listings__user__store__is_active=True
+        )
+        .distinct()
+        .order_by("name_ar")
+    )
+
+    total_count = paginator.count
+    visible_count = page_obj.end_index() if total_count else 0
+    has_more = page_obj.has_next()
+
+    context = {
+        "page_obj": page_obj,
+        "stores": page_obj.object_list,
+        "q": q,
+        "categories": categories,
+        "selected_categories": selected_categories,
+        "total_count": total_count,
+        "visible_count": visible_count,
+        "has_more": has_more,
+    }
+    return context
+
+
+def stores_list(request):
+    context = _stores_queryset_and_context(request)
+    return render(request, "stores_list.html", context)
+
+
+def stores_list_partial(request):
+    if request.headers.get("HX-Request") != "true":
+        # keep the same querystring
+        qs = request.META.get("QUERY_STRING", "")
+        url = reverse("stores_list")
+        return redirect(f"{url}?{qs}" if qs else url)
+
+    context = _stores_queryset_and_context(request)
+    return render(request, "partials/stores_list_results.html", context)
+
+
+# ✅ الـ View المُصلح - أضف هذا إلى marketplace/views.py
+
+from django.shortcuts import render
+from django.views.decorators.http import require_GET
+from .models import Category
+import json
+
+
+@require_GET
+def categories_browse(request):
+    """
+    صفحة تصفح الأقسام الاحترافية - Public page
+    تعرض جميع الأقسام بشكل تفاعلي وجميل
+    """
+
+    # جلب الأقسام الرئيسية مع الأقسام الفرعية
+    # ✅ تم إزالة filter(is_active=True) لأن Category ليس لديه هذا الحقل
+    top_categories = (
+        Category.objects
+        .filter(parent__isnull=True)
+        .prefetch_related('subcategories__subcategories')
+        .order_by('name_ar')
+    )
+
+    # بناء هيكل بيانات متداخل للأقسام
+    categories_data = []
+
+    for top_cat in top_categories:
+        # الأقسام الفرعية المباشرة
+        subcats = top_cat.subcategories.all().order_by('name_ar')
+
+        subs_list = []
+        for sub in subcats:
+            # الأقسام الفرعية من المستوى الثالث
+            sub_sub_cats = sub.subcategories.all().order_by('name_ar')
+
+            # ✅ استخدام if ... else بدلاً من or لتجنب القائمة الفارغة
+            levels_list = [ssc.name_ar for ssc in sub_sub_cats] if sub_sub_cats.exists() else [sub.name_ar]
+
+            subs_list.append({
+                'id': sub.id,
+                'title': sub.name_ar,
+                'icon': sub.icon or 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=150&h=150&fit=crop',
+                'levels': levels_list
+            })
+
+        categories_data.append({
+            'id': f"cat_{top_cat.id}",
+            'title': top_cat.name_ar,
+            'icon': top_cat.icon or 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=100&h=100&fit=crop',
+            'subs': subs_list
+        })
+
+    context = {
+        'categories': json.dumps(categories_data, ensure_ascii=False),
+        'page_title': 'تصفح الأقسام - ركن',
+    }
+
+    return render(request, 'categories_browse.html', context)

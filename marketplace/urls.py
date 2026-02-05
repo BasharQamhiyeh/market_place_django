@@ -99,6 +99,8 @@ urlpatterns = [
     path("listing/<int:listing_id>/feature/", views.feature_listing_api, name="feature_listing_api"),
 
     path("stores/<int:store_id>/", views.store_profile, name="store_profile"),
+    path("stores/", views.stores_list, name="stores_list"),
+    path("stores/partial/", views.stores_list_partial, name="stores_list_partial"),
 
     # AJAX / API endpoints used by JS
     path("store/<int:store_id>/follow-toggle/", views.store_follow_toggle, name="store_follow_toggle"),
@@ -126,6 +128,8 @@ urlpatterns = [
     path("listing/<int:listing_id>/delete/", views.delete_listing_api, name="api_delete_listing"),
 
     path('listing/<int:listing_id>/republish/', views.republish_listing_api, name='republish_listing'),
+
+    path('categories/browse/', views.categories_browse, name='categories_browse'),
 
     # path('api/', include('marketplace.api_urls')),
 ]
