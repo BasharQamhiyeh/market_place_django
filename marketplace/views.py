@@ -3225,13 +3225,10 @@ def user_profile(request, user_id):
         return cat
 
     for l in listings:
-        cat = getattr(l.item, "listing", None)
-        cat = getattr(cat, "category", None)
-        root = _root_category(cat)
+        root = _root_category(getattr(l, "category", None))
         l.root_category_id = root.id if root else ""
 
-        city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None)
-        l._city_id = city_id or ""
+        l._city_id = getattr(l, "city_id", None) or ""
 
     categories = Category.objects.filter(parent__isnull=True).order_by("name_ar")
     cities = City.objects.filter(is_active=True).order_by("name_ar")
