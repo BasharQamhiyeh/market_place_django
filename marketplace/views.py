@@ -1178,16 +1178,16 @@ def item_create(request):
             # -----------------------------
             from .services.notifications import K_AD, S_PENDING
 
-            # admins: pending moderation
-            for admin in User.objects.filter(is_staff=True):
-                notify(
-                    user=admin,
-                    kind=K_AD,
-                    status=S_PENDING,
-                    title="إعلان جديد بانتظار المراجعة",
-                    body=f"الإعلان: {listing.title}",
-                    listing=listing,
-                )
+            # # admins: pending moderation
+            # for admin in User.objects.filter(is_staff=True):
+            #     notify(
+            #         user=admin,
+            #         kind=K_AD,
+            #         status=S_PENDING,
+            #         title="إعلان جديد بانتظار المراجعة",
+            #         body=f"الإعلان: {listing.title}",
+            #         listing=listing,
+            #     )
 
             # owner: pending
             notify(
@@ -1429,15 +1429,15 @@ def item_edit(request, item_id):
 
         from .services.notifications import K_AD, S_PENDING
 
-        for admin in User.objects.filter(is_staff=True):
-            notify(
-                user=admin,
-                kind=K_AD,
-                status=S_PENDING,
-                title="تعديل إعلان بانتظار المراجعة",
-                body=f"تم تعديل الإعلان: {listing.title}",
-                listing=listing,
-            )
+        # for admin in User.objects.filter(is_staff=True):
+        #     notify(
+        #         user=admin,
+        #         kind=K_AD,
+        #         status=S_PENDING,
+        #         title="تعديل إعلان بانتظار المراجعة",
+        #         body=f"تم تعديل الإعلان: {listing.title}",
+        #         listing=listing,
+        #     )
 
         notify(
             user=request.user,
@@ -1562,15 +1562,15 @@ def request_create(request):
 
             from .services.notifications import K_REQUEST, S_PENDING
 
-            for admin in User.objects.filter(is_staff=True):
-                notify(
-                    user=admin,
-                    kind=K_REQUEST,
-                    status=S_PENDING,
-                    title="طلب جديد بانتظار المراجعة",
-                    body=f"الطلب: {listing.title}",
-                    listing=listing,
-                )
+            # for admin in User.objects.filter(is_staff=True):
+            #     notify(
+            #         user=admin,
+            #         kind=K_REQUEST,
+            #         status=S_PENDING,
+            #         title="طلب جديد بانتظار المراجعة",
+            #         body=f"الطلب: {listing.title}",
+            #         listing=listing,
+            #     )
 
             notify(
                 user=request.user,
@@ -2144,15 +2144,15 @@ def item_edit(request, item_id):
         # Notifications
         from .services.notifications import K_AD, S_PENDING
 
-        for admin in User.objects.filter(is_staff=True):
-            notify(
-                user=admin,
-                kind=K_AD,
-                status=S_PENDING,
-                title="تعديل إعلان بانتظار المراجعة",
-                body=f"تم تعديل الإعلان: {listing.title}",
-                listing=listing,
-            )
+        # for admin in User.objects.filter(is_staff=True):
+        #     notify(
+        #         user=admin,
+        #         kind=K_AD,
+        #         status=S_PENDING,
+        #         title="تعديل إعلان بانتظار المراجعة",
+        #         body=f"تم تعديل الإعلان: {listing.title}",
+        #         listing=listing,
+        #     )
 
         notify(
             user=request.user,
