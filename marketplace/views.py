@@ -3606,6 +3606,8 @@ def translate_condition(condition):
 @require_GET
 @login_required
 def my_account(request: HttpRequest):
+    Favorite.objects.filter(listing__type="item", listing__item__isnull=True).delete()
+
     user = request.user
     store = getattr(user, "store", None)
     has_store = bool(store) and getattr(store, "is_active", True)
@@ -3758,12 +3760,11 @@ def my_account(request: HttpRequest):
     # Items for the card
     fav_items_on_page = []
     for fav in fav_page_obj.object_list:
-        # listing__item exists because Listing has related_name="item"
-        item = fav.listing.item
+        item = getattr(fav.listing, "item", None)  # safe
+        if not item:
+            continue  # skip broken favorite (or collect to clean later)
 
-        # ✅ make heart filled in _item_card.html
         item.is_favorited = True
-
         fav_items_on_page.append(item)
 
     fav_count = paginator.count
