@@ -19,8 +19,18 @@ IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
 CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
-USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False') and all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
 
+# ✅ Fixed: proper string comparison
+USE_CLOUDINARY = (
+    os.getenv('USE_CLOUDINARY', 'True') == 'True' and
+    all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
+)
+
+# Debug (remove after testing)
+print(f"🔍 Cloudinary Debug:")
+print(f"   USE_CLOUDINARY env: {os.getenv('USE_CLOUDINARY', 'Not Set')}")
+print(f"   USE_CLOUDINARY result: {USE_CLOUDINARY}")
+print(f"   Credentials present: {all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])}")
 # ---------------------------------------------------
 # Installed apps
 # ---------------------------------------------------
@@ -46,7 +56,8 @@ INSTALLED_APPS = [
 ]
 
 if USE_CLOUDINARY:
-    INSTALLED_APPS += ['cloudinary', 'cloudinary_storage']
+    INSTALLED_APPS = ['cloudinary_storage', 'cloudinary'] + INSTALLED_APPS
+    print(f"   ✅ Cloudinary apps added to INSTALLED_APPS")
 
 
 ASGI_APPLICATION = 'Market_Place.asgi.application'
