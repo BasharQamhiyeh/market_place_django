@@ -6,6 +6,12 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------
+# Helpers
+# ---------------------------------------------------
+def env_true(name: str, default="false") -> bool:
+    return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "y", "on")
+
+# ---------------------------------------------------
 # Security
 # ---------------------------------------------------
 SECRET_KEY = os.getenv(
@@ -18,34 +24,70 @@ ALLOWED_HOSTS = ["*"]
 # ---------------------------------------------------
 # Cloudinary (must be early)
 # ---------------------------------------------------
-IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
+IS_RENDER = os.environ.get("RENDER", "").strip().lower() == "true"
 
-CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
-CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
-CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+# Detect Railway reliably (Railway sets at least one of these)
+IS_RAILWAY = bool(
+    os.getenv("RAILWAY_ENVIRONMENT")
+    or os.getenv("RAILWAY_PROJECT_ID")
+    or os.getenv("RAILWAY_SERVICE_ID")
+)
 
-def env_true(name: str, default="true") -> bool:
-    return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "y", "on")
+# ✅ Goal:
+# - Locally: DO NOT use cloudinary by default
+# - Railway: use hardcoded cloudinary creds TEMPORARILY (until Railway env vars are trusted)
+#
+# Control flags:
+# - FORCE_LOCAL_MEDIA=true  -> force local media storage even if cloudinary creds exist (default locally)
+# - FORCE_CLOUDINARY=true   -> force cloudinary usage (useful for testing)
+FORCE_LOCAL_MEDIA = env_true("FORCE_LOCAL_MEDIA", "true") and (not IS_RAILWAY)
+FORCE_CLOUDINARY = env_true("FORCE_CLOUDINARY", "false")
+
+# TEMP: hardcode creds on Railway only
+if IS_RAILWAY:
+    # ⚠️ IMPORTANT: put your NEW rotated secret here
+    CLOUDINARY_CLOUD_NAME = "dljrdisnq"
+    CLOUDINARY_API_KEY = "815862547747528"
+    CLOUDINARY_API_SECRET = "PUT_YOUR_NEW_SECRET_HERE"
+else:
+    # Local/dev: read from env (but we still default to local storage unless you force cloudinary)
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 
 HAS_CLOUDINARY_CREDS = all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET])
-USE_CLOUDINARY = env_true("USE_CLOUDINARY", "true") and HAS_CLOUDINARY_CREDS
 
-# ✅ Configure cloudinary-storage explicitly (important for Railway)
+# Decide if we use cloudinary
+# - Railway: yes if creds exist (hardcoded) unless forced local
+# - Local: no by default (FORCE_LOCAL_MEDIA true), unless FORCE_CLOUDINARY true
+USE_CLOUDINARY = (
+    HAS_CLOUDINARY_CREDS
+    and (IS_RAILWAY or FORCE_CLOUDINARY)
+    and (not FORCE_LOCAL_MEDIA)
+)
+
 if USE_CLOUDINARY:
     CLOUDINARY_STORAGE = {
         "CLOUD_NAME": CLOUDINARY_CLOUD_NAME,
         "API_KEY": CLOUDINARY_API_KEY,
         "API_SECRET": CLOUDINARY_API_SECRET,
     }
-    # Some integrations rely on CLOUDINARY_URL being present
-    CLOUDINARY_URL = f"cloudinary://{CLOUDINARY_API_KEY}:{CLOUDINARY_API_SECRET}@{CLOUDINARY_CLOUD_NAME}"
+    CLOUDINARY_URL = (
+        f"cloudinary://{CLOUDINARY_API_KEY}:{CLOUDINARY_API_SECRET}@{CLOUDINARY_CLOUD_NAME}"
+    )
 
-# Debug (remove after testing)
 print("🔍 Cloudinary Debug:")
-print(f"   USE_CLOUDINARY env: {os.getenv('USE_CLOUDINARY', 'Not Set')}")
-print(f"   USE_CLOUDINARY result: {USE_CLOUDINARY}")
-print(f"   Credentials present: {HAS_CLOUDINARY_CREDS}")
-print(f"   DEFAULT STORAGE BACKEND: {'cloudinary_storage.storage.MediaCloudinaryStorage' if USE_CLOUDINARY else 'django.core.files.storage.FileSystemStorage'}")
+print("   IS_RAILWAY:", IS_RAILWAY)
+print("   FORCE_LOCAL_MEDIA:", FORCE_LOCAL_MEDIA)
+print("   FORCE_CLOUDINARY:", FORCE_CLOUDINARY)
+print("   USE_CLOUDINARY result:", USE_CLOUDINARY)
+print("   Credentials present:", HAS_CLOUDINARY_CREDS)
+print(
+    "   DEFAULT STORAGE BACKEND:",
+    "cloudinary_storage.storage.MediaCloudinaryStorage"
+    if USE_CLOUDINARY
+    else "django.core.files.storage.FileSystemStorage",
+)
 
 # ---------------------------------------------------
 # Installed apps
