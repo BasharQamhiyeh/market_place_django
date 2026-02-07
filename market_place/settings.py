@@ -232,6 +232,17 @@ STORAGES = {
     ),
 }
 
+# -------------------------------------------------------------------
+# Compatibility shims for django-cloudinary-storage (expects old setting names)
+# Fixes Railway crash: AttributeError: Settings has no STATICFILES_STORAGE
+# -------------------------------------------------------------------
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+DEFAULT_FILE_STORAGE = (
+    "cloudinary_storage.storage.MediaCloudinaryStorage"
+    if USE_CLOUDINARY
+    else "django.core.files.storage.FileSystemStorage"
+)
+
 # ---------------------------------------------------
 # Default primary key field type
 # ---------------------------------------------------
