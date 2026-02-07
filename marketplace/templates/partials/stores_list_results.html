@@ -1,13 +1,4 @@
 <div id="resultsWrap">
-  <span id="storesHint" class="text-sm text-slate-500 italic sm:mt-0 mt-1">
-    {% if total_count == 0 %}
-      لا توجد متاجر
-    {% elif q or selected_categories %}
-      يوجد {{ total_count }} متجر في نتائج البحث
-    {% else %}
-      بإمكانك تحميل المزيد لعرض عدد أكبر من المتاجر
-    {% endif %}
-  </span>
 
   <div id="noResults" class="{% if stores %}hidden{% endif %} text-center py-20 text-slate-400">
     <div class="text-5xl mb-4">🔍</div>

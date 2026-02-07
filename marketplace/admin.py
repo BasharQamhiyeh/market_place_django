@@ -22,7 +22,7 @@ from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
-    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection
+    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto
 )
 
 class UserAdminForm(forms.ModelForm):
@@ -107,11 +107,26 @@ class ItemPhotoInline(admin.TabularInline):
     fields = ("image", "is_main",)
 
 
+class CategoryPhotoInline(nested_admin.NestedStackedInline):
+    model = CategoryPhoto
+    extra = 0
+    max_num = 1
+
+
 @admin.register(Category)
 class CategoryAdmin(nested_admin.NestedModelAdmin):
     change_list_template = "admin/categories_changelist.html"
     change_form_template = "admin/marketplace/category/change_form.html"
-    list_display = ("name_en", "name_ar", "parent", "icon_display", "color_box")
+
+    list_display = (
+        "name_en",
+        "name_ar",
+        "parent",
+        "icon_display",
+        "color_box",
+        "photo_preview",      # ✅ NEW
+    )
+
     fields = (
         "name_en",
         "name_ar",
@@ -123,10 +138,13 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         "description",
         "parent",
     )
+
     search_fields = ("name_en", "name_ar")
     list_filter = ("parent",)
     ordering = ("parent__id", "id")
-    inlines = [AttributeInline]
+
+    # ✅ add the photo inline on same page as Category
+    inlines = [CategoryPhotoInline, AttributeInline]
 
     def _build_tree(self, qs, opts, parent=None):
         nodes = []
@@ -149,9 +167,6 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
-        """
-        Injects the same tree JSON into the add/edit form for visual context.
-        """
         qs = self.get_queryset(request).select_related("parent")
         opts = self.model._meta
         tree = self._build_tree(qs, opts)
@@ -160,7 +175,6 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         return super().changeform_view(request, object_id, form_url, extra_context=extra_context)
 
     def get_changeform_initial_data(self, request):
-        """Pre-fill parent when ?parent=<id> is passed in the URL."""
         initial = super().get_changeform_initial_data(request)
         parent_id = request.GET.get("parent")
         if parent_id:
@@ -168,7 +182,6 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         return initial
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """Hierarchical dropdown for parent selection."""
         formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "parent" and formfield is not None:
             categories = Category.objects.all().select_related("parent")
@@ -191,15 +204,7 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
             formfield.choices = choices
         return formfield
 
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        """
-        Use a color picker for the 'color' field.
-        """
-        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name == "color" and formfield is not None:
-            formfield.widget = forms.TextInput(attrs={"type": "color"})
-        return formfield
-
+    # ✅ keep only ONE of these (you had it duplicated)
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
         if db_field.name == "color" and formfield is not None:
@@ -221,6 +226,17 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
             )
         return "—"
     color_box.short_description = "Color"
+
+    # ✅ NEW: small preview in list display
+    def photo_preview(self, obj):
+        p = getattr(obj, "photo", None)
+        if p and p.image:
+            return format_html(
+                '<img src="{}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid #ddd;" />',
+                p.image.url
+            )
+        return "—"
+    photo_preview.short_description = "Photo"
 
     class Media:
         js = (

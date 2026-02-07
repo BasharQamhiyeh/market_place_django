@@ -4537,51 +4537,65 @@ import json
 @require_GET
 def categories_browse(request):
     """
-    صفحة تصفح الأقسام الاحترافية - Public page
+    صفحة تصفح الأقسام - Public page
     تعرض جميع الأقسام بشكل تفاعلي وجميل
     """
 
-    # جلب الأقسام الرئيسية مع الأقسام الفرعية
-    # ✅ تم إزالة filter(is_active=True) لأن Category ليس لديه هذا الحقل
+    lang = translation.get_language()
+
     top_categories = (
         Category.objects
         .filter(parent__isnull=True)
-        .prefetch_related('subcategories__subcategories')
-        .order_by('name_ar')
+        .select_related("parent")
+        .prefetch_related("subcategories__subcategories")
+        .order_by("name_ar")
     )
 
-    # بناء هيكل بيانات متداخل للأقسام
+    def title_of(cat):
+        return cat.name_ar if lang == "ar" else cat.name_en
+
+    def photo_of(cat):
+        # uses your Category.photo_url property if you added it
+        return getattr(cat, "photo_url", None) or None
+
     categories_data = []
 
     for top_cat in top_categories:
-        # الأقسام الفرعية المباشرة
-        subcats = top_cat.subcategories.all().order_by('name_ar')
+        subcats = top_cat.subcategories.all().order_by("name_ar")
 
         subs_list = []
         for sub in subcats:
-            # الأقسام الفرعية من المستوى الثالث
-            sub_sub_cats = sub.subcategories.all().order_by('name_ar')
-
-            # ✅ استخدام if ... else بدلاً من or لتجنب القائمة الفارغة
-            levels_list = [ssc.name_ar for ssc in sub_sub_cats] if sub_sub_cats.exists() else [sub.name_ar]
+            sub_sub_cats = sub.subcategories.all().order_by("name_ar")
+            levels_list = [title_of(ssc) for ssc in sub_sub_cats] if sub_sub_cats.exists() else [title_of(sub)]
 
             subs_list.append({
-                'id': sub.id,
-                'title': sub.name_ar,
-                'icon': sub.icon or 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=150&h=150&fit=crop',
-                'levels': levels_list
+                "id": sub.id,
+                "title": title_of(sub),
+
+                # ✅ NEW
+                "photo": photo_of(sub),
+
+                # optional legacy fallback
+                "icon": sub.icon or "",
+                "color": sub.color or "",
+                "levels": levels_list,
             })
 
         categories_data.append({
-            'id': f"cat_{top_cat.id}",
-            'title': top_cat.name_ar,
-            'icon': top_cat.icon or 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=100&h=100&fit=crop',
-            'subs': subs_list
+            "id": top_cat.id,  # ✅ keep as int for simpler JS
+            "title": title_of(top_cat),
+
+            # ✅ NEW
+            "photo": photo_of(top_cat),
+
+            # optional legacy fallback
+            "icon": top_cat.icon or "",
+            "color": top_cat.color or "",
+            "subs": subs_list,
         })
 
     context = {
-        'categories': json.dumps(categories_data, ensure_ascii=False),
-        'page_title': 'تصفح الأقسام - ركن',
+        "categories_json": json.dumps(categories_data, ensure_ascii=False),
+        "page_title": "تصفح الأقسام - ركن",
     }
-
-    return render(request, 'categories_browse.html', context)
+    return render(request, "categories_browse.html", context)

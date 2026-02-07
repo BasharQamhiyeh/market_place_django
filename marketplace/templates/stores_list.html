@@ -51,8 +51,7 @@
 
                     <button type="submit"
                             class="absolute left-2 top-1/2 -translate-y-1/2 bg-orange-500 hover:bg-orange-600
-                                   w-12 h-12 rounded-xl flex items-center justify-center shadow-md transition"
-                            >
+                                   w-12 h-12 rounded-xl flex items-center justify-center shadow-md transition">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M21 21l-4.35-4.35m1.1-4.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -140,16 +139,29 @@
     <!-- STORES SECTION -->
     <section class="py-8 bg-white">
         <div class="max-w-7xl mx-auto px-4 bg-white">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-10">
+
+            <!-- ✅ FIXED: Title + Hint wrapper (HTMX will update the hint) -->
+            <div id="storesHeader" class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-10">
                 <h3 class="text-xl font-black flex items-center gap-2">
                     <span class="w-2 h-6 bg-[#ff7a18] rounded-full"></span>
                     المتاجر
                 </h3>
 
-                {# Hint + grid + load more now live inside resultsWrap (partial) #}
-                {# The partial MUST output a wrapper <div id="resultsWrap"> ... </div> #}
+                <!-- Hint will be updated by HTMX via hx-swap-oob -->
+                <span id="storesHint"
+                      class="text-sm text-slate-500 italic sm:mt-0 mt-1"
+                      hx-swap-oob="true">
+                    {% if total_count == 0 %}
+                      لا توجد متاجر
+                    {% elif q or selected_categories %}
+                      يوجد {{ total_count }} متجر في نتائج البحث
+                    {% else %}
+                      بإمكانك تحميل المزيد لعرض عدد أكبر من المتاجر
+                    {% endif %}
+                </span>
             </div>
 
+            <!-- Results container (HTMX target) -->
             {% include "partials/stores_list_results.html" %}
         </div>
     </section>
@@ -160,5 +172,4 @@
 {% block scripts %}
 {{ block.super }}
 <script src="{% static 'js/stores_list.js' %}"></script>
-
 {% endblock %}

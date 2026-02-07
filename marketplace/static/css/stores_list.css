@@ -1,61 +1,51 @@
+/* ================================================
+   STORES LIST PAGE - FIXED CSS
+   ================================================ */
+
+/* ===== CSS Variables ===== */
 :root {
   --rukn-orange: #ff7a18;
   --rukn-orange-light: #fdba74;
   --rukn-green: #16a34a;
+  --rukn-green-dark: #166534;
+  --rukn-green-light: #dcfce7;
 }
 
+/* ===== Base Styles ===== */
 body {
   background: #ffffff !important;
   font-family: 'Cairo', sans-serif;
 }
 
-/* Store Card Style */
-.store-card {
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
-    border-radius: 24px;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
+/* ===== Utility Classes ===== */
+.shadow-soft {
+    box-shadow: 0 12px 30px rgba(0,0,0,.08);
 }
 
-.store-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
-    border-color: var(--rukn-orange);
+.card-hover {
+    transition: .35s ease;
 }
 
-.store-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 50px;
-  height: 50px;
-  background: linear-gradient(135deg, var(--rukn-orange), #fdba74);
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-  border-radius: 24px 0 0 0;
-  opacity: 0.95;
-  pointer-events: none;
+.card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 40px rgba(0,0,0,.12);
 }
 
-.store-card {
-  border: 2px solid transparent;
+.orange-top-border {
+    border-top: 5px solid #f97316;
 }
 
-.store-card:hover {
-  border-color: var(--rukn-orange);
-}
-
-/* إخفاء سكرول الموبايل */
+/* ===== Scrollbar Hide (Mobile) ===== */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* زر القسم */
+/* ===== Category Chips ===== */
 .category-chip {
   padding: 10px 18px;
   border-radius: 999px;
@@ -73,7 +63,57 @@ body {
   border-color: var(--rukn-orange);
 }
 
-/* Logo container */
+.category-chip:hover:not(.active) {
+  border-color: var(--rukn-orange);
+  background: rgba(255, 122, 24, 0.05);
+}
+
+/* ===== Buttons ===== */
+.btn-orange {
+  background: var(--rukn-orange);
+  color: #fff;
+  transition: all 0.3s;
+}
+
+.btn-orange:hover {
+  background: #f97316;
+}
+
+.btn-orange:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Stores Grid ===== */
+#storesGrid {
+    display: grid;
+    gap: 1.25rem;
+}
+
+/* ===== Store Card ===== */
+.store-card {
+    background: #ffffff;
+    border: 2px solid #f1f5f9;
+    border-radius: 24px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.store-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
+    border-color: var(--rukn-orange);
+}
+
+/* ✅ REMOVED: Orange triangle ::after pseudo-element */
+
+/* Store card icon sizing */
+.store-card svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* ===== Logo Container (Desktop) ===== */
 .store-card .z-10 {
     width: 85px !important;
     height: 85px !important;
@@ -88,13 +128,14 @@ body {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
+/* Logo hover effect (Desktop) */
 .store-card:hover .z-10 {
     transform: translateX(-50%) scale(1.1) !important;
     box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
     z-index: 20;
 }
 
-/* Responsive for mobile */
+/* ===== Mobile Responsive ===== */
 @media (max-width: 640px) {
     #storesGrid {
         display: flex;
@@ -148,11 +189,28 @@ body {
     }
 }
 
-.btn-orange {
-  background: var(--rukn-orange);
-  color: #fff;
-  transition: all 0.3s;
+/* ===== No Results State ===== */
+#noResults {
+    text-align: center;
+    padding: 5rem 1rem;
+    color: #94a3b8;
 }
-.btn-orange:hover {
-  background: #f97316;
+
+#noResults .text-5xl {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* ===== HTMX Loading Indicators ===== */
+.htmx-request .htmx-indicator {
+    display: inline-block;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request #storesGrid {
+    opacity: 0.6;
+    pointer-events: none;
 }
