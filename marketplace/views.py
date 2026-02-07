@@ -4452,7 +4452,8 @@ def _stores_queryset_and_context(request):
 
     if selected_categories:
         stores_qs = stores_qs.filter(
-            owner__listings__category_id__in=selected_categories,
+            Q(owner__listings__category_id__in=selected_categories) |
+            Q(owner__listings__category__parent_id__in=selected_categories),
             owner__listings__type="item",
             owner__listings__is_active=True,
             owner__listings__is_approved=True,
@@ -4480,14 +4481,25 @@ def _stores_queryset_and_context(request):
 
     categories = (
         Category.objects
+        .filter(parent__isnull=True)
         .filter(
-            parent__isnull=True,
-            listings__type="item",
-            listings__is_active=True,
-            listings__is_approved=True,
-            listings__is_deleted=False,
-            listings__user__store__isnull=False,
-            listings__user__store__is_active=True
+            Q(
+                listings__type="item",
+                listings__is_active=True,
+                listings__is_approved=True,
+                listings__is_deleted=False,
+                listings__user__store__isnull=False,
+                listings__user__store__is_active=True,
+            )
+            |
+            Q(
+                subcategories__listings__type="item",
+                subcategories__listings__is_active=True,
+                subcategories__listings__is_approved=True,
+                subcategories__listings__is_deleted=False,
+                subcategories__listings__user__store__isnull=False,
+                subcategories__listings__user__store__is_active=True,
+            )
         )
         .distinct()
         .order_by("name_ar")
