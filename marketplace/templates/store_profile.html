@@ -109,6 +109,7 @@
                 </p>
 
                 <div class="mt-4 flex flex-wrap gap-2 justify-center lg:justify-start">
+                  {% if store.address %}
                   <span class="meta-pill">
                     <span class="meta-icon text-orange-500">
                       <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none">
@@ -116,8 +117,9 @@
                         <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
                       </svg>
                     </span>
-                    {{ store.city|default:"" }}
+                    {{ store.address|default:"" }}
                   </span>
+                  {% endif %}
 
                   <span class="meta-pill">
                     <span class="meta-icon text-orange-500">
@@ -382,31 +384,73 @@
                       <div class="text-sm text-gray-800 leading-8">
                         {{ store.description|default:"" }}
                       </div>
+                      <div class="mt-5 border-t border-gray-200 pt-4">
+                        <div class="text-sm font-extrabold text-gray-900 mb-4">تصنيفات</div>
+
+                        {% if store_categories %}
+                          <div class="flex flex-wrap gap-2">
+                            {% for c in store_categories %}
+                              <a href="{% url 'item_list' %}?category={{ c.id }}"
+                                 class="inline-flex items-center justify-center px-4 py-2 rounded-full
+                                        border border-orange-200 bg-orange-50 text-[var(--rukn-orange)]
+                                        text-xs font-extrabold hover:bg-orange-100 hover:border-orange-300 transition">
+                                {{ c }}
+                              </a>
+                            {% endfor %}
+                          </div>
+                        {% else %}
+                          <div class="text-xs text-gray-500">لا توجد تصنيفات بعد.</div>
+                        {% endif %}
+                      </div>
 
                       <div class="mt-5 border-t border-gray-200 pt-4">
                         <div class="text-sm font-extrabold text-gray-900 mb-4">روابط المتجر</div>
                         <div class="mt-2 flex flex-wrap gap-2">
                           {% if store.website %}
                             <a href="{{ store.website }}" target="_blank" rel="noopener" class="social-pill">
-                              <span class="social-icon" aria-hidden="true">🌐</span>
+                              <span class="social-icon" aria-hidden="true">
+                                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+                                      <path d="M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                      <path d="M12 2a15 15 0 0 1 0 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                      <path d="M12 2a15 15 0 0 0 0 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                                  </svg>
+                              </span>
                               الموقع الإلكتروني
                             </a>
                           {% endif %}
                           {% if store.instagram %}
                             <a href="{{ store.instagram }}" target="_blank" rel="noopener" class="social-pill">
-                              <span class="social-icon" aria-hidden="true">📸</span>
+                              <span class="social-icon" aria-hidden="true">
+                                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                      <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="2" />
+                                      <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="2" />
+                                      <path d="M16.5 7.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                                  </svg>
+                              </span>
                               إنستغرام
                             </a>
                           {% endif %}
                           {% if store.facebook %}
                             <a href="{{ store.facebook }}" target="_blank" rel="noopener" class="social-pill">
-                              <span class="social-icon" aria-hidden="true">📘</span>
+                              <span class="social-icon" aria-hidden="true">
+                                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                      <path d="M14 8h2V6h-2c-1.7 0-3 1.3-3 3v2H9v2h2v6h2v-6h2l1-2h-3V9c0-.6.4-1 1-1z" fill="currentColor" />
+                                  </svg>
+                              </span>
                               فيسبوك
                             </a>
                           {% endif %}
                           {% if store.whatsapp %}
                             <a href="https://wa.me/{{ store.whatsapp|cut:'+'|cut:' ' }}" target="_blank" rel="noopener" class="social-pill">
-                              <span class="social-icon" aria-hidden="true">💬</span>
+                              <span class="social-icon" aria-hidden="true">
+                                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                                      <path d="M20 12a8 8 0 0 1-12.6 6.6L4 19l.4-3.2A8 8 0 1 1 20 12z"
+                                            stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                                      <path d="M8.7 9.3c.2-.5.5-.5.7-.5h.6c.2 0 .4 0 .6.4l.8 1.9c.1.3.1.5 0 .7l-.4.5c-.1.2-.2.4 0 .7.3.6 1.3 2.1 3 2.9.3.1.5.1.7 0l.7-.4c.2-.1.4-.1.6 0l2 .9c.3.1.5.3.5.6 0 1-.6 1.8-1.5 2-1.1.2-2.6.1-4.6-1-2.5-1.4-4.1-4-4.5-4.8-.4-.9-1-2.5-.3-3.7z"
+                                            fill="currentColor" />
+                                  </svg>
+                              </span>
                               واتساب
                             </a>
                           {% endif %}
@@ -419,39 +463,58 @@
                         <div class="purchase-mini">
                           <div class="row">
                             <div class="item">
-                              <div class="ico" aria-hidden="true">💳</div>
+                              <div class="ico" aria-hidden="true">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                    <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"></rect>
+                                    <path d="M2 10h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                    <path d="M6 15h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
+                              </div>
                               <div>
                                 <div class="t">الدفع</div>
-                                <div class="d">كاش / بطاقة / CliQ (حسب المنتج/التوفر)</div>
-                              </div>
-                            </div>
-
-                            <div class="item">
-                              <div class="ico" aria-hidden="true">🚚</div>
-                              <div>
-                                <div class="t">التوصيل</div>
-                                <div class="d">24–48 ساعة (حسب المنطقة)</div>
+                                <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">
+                                  {{ store_payment_text }}
+                                </div>
                               </div>
                             </div>
 
                             <div class="item">
                               <div class="ico" aria-hidden="true">
-                                <span class="mx-auto flex items-center justify-center
-                                               w-9 h-9 sm:w-10 sm:h-10 rounded-full
-                                               bg-gray-50 border border-gray-200 text-gray-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                         class="w-4 h-4 sm:w-5 sm:h-5"
-                                         viewBox="0 0 24 24" fill="none"
-                                         stroke="currentColor" stroke-width="2"
-                                         stroke-linecap="round" stroke-linejoin="round">
-                                      <path d="M21 12a9 9 0 1 1-3-6.7"></path>
-                                      <path d="M21 3v6h-6"></path>
-                                    </svg>
-                                  </span>
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                    <path d="M10 17h4V5H2v12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                    <path d="M14 8h5l3 3v6h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                    <circle cx="7" cy="17" r="2" stroke="currentColor" stroke-width="2"></circle>
+                                    <circle cx="17" cy="17" r="2" stroke="currentColor" stroke-width="2"></circle>
+                                </svg>
+                              </div>
+                              <div>
+                                <div class="t">التوصيل</div>
+                                <div class="d">
+                                  {% if store.delivery_policy %}
+                                    {{ store.get_delivery_policy_display }}
+                                  {% else %}
+                                    غير محدد
+                                  {% endif %}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div class="item">
+                              <div class="ico" aria-hidden="true">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                    <path d="M21 12a9 9 0 1 1-3-6.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                    <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                                </svg>
                               </div>
                               <div>
                                 <div class="t">الاسترجاع</div>
-                                <div class="d">خلال 7 أيام (حسب شروط الإعلان)</div>
+                                <div class="d">
+                                  {% if store.return_policy %}
+                                    {{ store.get_return_policy_display }}
+                                  {% else %}
+                                    غير محدد
+                                  {% endif %}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -503,7 +566,7 @@
                         <path d="M6 15h4"></path>
                       </svg>
                     </span>
-                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">كاش / بطاقة / CliQ</div>
+                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">{{ store_payment_text }}</div>
                   </div>
 
                   <div class="rounded-2xl bg-white border border-gray-200 px-3 py-3">
@@ -521,7 +584,13 @@
                         <circle cx="17" cy="17" r="2"></circle>
                       </svg>
                     </span>
-                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">التوصيل خلال 24–48 ساعة</div>
+                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">
+                      {% if store.delivery_policy %}
+                        {{ store.get_delivery_policy_display }}
+                      {% else %}
+                        غير محدد
+                      {% endif %}
+                    </div>
                   </div>
 
                   <div class="rounded-2xl bg-white border border-gray-200 px-3 py-3">
@@ -539,7 +608,13 @@
                       </svg>
                     </span>
                     </span>
-                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">الاسترجاع خلال 7 أيام</div>
+                    <div class="mt-2 text-[11px] sm:text-xs font-semibold text-gray-700 leading-tight">
+                      {% if store.return_policy %}
+                        {{ store.get_return_policy_display }}
+                      {% else %}
+                        غير محدد
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -667,15 +742,20 @@
                 <span class="text-gray-500">رقم الموبايل (اضغط على الرقم لإظهاره بالكامل)</span>
 
                 <div class="flex items-center justify-start gap-5">
-                  <button type="button" id="revealPhoneBtn"
-                          data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
-                          data-login-modal="loginModal"
-                          class="flex text-right text-lg font-extrabold text-gray-900 underline-offset-2 hover:text-[var(--rukn-orange)] hover:underline transition">
+                  <button type="button"
+                    id="revealPhoneBtn"
+                    data-auth="{% if request.user.is_authenticated %}1{% else %}0{% endif %}"
+                    data-login-modal="loginModal"
+                    class="flex text-right text-lg font-extrabold text-gray-900
+                           underline-offset-2 hover:text-[var(--rukn-orange)] hover:underline transition">
                     <span id="sellerPhone"
                           dir="ltr"
-                          data-masked="{{ masked_phone|default:'079•• •• ••••' }}"
-                          data-full="{{ full_phone|default:'' }}"
-                          data-revealed="false">•• •• ••• •07</span>
+                          data-masked="{{ seller_phone_masked|default:'•• •• ••• •07' }}"
+                          data-full="{{ seller_phone_full|default:'' }}"
+                          data-revealed="false"
+                          data-allow="{% if allow_show_phone %}1{% else %}0{% endif %}">
+                      {{ seller_phone_masked|default:"•• •• ••• •07" }}
+                    </span>
                   </button>
 
                   <div id="contactActions" class="hidden flex items-center justify-start gap-2">

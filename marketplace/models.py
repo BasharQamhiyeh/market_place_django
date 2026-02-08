@@ -653,7 +653,7 @@ class ItemAttributeValue(models.Model):
 
 class Request(models.Model):
     CONDITION_CHOICES = [
-        ("any", "أي حالة"),
+        ("any", "لا يهم"),
         ("new", "جديد"),
         ("used", "مستعمل"),
     ]

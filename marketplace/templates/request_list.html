@@ -122,16 +122,26 @@
           <div>
             <label class="filter-title">حالة الطلب</label>
             <div class="seg-btn" role="group" aria-label="حالة الطلب">
-              <input type="radio" id="status_all" name="condition" value="" {% if not filters.condition %}checked{% endif %}>
-              <label for="status_all">لا يهم</label>
 
+              <!-- 1) ALL = no filter -->
+              <input type="radio" id="status_all" name="condition" value="" {% if not filters.condition %}checked{% endif %}>
+              <label for="status_all">الكل</label>
+
+              <!-- 2) NEW -->
               <input type="radio" id="status_new" name="condition" value="new" {% if filters.condition == "new" %}checked{% endif %}>
               <label for="status_new">جديد</label>
 
+              <!-- 3) USED -->
               <input type="radio" id="status_used" name="condition" value="used" {% if filters.condition == "used" %}checked{% endif %}>
               <label for="status_used">مستعمل</label>
+
+              <!-- 4) NOT IMPORTANT = filter condition_preference == "any" -->
+              <input type="radio" id="status_any" name="condition" value="any" {% if filters.condition == "any" %}checked{% endif %}>
+              <label for="status_any">لا يهم</label>
+
             </div>
           </div>
+
 
           <div>
             <label class="filter-title">نطاق الميزانية (د.أ)</label>

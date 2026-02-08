@@ -3281,46 +3281,54 @@ def user_profile(request, user_id):
 def store_profile(request, store_id):
     store = get_object_or_404(Store, pk=store_id, is_active=True)
 
-    # ✅ Increment views (logged-in + logged-out), once per session per store
     session_key = f"store_viewed_{store_id}"
     if not request.session.get(session_key):
         Store.objects.filter(pk=store.pk).update(views_count=F("views_count") + 1)
         request.session[session_key] = True
         store.refresh_from_db(fields=["views_count"])
 
-    listings = (
+    base_qs = (
         Listing.objects
         .filter(user=store.owner, is_active=True, is_approved=True, type="item")
         .select_related("category", "city", "user")
-        .order_by("-published_at")[:30]
+        .order_by("-published_at")
     )
 
-    listings_count = Listing.objects.filter(
-        user=store.owner, is_active=True, is_approved=True, type="item"
-    ).count()
+    listings = list(base_qs[:30])
+    listings_count = base_qs.count()
 
-    def _root_category(cat):
-        while cat and cat.parent_id:
-            cat = cat.parent
-        return cat
+    # --------- build root categories for chips (from ALL listings) ---------
+    # Build parent map once (categories table usually small)
+    cats = Category.objects.all().only("id", "parent_id", "name_ar", "name_en")
+    parent_map = {c.id: c.parent_id for c in cats}
 
+    def root_id(cat_id: int):
+        cur = cat_id
+        while cur and parent_map.get(cur):
+            cur = parent_map[cur]
+        return cur
+
+    cat_ids = list(base_qs.exclude(category_id__isnull=True).values_list("category_id", flat=True).distinct())
+    root_ids = sorted({root_id(cid) for cid in cat_ids if cid})
+
+    store_categories = list(
+        Category.objects.filter(id__in=root_ids, parent__isnull=True).order_by("name_ar")
+    )
+
+    # --------- attach filter data to the 30 rendered cards (NO extra DB hits) ---------
     for l in listings:
-        # category is on the Listing attached to Item in your project
-        cat = getattr(l.item, "listing", None)
-        cat = getattr(cat, "category", None)
-        root = _root_category(cat)
-        l.root_category_id = root.id if root else ""
+        # ✅ category is on Listing (you already select_related("category"))
+        cat = getattr(l, "category", None)
+        rid = root_id(cat.id) if cat else ""
+        l.root_category_id = rid or ""
 
-        city_id = getattr(l.item, "city_id", None)
-        if not city_id:
-            city_id = getattr(l, "city_id", None)
-
-        l._city_id = city_id or ""
+        # city id (prefer item.city_id if exists, else listing city)
+        city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None) or ""
+        l._city_id = city_id
 
     categories = Category.objects.filter(parent__isnull=True).order_by("name_ar")
     cities = City.objects.filter(is_active=True).order_by("name_ar")
 
-    # Reviews list (server-rendered list if you already show it)
     reviews = (
         StoreReview.objects
         .filter(store=store)
@@ -3328,16 +3336,17 @@ def store_profile(request, store_id):
         .order_by("-created_at")
     )
 
-    # follow state
     is_following = False
     if request.user.is_authenticated:
         is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
 
-    # phone reveal
-    full_phone = store.owner.phone if getattr(store.owner, "phone", None) else ""
-    masked_phone = "07•• ••• •••"
+    # phone reveal (respect store + user privacy flags)
+    is_auth = request.user.is_authenticated
+    allow_show_phone = bool(getattr(store, "show_phone", True)) and bool(getattr(store.owner, "show_phone", True))
 
-    # ✅ user review (for prefill + edit after reload)
+    seller_phone_full = store.owner.phone if (allow_show_phone and getattr(store.owner, "phone", None)) else ""
+    seller_phone_masked = "07•• ••• •••"
+
     user_review = None
     if request.user.is_authenticated:
         r = StoreReview.objects.filter(store=store, reviewer=request.user).first()
@@ -3349,20 +3358,20 @@ def store_profile(request, store_id):
             }
 
     followers_count = StoreFollow.objects.filter(store=store).count()
-    # is_following = StoreFollow.objects.filter(store=store, user=request.user).exists()
 
     reported_already = False
     is_own_store = False
-
     if request.user.is_authenticated:
         is_own_store = (store.owner_id == request.user.user_id)
-
-        # ✅ same idea as item_detail.reported_already but for store
         reported_already = IssuesReport.objects.filter(
             user=request.user,
             target_kind="store",
-            store=store,  # if you have FK "store"
+            store=store,
         ).exists()
+
+    PM_LABELS = {"cash": "كاش", "card": "بطاقة", "cliq": "CliQ", "transfer": "تحويل"}
+    pm = store.payment_methods or []
+    payment_text = " / ".join(PM_LABELS[k] for k in pm if k in PM_LABELS) or "غير محدد"
 
     ctx = {
         "store": store,
@@ -3371,16 +3380,22 @@ def store_profile(request, store_id):
         "categories": categories,
         "cities": cities,
         "reviews": reviews,
-        "full_phone": full_phone,
-        "masked_phone": masked_phone,
+        "allow_show_phone": allow_show_phone,
+        "seller_phone_full": seller_phone_full,
+        "seller_phone_masked": seller_phone_masked,
         "user_review": user_review,
         "is_following": is_following,
         "followers_count": followers_count,
         "reported_already": reported_already,
         "is_own_store": is_own_store,
+
+        # ✅ new: chips data
+        "store_categories": store_categories,
+        "store_payment_text": payment_text
     }
 
     return render(request, "store_profile.html", ctx)
+
 
 
 from django.db import IntegrityError

@@ -4,9 +4,10 @@
    ✅ Fix: listings filters + correct count
    ✅ Fix: message form auth gating actually works
    ✅ Fix: prevent double-init if script injected twice
-   ✅ Fix: init works even if script loads AFTER DOMContentLoaded (your “button does nothing” case)
+   ✅ Fix: init works even if script loads AFTER DOMContentLoaded
    ✅ Keeps: top "التقييم" box + stars update without reload
    ✅ Source of truth = listUrl response (avg/count) inside loadPage()
+   ✅ NEW: Phone reveal respects store.show_phone via data-allow (same as item page)
 ========================= */
 
 /* ========= HARD GUARD ========= */
@@ -28,9 +29,7 @@ function showToast(message) {
     box.classList.add("opacity-0", "scale-90");
   }, 2200);
 }
-
 window.showRuknAlert = showToast;
-
 
 /* ========= Login modal (same as item page) ========= */
 function openLoginModal() {
@@ -87,7 +86,8 @@ function renderStarsSVG(value, opts = {}) {
   const uid = (opts.idBase ?? "s") + "-" + Math.random().toString(36).slice(2);
   const isRTL = opts.rtl ?? (document?.documentElement?.dir === "rtl");
 
-  const STAR_PATH = "M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z";
+  const STAR_PATH =
+    "M12 17.3l6.2 3.7-1.6-7 5.4-4.7-7.1-.6L12 2 9.1 8.7l-7.1.6 5.4 4.7-1.6 7z";
 
   let html = `<span class="stars-row" style="gap:${gap}px">`;
 
@@ -177,6 +177,18 @@ function bindStoreFilters() {
 
   if (!grid || !adsCount || !categoryFilter || !cityFilter) return;
 
+  // ✅ preselect from URL (?tab=ads&category=ID&city=ID)
+  const params = new URLSearchParams(window.location.search);
+  const urlCat = (params.get("category") || "").trim();
+  const urlCity = (params.get("city") || "").trim();
+
+  if (urlCat && categoryFilter.querySelector(`option[value="${CSS.escape(urlCat)}"]`)) {
+    categoryFilter.value = urlCat;
+  }
+  if (urlCity && cityFilter.querySelector(`option[value="${CSS.escape(urlCity)}"]`)) {
+    cityFilter.value = urlCity;
+  }
+
   const cards = () => Array.from(grid.querySelectorAll(".store-ad-wrap"));
 
   function apply() {
@@ -205,7 +217,7 @@ function bindStoreFilters() {
   apply();
 }
 
-/* ========= Phone Reveal (login gated like item page) ========= */
+/* ========= Phone Reveal (login gated + allow flag like item page) ========= */
 function bindPhoneReveal() {
   const sellerPhoneEl = document.getElementById("sellerPhone");
   const revealPhoneBtn = document.getElementById("revealPhoneBtn");
@@ -228,12 +240,21 @@ function bindPhoneReveal() {
     sellerPhoneEl.dataset.revealed = "false";
   }
 
-  function reveal() {
-    if (isGuestFromEl(revealPhoneBtn) || !isAuthedFromEl(revealPhoneBtn)) {
+  function revealIfAllowed() {
+    // ✅ guest -> login modal
+    if (!isAuthedFromEl(revealPhoneBtn) || isGuestFromEl(revealPhoneBtn)) {
       openLoginModalById(revealPhoneBtn.dataset.loginModal);
       return false;
     }
 
+    // ✅ store doesn't allow showing phone
+    const allow = (sellerPhoneEl.dataset.allow || "1") === "1";
+    if (!allow) {
+      showToast("⚠️ المتجر يفضّل التواصل عبر الرسائل");
+      return false;
+    }
+
+    // already revealed
     if (sellerPhoneEl.dataset.revealed === "true") return true;
 
     const full = sellerPhoneEl.dataset.full || "";
@@ -254,6 +275,7 @@ function bindPhoneReveal() {
     return true;
   }
 
+  // init
   setMasked();
   if (callBtn) callBtn.href = "#";
   if (whatsappBtn) whatsappBtn.href = "#";
@@ -262,36 +284,39 @@ function bindPhoneReveal() {
     contactActions.classList.remove("flex");
   }
 
+  // click number
   revealPhoneBtn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    reveal();
+    revealIfAllowed();
   });
 
+  // call icon
   if (callBtn) {
     callBtn.addEventListener("click", (e) => {
-      if (isGuestFromEl(callBtn) || !isAuthedFromEl(callBtn)) {
+      if (!isAuthedFromEl(callBtn) || isGuestFromEl(callBtn)) {
         e.preventDefault();
-        openLoginModalById(callBtn.dataset.loginModal);
+        openLoginModalById(callBtn.dataset.loginModal || "loginModal");
         return;
       }
       if (sellerPhoneEl.dataset.revealed !== "true") {
         e.preventDefault();
-        if (reveal()) window.location.href = callBtn.href;
+        if (revealIfAllowed()) window.location.href = callBtn.href;
       }
     });
   }
 
+  // whatsapp icon
   if (whatsappBtn) {
     whatsappBtn.addEventListener("click", (e) => {
-      if (isGuestFromEl(whatsappBtn) || !isAuthedFromEl(whatsappBtn)) {
+      if (!isAuthedFromEl(whatsappBtn) || isGuestFromEl(whatsappBtn)) {
         e.preventDefault();
-        openLoginModalById(whatsappBtn.dataset.loginModal);
+        openLoginModalById(whatsappBtn.dataset.loginModal || "loginModal");
         return;
       }
       if (sellerPhoneEl.dataset.revealed !== "true") {
         e.preventDefault();
-        if (reveal()) window.open(whatsappBtn.href, "_blank", "noopener");
+        if (revealIfAllowed()) window.open(whatsappBtn.href, "_blank", "noopener");
       }
     });
   }
@@ -429,7 +454,6 @@ function bindMessage() {
 }
 
 /* ========= Reviews (FULL mockup: list + pagination + summary) ========= */
-/* ========= Reviews (FULL mockup: list + pagination + summary) ========= */
 function bindStoreReviews() {
   const cfg = readJsonScript("store-reviews-data") || {};
   const listUrl = cfg.listUrl || "";
@@ -470,7 +494,6 @@ function bindStoreReviews() {
     return new Intl.DateTimeFormat("ar-JO", { day: "2-digit", month: "long", year: "numeric" }).format(d);
   }
 
-  /* ✅ escape to avoid breaking HTML + XSS */
   function escapeHtml(s) {
     return String(s ?? "")
       .replace(/&/g, "&amp;")
@@ -480,15 +503,12 @@ function bindStoreReviews() {
       .replace(/'/g, "&#039;");
   }
 
-  /* ✅ initial letter from display name (reviewer) */
   function getInitialLetter(displayName) {
     const base = String(displayName || "").trim();
     if (!base) return "م";
-    // Unicode-safe first character (Arabic safe)
     return Array.from(base)[0].toUpperCase() || "م";
   }
 
-  /* ✅ avatar: image if exists, else initial letter */
   function renderReviewerAvatarHTML(avatarUrl, displayName) {
     const wrapClass =
       "w-10 h-10 rounded-full border border-gray-200 bg-gray-100 overflow-hidden flex items-center justify-center flex-shrink-0";
@@ -589,11 +609,8 @@ function bindStoreReviews() {
     }
 
     (results || []).forEach((r) => {
-      // ✅ for now: backend gives "reviewer" only
       const reviewer = (r.reviewer && String(r.reviewer).trim()) || "مستخدم";
       const name = reviewer;
-
-      // ✅ optional avatar URL if your backend adds it later
       const avatarUrl = (r.avatar && String(r.avatar).trim()) || "";
 
       const dateTxt = r.created_at ? formatArabicDate(r.created_at) : "";
@@ -788,8 +805,6 @@ function bindStoreReviews() {
   loadPage(false);
 }
 
-
-
 /* ========= Safe Init ========= */
 function safeRun(fn, name) {
   try {
@@ -805,71 +820,41 @@ function bindStoreFollow() {
   if (!btn) return;
 
   const textEl = document.getElementById("favText");
-  // NOTE: you don't want followersCount shown, so we do NOT depend on it.
-  // const countEl = document.getElementById("followersCount");
 
   function setUI(following) {
-      btn.dataset.following = following ? "1" : "0";
+    btn.dataset.following = following ? "1" : "0";
 
-      // label
-      if (textEl) {
-        textEl.textContent = following ? "أنت متابع للمتجـر" : "متابعة المتجـر";
-      }
-
-      // icon circle (first span inside button)
-      const iconCircle = btn.querySelector(":scope > span");
-      const iconSvg = iconCircle?.querySelector("svg");
-
-      if (following) {
-        // button
-        btn.classList.add("bg-orange-50", "border-orange-300");
-        btn.classList.remove("bg-white", "border-gray-200");
-
-        // icon circle
-        if (iconCircle) {
-          iconCircle.classList.add(
-            "bg-orange-100",
-            "border-orange-300",
-            "text-[var(--rukn-orange)]"
-          );
-          iconCircle.classList.remove(
-            "bg-gray-50",
-            "border-gray-200",
-            "text-gray-400"
-          );
-        }
-
-        if (iconSvg) {
-          iconSvg.classList.add("text-[var(--rukn-orange)]");
-        }
-      } else {
-        // button
-        btn.classList.remove("bg-orange-50", "border-orange-300");
-        btn.classList.add("bg-white", "border-gray-200");
-
-        // icon circle
-        if (iconCircle) {
-          iconCircle.classList.remove(
-            "bg-orange-100",
-            "border-orange-300",
-            "text-[var(--rukn-orange)]"
-          );
-          iconCircle.classList.add(
-            "bg-gray-50",
-            "border-gray-200",
-            "text-gray-400"
-          );
-        }
-
-        if (iconSvg) {
-          iconSvg.classList.remove("text-[var(--rukn-orange)]");
-        }
-      }
+    if (textEl) {
+      textEl.textContent = following ? "أنت متابع للمتجـر" : "متابعة المتجـر";
     }
 
+    const iconCircle = btn.querySelector(":scope > span");
+    const iconSvg = iconCircle?.querySelector("svg");
+
+    if (following) {
+      btn.classList.add("bg-orange-50", "border-orange-300");
+      btn.classList.remove("bg-white", "border-gray-200");
+
+      if (iconCircle) {
+        iconCircle.classList.add("bg-orange-100", "border-orange-300", "text-[var(--rukn-orange)]");
+        iconCircle.classList.remove("bg-gray-50", "border-gray-200", "text-gray-400");
+      }
+
+      if (iconSvg) iconSvg.classList.add("text-[var(--rukn-orange)]");
+    } else {
+      btn.classList.remove("bg-orange-50", "border-orange-300");
+      btn.classList.add("bg-white", "border-gray-200");
+
+      if (iconCircle) {
+        iconCircle.classList.remove("bg-orange-100", "border-orange-300", "text-[var(--rukn-orange)]");
+        iconCircle.classList.add("bg-gray-50", "border-gray-200", "text-gray-400");
+      }
+
+      if (iconSvg) iconSvg.classList.remove("text-[var(--rukn-orange)]");
+    }
+  }
 
   btn.addEventListener("click", async (e) => {
-    // safety (in case button is inside any clickable wrapper)
     e.preventDefault();
     e.stopPropagation();
 
@@ -880,7 +865,6 @@ function bindStoreFollow() {
       return;
     }
 
-    // block self-follow on frontend too (backend also blocks)
     const ownerId = String(btn.dataset.storeOwnerId || "");
     const userId = String(btn.dataset.currentUserId || "");
     if (ownerId && userId && ownerId === userId) {
@@ -927,7 +911,6 @@ function bindStoreFollow() {
     }
   });
 
-  // Initial UI
   setUI(btn.dataset.following === "1");
 }
 
@@ -950,7 +933,6 @@ function initStoreProfile() {
   safeRun(bindStoreReviews, "bindStoreReviews");
 }
 
-// ✅ this is the important fix for “button does nothing”
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initStoreProfile);
 } else {

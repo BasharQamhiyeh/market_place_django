@@ -109,31 +109,43 @@ window.copyAdNumber = function copyAdNumber() {
 })();
 
 /* ========= Share ========= */
+/* ========= Share ========= */
 (function initShare() {
   const shareBtn = document.getElementById("shareBtn");
   if (!shareBtn) return;
 
-  shareBtn.addEventListener("click", async () => {
-    console.log("LOAD MORE CLICK", { requestId: btn.dataset.requestId, offset: grid.children.length });
+  shareBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
 
     const shareData = {
       title: "طلب على منصة ركن",
-      text: "شاهد هذا الطلب",
-      url: window.location.href
+      text: "شاهد هذا الطلب على منصة ركن",
+      url: window.location.href,
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        showRuknAlert("✔ تم نسخ الرابط");
+        return;
       }
-    } catch (e) {
-      // ignore cancel
+
+      // fallback: copy link
+      const url = window.location.href;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        showRuknAlert("✔ تم نسخ رابط الطلب");
+      } else {
+        fallbackCopy(url);
+      }
+    } catch (err) {
+      // ignore share cancel, but if clipboard fails show fallback
+      // (no need to alert on cancel)
+      console.warn("share failed:", err);
     }
   });
 })();
+
 
 /* ========= Phone Reveal (WORKING + HIDE ICONS UNTIL REVEAL + ALLOW FLAG) ========= */
 /* ========= Phone Reveal (AUTH + HIDE ICONS UNTIL REVEAL + ALLOW FLAG) ========= */
