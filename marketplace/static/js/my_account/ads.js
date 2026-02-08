@@ -76,6 +76,35 @@
   /* =========================================================
      ✅ Helpers
   ========================================================= */
+
+  function openHighlightConfirmModal({ title, balance, days, cost, onConfirm }) {
+      const m = document.getElementById("highlightConfirmModal");
+      if (!m) return alert("highlightConfirmModal is missing in DOM.");
+
+      document.getElementById("highlightConfirmTitle").textContent = title || "تأكيد التمييز";
+      document.getElementById("highlightConfirmBalance").textContent = String(balance ?? points);
+      document.getElementById("highlightConfirmCost").textContent = String(cost ?? 0);
+      document.getElementById("highlightConfirmText").textContent =
+        `هل تريد تمييز الإعلان لمدة ${days} يوم مقابل ${cost} نقطة؟`;
+
+      const btn = document.getElementById("confirmHighlightBtn");
+      if (btn) btn.onclick = async () => {
+        await onConfirm?.();
+      };
+
+      m.classList.remove("hidden");
+      m.classList.add("flex");
+    }
+
+    window.closeHighlightConfirmModal = function () {
+      const m = document.getElementById("highlightConfirmModal");
+      if (!m) return;
+      m.classList.add("hidden");
+      m.classList.remove("flex");
+    };
+
+
+
   function updateCount() {
     const list = getList();
     const count = getCountEl();
@@ -535,73 +564,113 @@
   }
   if (!window.closeHighlightModal) window.closeHighlightModal = () => closeModal("highlightModal");
 
-  window.selectHighlightPackage = async (days) => {
-    if (!highlightTargetId) return;
+  let __highlightPending = null;
 
-    const row = getAdRow(highlightTargetId);
-    if (!row) return;
+    window.selectHighlightPackage = async (days, cost) => {
+      if (!highlightTargetId) return;
 
-    const listingId = Number(row.dataset.listingId || highlightTargetId);
+      const row = getAdRow(highlightTargetId);
+      if (!row) return;
 
-    let data = null;
-    try {
-      const res = await fetch(`/listing/${listingId}/feature/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken(),
-        },
-        body: JSON.stringify({ days: Number(days) }),
-      });
+      const listingId = Number(row.dataset.listingId || highlightTargetId);
+      const d = Number(days);
+      const c = Number(cost ?? 0);
 
-      data = await res.json().catch(() => null);
-
-      if (data && data.ok === false && data.error === "not_enough_points") {
+      // If not enough points -> go straight to noPoints
+      if (c > 0 && points < c) {
         closeModal("highlightModal");
         showNoPointsModal();
         highlightTargetId = null;
         return;
       }
 
-      if (!res.ok) console.warn("[ads] feature call failed:", res.status);
-    } catch (e) {
-      console.warn("[ads] feature call error:", e);
-    }
+      // store pending selection
+      __highlightPending = { adId: highlightTargetId, listingId, days: d, cost: c };
 
-    if (data && data.ok) {
-      setPoints(data.points_balance);
-
-      pushTxn({
-        type: "use",
-        text: `⭐ تمييز إعلان رقم ${highlightTargetId} لمدة ${data.days} يوم`,
-        amount: -Number(data.cost),
-      });
-
-      const featuredUntilISO = data.featured_until ? String(data.featured_until).slice(0, 10) : null;
-      if (featuredUntilISO) {
-        row.dataset.featuredExpiresAt = featuredUntilISO;
-        const daysLeft = calcDaysLeftFromNowISO(featuredUntilISO);
-        row.dataset.featuredDaysLeft = String(daysLeft);
-        ensureFeatureBadge(row, daysLeft);
-      } else {
-        row.dataset.featuredDaysLeft = String(days);
-        ensureFeatureBadge(row, Number(days));
-      }
-
-      applyActionStates();
+      // close package modal, open confirm modal
       closeModal("highlightModal");
-      openSuccessModal("تم تمييز الإعلان بنجاح!", "⭐ تم التمييز");
-      highlightTargetId = null;
-      return;
-    }
 
-    row.dataset.featuredDaysLeft = String(days);
-    ensureFeatureBadge(row, Number(days));
-    applyActionStates();
-    closeModal("highlightModal");
-    openSuccessModal("تم تمييز الإعلان بنجاح! (تجربة)", "⭐ تم التمييز");
-    highlightTargetId = null;
-  };
+      openHighlightConfirmModal({
+        title: "⭐ تأكيد تمييز الإعلان",
+        balance: points,
+        days: d,
+        cost: c,
+        onConfirm: async () => {
+          if (!__highlightPending) return;
+
+          let data = null;
+          try {
+            const res = await fetch(`/listing/${__highlightPending.listingId}/feature/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken(),
+              },
+              body: JSON.stringify({ days: Number(__highlightPending.days) }),
+            });
+
+            data = await res.json().catch(() => null);
+
+            if (data && data.ok === false && data.error === "not_enough_points") {
+              window.closeHighlightConfirmModal();
+              showNoPointsModal();
+              __highlightPending = null;
+              highlightTargetId = null;
+              return;
+            }
+
+            if (!res.ok) console.warn("[ads] feature call failed:", res.status);
+          } catch (e) {
+            console.warn("[ads] feature call error:", e);
+          }
+
+          const targetRow = getAdRow(__highlightPending.adId);
+
+          if (data && data.ok) {
+            setPoints(data.points_balance);
+
+            pushTxn({
+              type: "use",
+              text: `⭐ تمييز إعلان رقم ${__highlightPending.adId} لمدة ${data.days} يوم`,
+              amount: -Number(data.cost),
+            });
+
+            const featuredUntilISO = data.featured_until ? String(data.featured_until).slice(0, 10) : null;
+            if (targetRow) {
+              if (featuredUntilISO) {
+                targetRow.dataset.featuredExpiresAt = featuredUntilISO;
+                const daysLeft = calcDaysLeftFromNowISO(featuredUntilISO);
+                targetRow.dataset.featuredDaysLeft = String(daysLeft);
+                ensureFeatureBadge(targetRow, daysLeft);
+              } else {
+                targetRow.dataset.featuredDaysLeft = String(__highlightPending.days);
+                ensureFeatureBadge(targetRow, Number(__highlightPending.days));
+              }
+              applyActionStates();
+            }
+
+            window.closeHighlightConfirmModal();
+            openSuccessModal("تم تمييز الإعلان بنجاح!", "⭐ تم التمييز");
+            __highlightPending = null;
+            highlightTargetId = null;
+            return;
+          }
+
+          // fallback (demo)
+          if (targetRow) {
+            targetRow.dataset.featuredDaysLeft = String(__highlightPending.days);
+            ensureFeatureBadge(targetRow, Number(__highlightPending.days));
+            applyActionStates();
+          }
+
+          window.closeHighlightConfirmModal();
+          openSuccessModal("تم تمييز الإعلان بنجاح! (تجربة)", "⭐ تم التمييز");
+          __highlightPending = null;
+          highlightTargetId = null;
+        },
+      });
+    };
+
 
   /* =========================================================
      ✅ Republish
@@ -609,18 +678,28 @@
   let republishTargetId = null;
   let republishCost = 0;
 
-  function openRepublishConfirmModalForAd(id, cost) {
-    republishTargetId = id;
-    republishCost = Number(cost);
+  function openRepublishConfirmModalForAd(id, cost, daysLeft) {
+      republishTargetId = id;
+      republishCost = Number(cost);
 
-    const bal = document.getElementById("republishPointsBalance");
-    if (bal) bal.innerText = points;
+      const bal = document.getElementById("republishPointsBalance");
+      if (bal) bal.innerText = points;
 
-    const btn = document.getElementById("confirmRepublishBtn");
-    if (btn) btn.onclick = () => confirmRepublishNow();
+      const note = document.getElementById("republishNote");
+      if (note) {
+        const left = Math.max(0, Number(daysLeft || 0));
+        note.innerHTML =
+          left > 0
+            ? `📌 ملاحظة: إعادة النشر ستكون <b class="text-green-600">مجانية</b> بعد <b class="text-orange-600">${left}</b> يوم.`
+            : `📌 ملاحظة: إعادة النشر الآن <b class="text-green-600">مجانية</b>.`;
+      }
 
-    if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
-  }
+      const btn = document.getElementById("confirmRepublishBtn");
+      if (btn) btn.onclick = () => confirmRepublishNow();
+
+      if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
+    }
+
 
   if (!window.closeRepublishConfirmModal) {
     window.closeRepublishConfirmModal = () => {
@@ -862,7 +941,7 @@
           if (data?.published_at) row.dataset.lastRepublish = String(data.published_at).slice(0, 10);
           doRepublishAdUI(id, data.free === true, data.cost);
         } else {
-          openRepublishConfirmModalForAd(id, check.cost);
+          openRepublishConfirmModalForAd(id, check.cost, check.daysLeft);
         }
 
       return;
@@ -887,6 +966,11 @@
     document.getElementById("highlightModal")?.addEventListener("click", (e) => {
       if (e.target.id === "highlightModal") window.closeHighlightModal();
     });
+
+    document.getElementById("highlightConfirmModal")?.addEventListener("click", (e) => {
+      if (e.target.id === "highlightConfirmModal") window.closeHighlightConfirmModal();
+    });
+
   }
 
   function init() {

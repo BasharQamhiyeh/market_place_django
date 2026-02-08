@@ -553,13 +553,20 @@
       await postAccountInfo(hasStoreSection);
     };
 
+    // ✅ Put this OUTSIDE the function (top-level in the same IIFE/module scope)
+    let __infoSaving = false;
+
     async function postAccountInfo(hasStoreSection) {
+      // prevent double submit (onclick + addEventListener, double clicks, etc.)
+      if (__infoSaving) return;
+      __infoSaving = true;
+
       const root = document.getElementById("myAccountRoot");
       const url = root?.dataset?.saveUrl;
       const csrf = document.querySelector("input[name='csrfmiddlewaretoken']")?.value;
 
-      if (!url) { console.error("❌ data-save-url missing"); return; }
-      if (!csrf) { console.error("❌ CSRF missing"); return; }
+      if (!url) { console.error("❌ data-save-url missing"); __infoSaving = false; return; }
+      if (!csrf) { console.error("❌ CSRF missing"); __infoSaving = false; return; }
 
       const fd = new FormData();
 
@@ -574,30 +581,44 @@
       if (profileFile) fd.append("profile_photo", profileFile);
 
       if (hasStoreSection) {
-        fd.append("store_name",       (document.getElementById("storeName")?.value || "").trim());
-        fd.append("store_specialty",  (document.getElementById("storeSpecialty")?.value || "").trim());
-        fd.append("store_address",    (document.getElementById("storeLocation")?.value || "").trim());
-        fd.append("store_website",    (document.getElementById("storeWebsite")?.value || "").trim());
-        fd.append("store_instagram",  (document.getElementById("instagramLink")?.value || "").trim());
-        fd.append("store_facebook",   (document.getElementById("facebookLink")?.value || "").trim());
-        fd.append("store_description",(document.getElementById("storeDesc")?.value || "").trim());
+        fd.append("store_name",        (document.getElementById("storeName")?.value || "").trim());
+        fd.append("store_specialty",   (document.getElementById("storeSpecialty")?.value || "").trim());
+        fd.append("store_address",     (document.getElementById("storeLocation")?.value || "").trim());
+        fd.append("store_website",     (document.getElementById("storeWebsite")?.value || "").trim());
+        fd.append("store_instagram",   (document.getElementById("instagramLink")?.value || "").trim());
+        fd.append("store_facebook",    (document.getElementById("facebookLink")?.value || "").trim());
+        fd.append("store_description", (document.getElementById("storeDesc")?.value || "").trim());
 
         const logoFile = document.getElementById("storeLogoInput")?.files?.[0];
         if (logoFile) fd.append("store_logo", logoFile);
 
-        fd.append("show_mobile", document.querySelector("input[name='showMobile']:checked")?.value || "");
+        fd.append(
+          "show_mobile",
+          document.querySelector("input[name='showMobile']:checked")?.value || ""
+        );
 
         const payments = Array.from(
           document.querySelectorAll("#paymentBox input[type='checkbox']:checked")
         ).map(x => x.value || "on");
         payments.forEach(p => fd.append("payment_methods", p));
 
-        fd.append("delivery_time", document.querySelector("input[name='deliveryTime']:checked")?.value || "");
-        fd.append("return_policy", document.querySelector("input[name='returnPolicy']:checked")?.value || "");
+        fd.append(
+          "delivery_time",
+          document.querySelector("input[name='deliveryTime']:checked")?.value || ""
+        );
+        fd.append(
+          "return_policy",
+          document.querySelector("input[name='returnPolicy']:checked")?.value || ""
+        );
       }
 
       const btn = document.getElementById("saveBtn");
-      const oldText = btn?.textContent;
+
+      // ✅ store original text once (so it never becomes "جاري الحفظ...")
+      if (btn && !btn.dataset.originalText) {
+        btn.dataset.originalText = (btn.textContent || "").trim() || "حفظ التعديلات";
+      }
+      const originalText = btn?.dataset.originalText || "حفظ التعديلات";
 
       try {
         if (btn) {
@@ -609,13 +630,13 @@
         const res = await fetch(url, {
           method: "POST",
           headers: { "X-CSRFToken": csrf },
-          body: fd
+          body: fd,
         });
 
         const data = await res.json().catch(() => ({}));
+
         if (!res.ok || data.ok === false) {
-          const msg = data.message || "حدث خطأ أثناء الحفظ.";
-          openSuccessModal(msg, "❌ لم يتم الحفظ");
+          openSuccessModal(data.message || "حدث خطأ أثناء الحفظ.", "❌ لم يتم الحفظ");
           return;
         }
 
@@ -627,10 +648,12 @@
         if (btn) {
           btn.disabled = false;
           btn.classList.remove("opacity-70", "cursor-not-allowed");
-          btn.textContent = oldText || "حفظ التعديلات";
+          btn.textContent = originalText; // ✅ always restore the real label
         }
+        __infoSaving = false;
       }
     }
+
 
 
 

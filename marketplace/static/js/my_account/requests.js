@@ -112,28 +112,29 @@
       const editLink = row.querySelector('a[data-action="edit"]');
       const delBtn = row.querySelector('button[data-action="delete"]');
       const republishBtn = row.querySelector('button[data-action="republish"]');
-      const highlightBtn = row.querySelector('button[data-action="highlight"]') ||
-                          Array.from(row.querySelectorAll('button')).find(btn => {
-                            const text = (btn.textContent || '').trim();
-                            return text === 'تمييز' || btn.classList.contains('pill-orange');
-                          });
+      const highlightBtn =
+        row.querySelector('button[data-action="highlight"]') ||
+        Array.from(row.querySelectorAll("button")).find((btn) => {
+          const text = (btn.textContent || "").trim();
+          return text === "تمييز" || btn.classList.contains("pill-orange");
+        });
 
-      [editLink, delBtn, republishBtn, highlightBtn].forEach(btn => {
+      [editLink, delBtn, republishBtn, highlightBtn].forEach((btn) => {
         if (!btn) return;
         btn.classList.remove("opacity-40", "cursor-not-allowed", "pointer-events-none");
         btn.removeAttribute("aria-disabled");
         btn.removeAttribute("title");
 
-        const existingTooltip = btn.querySelector('.tooltip-span');
+        const existingTooltip = btn.querySelector(".tooltip-span");
         if (existingTooltip) existingTooltip.remove();
 
         btn.classList.remove("relative", "group");
       });
 
-      if (highlightBtn && !highlightBtn.hasAttribute('data-action')) {
-        highlightBtn.setAttribute('data-action', 'highlight');
+      if (highlightBtn && !highlightBtn.hasAttribute("data-action")) {
+        highlightBtn.setAttribute("data-action", "highlight");
         const reqId = row.dataset.reqId;
-        if (reqId) highlightBtn.setAttribute('data-id', reqId);
+        if (reqId) highlightBtn.setAttribute("data-id", reqId);
       }
 
       if (featured) {
@@ -143,8 +144,10 @@
           editLink.setAttribute("title", "لا يمكنك تعديل الطلب لأنه مميز");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك تعديل الطلب لأنه مميز</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك تعديل الطلب لأنه مميز</span>';
           editLink.appendChild(tooltip);
         }
 
@@ -154,8 +157,10 @@
           delBtn.setAttribute("title", "لا يمكنك حذف الطلب لأنه مميز");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك حذف الطلب لأنه مميز</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك حذف الطلب لأنه مميز</span>';
           delBtn.appendChild(tooltip);
         }
 
@@ -165,8 +170,10 @@
           republishBtn.setAttribute("title", "لا يمكن إعادة نشر طلب مميز");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة نشر طلب مميز</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة نشر طلب مميز</span>';
           republishBtn.appendChild(tooltip);
         }
 
@@ -176,8 +183,10 @@
           highlightBtn.setAttribute("title", "الطلب مميز بالفعل");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">الطلب مميز بالفعل</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">الطلب مميز بالفعل</span>';
           highlightBtn.appendChild(tooltip);
         }
         return;
@@ -190,8 +199,10 @@
           republishBtn.setAttribute("title", "لا يمكن إعادة النشر أثناء المراجعة");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة النشر أثناء المراجعة</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة النشر أثناء المراجعة</span>';
           republishBtn.appendChild(tooltip);
         }
 
@@ -201,8 +212,10 @@
           highlightBtn.setAttribute("title", "لا يمكن التمييز أثناء المراجعة");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن التمييز أثناء المراجعة</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن التمييز أثناء المراجعة</span>';
           highlightBtn.appendChild(tooltip);
         }
         return;
@@ -215,8 +228,10 @@
           republishBtn.setAttribute("title", "لا يمكن إعادة نشر طلب مرفوض");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة نشر طلب مرفوض</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن إعادة نشر طلب مرفوض</span>';
           republishBtn.appendChild(tooltip);
         }
 
@@ -226,8 +241,10 @@
           highlightBtn.setAttribute("title", "لا يمكن تمييز طلب مرفوض");
 
           const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن تمييز طلب مرفوض</span>';
+          tooltip.className =
+            "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
+          tooltip.innerHTML =
+            '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكن تمييز طلب مرفوض</span>';
           highlightBtn.appendChild(tooltip);
         }
         return;
@@ -257,6 +274,48 @@
     };
   }
 
+  /* =========================================================
+     ✅ Highlight Confirm Modal (shared modal created in _modals.html)
+  ========================================================= */
+  function openHighlightConfirmModal({ title, balance, days, cost, onConfirm }) {
+    const m = document.getElementById("highlightConfirmModal");
+    if (!m) return alert("highlightConfirmModal is missing in DOM.");
+
+    const titleEl = document.getElementById("highlightConfirmTitle");
+    const balEl = document.getElementById("highlightConfirmBalance");
+    const costEl = document.getElementById("highlightConfirmCost");
+    const textEl = document.getElementById("highlightConfirmText");
+    const btn = document.getElementById("confirmHighlightBtn");
+
+    if (titleEl) titleEl.textContent = title || "تأكيد التمييز";
+    if (balEl) balEl.textContent = String(balance ?? getPoints());
+    if (costEl) costEl.textContent = String(cost ?? 0);
+    if (textEl) textEl.textContent = `هل تريد تمييز الطلب لمدة ${days} يوم مقابل ${cost} نقطة؟`;
+
+    if (btn) {
+      btn.onclick = async () => {
+        try {
+          await onConfirm?.();
+        } catch (e) {
+          console.warn("[requests] confirm highlight error:", e);
+        }
+      };
+    }
+
+    m.classList.remove("hidden");
+    m.classList.add("flex");
+  }
+
+  window.closeHighlightConfirmModal = function () {
+    const m = document.getElementById("highlightConfirmModal");
+    if (!m) return;
+    m.classList.add("hidden");
+    m.classList.remove("flex");
+  };
+
+  /* =========================================================
+     ✅ Feature helpers
+  ========================================================= */
   function calcDaysLeftFromNowISO(isoDate) {
     if (!isoDate) return 0;
     const today = new Date();
@@ -288,12 +347,15 @@
   }
 
   function daysBetween(dateStr) {
-      const d = parseISO(dateStr);
-      if (!d) return 0; // ✅ missing => NOT free => show confirm modal (paid)
-      const a = new Date(d); a.setHours(0, 0, 0, 0);
-      const b = new Date();  b.setHours(0, 0, 0, 0);
-      return Math.floor((b - a) / 86400000);
-    }
+    const d = parseISO(dateStr);
+    if (!d) return 0; // missing => NOT free => show confirm modal (paid)
+    const a = new Date(d);
+    a.setHours(0, 0, 0, 0);
+    const b = new Date();
+    b.setHours(0, 0, 0, 0);
+    return Math.floor((b - a) / 86400000);
+  }
+
   function canRepublishWithCost(lastRepublishAt) {
     const days = daysBetween(lastRepublishAt);
     if (days >= 7) return { ok: true, cost: 0, daysLeft: 0 };
@@ -339,23 +401,21 @@
   }
 
   function doRepublishRequestUI(id, free, cost = 0) {
-      const row = getRow(id);
-      if (!row) return;
+    const row = getRow(id);
+    if (!row) return;
 
-      const iso = new Date().toISOString().split("T")[0];
-      row.dataset.lastRepublish = iso;
+    const iso = new Date().toISOString().split("T")[0];
+    row.dataset.lastRepublish = iso;
 
-      setRowActiveUI(row);
-      updateRowDateToToday(row);
-      applyActionStates();
+    setRowActiveUI(row);
+    updateRowDateToToday(row);
+    applyActionStates();
 
-      openSuccessModal(
-        free ? "تم إعادة نشر الطلب مجاناً ✅" : `تمت إعادة النشر مقابل ${Number(cost)} نقطة ✅`,
-        "🔄 تم إعادة النشر"
-      );
-    }
-
-
+    openSuccessModal(
+      free ? "تم إعادة نشر الطلب مجاناً ✅" : `تمت إعادة النشر مقابل ${Number(cost)} نقطة ✅`,
+      "🔄 تم إعادة النشر"
+    );
+  }
 
   function openHighlightModalForRequest(id) {
     highlightTargetRequestId = id;
@@ -391,6 +451,7 @@
     window.__requestsSelectHighlightWrapped = true;
 
     window.selectHighlightPackage = async (days, cost) => {
+      // If not request highlight mode, pass through to ads implementation
       if (!highlightTargetRequestId || !isRequestHighlightModal()) {
         if (typeof prevSelectHighlight === "function") return prevSelectHighlight(days, cost);
         return;
@@ -410,7 +471,10 @@
       }
 
       const pointsNow = getPoints();
+      const d = Number(days);
       const c = Number(cost || 0);
+
+      // not enough points -> go to noPoints
       if (c && pointsNow < c) {
         closeModal("highlightModal");
         showNoPointsModal();
@@ -418,61 +482,74 @@
         return;
       }
 
-      let data = null;
-      try {
-        const res = await fetch(`/listing/${listingId}/feature/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCSRFToken(),
-          },
-          body: JSON.stringify({ days: Number(days) }),
-        });
-
-        data = await res.json().catch(() => null);
-
-        if (data && data.ok === false && data.error === "not_enough_points") {
-          closeModal("highlightModal");
-          showNoPointsModal();
-          highlightTargetRequestId = null;
-          return;
-        }
-
-        if (!res.ok) console.warn("[requests] feature call failed:", res.status, data);
-      } catch (e) {
-        console.warn("[requests] feature call error:", e);
-      }
-
-      if (data && data.ok) {
-        if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
-
-        const featuredUntilISO = data.featured_until ? String(data.featured_until).slice(0, 10) : "";
-        if (featuredUntilISO) {
-          row.dataset.featuredExpiresAt = featuredUntilISO;
-          const daysLeft = calcDaysLeftFromNowISO(featuredUntilISO);
-          row.dataset.featuredDaysLeft = String(daysLeft);
-          ensureFeatureBadge(row, daysLeft);
-        } else {
-          row.dataset.featuredDaysLeft = String(Number(days));
-          ensureFeatureBadge(row, Number(days));
-        }
-
-        applyActionStates();
-
-        closeModal("highlightModal");
-        openSuccessModal("تم تمييز الطلب بنجاح!", "⭐ تم التمييز");
-        highlightTargetRequestId = null;
-        return;
-      }
-
-      if (c) setPoints(pointsNow - c);
-      row.dataset.featuredDaysLeft = String(Number(days));
-      ensureFeatureBadge(row, Number(days));
-      applyActionStates();
-
+      // close package modal and open confirm modal
       closeModal("highlightModal");
-      openSuccessModal("تم تمييز الطلب بنجاح! (تجربة)", "⭐ تم التمييز");
-      highlightTargetRequestId = null;
+
+      openHighlightConfirmModal({
+        title: "⭐ تأكيد تمييز الطلب",
+        balance: pointsNow,
+        days: d,
+        cost: c,
+        onConfirm: async () => {
+          let data = null;
+
+          try {
+            const res = await fetch(`/listing/${listingId}/feature/`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken(),
+              },
+              body: JSON.stringify({ days: d }),
+            });
+
+            data = await res.json().catch(() => null);
+
+            if (data && data.ok === false && data.error === "not_enough_points") {
+              window.closeHighlightConfirmModal();
+              showNoPointsModal();
+              highlightTargetRequestId = null;
+              return;
+            }
+
+            if (!res.ok) console.warn("[requests] feature call failed:", res.status, data);
+          } catch (e) {
+            console.warn("[requests] feature call error:", e);
+          }
+
+          if (data && data.ok) {
+            if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+
+            const featuredUntilISO = data.featured_until ? String(data.featured_until).slice(0, 10) : "";
+            if (featuredUntilISO) {
+              row.dataset.featuredExpiresAt = featuredUntilISO;
+              const daysLeft = calcDaysLeftFromNowISO(featuredUntilISO);
+              row.dataset.featuredDaysLeft = String(daysLeft);
+              ensureFeatureBadge(row, daysLeft);
+            } else {
+              row.dataset.featuredDaysLeft = String(d);
+              ensureFeatureBadge(row, d);
+            }
+
+            applyActionStates();
+
+            window.closeHighlightConfirmModal();
+            openSuccessModal("تم تمييز الطلب بنجاح!", "⭐ تم التمييز");
+            highlightTargetRequestId = null;
+            return;
+          }
+
+          // fallback (demo)
+          if (c) setPoints(pointsNow - c);
+          row.dataset.featuredDaysLeft = String(d);
+          ensureFeatureBadge(row, d);
+          applyActionStates();
+
+          window.closeHighlightConfirmModal();
+          openSuccessModal("تم تمييز الطلب بنجاح! (تجربة)", "⭐ تم التمييز");
+          highlightTargetRequestId = null;
+        },
+      });
     };
   }
 
@@ -576,7 +653,9 @@
       if (err) err.classList.add("hidden");
 
       const finalReason =
-        reason === "other" && otherTxt.length ? otherTxt : select?.options?.[select.selectedIndex]?.text || "";
+        reason === "other" && otherTxt.length
+          ? otherTxt
+          : select?.options?.[select.selectedIndex]?.text || "";
 
       await callBackend(`/listing/${listingToDelete}/delete/`, { reason: finalReason });
 
@@ -596,51 +675,60 @@
     if (typeof prevConfirmDeleteAd === "function") return prevConfirmDeleteAd();
   };
 
-  function openRepublishConfirmModalForRequest(id, cost) {
-    republishTargetRequestId = id;
-    republishCost = Number(cost);
+  function openRepublishConfirmModalForRequest(id, cost, daysLeft) {
+      republishTargetRequestId = id;
+      republishCost = Number(cost);
 
-    const bal = document.getElementById("republishPointsBalance");
-    if (bal) bal.innerText = String(getPoints());
+      const bal = document.getElementById("republishPointsBalance");
+      if (bal) bal.innerText = String(getPoints());
 
-    const btn = document.getElementById("confirmRepublishBtn");
-    if (btn) btn.onclick = () => confirmRepublishNow();
-
-    if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
-  }
-
-  async function confirmRepublishNow() {
-      if (!republishTargetRequestId) return;
-
-      const pointsNow = getPoints();
-      if (pointsNow < republishCost) {
-        closeModal("republishConfirmModal");
-        showNoPointsModal();
-        return;
+      const note = document.getElementById("republishNote");
+      if (note) {
+        const left = Math.max(0, Number(daysLeft || 0));
+        note.innerHTML =
+          left > 0
+            ? `📌 ملاحظة: إعادة النشر ستكون <b class="text-green-600">مجانية</b> بعد <b class="text-orange-600">${left}</b> يوم.`
+            : `📌 ملاحظة: إعادة النشر الآن <b class="text-green-600">مجانية</b>.`;
       }
 
-      const row = getRow(republishTargetRequestId);
-      const listingId = Number(row?.dataset?.listingId || republishTargetRequestId);
+      const btn = document.getElementById("confirmRepublishBtn");
+      if (btn) btn.onclick = () => confirmRepublishNow();
 
-      const res = await callBackend(`/listing/${listingId}/republish/`, {});
-      const data = await res?.json().catch(() => null);
-
-      if (!res || !res.ok || !data || data.ok !== true) {
-        closeModal("republishConfirmModal");
-        const err = data?.error;
-        if (err === "not_enough_points") return showNoPointsModal();
-        return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
-      }
-
-      if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
-
-      closeModal("republishConfirmModal");
-      doRepublishRequestUI(republishTargetRequestId, data.free === true, data.cost);
-
-      republishTargetRequestId = null;
-      republishCost = 0;
+      if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
     }
 
+
+  async function confirmRepublishNow() {
+    if (!republishTargetRequestId) return;
+
+    const pointsNow = getPoints();
+    if (pointsNow < republishCost) {
+      closeModal("republishConfirmModal");
+      showNoPointsModal();
+      return;
+    }
+
+    const row = getRow(republishTargetRequestId);
+    const listingId = Number(row?.dataset?.listingId || republishTargetRequestId);
+
+    const res = await callBackend(`/listing/${listingId}/republish/`, {});
+    const data = await res?.json().catch(() => null);
+
+    if (!res || !res.ok || !data || data.ok !== true) {
+      closeModal("republishConfirmModal");
+      const err = data?.error;
+      if (err === "not_enough_points") return showNoPointsModal();
+      return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
+    }
+
+    if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+
+    closeModal("republishConfirmModal");
+    doRepublishRequestUI(republishTargetRequestId, data.free === true, data.cost);
+
+    republishTargetRequestId = null;
+    republishCost = 0;
+  }
 
   function wireBackdropClose() {
     document.getElementById("deleteAdModal")?.addEventListener("click", (e) => {
@@ -660,6 +748,10 @@
 
     document.getElementById("highlightModal")?.addEventListener("click", (e) => {
       if (e.target.id === "highlightModal") window.closeHighlightModal();
+    });
+
+    document.getElementById("highlightConfirmModal")?.addEventListener("click", (e) => {
+      if (e.target.id === "highlightConfirmModal") window.closeHighlightConfirmModal();
     });
   }
 
@@ -750,22 +842,22 @@
 
       const check = canRepublishWithCost(last);
       if (check.ok) {
-          const listingId = Number(row.dataset.listingId || id);
+        const listingId = Number(row.dataset.listingId || id);
 
-          const res = await callBackend(`/listing/${listingId}/republish/`, {});
-          const data = await res?.json().catch(() => null);
+        const res = await callBackend(`/listing/${listingId}/republish/`, {});
+        const data = await res?.json().catch(() => null);
 
-          if (!res || !res.ok || !data || data.ok !== true) {
-            const err = data?.error;
-            if (err === "not_enough_points") return showNoPointsModal();
-            return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
-          }
-
-          if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
-          doRepublishRequestUI(id, data.free === true, data.cost);
-        } else {
-          openRepublishConfirmModalForRequest(id, check.cost);
+        if (!res || !res.ok || !data || data.ok !== true) {
+          const err = data?.error;
+          if (err === "not_enough_points") return showNoPointsModal();
+          return openSuccessModal("تعذر إعادة النشر. حاول مرة أخرى.", "❌ خطأ");
         }
+
+        if (typeof data.points_balance !== "undefined") setPoints(data.points_balance);
+        doRepublishRequestUI(id, data.free === true, data.cost);
+      } else {
+        openRepublishConfirmModalForRequest(id, check.cost, check.daysLeft);
+      }
 
       return;
     }
@@ -777,7 +869,14 @@
     wireDeleteReasonChangeOnce();
     wireBackdropClose();
 
-    ["deleteAdModal", "highlightModal", "successModal", "republishConfirmModal", "noPointsModal"].forEach(mustEl);
+    [
+      "deleteAdModal",
+      "highlightModal",
+      "highlightConfirmModal", // ✅ NEW
+      "successModal",
+      "republishConfirmModal",
+      "noPointsModal",
+    ].forEach(mustEl);
   }
 
   document.addEventListener("DOMContentLoaded", () => {

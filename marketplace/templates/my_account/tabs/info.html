@@ -27,6 +27,8 @@
   <div class="flex flex-col md:flex-row items-center md:items-center justify-center gap-6 mx-auto w-fit text-center">
 
     <!-- صورة الحساب -->
+    {% if not store %}
+    <!-- صورة الحساب -->
     <div class="relative flex flex-col items-center gap-3">
       <div id="profilePreview"
            class="w-28 h-28 rounded-full bg-white text-orange-700 flex items-center justify-center text-4xl font-extrabold relative">
@@ -57,6 +59,7 @@
         <input type="file" id="profileImgInput" class="hidden" accept="image/*">
       </label>
     </div>
+  {% endif %}
 
     <!-- الاسم + تاريخ التسجيل -->
     <div id="accountHeaderBox" class="min-w-0 text-center">

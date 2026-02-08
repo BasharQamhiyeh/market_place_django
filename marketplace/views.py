@@ -3730,7 +3730,7 @@ def my_account(request: HttpRequest):
             "created_at": _fmt_date(getattr(listing, "created_at", None)),
             "published_at": _fmt_date(getattr(listing, "published_at", None)),
 
-            "views": getattr(listing, "views", 0) or 0,  # ❌ WRONG - uses non-existent field
+            "views": getattr(listing, "views_count", 0) or 0,
 
             # moderation/status
             "status": _status_from_listing(listing),

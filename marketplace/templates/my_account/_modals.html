@@ -123,6 +123,42 @@
 </div>
 
 
+{# ✅ HIGHLIGHT CONFIRM MODAL (ads + requests) #}
+<div id="highlightConfirmModal"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[999999]">
+  <div class="bg-white p-6 rounded-2xl w-[90%] max-w-md shadow-xl orange-top-border text-center">
+    <div class="text-4xl mb-2">⭐</div>
+
+    <h2 id="highlightConfirmTitle" class="text-xl font-bold text-gray-800 mb-2">
+      تأكيد التمييز
+    </h2>
+
+    <p class="text-gray-700 mb-2">
+      رصيدك الحالي:
+      <b id="highlightConfirmBalance" class="text-orange-600"></b> نقطة
+    </p>
+
+    <p id="highlightConfirmText" class="text-gray-800 font-semibold mb-3"></p>
+
+    <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 text-sm text-gray-700 mb-4">
+      سيتم خصم <b id="highlightConfirmCost" class="text-red-600"></b> نقطة من محفظتك عند التأكيد.
+    </div>
+
+    <div class="flex gap-3">
+      <button id="confirmHighlightBtn"
+              class="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold hover:bg-orange-700 transition">
+        تأكيد
+      </button>
+
+      <button onclick="closeHighlightConfirmModal()"
+              class="flex-1 py-3 border rounded-xl hover:bg-gray-100 transition">
+        إلغاء
+      </button>
+    </div>
+  </div>
+</div>
+
+
 {# ✅ NO POINTS MODAL #}
 <div id="noPointsModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[99999]">
   <div class="bg-white p-6 rounded-2xl w-[90%] max-w-md text-center shadow-xl delete-top-border">
@@ -164,7 +200,7 @@
       <b class="text-red-600">20 نقطة</b>
     </p>
 
-    <p class="text-sm text-gray-600 mb-4">
+    <p id="republishNote" class="text-sm text-gray-600 mb-4">
       📌 ملاحظة: إعادة النشر بعد مرور 7 أيام تكون <b class="text-green-600">مجانية</b>.
     </p>
 
