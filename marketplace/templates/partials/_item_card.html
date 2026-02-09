@@ -168,13 +168,17 @@
 
     <div class="ad-footer">
       <div class="ad-seller">
-        {% with avatar=item.listing.user.profile.avatar|default_if_none:"" %}
-          {% if avatar %}
-            <img src="{{ avatar.url }}" alt="{{ item.listing.user.username }}">
+        {# Seller avatar: prefer user.profile_photo, else fallback initial #}
+        {% with u=item.listing.user %}
+          {% if u.profile_photo %}
+            <img src="{{ u.profile_photo.url }}" alt="{{ u.username|default:u.phone }}">
           {% else %}
             <div class="ad-avatar-fallback">
-              {% with fn=item.listing.user.first_name|default:"" un=item.listing.user.username|default:"" %}
-                {% if fn %}{{ fn|slice:":1"|upper }}{% elif un %}{{ un|slice:":1"|upper }}{% else %}?{% endif %}
+              {% with fn=u.first_name|default:"" un=u.username|default:"" ph=u.phone|default:"" %}
+                {% if fn %}{{ fn|slice:":1"|upper }}
+                {% elif un %}{{ un|slice:":1"|upper }}
+                {% elif ph %}{{ ph|slice:":1"|upper }}
+                {% else %}?{% endif %}
               {% endwith %}
             </div>
           {% endif %}
