@@ -1,9 +1,9 @@
 from django.db import transaction
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
 from django.utils import timezone
 
-from .models import Item, Listing, Store, Notification, StoreFollow
+from .models import Item, Listing, Store, Notification, StoreFollow, ItemPhoto
 from . import moderation   # imports the moderation.py you already created
 
 
@@ -108,3 +108,9 @@ def notify_followers_on_approval(sender, instance: Listing, created, **kwargs):
         Listing.objects.filter(pk=instance.pk).update(followers_notified=True)
 
     transaction.on_commit(_create)
+
+
+@receiver(post_delete, sender=ItemPhoto)
+def delete_itemphoto_file(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)
