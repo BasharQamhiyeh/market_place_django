@@ -72,17 +72,23 @@ def feature_listing_api(request, listing_id):
 def delete_listing_api(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id, user=request.user)
 
-    # already deleted => idempotent
-    if getattr(listing, "is_deleted", False):
+    # ✅ already deleted => idempotent
+    if listing.is_deleted:
         return JsonResponse({"ok": True, "already": True})
 
+    # ❌ block delete if currently featured
+    now = timezone.now()
+    if listing.featured_until and listing.featured_until > now:
+        return JsonResponse(
+            {"ok": False, "error": "featured_active", "message": "لا يمكن حذف إعلان مميز حالياً"},
+            status=403
+        )
+
     listing.is_deleted = True
-    listing.is_active = False  # مهم: ما يرجع يظهر بأي مكان
-    if hasattr(listing, "deleted_at"):
-        listing.deleted_at = timezone.now()
+    listing.is_active = False
+    listing.deleted_at = now  # field exists in your model
 
-    listing.save(update_fields=["is_deleted", "is_active"] + (["deleted_at"] if hasattr(listing, "deleted_at") else []))
-
+    listing.save(update_fields=["is_deleted", "is_active", "deleted_at"])
     return JsonResponse({"ok": True})
 
 
