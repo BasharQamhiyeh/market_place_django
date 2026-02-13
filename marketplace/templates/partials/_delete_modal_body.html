@@ -1,0 +1,28 @@
+{# marketplace/templates/partials/_delete_modal_body.html #}
+
+<h2 class="text-xl font-bold text-gray-800 mb-3">{{ modal_title }}</h2>
+<p class="text-gray-600 mb-4">{{ subtitle }}</p>
+
+{# ✅ IMPORTANT: empty select, JS will fill based on delete_kind #}
+<select data-delete-reason
+        class="w-full p-3 border rounded-xl bg-gray-50 mb-3 focus:outline-none"></select>
+
+<textarea data-delete-other
+          class="w-full p-3 border rounded-xl bg-gray-50 mb-1 hidden"
+          placeholder="اكتب سبب الحذف هنا… (اختياري)"></textarea>
+
+<p data-delete-error class="text-red-600 text-sm mt-1 hidden">الرجاء اختيار سبب الحذف</p>
+
+<div class="flex gap-3 mt-4">
+  <button type="button"
+          data-delete-confirm
+          class="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600">
+    {{ confirm_text|default:"حذف" }}
+  </button>
+
+  <button type="button"
+          data-delete-cancel
+          class="flex-1 py-3 border rounded-xl hover:bg-gray-100">
+    {{ cancel_text|default:"إلغاء" }}
+  </button>
+</div>

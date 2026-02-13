@@ -1,0 +1,18 @@
+{# marketplace/templates/partials/_delete_modal.html #}
+
+<div id="{{ modal_id|default:'deleteModal' }}"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[99999]
+            {% if delete_kind == 'request' %}theme-green{% else %}theme-orange{% endif %}"
+     aria-hidden="true"
+     data-delete-kind="{{ delete_kind|default:'item' }}">
+
+  <div class="bg-white p-6 rounded-2xl max-w-md w-[90%] shadow-xl delete-top-border">
+
+    {% if delete_kind == "request" %}
+      {% include "partials/_delete_modal_body.html" with modal_title=" حذف الطلب" subtitle="الرجاء اختيار سبب حذف الطلب:" confirm_text="حذف الطلب" cancel_text="إلغاء" %}
+    {% else %}
+      {% include "partials/_delete_modal_body.html" with modal_title=" حذف الإعلان" subtitle="الرجاء اختيار سبب حذف الإعلان:" confirm_text="حذف الإعلان" cancel_text="إلغاء" %}
+    {% endif %}
+
+  </div>
+</div>

@@ -836,9 +836,22 @@ def delete_item_photo(request, photo_id):
 @login_required
 def delete_item(request, item_id):
     item = get_object_or_404(Item, id=item_id, listing__user=request.user)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "method_not_allowed"}, status=405)
+
     item.delete()
-    messages.success(request, "Item deleted successfully.")
-    return redirect('my_items')
+
+    # ✅ If called via fetch/AJAX -> return JSON redirect
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "redirect_url": "/my-account/#tab-ads"})
+
+    # ✅ Normal browser POST fallback
+    messages.success(request, "تم حذف الإعلان")
+
+    resp = redirect("my_account")
+    resp["Location"] += "#tab-ads"
+    return resp
 
 
 @login_required

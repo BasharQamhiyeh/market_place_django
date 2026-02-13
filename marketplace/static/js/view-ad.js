@@ -569,4 +569,5 @@ renderGallery();
       locked = false;
     }
   });
+
 })();
