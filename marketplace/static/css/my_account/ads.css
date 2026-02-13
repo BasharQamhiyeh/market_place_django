@@ -494,10 +494,20 @@
 }
 
 /* Empty state */
-#tab-ads .empty-state {
-  padding: 26px 10px;
+#tab-ads .empty-state,
+#tab-ads .ads-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 10px;
   text-align: center;
   color: #6b7280;
-  font-weight: 900;
-  font-size: 14px;
+}
+
+#tab-ads .ads-empty-ico {
+  width: 40px;
+  height: 40px;
+  color: #d1d5db;
 }

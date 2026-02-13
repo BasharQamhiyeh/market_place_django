@@ -269,7 +269,14 @@
 
       {% endfor %}
     {% else %}
-      <div class="empty-state">لا يوجد طلبات حالياً</div>
+      <div class="requests-empty">
+        <svg class="requests-empty-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+          <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
+          <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>لا يوجد طلبات حالياً</span>
+      </div>
     {% endif %}
   </div>
 </div>

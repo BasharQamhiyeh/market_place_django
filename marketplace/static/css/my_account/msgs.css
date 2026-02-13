@@ -395,3 +395,25 @@
   align-items:center;
   gap:6px;
 }
+
+/* Empty state - matches fav tab style */
+#tab-msgs .msgs-empty{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 10px;
+  text-align: center;
+  color: #6b7280;
+}
+
+#tab-msgs .msgs-empty-ico{
+  width: 40px;
+  height: 40px;
+  color: #d1d5db;
+}
+
+#tab-msgs .msgs-empty.hidden{
+  display: none !important;
+}

@@ -274,7 +274,15 @@
 
       {% endfor %}
     {% else %}
-      <div class="empty-state">لا يوجد إعلانات حالياً</div>
+      <div class="ads-empty">
+        <svg class="ads-empty-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 11v2a1 1 0 0 0 1 1h2l8 4V6l-8 4H4a1 1 0 0 0-1 1Z"
+                stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M14 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M19 8a5 5 0 0 1 0 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span>لا يوجد إعلانات حالياً</span>
+      </div>
     {% endif %}
   </div>
 </div>

@@ -7,6 +7,7 @@
    - No duplicate showChat()
    - Delegated click always works
    ✅ When returning to msgs tab, show list (not last opened chat)
+   ✅ Shows proper empty state with icon
 */
 
 let currentChatId = null;
@@ -58,6 +59,8 @@ function getConvLastTime(c){ return (c?.last?.time || c?.lastTime || ""); }
 
 function renderConversations(){
   const container = $("conversationsList");
+  const emptyState = $("msgsEmpty");
+
   if(!container) return;
 
   const q = ($("chatSearch")?.value || "").trim().toLowerCase();
@@ -75,10 +78,22 @@ function renderConversations(){
   container.innerHTML = "";
 
   if(!filtered.length){
-    container.innerHTML = `<div style="text-align:center; color:#6b7280; padding:40px 0;">لا توجد محادثات مطابقة 🔍</div>`;
+    // Show empty state, hide list
+    if(container) container.style.display = "none";
+    if(emptyState){
+      emptyState.classList.remove("hidden");
+      emptyState.style.display = "flex";
+    }
     updateCounters();
     return;
   }
+
+  // Hide empty state, show list
+  if(emptyState){
+    emptyState.classList.add("hidden");
+    emptyState.style.display = "none";
+  }
+  if(container) container.style.display = "flex";
 
   container.innerHTML = filtered.map(c => {
     const badge = (c.unreadCount > 0)
@@ -141,8 +156,13 @@ function showMsgs(){
 function showChat(){
   const panel = $("chatPanel");
   const list = $("conversationsList");
+  const emptyState = $("msgsEmpty");
 
   if(list) list.style.display = "none";
+  if(emptyState){
+    emptyState.classList.add("hidden");
+    emptyState.style.display = "none";
+  }
   if(panel){
     panel.hidden = false;
     panel.removeAttribute("hidden");
