@@ -1,6 +1,7 @@
 {% load static i18n %}
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl"
+      data-is-store="{% if request.user.is_authenticated and request.user.store and request.user.store.is_active %}1{% else %}0{% endif %}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -119,7 +120,7 @@
                           {% endif %}
                         </div>
 
-                      </a>  {# ✔ PROPERLY CLOSED #}
+                      </a>
 
                   {% endwith %}
                 {% empty %}
@@ -426,7 +427,6 @@
         </button>
       </div>
 
-
       <button type="submit" class="modal-submit">دخول</button>
     </form>
 
@@ -442,9 +442,6 @@
   </div>
 </div>
 {% endif %}
-
-
-
 
 <!-- =================== HEADER (SEARCH) =================== -->
 {% block searchbar %}
@@ -484,7 +481,6 @@
                 طلب
               </button>
             </div>
-
 
             <!-- Search button -->
             <button id="searchBtn"
@@ -588,6 +584,45 @@
   </div>
 </footer>
 
+<!-- ✅ Store: cannot add requests (GLOBAL modal) -->
+<div id="storeNoRequestsModalGlobal" class="hidden fixed inset-0 z-[9999] items-center justify-center">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+  <div class="relative bg-white w-[92%] max-w-md rounded-2xl shadow-xl border border-gray-200 p-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+          <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="12" cy="16" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="font-extrabold text-gray-900">تنبيه</div>
+      </div>
+
+      <button type="button" id="closeStoreNoRequestsModalGlobalX" class="text-gray-500 hover:text-gray-800">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="mt-3 text-sm text-gray-700 leading-relaxed">
+      هذا الحساب <b>حساب متجر</b>، ولا يمكن إضافة طلبات.
+      يمكنك إضافة <b>إعلانات</b> فقط.
+    </p>
+
+    <div class="mt-5 flex justify-end gap-2">
+      <button type="button"
+              id="closeStoreNoRequestsModalGlobalBtn"
+              class="px-4 py-2 rounded-xl font-bold text-sm bg-green-500 text-white hover:bg-green-600 transition">
+        حسناً
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- =================== JS =================== -->
 
 <script>
@@ -625,10 +660,5 @@
 </script>
 {% endif %}
 
-
-
 </body>
-
 </html>
-
-

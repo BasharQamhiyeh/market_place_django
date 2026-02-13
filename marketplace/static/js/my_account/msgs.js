@@ -112,7 +112,7 @@ function renderConversations(){
             <div class="chat-item__time">${fmtTime(getConvLastTime(c))}</div>
           </div>
           <div class="chat-item__type">${typeLineHtml(c)}</div>
-          <div class="chat-item__last">${getConvLastText(c) || "لا توجد رسائل بعد"}</div>
+          <div class="chat-item__last">${getConvLastText(c) || "لا يوجد رسائل"}</div>
         </div>
         ${badge}
       </div>

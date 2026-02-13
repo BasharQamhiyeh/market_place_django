@@ -1,7 +1,7 @@
 {# templates/my_account/tabs/requests.html #}
 {% load i18n %}
 
-<div class="requests-tab">
+<div class="requests-tab" data-is-store="{% if has_store %}1{% else %}0{% endif %}">
 
   <!-- Header -->
   <div class="flex items-center justify-between gap-2 md:gap-3 mb-5 flex-nowrap">
@@ -17,10 +17,17 @@
     <div class="flex items-center gap-1.5 md:gap-3 shrink-0">
       <div class="px-2.5 py-1 md:px-4 md:py-1.5 bg-green-100 text-green-700 border border-green-300 rounded-lg md:rounded-xl font-bold text-xs md:text-sm whitespace-nowrap">
         عدد الطلبات:
-        <span id="requestsCount">{% if my_requests %}{{ my_requests|length }}{% else %}0{% endif %}</span>
+        <span id="requestsCount">
+          {% if has_store %}
+            0
+          {% else %}
+            {% if my_requests %}{{ my_requests|length }}{% else %}0{% endif %}
+          {% endif %}
+        </span>
       </div>
 
       <a href="{% url 'create_request' %}"
+         id="createRequestBtn"
          class="px-3 py-1.5 md:px-4 md:py-2 bg-green-500 text-white rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-green-600 transition shadow whitespace-nowrap">
         أضف طلب
       </a>
@@ -29,254 +36,314 @@
 
   <!-- Requests List -->
   <div id="requestsList" class="space-y-4">
-    {% if my_requests %}
-      {% for req in my_requests %}
 
-        <div class="request-row relative flex flex-col md:flex-row items-start md:items-center gap-5 p-4 pt-6 rounded-2xl shadow-sm
-                {% if req.status == 'pending' %}
-                  bg-yellow-50 border border-yellow-300
-                {% elif req.status == 'rejected' %}
-                  bg-red-50 border border-red-300
-                {% else %}
-                  bg-white border border-gray-200
-                {% endif %}
-              "
-              data-req-id="{{ req.id }}"
-              data-listing-id="{{ req.listing_id }}"
-              data-status="{{ req.status|default:'active' }}"
-              data-featured-days-left="{{ req.featuredDaysLeft|default:0 }}"
-              data-last-republish="{{ req.published_at|default:req.created_at }}"
-              data-edit-url="{{ req.editUrl|default:'' }}"
-        >
-
-          <!-- ✅ Category Badge - Top Right (Absolute) -->
-          <span class="req-cat-badge">
-            {{ req.category|default:"بدون قسم" }}
-          </span>
-
-          <!-- Body -->
-          <div class="flex-1 w-full">
-            <!-- header line: id + status + featured -->
-            <div class="req-header">
-
-              <span class="flex items-center gap-1 text-gray-700 font-bold">
-                <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-                  <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                رقم الطلب:
-                <span class="text-red-600">{{ req.id }}</span>
-              </span>
-
-              {% if req.status == "active" %}
-                <span class="status-badge status-active">
-                  <span class="inline-flex items-center gap-1">
-                    <svg class="w-3 h-3 text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/>
-                    </svg>
-                  </span>
-                  مفعّل
-                </span>
-              {% elif req.status == "pending" %}
-                <span class="status-badge status-pending">
-                  <span class="inline-flex items-center gap-1">
-                    <svg class="w-3 h-3 text-yellow-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/>
-                    </svg>
-                  </span>
-                  قيد المراجعة
-                </span>
-              {% elif req.status == "rejected" %}
-                <span class="status-badge status-rejected">
-                  <span class="inline-flex items-center gap-1">
-                    <svg class="w-3 h-3 text-red-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/>
-                    </svg>
-                  </span>
-                  مرفوض
-                </span>
-              {% endif %}
-
-              {% if req.featured %}
-                {% if req.featuredDaysLeft and req.featuredDaysLeft > 0 %}
-                  <span class="feature-badge flex items-center gap-1">⭐ مميز — متبقّي: {{ req.featuredDaysLeft }} يوم</span>
-                {% endif %}
-              {% endif %}
-            </div>
-
-            <!-- title + budget -->
-            <div class="flex items-center gap-3 mb-2 flex-wrap">
-              <h3 class="font-bold text-lg text-gray-800">{{ req.title }}</h3>
-              {% if req.budget %}
-                <div class="flex items-center gap-2">
-                  <span class="text-orange-600 font-extrabold text-2xl leading-none">الميزانية:</span>
-                  <span class="text-orange-600 font-extrabold text-2xl leading-none">{{ req.budget }} د.أ</span>
-                </div>
-              {% endif %}
-            </div>
-
-            <!-- meta line -->
-            <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2 flex-wrap">
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 21s7-7 7-11a7 7 0 1 0-14 0c0 4 7 11 7 11Z" stroke="currentColor" stroke-width="2"/>
-                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                <span>{{ req.city|default:"—" }}</span>
-              </span>
-
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                  <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                <span>{{ req.published_at|default:req.created_at|default:"—" }}</span>
-              </span>
-
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="7"
-                          stroke="currentColor" stroke-width="2"/>
-                  <path d="M21 21l-4.3-4.3"
-                        stroke="currentColor" stroke-width="2"/>
-                </svg>
-                <span>{{ req.condition|default:"—" }}</span>
-              </span>
-
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"
-                        stroke="currentColor" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                <span>{{ req.views|default:0 }} مشاهدة</span>
-              </span>
-            </div>
-
-            {% if req.status == "rejected" and req.rejectReason %}
-              <p class="text-sm text-red-700 mt-2 flex items-center gap-1">
-                <svg class="w-4 h-4 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                  <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  <circle cx="12" cy="16" r="1" fill="currentColor"/>
-                </svg>
-                <span>سبب الرفض: <b class="font-semibold">{{ req.rejectReason }}</b></span>
-              </p>
-            {% endif %}
-          </div>
-
-          <!-- Actions -->
-          <div class="flex flex-col gap-2 w-full md:w-auto">
-
-            {# EDIT #}
-            <a href="{% url 'request_edit' req.id %}"
-               data-action="edit"
-               data-id="{{ req.id }}"
-               class="px-4 py-2 pill-blue text-sm relative group
-                      {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
-               {% if req.featuredDaysLeft|default:0 > 0 %}
-                 title="لا يمكنك تعديل الطلب لأنه مميز"
-                 aria-disabled="true"
-               {% endif %}
-            >
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"
-                        stroke="currentColor" stroke-width="2"/>
-                </svg>
-              </span>
-              تعديل
-
-              {% if req.featuredDaysLeft|default:0 > 0 %}
-                <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
-                  <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                    لا يمكنك تعديل الطلب لأنه مميز
-                  </span>
-                </span>
-              {% endif %}
-            </a>
-
-            {# DELETE #}
-            <button type="button"
-                    data-action="delete"
-                    data-id="{{ req.id }}"
-                    class="px-4 py-2 pill-red text-sm relative group
-                           {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
-                    {% if req.featuredDaysLeft|default:0 > 0 %}
-                      title="لا يمكنك حذف الطلب لأنه مميز"
-                      aria-disabled="true"
-                    {% endif %}
-            >
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M3 6h18M8 6v14h8V6M10 10v6M14 10v6"
-                        stroke="currentColor" stroke-width="2"/>
-                </svg>
-              </span>
-              حذف
-
-              {% if req.featuredDaysLeft|default:0 > 0 %}
-                <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
-                  <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                    لا يمكنك حذف الطلب لأنه مميز
-                  </span>
-                </span>
-              {% endif %}
-            </button>
-
-            {# REPUBLISH #}
-            <button type="button"
-                    class="px-4 py-2 pill-green text-sm {% if req.status != 'active' %}opacity-40 pointer-events-none{% endif %}"
-                    data-action="republish"
-                    data-id="{{ req.id }}">
-              <span class="inline-flex items-center gap-1">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M21 12a9 9 0 1 1-3-6.7" stroke="currentColor" stroke-width="2"/>
-                  <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2"/>
-                </svg>
-              </span>
-              إعادة نشر
-            </button>
-
-            {# HIGHLIGHT #}
-            {% if req.status != "active" or req.featuredDaysLeft|default:0 > 0 %}
-              <button type="button" class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">
-                <span class="inline-flex items-center gap-1">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"
-                             stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </span>
-                تمييز
-              </button>
-            {% else %}
-              <button type="button"
-                      class="px-4 py-2 pill-orange text-sm"
-                      data-action="highlight"
-                      data-id="{{ req.id }}">
-                <span class="inline-flex items-center gap-1">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"
-                             stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                </span>
-                تمييز
-              </button>
-            {% endif %}
-          </div>
-
-        </div>
-
-      {% endfor %}
-    {% else %}
-      <div class="requests-empty">
-        <svg class="requests-empty-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    {# ✅ STORE ACCOUNT: always show empty + explanation #}
+    {% if has_store %}
+      <div class="requests-empty flex flex-col items-center justify-center text-center gap-3 p-6 rounded-2xl border border-gray-200 bg-white">
+        <svg class="requests-empty-ico w-12 h-12 text-gray-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
           <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
           <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        <span>لا يوجد طلبات حالياً</span>
+
+        <div class="space-y-1">
+          <div class="font-bold text-gray-800">لا توجد طلبات لحساب المتجر</div>
+          <div class="text-sm text-gray-600 leading-relaxed">
+            حساب المتجر لا يدعم قسم الطلبات، لذلك لن تظهر طلبات في صفحة المتجر.
+          </div>
+        </div>
       </div>
+
+    {# ✅ NORMAL USER: show real requests #}
+    {% else %}
+
+      {% if my_requests %}
+        {% for req in my_requests %}
+
+          <div class="request-row relative flex flex-col md:flex-row items-start md:items-center gap-5 p-4 pt-6 rounded-2xl shadow-sm
+                  {% if req.status == 'pending' %}
+                    bg-yellow-50 border border-yellow-300
+                  {% elif req.status == 'rejected' %}
+                    bg-red-50 border border-red-300
+                  {% else %}
+                    bg-white border border-gray-200
+                  {% endif %}
+                "
+                data-req-id="{{ req.id }}"
+                data-listing-id="{{ req.listing_id }}"
+                data-status="{{ req.status|default:'active' }}"
+                data-featured-days-left="{{ req.featuredDaysLeft|default:0 }}"
+                data-last-republish="{{ req.published_at|default:req.created_at }}"
+                data-edit-url="{{ req.editUrl|default:'' }}"
+          >
+
+            <!-- ✅ Category Badge - Top Right (Absolute) -->
+            <span class="req-cat-badge">
+              {{ req.category|default:"بدون قسم" }}
+            </span>
+
+            <!-- Body -->
+            <div class="flex-1 w-full">
+              <!-- header line: id + status + featured -->
+              <div class="req-header">
+
+                <span class="flex items-center gap-1 text-gray-700 font-bold">
+                  <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M7 8h10M7 12h10M7 16h6" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  رقم الطلب:
+                  <span class="text-red-600">{{ req.id }}</span>
+                </span>
+
+                {% if req.status == "active" %}
+                  <span class="status-badge status-active">
+                    <span class="inline-flex items-center gap-1">
+                      <svg class="w-3 h-3 text-green-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                      </svg>
+                    </span>
+                    مفعّل
+                  </span>
+                {% elif req.status == "pending" %}
+                  <span class="status-badge status-pending">
+                    <span class="inline-flex items-center gap-1">
+                      <svg class="w-3 h-3 text-yellow-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                      </svg>
+                    </span>
+                    قيد المراجعة
+                  </span>
+                {% elif req.status == "rejected" %}
+                  <span class="status-badge status-rejected">
+                    <span class="inline-flex items-center gap-1">
+                      <svg class="w-3 h-3 text-red-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"/>
+                      </svg>
+                    </span>
+                    مرفوض
+                  </span>
+                {% endif %}
+
+                {% if req.featured %}
+                  {% if req.featuredDaysLeft and req.featuredDaysLeft > 0 %}
+                    <span class="feature-badge flex items-center gap-1">⭐ مميز — متبقّي: {{ req.featuredDaysLeft }} يوم</span>
+                  {% endif %}
+                {% endif %}
+              </div>
+
+              <!-- title + budget -->
+              <div class="flex items-center gap-3 mb-2 flex-wrap">
+                <h3 class="font-bold text-lg text-gray-800">{{ req.title }}</h3>
+                {% if req.budget %}
+                  <div class="flex items-center gap-2">
+                    <span class="text-orange-600 font-extrabold text-2xl leading-none">الميزانية:</span>
+                    <span class="text-orange-600 font-extrabold text-2xl leading-none">{{ req.budget }} د.أ</span>
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- meta line -->
+              <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2 flex-wrap">
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 21s7-7 7-11a7 7 0 1 0-14 0c0 4 7 11 7 11Z" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>{{ req.city|default:"—" }}</span>
+                </span>
+
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>{{ req.published_at|default:req.created_at|default:"—" }}</span>
+                </span>
+
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+                    <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>{{ req.condition|default:"—" }}</span>
+                </span>
+
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span>{{ req.views|default:0 }} مشاهدة</span>
+                </span>
+              </div>
+
+              {% if req.status == "rejected" and req.rejectReason %}
+                <p class="text-sm text-red-700 mt-2 flex items-center gap-1">
+                  <svg class="w-4 h-4 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="12" cy="16" r="1" fill="currentColor"/>
+                  </svg>
+                  <span>سبب الرفض: <b class="font-semibold">{{ req.rejectReason }}</b></span>
+                </p>
+              {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col gap-2 w-full md:w-auto">
+
+              {# EDIT #}
+              <a href="{% url 'request_edit' req.id %}"
+                 data-action="edit"
+                 data-id="{{ req.id }}"
+                 class="px-4 py-2 pill-blue text-sm relative group
+                        {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
+                 {% if req.featuredDaysLeft|default:0 > 0 %}
+                   title="لا يمكنك تعديل الطلب لأنه مميز"
+                   aria-disabled="true"
+                 {% endif %}
+              >
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"
+                          stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                تعديل
+
+                {% if req.featuredDaysLeft|default:0 > 0 %}
+                  <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
+                    <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
+                      لا يمكنك تعديل الطلب لأنه مميز
+                    </span>
+                  </span>
+                {% endif %}
+              </a>
+
+              {# DELETE #}
+              <button type="button"
+                      data-action="delete"
+                      data-id="{{ req.id }}"
+                      class="px-4 py-2 pill-red text-sm relative group
+                             {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
+                      {% if req.featuredDaysLeft|default:0 > 0 %}
+                        title="لا يمكنك حذف الطلب لأنه مميز"
+                        aria-disabled="true"
+                      {% endif %}
+              >
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3 6h18M8 6v14h8V6M10 10v6M14 10v6"
+                          stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                حذف
+
+                {% if req.featuredDaysLeft|default:0 > 0 %}
+                  <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
+                    <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
+                      لا يمكنك حذف الطلب لأنه مميز
+                    </span>
+                  </span>
+                {% endif %}
+              </button>
+
+              {# REPUBLISH #}
+              <button type="button"
+                      class="px-4 py-2 pill-green text-sm {% if req.status != 'active' %}opacity-40 pointer-events-none{% endif %}"
+                      data-action="republish"
+                      data-id="{{ req.id }}">
+                <span class="inline-flex items-center gap-1">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-3-6.7" stroke="currentColor" stroke-width="2"/>
+                    <path d="M21 3v6h-6" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </span>
+                إعادة نشر
+              </button>
+
+              {# HIGHLIGHT #}
+              {% if req.status != "active" or req.featuredDaysLeft|default:0 > 0 %}
+                <button type="button" class="px-4 py-2 pill-orange text-sm opacity-40 cursor-not-allowed">
+                  <span class="inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"
+                               stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </span>
+                  تمييز
+                </button>
+              {% else %}
+                <button type="button"
+                        class="px-4 py-2 pill-orange text-sm"
+                        data-action="highlight"
+                        data-id="{{ req.id }}">
+                  <span class="inline-flex items-center gap-1">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9"
+                               stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                  </span>
+                  تمييز
+                </button>
+              {% endif %}
+            </div>
+
+          </div>
+
+        {% endfor %}
+      {% else %}
+        <div class="requests-empty">
+          <svg class="requests-empty-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+            <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
+            <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>لا يوجد طلبات حالياً</span>
+        </div>
+      {% endif %}
+
     {% endif %}
   </div>
+
+  {# ✅ Store: "cannot add requests" modal (Arabic) #}
+  <div id="storeNoRequestsModal" class="hidden fixed inset-0 z-[9999] items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
+    <div class="relative bg-white w-[92%] max-w-md rounded-2xl shadow-xl border border-gray-200 p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+            <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="16" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="font-extrabold text-gray-900">تنبيه</div>
+        </div>
+
+        <button type="button" id="closeStoreNoRequestsModalX" class="text-gray-500 hover:text-gray-800">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="mt-3 text-sm text-gray-700 leading-relaxed">
+        هذا الحساب <b>حساب متجر</b>، ولا يمكن إضافة طلبات.
+        يمكنك إضافة <b>إعلانات</b> فقط.
+      </p>
+
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button"
+                id="closeStoreNoRequestsModalBtn"
+                class="px-4 py-2 rounded-xl font-bold text-sm bg-green-500 text-white hover:bg-green-600 transition">
+          حسناً
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

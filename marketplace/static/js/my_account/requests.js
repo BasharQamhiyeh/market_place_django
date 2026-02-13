@@ -66,7 +66,15 @@
   function updateCount() {
     const list = getList();
     const count = getCountEl();
-    if (!list || !count) return;
+    if (!count) return;
+
+    // ✅ if store: force 0
+    if (isStoreAccount()) {
+      count.textContent = "0";
+      return;
+    }
+
+    if (!list) return;
     count.textContent = String(list.querySelectorAll(".request-row[data-req-id]").length);
   }
 
@@ -89,17 +97,70 @@
     return Number(row?.dataset?.featuredDaysLeft || "0") > 0;
   }
 
-  function isPendingRow(row) {
-    return (row?.dataset?.status || "").toLowerCase() === "pending";
+  /* ================================
+     ✅ STORE ACCOUNT HELPERS (NEW)
+  ================================= */
+  function isStoreAccount() {
+    const tab = getTab();
+    const isStore = tab?.dataset?.isStore === "1";
+    // also support the wrapper attribute if tab is missing
+    const wrapper = document.querySelector(".requests-tab");
+    const wStore = wrapper?.dataset?.isStore === "1";
+    return Boolean(isStore || wStore);
   }
 
-  function isActiveRow(row) {
-    return (row?.dataset?.status || "").toLowerCase() === "active";
+  function openStoreNoRequestsModal() {
+    const m = document.getElementById("storeNoRequestsModal");
+    if (!m) return alert("هذا الحساب حساب متجر ولا يمكن إضافة طلبات.");
+    m.classList.remove("hidden");
+    m.classList.add("flex");
+    document.body.classList.add("overflow-hidden");
   }
 
-  function isRejectedRow(row) {
-    return (row?.dataset?.status || "").toLowerCase() === "rejected";
+  function closeStoreNoRequestsModal() {
+    const m = document.getElementById("storeNoRequestsModal");
+    if (!m) return;
+    m.classList.add("hidden");
+    m.classList.remove("flex");
+    document.body.classList.remove("overflow-hidden");
   }
+
+  function wireStoreCreateRequestBlock() {
+    const btn = document.getElementById("createRequestBtn");
+    if (!btn) return;
+
+    if (btn.dataset.wiredStoreBlock === "1") return;
+    btn.dataset.wiredStoreBlock = "1";
+
+    btn.addEventListener("click", (e) => {
+      if (!isStoreAccount()) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openStoreNoRequestsModal();
+    }, true);
+
+    // close buttons
+    document.getElementById("closeStoreNoRequestsModalBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeStoreNoRequestsModal();
+    });
+
+    document.getElementById("closeStoreNoRequestsModalX")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeStoreNoRequestsModal();
+    });
+
+    // backdrop click
+    document.getElementById("storeNoRequestsModal")?.addEventListener("click", (e) => {
+      const modal = document.getElementById("storeNoRequestsModal");
+      if (e.target === modal) closeStoreNoRequestsModal();
+      if (e.target?.classList?.contains("bg-black/40")) closeStoreNoRequestsModal();
+    });
+  }
+
+  /* =========================================================
+     Existing logic (kept)
+  ========================================================= */
 
   function applyActionStates() {
     const list = getList();
@@ -305,9 +366,6 @@
     m.classList.remove("flex");
   };
 
-  /* =========================================================
-     ✅ Feature helpers
-  ========================================================= */
   function calcDaysLeftFromNowISO(isoDate) {
     if (!isoDate) return 0;
     const today = new Date();
@@ -340,7 +398,7 @@
 
   function daysBetween(dateStr) {
     const d = parseISO(dateStr);
-    if (!d) return 0; // missing => NOT free => show confirm modal (paid)
+    if (!d) return 0;
     const a = new Date(d);
     a.setHours(0, 0, 0, 0);
     const b = new Date();
@@ -443,7 +501,6 @@
     window.__requestsSelectHighlightWrapped = true;
 
     window.selectHighlightPackage = async (days, cost) => {
-      // If not request highlight mode, pass through to ads implementation
       if (!highlightTargetRequestId || !isRequestHighlightModal()) {
         if (typeof prevSelectHighlight === "function") return prevSelectHighlight(days, cost);
         return;
@@ -466,7 +523,6 @@
       const d = Number(days);
       const c = Number(cost || 0);
 
-      // not enough points -> go to noPoints
       if (c && pointsNow < c) {
         closeModal("highlightModal");
         showNoPointsModal();
@@ -474,7 +530,6 @@
         return;
       }
 
-      // close package modal and open confirm modal
       closeModal("highlightModal");
 
       openHighlightConfirmModal({
@@ -531,7 +586,6 @@
             return;
           }
 
-          // fallback (demo)
           if (c) setPoints(pointsNow - c);
           row.dataset.featuredDaysLeft = String(d);
           ensureFeatureBadge(row, d);
@@ -668,27 +722,26 @@
   };
 
   function openRepublishConfirmModalForRequest(id, cost, daysLeft) {
-      republishTargetRequestId = id;
-      republishCost = Number(cost);
+    republishTargetRequestId = id;
+    republishCost = Number(cost);
 
-      const bal = document.getElementById("republishPointsBalance");
-      if (bal) bal.innerText = String(getPoints());
+    const bal = document.getElementById("republishPointsBalance");
+    if (bal) bal.innerText = String(getPoints());
 
-      const note = document.getElementById("republishNote");
-      if (note) {
-        const left = Math.max(0, Number(daysLeft || 0));
-        note.innerHTML =
-          left > 0
-            ? `📌 ملاحظة: إعادة النشر ستكون <b class="text-green-600">مجانية</b> بعد <b class="text-orange-600">${left}</b> يوم.`
-            : `📌 ملاحظة: إعادة النشر الآن <b class="text-green-600">مجانية</b>.`;
-      }
-
-      const btn = document.getElementById("confirmRepublishBtn");
-      if (btn) btn.onclick = () => confirmRepublishNow();
-
-      if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
+    const note = document.getElementById("republishNote");
+    if (note) {
+      const left = Math.max(0, Number(daysLeft || 0));
+      note.innerHTML =
+        left > 0
+          ? `📌 ملاحظة: إعادة النشر ستكون <b class="text-green-600">مجانية</b> بعد <b class="text-orange-600">${left}</b> يوم.`
+          : `📌 ملاحظة: إعادة النشر الآن <b class="text-green-600">مجانية</b>.`;
     }
 
+    const btn = document.getElementById("confirmRepublishBtn");
+    if (btn) btn.onclick = () => confirmRepublishNow();
+
+    if (!openModal("republishConfirmModal")) alert("republishConfirmModal is missing in DOM.");
+  }
 
   async function confirmRepublishNow() {
     if (!republishTargetRequestId) return;
@@ -748,6 +801,9 @@
   }
 
   async function onRequestsClick(e) {
+    // ✅ If store account: block any request actions (extra safety)
+    if (isStoreAccount()) return;
+
     const list = getList();
     if (!list) return;
 
@@ -794,9 +850,7 @@
     if (action === "delete") {
       e.preventDefault();
       e.stopPropagation();
-
       if (featured) return;
-
       openDeleteModalForRequest(id);
       return;
     }
@@ -804,11 +858,8 @@
     if (action === "highlight") {
       e.preventDefault();
       e.stopPropagation();
-
       if (featured) return;
-
       if (status === "pending") return;
-
       if (status !== "active") return;
 
       let daysLeft = Number(row.dataset.featuredDaysLeft || "0");
@@ -827,9 +878,7 @@
       e.stopPropagation();
 
       if (featured) return;
-
       if (status === "pending") return;
-
       if (status !== "active") return;
 
       const check = canRepublishWithCost(last);
@@ -856,7 +905,12 @@
   }
 
   function init() {
+    // ✅ Store: only wire the create-request blocking + force count 0
+    wireStoreCreateRequestBlock();
     updateCount();
+
+    if (isStoreAccount()) return;
+
     applyActionStates();
     wireDeleteReasonChangeOnce();
     wireBackdropClose();
@@ -864,7 +918,7 @@
     [
       "deleteAdModal",
       "highlightModal",
-      "highlightConfirmModal", // ✅ NEW
+      "highlightConfirmModal",
       "successModal",
       "republishConfirmModal",
       "noPointsModal",

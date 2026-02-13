@@ -310,6 +310,12 @@ def request_detail(request, request_id):
 @login_required
 @transaction.atomic
 def request_create(request):
+    # ✅ BLOCK store users from creating requests (backend)
+    store = getattr(request.user, "store", None)
+    if store and getattr(store, "is_active", True):
+        messages.error(request, "❌ هذا الحساب حساب متجر ولا يمكنه إضافة طلبات. يمكنك إضافة إعلانات فقط.")
+        return redirect("my_account")  # أو redirect("home") حسب ما تريد
+
     # =============================
     # 1. Top-level categories
     # =============================
@@ -413,7 +419,7 @@ def request_create(request):
                 listing=listing,
             )
 
-            messages.success(request, "✅ Your request was submitted (pending review).")
+            messages.success(request, "✅ تم إرسال طلبك وهو الآن قيد المراجعة.")
             return redirect("my_account")
 
         request.session["item_create_form_token"] = str(uuid.uuid4())
@@ -428,7 +434,6 @@ def request_create(request):
                 "categories": top_categories,
                 "selected_category": selected_category,
                 "form_token": request.session["item_create_form_token"],
-
             },
         )
 
@@ -445,7 +450,6 @@ def request_create(request):
 
     request.session["item_create_form_token"] = str(uuid.uuid4())
 
-
     return render(
         request,
         "request_create.html",
@@ -457,7 +461,6 @@ def request_create(request):
             "category_tree_json": category_tree_json,
             "selected_category_path_json": selected_path_json,
             "form_token": request.session["item_create_form_token"],
-
         },
     )
 

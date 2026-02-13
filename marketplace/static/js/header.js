@@ -197,6 +197,79 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 /* =========================================================
+   ✅ Store account: block creating requests from GLOBAL "Add" button
+========================================================= */
+(function () {
+  function isStoreAccountGlobal() {
+    return document.documentElement?.dataset?.isStore === "1";
+  }
+
+  function openStoreNoRequestsModalGlobal() {
+    const m = document.getElementById("storeNoRequestsModalGlobal");
+    if (!m) return alert("هذا الحساب حساب متجر ولا يمكن إضافة طلبات.");
+    m.classList.remove("hidden");
+    m.classList.add("flex");
+    document.body.classList.add("overflow-hidden");
+  }
+
+  function closeStoreNoRequestsModalGlobal() {
+    const m = document.getElementById("storeNoRequestsModalGlobal");
+    if (!m) return;
+    m.classList.add("hidden");
+    m.classList.remove("flex");
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  function isCreateRequestUrl(url) {
+    if (!url) return false;
+    const u = String(url);
+    return u.includes("/request/create/") || u.includes("/requests/create/") || u.includes("create_request");
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!isStoreAccountGlobal()) return;
+
+    const addAdBtn = document.getElementById("addAdBtn");
+    if (!addAdBtn) return;
+
+    // Close wiring
+    document.getElementById("closeStoreNoRequestsModalGlobalBtn")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeStoreNoRequestsModalGlobal();
+    });
+    document.getElementById("closeStoreNoRequestsModalGlobalX")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeStoreNoRequestsModalGlobal();
+    });
+    document.getElementById("storeNoRequestsModalGlobal")?.addEventListener("click", (e) => {
+      const modal = document.getElementById("storeNoRequestsModalGlobal");
+      if (e.target === modal) closeStoreNoRequestsModalGlobal();
+      if (e.target?.classList?.contains("bg-black/40")) closeStoreNoRequestsModalGlobal();
+    });
+
+    // Block only when in request-create mode
+    addAdBtn.addEventListener(
+      "click",
+      function (e) {
+        const targetUrl =
+          addAdBtn.dataset.targetUrl ||
+          addAdBtn.getAttribute("data-target-url") ||
+          addAdBtn.getAttribute("href") ||
+          "";
+
+        if (isCreateRequestUrl(targetUrl)) {
+          e.preventDefault();
+          e.stopPropagation();
+          openStoreNoRequestsModalGlobal();
+        }
+      },
+      true
+    );
+  });
+})();
+
+
+/* =========================================================
    Buy / Sell toggle (kept exactly, already in header.js)
 ========================================================= */
 document.addEventListener('DOMContentLoaded', () => {
