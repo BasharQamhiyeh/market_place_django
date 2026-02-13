@@ -286,7 +286,6 @@
         if (editLink) {
           editLink.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           editLink.setAttribute("aria-disabled", "true");
-          editLink.setAttribute("title", "لا يمكنك تعديل الإعلان لأنه مميز");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -297,7 +296,6 @@
         if (delBtn) {
           delBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           delBtn.setAttribute("aria-disabled", "true");
-          delBtn.setAttribute("title", "لا يمكنك حذف الإعلان لأنه مميز");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -308,7 +306,6 @@
         if (republishBtn) {
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
-          republishBtn.setAttribute("title", "لا يمكن إعادة نشر إعلان مميز");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -319,7 +316,6 @@
         if (highlightBtn) {
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
-          highlightBtn.setAttribute("title", "الإعلان مميز بالفعل");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -333,7 +329,6 @@
         if (republishBtn) {
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
-          republishBtn.setAttribute("title", "لا يمكن إعادة النشر أثناء المراجعة");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -344,7 +339,6 @@
         if (highlightBtn) {
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
-          highlightBtn.setAttribute("title", "لا يمكن التمييز أثناء المراجعة");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -358,7 +352,6 @@
         if (republishBtn) {
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
-          republishBtn.setAttribute("title", "لا يمكن إعادة نشر إعلان مرفوض");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
@@ -369,7 +362,6 @@
         if (highlightBtn) {
           highlightBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           highlightBtn.setAttribute("aria-disabled", "true");
-          highlightBtn.setAttribute("title", "لا يمكن تمييز إعلان مرفوض");
 
           const tooltip = document.createElement("span");
           tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
