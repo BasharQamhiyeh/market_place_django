@@ -248,16 +248,13 @@ def item_list(request):
 def item_detail(request, item_id):
     item = get_object_or_404(
         Item.objects.select_related("listing", "listing__user", "listing__category"),
-        id=item_id
+        id=item_id,
+        listing__is_approved=True,
+        listing__is_active=True,
+        listing__is_deleted=False,
     )
 
     listing = item.listing
-    is_own_listing = request.user.is_authenticated and (listing.user_id == request.user.user_id)
-    is_staff = request.user.is_authenticated and request.user.is_staff
-
-    if not (listing.is_approved and listing.is_active and not listing.is_deleted):
-        if not (is_own_listing or is_staff):
-            raise Http404()
 
     # ✅ Increment views (once per session per item)
     session_key = f"item_viewed_{item_id}"
@@ -597,6 +594,8 @@ def item_edit(request, item_id):
         Item.objects.select_related("listing", "listing__category", "listing__user"),
         id=item_id,
         listing__user=request.user,
+        listing__is_deleted=False,
+        listing__featured_until__lte=timezone.now()  # block currently featured
     )
 
     listing = item.listing

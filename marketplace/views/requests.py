@@ -192,16 +192,15 @@ def request_list(request):
 
 
 def request_detail(request, request_id):
-    request_obj = get_object_or_404(Request, id=request_id)
+    request_obj = get_object_or_404(
+        Request.objects.select_related("listing", "listing__user", "listing__category"),
+        id=request_id,
+        listing__is_approved=True,
+        listing__is_active=True,
+        listing__is_deleted=False,
+    )
 
     listing = request_obj.listing
-    is_owner = request.user.is_authenticated and (listing.user_id == request.user.user_id)
-    is_staff = request.user.is_authenticated and request.user.is_staff
-
-    # ✅ Block public access to unapproved/inactive/deleted items
-    if not (listing.is_approved and listing.is_active and not listing.is_deleted):
-        if not (is_owner or is_staff):
-            raise Http404()
 
     # ✅ Increment views (once per session per request)
     session_key = f"request_viewed_{request_id}"
@@ -219,11 +218,6 @@ def request_detail(request, request_id):
         cat = cat.parent
 
     breadcrumb_categories.reverse()
-
-    # SECURITY
-    if not request_obj.listing.is_approved and request.user != request_obj.listing.user:
-        if not request.user.is_staff:
-            return redirect("home")
 
     attributes = []
     for av in request_obj.attribute_values.select_related("attribute").prefetch_related("attribute__options"):
@@ -476,6 +470,8 @@ def request_edit(request, request_id):
         Request.objects.select_related("listing", "listing__category", "listing__user"),
         id=request_id,
         listing__user=request.user,
+        listing__is_deleted=False,
+        listing__featured_until__lte=timezone.now()  # block currently featured
     )
 
     listing = req.listing
