@@ -81,6 +81,14 @@
   function openModal(id) {
     const m = mustEl(id);
     if (!m) return false;
+
+    // ✅ Add theme-green for requests tab (remove theme-orange if present)
+    const themedModals = ['highlightModal', 'highlightConfirmModal', 'republishConfirmModal', 'noPointsModal'];
+    if (themedModals.includes(id)) {
+      m.classList.add('theme-green');
+      m.classList.remove('theme-orange');
+    }
+
     m.classList.remove("hidden");
     m.classList.add("flex");
     return true;
@@ -89,6 +97,13 @@
   function closeModal(id) {
     const m = document.getElementById(id);
     if (!m) return;
+
+    // ✅ Clean up theme classes when closing
+    const themedModals = ['highlightModal', 'highlightConfirmModal', 'republishConfirmModal', 'noPointsModal'];
+    if (themedModals.includes(id)) {
+      m.classList.remove('theme-orange', 'theme-green');
+    }
+
     m.classList.add("hidden");
     m.classList.remove("flex");
   }
@@ -355,15 +370,11 @@
       };
     }
 
-    m.classList.remove("hidden");
-    m.classList.add("flex");
+    openModal("highlightConfirmModal");
   }
 
   window.closeHighlightConfirmModal = function () {
-    const m = document.getElementById("highlightConfirmModal");
-    if (!m) return;
-    m.classList.add("hidden");
-    m.classList.remove("flex");
+    closeModal("highlightConfirmModal");
   };
 
   function calcDaysLeftFromNowISO(isoDate) {

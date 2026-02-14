@@ -975,3 +975,134 @@ button, .tab-btn, .modal-x {
 .ads-add-btn {
   box-shadow: 0 10px 26px rgba(255, 122, 24, 0.16) !important;
 }
+
+
+/* ========================================
+   MY ACCOUNT MODALS - THEME SWITCHING
+   Orange for Ads / Green for Requests
+======================================== */
+
+/* Default theme: orange */
+#highlightModal,
+#highlightConfirmModal,
+#republishConfirmModal,
+#noPointsModal {
+  --modal-accent: #ff7a18;
+  --modal-accent-light: #fdba74;
+}
+
+/* Green theme for requests */
+#highlightModal.theme-green,
+#highlightConfirmModal.theme-green,
+#republishConfirmModal.theme-green,
+#noPointsModal.theme-green {
+  --modal-accent: #16a34a;
+  --modal-accent-light: #86efac;
+}
+
+/* ========================================
+   TOP GRADIENT BAR (4px narrow bar)
+======================================== */
+#highlightModal > div,
+#highlightConfirmModal > div,
+#republishConfirmModal > div,
+#noPointsModal > div {
+  position: relative;
+  overflow: hidden;
+}
+
+#highlightModal > div::before,
+#highlightConfirmModal > div::before,
+#republishConfirmModal > div::before,
+#noPointsModal > div::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--modal-accent), var(--modal-accent-light));
+  opacity: 0.9;
+  border-radius: 16px 16px 0 0;
+  z-index: 1;
+}
+
+/* ========================================
+   DYNAMIC ACCENT COLORS
+======================================== */
+
+/* Text colors */
+#highlightModal .text-orange-600,
+#highlightConfirmModal .text-orange-600,
+#republishConfirmModal .text-orange-600,
+#noPointsModal .text-orange-600 {
+  color: var(--modal-accent) !important;
+}
+
+#highlightModal .text-red-600,
+#highlightConfirmModal .text-red-600,
+#republishConfirmModal .text-red-600,
+#noPointsModal .text-red-600 {
+  color: var(--modal-accent) !important;
+}
+
+/* Background colors */
+#highlightModal .bg-orange-500,
+#highlightModal .bg-orange-600,
+#highlightConfirmModal .bg-orange-600,
+#highlightConfirmModal .bg-orange-700,
+#republishConfirmModal .bg-orange-600,
+#republishConfirmModal .bg-orange-700,
+#noPointsModal .bg-orange-600,
+#noPointsModal .bg-orange-700 {
+  background-color: var(--modal-accent) !important;
+}
+
+/* Hover states */
+#highlightModal .hover\:bg-orange-600:hover,
+#highlightModal .hover\:bg-orange-700:hover,
+#highlightConfirmModal .hover\:bg-orange-700:hover,
+#republishConfirmModal .hover\:bg-orange-700:hover,
+#noPointsModal .hover\:bg-orange-700:hover {
+  background-color: color-mix(in srgb, var(--modal-accent) 90%, black) !important;
+}
+
+#highlightModal .hover\:bg-orange-50:hover {
+  background-color: color-mix(in srgb, var(--modal-accent) 10%, white) !important;
+}
+
+/* Border and background accents */
+#highlightModal .border-orange-200,
+#highlightConfirmModal .border-orange-200,
+#republishConfirmModal .border-orange-200 {
+  border-color: color-mix(in srgb, var(--modal-accent) 40%, white) !important;
+}
+
+#highlightModal .bg-orange-50,
+#highlightConfirmModal .bg-orange-50,
+#republishConfirmModal .bg-orange-50 {
+  background-color: color-mix(in srgb, var(--modal-accent) 10%, white) !important;
+}
+
+/* Title colors */
+#highlightModalTitle {
+  color: var(--modal-accent) !important;
+}
+
+/* Icon colors */
+#highlightModal svg,
+#republishConfirmModal svg {
+  color: var(--modal-accent) !important;
+}
+
+/* ========================================
+   CONTENT Z-INDEX FIX
+   (ensure content appears above ::before)
+======================================== */
+#highlightModal > div > *,
+#highlightConfirmModal > div > *,
+#republishConfirmModal > div > *,
+#noPointsModal > div > * {
+  position: relative;
+  z-index: 2;
+}
