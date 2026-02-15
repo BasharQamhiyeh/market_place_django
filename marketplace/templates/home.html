@@ -332,23 +332,8 @@
            class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 cursor-grab select-none no-scrollbar px-4 sm:px-6"
            style="scrollbar-width:none; -ms-overflow-style:none;">
 
-        {% for cat in trending_categories %}
-          <div class="trending-wrap snap-start flex-shrink-0">
-            <a href="{% url 'item_list' %}?categories={{ cat.id }}"
-               class="trending-card relative h-[210px] w-[250px] sm:h-[220px] sm:w-[280px] group cursor-pointer overflow-hidden rounded-2xl border-2 border-transparent transition-all duration-300 hover:border-[#ff7a18] block">
-
-              {% if cat.image %}
-                <img src="{{ cat.image.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ cat.name }}">
-              {% else %}
-                <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=900" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ cat.name }}">
-              {% endif %}
-
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
-                <h5 class="text-xl font-black text-white mb-1">{{ cat.name }}</h5>
-                <p class="text-xs text-orange-400 font-bold uppercase tracking-widest">{{ cat.subtitle_ar }}</p>
-              </div>
-            </a>
-          </div>
+        {% for cat in categories %}
+          {% include "partials/_category_card.html" with cat=cat %}
         {% endfor %}
 
       </div>
