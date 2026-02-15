@@ -1,661 +1,695 @@
 {% load static i18n %}
 <!doctype html>
-<html lang="ar" dir="rtl"
-      data-is-store="{% if request.user.is_authenticated and request.user.store and request.user.store.is_active %}1{% else %}0{% endif %}">
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
-  <title>{% block title %}ركن — منصة إعلانات{% endblock %}</title>
+  <title>{% block title %}ركن | السوق الأردني المتكامل - سيارات، عقارات، وظائف وخدمات{% endblock %}</title>
 
-  <meta name="description" content="منصة ركن للإعلانات المبوبة - بيع، اشتري، أو اطلب ما تحتاجه بسهولة وأمان">
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap"
-    rel="stylesheet">
+  <style>
+    html, body { font-family: "Cairo", sans-serif !important; }
+    button, input, select, textarea { font-family: inherit !important; }
+  </style>
 
-  <!-- Tailwind (mockup uses it) -->
+  <!-- Tailwind (DEV CDN). For production, switch to compiled CSS. -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Swiper CSS (for sliders on home page) -->
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <!-- Swiper -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
-  <!-- Mockup CSS -->
-  <link rel="stylesheet" href="{% static 'css/header.css' %}">
-  <link rel="stylesheet" href="{% static 'css/footer.css' %}">
-  <!-- Small overrides for search behaviour/dropdown -->
-  <link rel="stylesheet" href="{% static 'css/search.css' %}">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
   {% block base_css %}{% endblock %}
   {% block page_css %}{% endblock %}
 
   <link rel="stylesheet" href="{% static 'css/item-card.css' %}">
   <link rel="stylesheet" href="{% static 'css/request-card.css' %}">
+  <link rel="stylesheet" href="{% static 'css/store-card.css' %}">
 
+  <!-- Global runtime context (safe + no template-quoting bugs) -->
+  <script id="rukn-context" type="application/json">
+    {
+      "isAuthenticated": {{ request.user.is_authenticated|yesno:"true,false" }},
+      "userId": {% if request.user.is_authenticated and request.user.id %}{{ request.user.id }}{% else %}null{% endif %},
+      "username": "{{ request.user.username|default:''|escapejs }}"
+    }
+  </script>
+
+  <!-- Keep legacy window.RUKN for existing base.js usage + set csrfToken from cookie -->
+  <script>
+    (() => {
+      const el = document.getElementById("rukn-context");
+      let ctx = {};
+      try { ctx = JSON.parse(el?.textContent || "{}"); } catch (e) {}
+      window.RUKN = Object.assign({}, window.RUKN || {}, ctx);
+
+      const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+      if (!window.RUKN.csrfToken) window.RUKN.csrfToken = m ? decodeURIComponent(m[1]) : "";
+    })();
+  </script>
 </head>
 
-<body class="font-[Cairo] bg-white text-gray-900">
+<body class="antialiased bg-mesh">
 
-<!-- =================== TOPBAR =================== -->
-<div class="topbar">
-  <div class="container">
+  <!-- ===================== HEADER ===================== -->
+  <header class="topbar">
+    <div class="container">
 
-    <!-- Logo -->
-    <div class="logo-box">
-      <a href="{% url 'home' %}">
-        <img src="{% static 'images/logo.png' %}" class="logo" alt="شعار ركن" />
-      </a>
-    </div>
+      <!-- Right: Logo + Mobile user placeholder -->
+      <div class="logo-box flex items-center flex-nowrap">
+        <div class="flex items-center gap-2">
+          <a href="/" class="inline-flex items-center">
+            <img src="{% static 'images/logo.png' %}" class="logo" alt="شعار ركن">
+          </a>
+        </div>
 
-    <!-- IF USER NOT LOGGED IN: mockup auth buttons -->
-    {% if not request.user.is_authenticated %}
-      <div id="authButtons" class="auth-buttons">
-        <button id="loginBtn" type="button" class="btn-login">
-          تسجيل الدخول
-        </button>
-        <a href="{% url 'register' %}" class="btn-signup">
-          إنشاء حساب
-        </a>
+        <div id="mobileUserPlaceholder" class="flex items-center gap-1"></div>
+
+        <!-- Mobile guest auth buttons -->
+        <div id="authButtonsMobile"
+             class="flex items-center gap-2 mobile-only {% if request.user.is_authenticated %}hidden{% endif %}">
+          <button type="button" data-open-login class="btn-auth-icon btn-login-style has-tooltip">
+            <i data-lucide="log-in"></i>
+            <span class="tooltip">تسجيل الدخول</span>
+          </button>
+
+          <a href="{% url 'register' %}" class="btn-auth-icon btn-signup-style has-tooltip" title="تسجيل">
+            <i data-lucide="user-plus"></i>
+            <span class="tooltip">إنشاء حساب</span>
+          </a>
+        </div>
       </div>
-    {% else %}
-    <!-- IF USER LOGGED IN: your dynamic icons bar (fav/msg/noti/user) -->
-      <div id="userIcons" class="user-icons">
-        <div class="flex items-center gap-4 text-[var(--muted)]">
+
+      <!-- Center: Search -->
+      <div class="flex-1 flex justify-center">
+        <div class="w-full max-w-3xl flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div class="search-container flex-grow order-1 sm:order-none">
+            <form id="siteSearch" class="relative" action="#" method="get">
+              <input id="searchInput" type="search" required placeholder="ابحث عن إعلان"
+                     class="w-full bg-white rounded-3xl border-2 border-[var(--rukn-orange)]
+                            py-3 px-4 pr-36 focus:outline-none focus:ring-2 focus:ring-orange-100 transition-all">
+
+              <div id="intentBox"
+                   class="absolute right-2 top-1/2 -translate-y-1/2 flex border border-gray-100 bg-white rounded-2xl overflow-hidden">
+                <button id="sellBtn" type="button"
+                        class="px-3 h-8 text-xs font-bold bg-[var(--rukn-orange)] text-white">إعلان</button>
+                <button id="buyBtn" type="button"
+                        class="px-3 h-8 text-xs font-bold text-gray-500">طلب</button>
+              </div>
+
+              <button id="searchBtn" type="submit" disabled
+                      class="absolute left-2 top-1/2 -translate-y-1/2
+                             bg-[var(--rukn-orange)] text-white w-8 h-8 rounded-full
+                             flex items-center justify-center opacity-50 cursor-not-allowed">
+                <i class="fas fa-search text-xs"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left: Auth / User actions -->
+      <div id="desktopAuthContainer" class="flex items-center gap-3 ml-auto sm:ml-0">
+
+        <!-- Desktop guest auth buttons -->
+        <div id="guestActions"
+             class="flex items-center gap-2 desktop-only {% if request.user.is_authenticated %}hidden{% endif %}">
+          <button type="button" data-open-login class="btn-auth-icon btn-login-style has-tooltip">
+            <i data-lucide="log-in"></i>
+            <span class="tooltip">تسجيل الدخول</span>
+          </button>
+
+          <a href="{% url 'register' %}" class="btn-auth-icon btn-signup-style has-tooltip" title="تسجيل">
+            <i data-lucide="user-plus"></i>
+            <span class="tooltip">إنشاء حساب</span>
+          </a>
+        </div>
+
+        <!-- User dropdowns (icons + profile trigger) -->
+        <div id="userActionsDropdowns"
+             class="flex items-center gap-3 {% if not request.user.is_authenticated %}hidden{% endif %}">
 
           <!-- Favorites -->
           <div class="relative">
-            <button id="favBtn"
-                    class="relative hover:text-gray-900 transition-colors topbar-icon"
-                    aria-expanded="false" aria-haspopup="true" aria-label="المفضلة">
-              ❤️
-              {% if favorite_count %}
-                <span class="badge">{{ favorite_count }}</span>
-              {% endif %}
-            </button>
+            <button id="headerFavBtn" type="button" class="action-icon has-tooltip" data-toggle-dropdown="favDropdown">
+  <i data-lucide="heart" class="fav-heart {% if favorite_count %}filled{% endif %}"></i>
+  <span id="favTooltip" class="tooltip">
+    {% if favorite_count %}يوجد {{ favorite_count }} منتجات في المفضلة{% else %}لا يوجد منتجات في المفضلة{% endif %}
+  </span>
+</button>
 
-            <div id="favMenu" class="dropdown" aria-labelledby="favBtn">
+            <div id="favDropdown" class="actions-dropdown">
               <div class="dropdown-header">المفضلة</div>
 
-              <div class="dropdown-list">
-
+              <div class="fav-scroll">
                 {% for fav in recent_favorites %}
                   {% with item=fav.listing.item request_obj=fav.listing.request %}
+                    <a href="{% if item %}{% url 'item_detail' item.id %}{% elif request_obj %}{% url 'request_detail' request_obj.id %}{% endif %}"
+                       class="dropdown-item flex gap-3 p-2">
 
-                    {% if item %}
-                      <a href="{% url 'item_detail' item.id %}"
-                         class="dropdown-item border-r-4 border-[var(--rukn-orange)]">
-                    {% elif request_obj %}
-                      <a href="{% url 'request_detail' request_obj.id %}"
-                         class="dropdown-item border-r-4 border-[var(--rukn-green)]">
-                    {% endif %}
+                      <img src="{% if item and item.photos.first %}{{ item.photos.first.image.url }}{% else %}https://via.placeholder.com/40{% endif %}"
+                           class="rounded-md w-10 h-10 object-cover">
 
-                        <!-- THUMB -->
-                        <div class="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border flex-shrink-0">
-                          {% if item %}
-                            {% with photo=item.photos.first %}
-                              {% if photo %}
-                                <img src="{{ photo.image.url }}"
-                                     alt="{{ item.listing.title }}"
-                                     class="w-full h-full object-cover">
-                              {% else %}
-                                <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🖼️</div>
-                              {% endif %}
-                            {% endwith %}
-                          {% else %}
-                            <div class="w-full h-full flex items-center justify-center text-gray-400 text-xs">🙋‍♂️</div>
-                          {% endif %}
+                      <div>
+                        <div class="text-xs font-bold">
+                          {% if item %}{{ item.listing.title }}{% elif request_obj %}{{ request_obj.listing.title }}{% endif %}
                         </div>
-
-                        <!-- TEXT INFO -->
-                        <div>
-                          {% if item %}
-                            <div class="font-medium text-gray-900 truncate">{{ item.listing.title }}</div>
-                            <div class="text-xs text-[var(--muted)]">{{ item.price }} د.أ</div>
-                          {% elif request_obj %}
-                            <div class="font-medium text-gray-900 truncate">{{ request_obj.listing.title }}</div>
-                            <div class="text-xs text-[var(--muted)]">طلب شراء</div>
-                          {% endif %}
+                        <div class="text-[10px] text-orange-600">
+                          {% if item %}{{ item.price }} د.أ{% else %}طلب شراء{% endif %}
                         </div>
-
-                      </a>
-
+                        <div class="text-[10px] text-gray-400">
+                          البائع: {% if item %}{{ item.listing.user.first_name }}{% elif request_obj %}{{ request_obj.listing.user.first_name }}{% endif %}
+                        </div>
+                      </div>
+                    </a>
                   {% endwith %}
                 {% empty %}
-                  <div class="px-4 py-3 text-sm text-gray-500">
-                    لا يوجد عناصر في المفضلة.
+                  <div class="p-4 text-center text-sm text-gray-400">
+                    لا يوجد منتجات في المفضلة
                   </div>
                 {% endfor %}
-
               </div>
 
-              <div class="p-3 border-t">
-                <a href="{% url 'my_favorites' %}"
-                   class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
-                  عرض كل المفضلة
-                </a>
+              <div class="dropdown-footer">
+                <a href="{% url 'my_favorites' %}" class="btn-view-all">عرض كل المفضلة</a>
               </div>
             </div>
+
           </div>
 
           <!-- Messages -->
           <div class="relative">
-            <button id="msgBtn"
-                    class="relative hover:text-gray-900 transition-colors topbar-icon"
-                    aria-expanded="false" aria-haspopup="true" aria-label="الرسائل">
-              ✉️
+            <button type="button" class="action-icon has-tooltip" data-toggle-dropdown="msgDropdown">
+              <i data-lucide="message-square" class="msg-icon {% if unread_messages %}filled{% endif %}"></i>
               {% if unread_messages %}
-                <span class="badge">{{ unread_messages }}</span>
+                <span class="badge msg-badge">{{ unread_messages }}</span>
+              {% else %}
+                <span class="badge msg-badge hidden"></span>
               {% endif %}
+              <span class="tooltip">{% if unread_messages %}يوجد {{ unread_messages }} رسائل غير مقروءة{% else %}لا يوجد رسائل جديدة{% endif %}</span>
             </button>
 
-            <div id="msgMenu" class="dropdown" aria-labelledby="msgBtn">
-              <div class="dropdown-header">الرسائل</div>
+            <div id="msgDropdown" class="actions-dropdown">
+  <div class="dropdown-header">الرسائل الواردة</div>
 
-              <div class="dropdown-list">
+  <div class="msg-scroll">
+    {% for msg in recent_messages %}
+      {% with convo=msg.conversation listing=convo.listing store=convo.store %}
+        <a href="{% url 'my_account' %}?tab=msgs&c={{ convo.id }}"
+           class="dropdown-msg-item {% if not msg.is_read %}is-unread{% endif %}"
+           data-type="{% if store %}store{% elif listing and listing.item %}ad{% elif listing and listing.request %}request{% endif %}">
 
-                {% for msg in recent_messages %}
-                  {% with convo=msg.conversation listing=msg.conversation.listing store=msg.conversation.store %}
+          <div class="msg-icon-box"></div>
 
-                    <a href="{% url 'my_account' %}?tab=msgs&c={{ convo.id }}"
-                       class="
-                         dropdown-item
-                         {% if store %} bg-blue-50 border-r-4 border-blue-400 {% endif %}
-                         {% if listing and listing.item %} bg-orange-50 border-r-4 border-[var(--rukn-orange)] {% endif %}
-                         {% if listing and listing.request %} bg-green-50 border-r-4 border-[var(--rukn-green)] {% endif %}
-                         {% if not msg.is_read %} shadow-sm {% endif %}
-                       ">
-
-                      <!-- ICON CIRCLE -->
-                      <div class="
-                          flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold
-                          {% if store %} bg-blue-200 text-blue-800 {% endif %}
-                          {% if listing and listing.item %} bg-orange-200 text-orange-800 {% endif %}
-                          {% if listing and listing.request %} bg-green-200 text-green-800 {% endif %}
-                      ">
-                        {% with u=msg.sender.first_name|default:"" %}
-                          {% if u %}{{ u|slice:":1"|upper }}{% else %}?{% endif %}
-                        {% endwith %}
-                      </div>
-
-                      <!-- TEXT -->
-                      <div class="min-w-0">
-
-                        <div class="flex justify-between gap-2">
-                          <div class="font-medium text-gray-900 truncate">
-                            {{ msg.sender.first_name }}
-                          </div>
-                          <div class="text-xs text-[var(--muted)] whitespace-nowrap">
-                            {{ msg.created_at|timesince }} {% trans "ago" %}
-                          </div>
-                        </div>
-
-                        <!-- context line: listing title or store name -->
-                        <div class="text-xs text-gray-600 truncate">
-                          {% if store %}
-                            {{ store.name }} <span class="text-[10px] text-gray-400">• متجر</span>
-                          {% elif listing and listing.item %}
-                            {{ listing.title }} <span class="text-[10px] text-gray-400">• إعلان</span>
-                          {% elif listing and listing.request %}
-                            {{ listing.title }} <span class="text-[10px] text-gray-400">• طلب</span>
-                          {% else %}
-                            {% trans "Conversation" %}
-                          {% endif %}
-                        </div>
-
-                        <div class="text-xs text-gray-500 mt-0.5 line-clamp-2">
-                          {{ msg.body }}
-                        </div>
-
-                      </div>
-
-                    </a>
-
-                  {% endwith %}
-                {% empty %}
-                  <div class="px-4 py-3 text-sm text-gray-500">
-                    لا يوجد رسائل.
-                  </div>
-                {% endfor %}
-              </div>
-
-              <div class="p-3 border-t">
-                <a href="{% url 'my_account' %}?tab=msgs"
-                   class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
-                  فتح صندوق الرسائل
-                </a>
-              </div>
-
+          <div class="msg-content-box">
+            <div class="msg-sender-row">
+              <span class="msg-sender-name">{{ msg.sender.first_name|default:msg.sender.username }}</span>
+              {% if not msg.is_read %}
+                <span class="msg-unread-dot"></span>
+              {% endif %}
             </div>
-          </div>
 
+            <div class="msg-subject-text">
+              {% if store %}{{ store.name }} <span>• متجر</span>
+              {% elif listing.item %}{{ listing.title }} <span>• إعلان</span>
+              {% elif listing.request %}{{ listing.title }} <span>• طلب</span>{% endif %}
+            </div>
+
+            <div class="msg-preview-text">{{ msg.body }}</div>
+          </div>
+        </a>
+      {% endwith %}
+    {% empty %}
+      <div class="p-4 text-center text-sm text-gray-400">لا يوجد رسائل</div>
+    {% endfor %}
+  </div>
+
+  <div class="dropdown-footer">
+    <a href="{% url 'my_account' %}?tab=msgs" class="btn-view-all">الانتقال للمحادثات</a>
+  </div>
+</div>
+          </div>
 
           <!-- Notifications -->
           <div class="relative">
-            <button id="notiBtn"
-                    class="relative hover:text-gray-900 transition-colors topbar-icon"
-                    aria-expanded="false" aria-haspopup="true" aria-label="الإشعارات">
-              🔔
+            <button type="button" class="action-icon has-tooltip" data-toggle-dropdown="notifDropdown">
+              <i data-lucide="bell" class="notif-icon {% if unread_notifications %}filled{% endif %}"></i>
               {% if unread_notifications %}
-                <span class="badge">{{ unread_notifications }}</span>
+                <span class="badge notif-badge">{{ unread_notifications }}</span>
+              {% else %}
+                <span class="badge notif-badge hidden"></span>
               {% endif %}
+              <span class="tooltip">{% if unread_notifications %}يوجد {{ unread_notifications }} إشعارات غير مقروءة{% else %}لا يوجد إشعارات جديدة{% endif %}</span>
             </button>
 
-            <div id="notiMenu" class="dropdown" aria-labelledby="notiBtn">
-              <div class="dropdown-header">الإشعارات</div>
+            <div id="notifDropdown" class="actions-dropdown">
+  <div class="dropdown-header">الإشعارات</div>
 
-              <div class="dropdown-list">
-                {% for n in recent_notifications %}
-                  {% with listing=n.listing item=listing.item req=listing.request %}
+  <div class="notif-scroll">
+    {% for n in recent_notifications %}
+      <a href="{% if n.listing %}{% if n.listing.item %}{% url 'item_detail' n.listing.item.id %}{% elif n.listing.request %}{% url 'request_detail' n.listing.request.id %}{% endif %}{% else %}#{% endif %}"
+         class="dropdown-noti-item {% if not n.is_read %}is-unread{% endif %}"
+         data-kind="{{ n.kind }}"
+         data-status="{{ n.status }}">
 
-                    <a href="
-                      {% if item %}{% url 'item_detail' item.id %}
-                      {% elif req %}{% url 'request_detail' req.id %}
-                      {% endif %}
-                    "
-                    class="
-                      dropdown-item
-                      {% if item %} bg-orange-50 border-r-4 border-[var(--rukn-orange)] {% endif %}
-                      {% if req %} bg-green-50 border-r-4 border-[var(--rukn-green)] {% endif %}
-                      {% if not n.is_read %} shadow-sm {% endif %}
-                    ">
+        <div class="noti-icon-box noti-kind-{{ n.kind }}">
+          <!-- Icon will be injected by JS -->
+        </div>
 
-                      <!-- ICON -->
-                      <div class="
-                        flex-none w-10 h-10 rounded-full flex items-center justify-center text-lg
-                        {% if item %} bg-orange-200 text-orange-700 {% endif %}
-                        {% if req %} bg-green-200 text-green-700 {% endif %}
-                      ">
-                        ✔️
-                      </div>
-
-                      <!-- TEXT -->
-                      <div class="min-w-0">
-                        <div class="font-medium text-gray-900 truncate">
-                          {{ n.title }}
-                        </div>
-
-                        <div class="text-xs text-[var(--muted)]">
-                          {{ n.created_at|timesince }} {% trans "ago" %}
-                        </div>
-
-                        {% if n.body %}
-                        <div class="text-xs text-gray-600 mt-0.5 line-clamp-2">
-                          {{ n.body }}
-                        </div>
-                        {% endif %}
-
-                        <div class="text-xs mt-1 font-semibold
-                          {% if item %} text-orange-700 {% endif %}
-                          {% if req %} text-green-700 {% endif %}
-                        ">
-                          {% if item %} إعلان: {{ item.listing.title }} {% endif %}
-                          {% if req %} طلب: {{ req.listing.title }} {% endif %}
-                        </div>
-                      </div>
-
-                    </a>
-
-                  {% endwith %}
-                {% empty %}
-
-                <div class="px-4 py-3 text-sm text-gray-500">
-                  لا يوجد إشعارات.
-                </div>
-
-                {% endfor %}
-              </div>
-
-              <div class="p-3 border-t">
-                <a href="{% url 'notifications' %}"
-                   class="block text-center text-sm text-white rounded-lg py-2 btn-primary">
-                  كل الإشعارات
-                </a>
-              </div>
-
-            </div>
+        <div class="noti-content-box">
+          <div class="noti-title-row">
+            <span class="noti-title-text">{{ n.title }}</span>
+            <span class="noti-badge-box"></span>
           </div>
 
+          <div class="noti-time-text">{{ n.created_at|timesince }} ago</div>
+        </div>
 
-          <!-- User Menu -->
+        {% if not n.is_read %}
+          <span class="noti-unread-dot"></span>
+        {% endif %}
+      </a>
+    {% empty %}
+      <div class="p-4 text-center text-sm text-gray-400">لا يوجد إشعارات</div>
+    {% endfor %}
+  </div>
+
+  <div class="dropdown-footer">
+    <a href="{% url 'notifications' %}" class="btn-view-all">مشاهدة كل الإشعارات</a>
+  </div>
+</div>
+          </div>
+
+          <!-- User -->
           <div class="relative">
-            <button id="userBtn"
-                    class="flex items-center gap-2 transition-colors hover:text-gray-900"
-                    aria-expanded="false" aria-haspopup="true" aria-label="حساب المستخدم">
-              <div class="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
-                {% with fn=request.user.first_name|default:"" un=request.user.username|default:"" %}
-                  {% if fn %}
-                    {{ fn|slice:":1"|upper }}
-                  {% elif un %}
-                    {{ un|slice:":1"|upper }}
+            <div class="user-profile-trigger" data-toggle-user-menu>
+              <div class="text-right leading-tight">
+                <div class="text-xs text-gray-400">مرحباً بك</div>
+                <div class="text-sm font-bold">
+                  {% if request.user.is_authenticated %}
+                    {{ request.user.get_full_name|default:request.user.username }}
                   {% else %}
-                    ?
+                    مستخدم
                   {% endif %}
-                {% endwith %}
+                </div>
               </div>
-              <span class="hidden sm:inline-block">
-                مرحبًا، {{ request.user.first_name }}
-              </span>
-            </button>
-            <div id="userMenu" class="dropdown w-44" aria-labelledby="userBtn">
-              <a href="{% url 'my_account' %}#tab-info"
-                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
-                ملفي الشخصي
-              </a>
-              <a href="{% url 'my_items' %}"
-                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
-                إعلاناتي
-              </a>
-              <a href="#"
-                 id="inviteFriendsLink"
-                 data-register-url="{% url 'register' %}"
-                 data-referral-code="{{ request.user.referral_code|default:'' }}"
-                 class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
-                🎁 دعوة الأصدقاء
-              </a>
-              {% if request.user.is_staff %}
-                <a href="/admin/"
-                   class="block px-4 py-2 text-sm hover:bg-[var(--rukn-gray)] transition-colors">
-                  لوحة التحكم
+
+              <img
+                src="https://ui-avatars.com/api/?name={{ request.user.username|default:'User'|urlencode }}&background=ff7a18&color=fff"
+                class="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                alt="avatar">
+            </div>
+
+            <div id="userDropdown" class="user-dropdown">
+              <div class="p-4 border-bottom bg-orange-50 rounded-t-16">
+                <div class="text-xs text-gray-500">رصيد المحفظة</div>
+                <div class="text-lg font-bold text-orange-600">
+                  {% if request.user.is_authenticated %}{{ request.user.wallet_balance|default:"0" }}{% else %}0{% endif %} نقطة
+                </div>
+              </div>
+
+              <div class="py-2">
+                <a href="{% url 'my_account' %}#tab-info" class="menu-item"><i class="fas fa-user"></i> الملف الشخصي</a>
+                <a href="{% url 'my_account' %}#tab-ads" class="menu-item"><i class="fas fa-bullhorn"></i> إعلاناتي</a>
+                <a href="{% url 'my_account' %}#tab-requests" class="menu-item"><i class="fas fa-shopping-cart"></i> طلباتي</a>
+                <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-wallet"></i> المحفظة</a>
+                <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
+
+                {% if request.user.is_staff %}
+                  <a href="/admin/" class="menu-item"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a>
+                {% endif %}
+
+                <hr class="my-2 border-gray-100">
+
+                <a href="{% url 'logout' %}" class="menu-item text-red-500">
+                  <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
                 </a>
-              {% endif %}
-              <a href="{% url 'logout' %}"
-                 class="block px-4 py-2 text-sm text-red-600 hover:bg-[var(--rukn-gray)] transition-colors">
-                تسجيل الخروج
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /userActionsDropdowns -->
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== CATEGORIES ROW (DYNAMIC) ===================== -->
+  {% url 'categories_browse' as categories_browse_url %}
+  <div id="categoriesRow" class="categoriesRow border-t border-slate-50 bg-white">
+    <div class="max-w-7xl mx-auto px-4 overflow-x-auto scrollbar-hide">
+      <nav class="flex items-center h-14 gap-8">
+
+        {% if navbar_categories %}
+          {# ✅ show max 7 top-level categories #}
+          {% for cat in navbar_categories|slice:":7" %}
+            <div class="group h-full flex items-center">
+              <a href="{{ cat.url }}"
+                 class="nav-link-h flex items-center gap-1.5 text-sm"
+                 data-mobile-category="{{ cat.slug|default:cat.id }}">
+                {{ cat.name }}
+                {% if cat.children %}
+                  <svg class="w-3 h-3 opacity-50 group-hover:rotate-180 transition-transform"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                {% endif %}
               </a>
+
+              {% if cat.children %}
+                <div class="mega-menu absolute top-full right-0 left-0 bg-white shadow-2xl border-t border-slate-100 p-8 rounded-b-[2rem]">
+
+                  {# --- 3 levels: child has children -> mockup columns (only 3 groups, only 3 leaves) --- #}
+                  {% if cat.children and cat.children.0 and cat.children.0.children %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                      {% for group in cat.children|slice:":3" %}
+                        <div>
+                          <h6 class="text-[#ff7a18] mb-4 text-sm">{{ group.name }}</h6>
+
+                          {# ✅ only 3 leaves #}
+                          {% for leaf in group.children|slice:":3" %}
+                            <a href="{{ leaf.url }}" class="sub-link">{{ leaf.name }}</a>
+                          {% endfor %}
+
+                          {# ✅ show more -> categories_browse #}
+                          <a href="{{ categories_browse_url }}?category={{ group.id }}"
+                             class="text-[#ff7a18] text-xs font-bold mt-3 inline-flex items-center gap-1 hover:text-[#e66a15] hover:scale-105 transition-transform">
+                            مشاهدة الكل
+                          </a>
+                        </div>
+                      {% endfor %}
+
+                      <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                        <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
+                          <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800">هل تريد نشر إعلان؟</p>
+                        <p class="text-xs text-slate-500 mt-1">انشر إعلانك الآن مجاناً</p>
+                        <a href="#"
+                           class="mt-4 bg-[#ff7a18] text-white text-[11px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all">
+                          انشر إعلانك
+                        </a>
+                      </div>
+                    </div>
+
+                  {# --- 2 levels only: show only 3 subcategories + show more -> categories_browse --- #}
+                  {% else %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                      <div>
+                        <h6 class="text-[#ff7a18] mb-4 text-sm">الأقسام</h6>
+
+                        {# ✅ only 3 subcategories #}
+                        {% for ch in cat.children|slice:":3" %}
+                          <a href="{{ ch.url }}" class="sub-link">{{ ch.name }}</a>
+                        {% endfor %}
+
+                        {# ✅ show more -> categories_browse #}
+                        <a href="{{ categories_browse_url }}?category={{ cat.id }}"
+                           class="text-[#ff7a18] text-xs font-bold mt-3 inline-flex items-center gap-1 hover:text-[#e66a15] hover:scale-105 transition-transform">
+                          مشاهدة الكل
+                        </a>
+                      </div>
+
+                      <div></div>
+                      <div></div>
+
+                      <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                        <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
+                          <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-800">هل تريد نشر إعلان؟</p>
+                        <p class="text-xs text-slate-500 mt-1">انشر إعلانك الآن مجاناً</p>
+                        <a href="#"
+                           class="mt-4 bg-[#ff7a18] text-white text-[11px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all">
+                          انشر إعلانك
+                        </a>
+                      </div>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endif %}
             </div>
-          </div>
+          {% endfor %}
+        {% endif %}
 
-        </div>
-      </div>
-    {% endif %}
+        <div class="flex-1"></div>
 
-  </div>
-</div>
+        {# ✅ all sections -> categories_browse (keep data-open-categories for mobile modal if your JS uses it) #}
+        <a href="{{ categories_browse_url }}"
+           class="flex items-center gap-1 text-[#ff7a18] text-xs font-extrabold hover:gap-2 transition"
+           data-open-categories>
+          جميع الأقسام
+          <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+        </a>
 
-<!-- ========== LOGIN MODAL (REAL FORM) ========== -->
-{% if not request.user.is_authenticated %}
-<div id="loginModal" class="modal hidden">
-  <div class="modal-box">
-
-    <span id="closeLoginX" class="modal-close-x">✖</span>
-
-    <div class="login-icon">🔒</div>
-    <h2 class="modal-title">تسجيل الدخول</h2>
-
-    {% if request.GET.login_error %}
-    <div class="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-3">
-      رقم الهاتف أو كلمة المرور غير صحيحة.
-    </div>
-    {% endif %}
-
-    <form id="loginForm"
-          class="modal-form"
-          method="post"
-          action="{% url 'login' %}">
-      {% csrf_token %}
-
-      <input type="hidden" name="next" id="loginNext">
-
-      <!-- PHONE ONLY -->
-      <input id="loginPhone"
-       name="username"
-       type="tel"
-       inputmode="numeric"
-       autocomplete="username"
-       maxlength="10"
-       pattern="\d{10}"
-       class="modal-input"
-       placeholder="رقم الهاتف (مثال: 0790000000)"
-       required />
-
-      <div class="relative">
-        <input id="loginPassword"
-               name="password"
-               type="password"
-               autocomplete="current-password"
-               class="modal-input pr-12"
-               placeholder="كلمة المرور"
-               required />
-
-        <button id="toggleLoginPassword"
-                type="button"
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--muted)] hover:text-gray-900"
-                aria-label="إظهار كلمة المرور">
-        </button>
-      </div>
-
-      <button type="submit" class="modal-submit">دخول</button>
-    </form>
-
-    <div class="modal-footer-link">
-      <a href="{% url 'reset_password' %}">نسيت كلمة المرور؟</a>
-    </div>
-
-    <div class="modal-footer-link">
-      ليس لديك حساب؟
-      <a href="{% url 'register' %}">إنشاء حساب جديد</a>
-    </div>
-
-  </div>
-</div>
-{% endif %}
-
-<!-- =================== HEADER (SEARCH) =================== -->
-{% block searchbar %}
-<header class="bg-white shadow-sm z-40">
-  <div class="max-w-[1500px] mx-auto">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-3 py-5 px-8">
-
-      <div class="w-full px-3 mt-2 md:mt-0">
-          <form id="siteSearch"
-              action="{% url 'item_list' %}"
-              method="get"
-              class="flex flex-col sm:flex-row items-stretch gap-2 w-full"
-              role="search">
-
-          <!-- Search input -->
-          <div class="relative flex-1">
-            <input type="hidden" name="mode" id="searchMode" value="sell">
-            <input id="searchInput"
-                   name="q"
-                   type="search"
-                   autocomplete="off"
-                   required
-                   placeholder="ابحث عن إعلان"
-                   class="w-full bg-white text-base md:text-lg rounded-3xl border-2 border-[var(--rukn-orange)]
-                          py-2.5 px-4 pr-36 focus:outline-none focus:ring-2 focus:ring-orange-200
-                          transition-all duration-300" />
-
-            <div id="intentBox"
-                 class="absolute right-2 top-1/2 -translate-y-1/2 flex border border-gray-200 shadow-sm
-                        bg-white overflow-hidden rounded-2xl">
-              <button id="sellBtn" type="button"
-                      class="w-[58px] h-8 text-sm font-extrabold text-white bg-[var(--rukn-orange)]">
-                اعلان
-              </button>
-              <button id="buyBtn" type="button"
-                      class="w-[58px] h-8 text-sm font-extrabold text-gray-600 bg-white">
-                طلب
-              </button>
-            </div>
-
-            <!-- Search button -->
-            <button id="searchBtn"
-                    type="submit"
-                    disabled
-                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-[var(--rukn-orange)] text-white
-                           w-8 h-8 rounded-3xl flex items-center justify-center shadow-md hover:scale-105
-                           transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="ابحث">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                   fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
-              </svg>
-            </button>
-
-            <!-- Suggestions dropdown (filled by JS) -->
-            <div id="searchSuggestionsBox"
-                 class="absolute z-40 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg
-                        text-sm hidden">
-            </div>
-          </div>
-
-          <!-- Add Ad button -->
-          <a id="addAdBtn"
-           href="#"
-           data-target-url="{% url 'create_item' %}"
-           class="text-center text-sm font-extrabold text-white bg-[var(--rukn-orange)]
-                  px-4 py-4 rounded-3xl shadow-md hover:shadow-lg transition-all duration-300
-                  w-full sm:w-auto">
-            أضف إعلانك
-          </a>
-
-          </form>
-      </div>
-
+      </nav>
     </div>
   </div>
-</header>
-{% endblock %}
 
-<!-- =================== MAIN CONTENT =================== -->
-<main>
-  {% block content %}{% endblock %}
-</main>
+  <!-- Provide categories tree for JS (optional) -->
+  {% if navbar_categories %}
+    {{ navbar_categories|json_script:"rukn-navbar-categories" }}
+  {% endif %}
 
-<!-- =================== FOOTER (mockup) =================== -->
-<footer class="footer-bg-custom pt-10 pb-6 mt-10">
-  <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-10">
+  <!-- ===================== MODALS ===================== -->
 
-    <!-- Logo + description -->
-    <div>
-      <div class="logo-wrapper mb-4">
-        <img src="{% static 'images/logo_footer.png' %}" alt="شعار ركن"
-             class="h-7 w-auto object-contain" />
-        <span class="text-sm font-semibold tracking-wide">
-          ركن —منصة  إعلانات
-        </span>
-      </div>
-      <p class="text-sm leading-7">
-        منصة بيع و شراء للجميع،
-        ابحث عن المنتج المطلوب و تواصل مع البائع،
-        لم تجد المنتج؟ لا تقلق، بإمكانك تقديم طلب
-        و سيقوم البائعين بالتواصل معك.
-      </p>
-    </div>
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal hidden">
+    <div class="login-box">
 
-    <!-- Quick links -->
-    <div>
-      <h4 class="font-semibold mb-3 text-base">روابط سريعة</h4>
-      <ul class="space-y-2 text-sm">
-        <li><a href="{% url 'item_list' %}" class="hover:text-[var(--footer-accent)]">تصفح الإعلانات</a></li>
-        <li><a href="{% url 'contact_support' %}" class="hover:text-[var(--footer-accent)]">اتصل بنا</a></li>
-      </ul>
-    </div>
+      <button id="closeLoginX" type="button" class="close-btn" data-close-login aria-label="إغلاق">
+        <i class="fas fa-times"></i>
+      </button>
 
-    <!-- Categories -->
-    <div>
-      <h4 class="font-semibold mb-3 text-base">الأقسام</h4>
-      <ul class="space-y-2 text-sm">
-        <li><a href="{% url 'category_list' %}" class="hover:text-[var(--footer-accent)]">كل الأقسام</a></li>
-      </ul>
-    </div>
-
-    <!-- Contact -->
-    <div>
-      <h4 class="font-semibold mb-3 text-base">تواصل معنا</h4>
-      <p class="text-sm mb-3">📧 info@rokon.example</p>
-      <div class="flex gap-4 text-xl">
-        <a href="#" aria-label="Facebook" class="hover:text-[var(--footer-accent)]">📘</a>
-        <a href="#" aria-label="Twitter" class="hover:text-[var(--footer-accent)]">🐦</a>
-        <a href="#" aria-label="Instagram" class="hover:text-[var(--footer-accent)]">📸</a>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    جميع الحقوق محفوظة
-    <span> ركن </span> © 2025
-  </div>
-</footer>
-
-<!-- ✅ Store: cannot add requests (GLOBAL modal) -->
-<div id="storeNoRequestsModalGlobal" class="hidden fixed inset-0 z-[9999] items-center justify-center">
-  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-
-  <div class="relative bg-white w-[92%] max-w-md rounded-2xl shadow-xl border border-gray-200 p-5">
-    <div class="flex items-start justify-between gap-3">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
-          <svg class="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <circle cx="12" cy="16" r="1" fill="currentColor"/>
-          </svg>
-        </div>
-        <div class="font-extrabold text-gray-900">تنبيه</div>
-      </div>
-
-      <button type="button" id="closeStoreNoRequestsModalGlobalX" class="text-gray-500 hover:text-gray-800">
-        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      <div class="login-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="5" y="10" width="14" height="10" rx="2" stroke="#ff7a18" stroke-width="2"/>
+          <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#ff7a18" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="15" r="1.2" fill="#ff7a18"/>
         </svg>
-      </button>
-    </div>
+      </div>
 
-    <p class="mt-3 text-sm text-gray-700 leading-relaxed">
-      هذا الحساب <b>حساب متجر</b>، ولا يمكن إضافة طلبات.
-      يمكنك إضافة <b>إعلانات</b> فقط.
-    </p>
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">مرحباً بك في <span class="text-orange-500">ركن</span></h2>
+        <p class="text-gray-500 text-sm px-6 leading-relaxed">
+          ابدأ البيع أو الشراء الآن بخطوات بسيطة وآمنة
+        </p>
+      </div>
 
-    <div class="mt-5 flex justify-end gap-2">
-      <button type="button"
-              id="closeStoreNoRequestsModalGlobalBtn"
-              class="px-4 py-2 rounded-xl font-bold text-sm bg-green-500 text-white hover:bg-green-600 transition">
-        حسناً
-      </button>
+      <div class="w-full flex justify-center mt-2 mb-2">
+        <h2 class="group flex items-center gap-2 px-6 py-2 bg-orange-100 text-orange-600 rounded-full font-extrabold text-sm md:text-base border border-orange-100 shadow-sm cursor-default">
+          <span>سجّل دخولك الآن</span>
+          <i data-lucide="arrow-down-circle" class="w-5 h-5 transition-transform group-hover:translate-y-1"></i>
+        </h2>
+      </div>
+
+      <!-- Error message (shows when login_error is in URL) -->
+      {% if request.GET.login_error %}
+      <div class="bg-red-100 text-red-700 p-3 rounded-xl text-sm mb-4 text-center">
+        رقم الهاتف أو كلمة المرور غير صحيحة.
+      </div>
+      {% endif %}
+
+      <!-- ✅ REAL DJANGO LOGIN FORM -->
+      <form id="loginForm" method="post" action="{% url 'login' %}" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" id="loginNext" value="">
+
+        <div class="field-group" id="phoneGroup">
+          <div class="input-wrapper">
+            <i class="fas fa-mobile-alt main-icon"></i>
+            <input type="tel"
+                   id="phone"
+                   name="username"
+                   inputmode="numeric"
+                   autocomplete="username"
+                   placeholder="رقم الموبايل"
+                   maxlength="10"
+                   dir="rtl"
+                   required>
+          </div>
+          <span class="error-msg" style="display:none;">رقم الموبايل يجب أن يبدأ بـ 07 ويتكون من 10 أرقام</span>
+        </div>
+
+        <div class="field-group" id="passGroup">
+          <div class="input-wrapper">
+            <i class="fas fa-lock main-icon"></i>
+            <input type="password"
+                   id="password"
+                   name="password"
+                   autocomplete="current-password"
+                   placeholder="كلمة المرور"
+                   required>
+            <i class="fas fa-eye toggle-password"
+               data-toggle-pass
+               role="button"
+               tabindex="0"
+               aria-label="إظهار كلمة المرور"></i>
+          </div>
+          <span class="error-msg" style="display:none;">يجب كتابة كلمة المرور</span>
+        </div>
+
+        <button id="loginSubmitBtn" type="submit" class="login-btn">دخول</button>
+
+        <div class="secondary-actions">
+          <a href="{% url 'forgot_password' %}" class="forgot-link">نسيت كلمة المرور؟</a>
+          <p class="text-gray-600 flex items-center justify-center gap-1.5 text-sm">
+            <span>ليس لديك حساب؟</span>
+            <a href="{% url 'register' %}" class="text-orange-500 font-extrabold hover:text-orange-600 transition-colors">انضم إلينا الآن</a>
+          </p>
+        </div>
+      </form>
+
     </div>
   </div>
-</div>
 
-<!-- =================== JS =================== -->
+  <!-- Center Popup Modal (Mobile) -->
+  <div id="centerModal" class="center-modal hidden">
+    <div class="center-box">
+      <div id="centerModalContent"></div>
+    </div>
+  </div>
 
-<script>
-    const CSRF_TOKEN = "{{ csrf_token }}";
-</script>
+  <!-- Categories Center Modal (Mobile) -->
+  <div id="categoriesModal" class="center-modal hidden">
+    <div class="center-box">
+      <div id="categoriesModalContent"></div>
+    </div>
+  </div>
 
-<!-- HTMX (used by your old search) -->
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <!-- ===================== PAGE CONTENT ===================== -->
+  <main>
+    {% block content %}{% endblock %}
+  </main>
 
-<!-- Swiper JS (hero slider, used on home page) -->
-<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="pro-footer">
+    <div class="max-w-[1400px] mx-auto px-6">
 
-{% block scripts %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
+
+        <div class="lg:col-span-4 space-y-6">
+          <img src="{% static 'img/logo-footer.png' %}" class="h-9" alt="ركن">
+          <p class="text-slate-400 leading-relaxed">
+            في <span class="text-orange-500 font-bold">ركن</span>، نؤمن أن التجارة تبدأ بالثقة.
+            لذا سخرنا أحدث التقنيات لنضمن لك رحلة بيع وشراء آمنة، سريعة، وموثوقة.
+          </p>
+
+          <div class="space-y-4">
+            <p class="text-[var(--text-gray)] text-xs font-bold uppercase tracking-widest">تواصل معنا عبر</p>
+            <div class="flex gap-3">
+              <a href="#" class="social-btn"><i class="fab fa-facebook"></i></a>
+              <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+              <a href="#" class="social-btn"><i class="fab fa-whatsapp"></i></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 grid grid-cols-2 md:grid-cols-3 gap-8">
+          <div>
+            <h4 class="footer-heading">روابط</h4>
+            <ul class="space-y-4">
+              <li><a href="#" class="nav-link">الأقسام</a></li>
+              <li><a href="#" class="nav-link">الإعلانات</a></li>
+              <li><a href="#" class="nav-link">الطلبات</a></li>
+              <li><a href="#" class="nav-link">المتاجر</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="footer-heading">اكتشف ركن</h4>
+            <ul class="space-y-4">
+              <li><a href="#" class="nav-link">من نحن</a></li>
+              <li><a href="#" class="nav-link">كيف يعمل ركن</a></li>
+              <li><a href="#" class="nav-link">الأسئلة الشائعة</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="footer-heading">قانونية</h4>
+            <ul class="space-y-4">
+              <li><a href="#" class="nav-link">سياسة الخصوصية</a></li>
+              <li><a href="#" class="nav-link">الشروط والأحكام</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="lg:col-span-3 bg-white/5 p-6 rounded-2xl border border-white/10">
+          <h4 class="footer-heading !mb-4">تحتاج مساعدة؟</h4>
+          <p class="text-[var(--text-gray)] text-sm mb-6 leading-relaxed">
+            يسعدنا دائماً تواصلك معنا للإجابة على كافة استفساراتك.
+          </p>
+          <a href="#" class="inline-flex items-center justify-center w-full py-3 bg-[var(--rukn-orange)] hover:bg-orange-600 text-white rounded-xl font-bold transition-all gap-2">
+            <i class="far fa-envelope"></i>
+            تواصل معنا الآن
+          </a>
+        </div>
+
+      </div>
+
+      <div class="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
+        <p class="text-[var(--text-gray)] text-sm font-medium order-2 md:order-1 text-center md:text-right">
+          جميع الحقوق محفوظة ©
+          <span class="text-white font-bold hover:text-[var(--rukn-orange)] transition-colors duration-300">ركن</span>
+          <span><script>document.write(new Date().getFullYear())</script></span>
+        </p>
+
+        <div class="flex items-center gap-6 order-1 md:order-2">
+          <div class="flex items-center gap-2 text-xs font-bold text-[var(--text-gray)] group cursor-default">
+            <i data-lucide="shield-check" class="text-[var(--rukn-orange)] w-4 h-4 group-hover:scale-110 transition-transform"></i>
+            <span class="group-hover:text-white transition-colors">تصفح آمن 100%</span>
+          </div>
+
+          <div class="h-4 w-[1px] bg-white/10 hidden md:block"></div>
+
+          <div class="flex items-center gap-2 text-xs font-bold text-[var(--text-gray)] group cursor-default">
+            <i data-lucide="globe" class="text-[var(--rukn-orange)] w-4 h-4 group-hover:rotate-12 transition-transform"></i>
+            <span class="group-hover:text-white transition-colors">الأردن</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Libs -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  {% block scripts %}
   <!-- All navbar + search + categories + referral JS moved here -->
-  <script src="{% static 'js/swiper-init.js' %}"></script>
-  <script src="{% static 'js/search.js' %}"></script>
-  <script src="{% static 'js/header.js' %}"></script>
+  <script src="{% static 'js/base.js' %}"></script>
   <script src="{% static 'js/item-card.js' %}"></script>
+  {% endblock %}
 
-{% endblock %}
+  <!-- ✅ CRITICAL: These inline scripts make login error work (from old stable version) -->
+  {% if form and form.errors %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.getElementById("loginModal").classList.remove("hidden");
+    });
+  </script>
+  {% endif %}
 
-{% if form and form.errors %}
+  {% if request.GET.login_error %}
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("loginModal").classList.remove("hidden");
-  });
-</script>
-{% endif %}
+    // Open the modal
+    if (window.RUKN_UI && window.RUKN_UI.openLogin) {
+      window.RUKN_UI.openLogin();
+    }
 
-{% if request.GET.login_error %}
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("loginModal").classList.remove("hidden");
+    // ✅ FIX: Set next to clean URL (without login_error)
+    const nextInput = document.getElementById("loginNext");
+    if (nextInput) {
+      // Use just the pathname without query params
+      nextInput.value = window.location.pathname;
+    }
   });
 </script>
 {% endif %}

@@ -1,0 +1,209 @@
+/* ==================== STORE CARD STYLES ==================== */
+
+.store-card-wrapper {
+  flex-shrink: 0;
+  width: 290px;
+}
+
+@media (min-width: 640px) {
+  .store-card-wrapper {
+    width: 320px;
+  }
+}
+
+.store-card {
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid #f1f5f9; /* slate-100 */
+  border-radius: 1.5rem; /* 24px */
+  height: 100%;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.store-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
+  border-color: #ff7a18; /* orange */
+}
+
+/* ==================== TOP BANNER WITH LOGO ==================== */
+
+.store-banner {
+  position: relative;
+  width: 100%;
+  height: 4rem; /* 64px */
+  background: #fff5ed; /* orange-50 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #f1f5f9; /* slate-50 */
+  margin-bottom: 0.25rem;
+}
+
+.store-logo-container {
+  z-index: 10;
+  width: 5rem; /* 80px */
+  height: 5rem;
+  border-radius: 1rem; /* 16px */
+  background: #ffffff;
+  padding: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 4px solid #ffffff;
+  position: absolute;
+  bottom: -2rem; /* -32px, half of height */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.store-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ==================== CONTENT ==================== */
+
+.store-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem;
+  padding-top: 2.5rem; /* 40px - to account for logo */
+  text-align: center;
+  min-width: 0;
+  justify-content: space-between;
+}
+
+/* Store Info */
+.store-info {
+  margin-bottom: 0.5rem;
+}
+
+.store-name {
+  font-weight: 900;
+  font-size: 1.125rem; /* 18px */
+  color: #1e293b; /* slate-800 */
+  margin-bottom: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.store-description {
+  font-size: 0.875rem; /* 14px */
+  color: #64748b; /* slate-500 */
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+
+  /* Clamp to 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Rating */
+.store-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.store-rating-icon {
+  width: 1rem; /* 16px */
+  height: 1rem;
+}
+
+.store-rating-value {
+  font-size: 0.75rem; /* 12px */
+  font-weight: 700;
+  color: #334155; /* slate-700 */
+}
+
+.store-rating-count {
+  font-size: 0.625rem; /* 10px */
+  color: #94a3b8; /* slate-400 */
+  font-weight: 400;
+}
+
+/* ==================== FOOTER ==================== */
+
+.store-footer {
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9; /* slate-50 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Stats */
+.store-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.store-stat-item {
+  width: 100%;
+}
+
+.store-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.store-stat-icon {
+  width: 1rem; /* 16px */
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.store-stat-icon-followers {
+  fill: #16a34a; /* green-600 */
+}
+
+.store-stat-icon-ads {
+  fill: #2563eb; /* blue-600 */
+}
+
+.store-stat-value {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 900;
+  color: #334155; /* slate-700 */
+}
+
+.store-stat-label {
+  font-size: 0.625rem; /* 10px */
+  color: #94a3b8; /* slate-400 */
+  font-weight: 700;
+}
+
+/* Visit Button */
+.store-visit-btn {
+  background: #f97316; /* orange-500 */
+  color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem; /* 12px */
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 900;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(249, 115, 22, 0.1);
+  text-decoration: none;
+  display: inline-block;
+}
+
+.store-visit-btn:hover {
+  background: #ea580c; /* orange-600 */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(249, 115, 22, 0.2);
+}

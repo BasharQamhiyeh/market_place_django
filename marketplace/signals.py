@@ -5,7 +5,8 @@ from django.utils import timezone
 
 from .models import Item, Listing, Store, Notification, StoreFollow, ItemPhoto
 from . import moderation   # imports the moderation.py you already created
-
+from django.core.cache import cache
+from .models import Category
 
 @receiver(post_save, sender=Item)
 def auto_moderate_item(sender, instance: Item, created: bool, **kwargs):
@@ -114,3 +115,9 @@ def notify_followers_on_approval(sender, instance: Listing, created, **kwargs):
 def delete_itemphoto_file(sender, instance, **kwargs):
     if instance.image:
         instance.image.delete(save=False)
+
+
+@receiver([post_save, post_delete], sender=Category)
+def clear_navbar_categories_cache(sender, instance, **kwargs):
+    cache.delete("navbar_cats:v1:en")
+    cache.delete("navbar_cats:v1:ar")

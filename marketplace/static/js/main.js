@@ -1,47 +1,105 @@
 /* =========================================================
    main.js (HOME ONLY)
-   - Keep home-only logic here
-   - Removed: navbar dropdowns + referral handling (moved to header.js)
 ========================================================= */
+
+console.log("✅ main.js loaded");
 
 /* =========================================================
-   FEATURE FLAG (kept but unused — harmless)
+   Billboard Swiper Initialization (MOCKUP)
 ========================================================= */
-const ENABLE_ITEM_SUGGESTIONS = true;
-
-console.log("✅ home.js loaded");
+document.addEventListener("DOMContentLoaded", () => {
+  const billboard = document.querySelector(".billboardSwiper");
+  if (billboard) {
+    new Swiper(".billboardSwiper", {
+      slidesPerView: 1,
+      loop: true,
+      autoplay: {
+        delay: 2000,
+        pauseOnMouseEnter: true,
+        disableOnInteraction: false,
+      },
+      pagination: {
+        el: ".swiper-pagination",
+        clickable: true,
+      },
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev",
+      },
+      speed: 900,
+    });
+  }
+});
 
 /* =========================================================
-   Categories scroll buttons
+   Horizontal Scroll (Stores / Trending) - keep your behavior
 ========================================================= */
-function updateScrollButtons() {
-  const container = document.getElementById("catsScroll");
-  const leftBtn = document.querySelector(".scroll-btn.left");
-  const rightBtn = document.querySelector(".scroll-btn.right");
-  if (!container || !leftBtn || !rightBtn) return;
+function scrollRow(rowId, direction, scrollAmount) {
+  const container = document.getElementById(rowId);
+  if (!container) return;
 
-  leftBtn.style.opacity = container.scrollLeft > 0 ? "1" : "0.5";
-  rightBtn.style.opacity =
-    container.scrollLeft < (container.scrollWidth - container.clientWidth)
-      ? "1"
-      : "0.5";
+  container.scrollBy({
+    left: direction * scrollAmount,
+    behavior: "smooth",
+  });
 }
 
-document.getElementById("catsScroll")?.addEventListener("scroll", updateScrollButtons);
-window.addEventListener("load", updateScrollButtons);
+document.addEventListener("DOMContentLoaded", () => {
+  const storesLeft = document.getElementById("storesLeft");
+  const storesRight = document.getElementById("storesRight");
 
-function scrollCats(dir) {
-  const c = document.getElementById("catsScroll");
-  if (!c) return;
-  c.scrollBy({ left: dir * 220, behavior: "smooth" });
-  setTimeout(updateScrollButtons, 300);
-}
+  if (storesLeft) storesLeft.addEventListener("click", () => scrollRow("storesRow", -1, 360));
+  if (storesRight) storesRight.addEventListener("click", () => scrollRow("storesRow", 1, 360));
 
-window.scrollCats = scrollCats;
+  const trendingLeft = document.getElementById("trendingLeft");
+  const trendingRight = document.getElementById("trendingRight");
+
+  if (trendingLeft) trendingLeft.addEventListener("click", () => scrollRow("trendingRow", -1, 340));
+  if (trendingRight) trendingRight.addEventListener("click", () => scrollRow("trendingRow", 1, 340));
+
+  addDragScroll("storesRow");
+  addDragScroll("trendingRow");
+});
 
 /* =========================================================
-   Single-submit protection (safe on all pages but ok to keep here
-   since you currently load main.js only on home)
+   Drag to Scroll (match mockup class naming)
+========================================================= */
+function addDragScroll(elementId) {
+  const row = document.getElementById(elementId);
+  if (!row) return;
+
+  let isDown = false;
+  let startX = 0;
+  let scrollLeft = 0;
+
+  row.addEventListener("mousedown", (e) => {
+    isDown = true;
+    row.classList.add("cursor-grabbing");
+    startX = e.pageX - row.offsetLeft;
+    scrollLeft = row.scrollLeft;
+  });
+
+  row.addEventListener("mouseleave", () => {
+    isDown = false;
+    row.classList.remove("cursor-grabbing");
+  });
+
+  row.addEventListener("mouseup", () => {
+    isDown = false;
+    row.classList.remove("cursor-grabbing");
+  });
+
+  row.addEventListener("mousemove", (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - row.offsetLeft;
+    const walk = (x - startX) * 1.6;
+    row.scrollLeft = scrollLeft - walk;
+  });
+}
+
+/* =========================================================
+   Single-submit protection
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("form[data-single-submit]").forEach((form) => {
@@ -67,6 +125,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+/* =========================================================
+   Load More Functionality (KEEP AS-IS)
+========================================================= */
 function gridCols(gridEl) {
   const cols = getComputedStyle(gridEl).gridTemplateColumns.split(" ").filter(Boolean).length;
   return Math.max(cols || 1, 1);
@@ -90,8 +151,8 @@ async function loadMoreChunk({ btnId, gridId, url, noMoreText }) {
     locked = true;
 
     const cols = gridCols(grid);
-    const limit = 3 * cols;              // ✅ 3 rows
-    const offset = grid.children.length; // ✅ already rendered cards count
+    const limit = 3 * cols;
+    const offset = grid.children.length;
 
     btn.disabled = true;
     btn.classList.add("opacity-60");
@@ -114,6 +175,7 @@ async function loadMoreChunk({ btnId, gridId, url, noMoreText }) {
       btn.disabled = false;
       btn.classList.remove("opacity-60");
     } catch (e) {
+      console.error("Load more error:", e);
       btn.disabled = false;
       btn.classList.remove("opacity-60");
     } finally {
@@ -139,9 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================================================
-   Open login modal if redirected with ?login=1
-   - Open ONLY via existing trigger (so centering + close works)
-   - Retry until header.js is ready
+   Open login modal if redirected with ?login=1 (KEEP)
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -149,31 +209,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const findLoginTrigger = () => {
     return (
-      // 1) Preferred explicit triggers (your project may have one of these)
       document.querySelector('[data-open-login]') ||
       document.querySelector('[data-auth-open="login"]') ||
-      document.querySelector('button[data-login]') ||
+      document.querySelector("button[data-login]") ||
       document.getElementById("openLoginBtn") ||
-
-      // 2) Common modal toggle patterns
       document.querySelector('[data-modal-target="login"]') ||
       document.querySelector('[data-target="login"]') ||
       document.querySelector('[data-bs-target="#loginModal"]') ||
       document.querySelector('a[href="#loginModal"]') ||
       document.querySelector('a[href="#login"]') ||
-
-      // 3) Last resort: match by visible text
       Array.from(document.querySelectorAll("a,button")).find((el) => {
         const t = (el.textContent || "").trim();
         return t === "تسجيل الدخول" || t === "دخول" || t.toLowerCase() === "login";
       }) ||
-
       null
     );
   };
 
   let tries = 0;
-  const maxTries = 30;   // ~3 seconds
+  const maxTries = 30;
   const intervalMs = 100;
 
   const timer = setInterval(() => {
@@ -183,10 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (trigger) {
       clearInterval(timer);
       trigger.click();
-
-      // optional: remove params so refresh doesn't reopen
-      // history.replaceState({}, "", window.location.pathname);
-
       return;
     }
 

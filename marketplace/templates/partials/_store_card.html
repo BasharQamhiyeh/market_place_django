@@ -1,0 +1,90 @@
+{% load static %}
+
+<div class="store-card-wrapper">
+  <div class="store-card group">
+
+    <!-- TOP BANNER WITH LOGO -->
+    <div class="store-banner">
+      <div class="store-logo-container">
+        {% if store.logo %}
+          <img src="{{ store.logo.url }}" class="store-logo-img" alt="logo">
+        {% else %}
+          <img src="https://ui-avatars.com/api/?name={% firstof store.name store.store_name store.title 'Store' %}&background=ff7a18&color=fff"
+               class="store-logo-img" alt="logo">
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="store-content">
+
+      <div class="store-info">
+        <h4 class="store-name">
+          {% firstof store.name store.store_name store.title "متجر" %}
+        </h4>
+
+        <p class="store-description">
+          {% firstof store.description store.bio store.about "" %}
+        </p>
+
+        <!-- RATING -->
+        <div class="store-rating">
+          <svg class="store-rating-icon" viewBox="0 0 24 24" fill="#fbbf24" aria-hidden="true">
+            <path d="M12 2.5l3.1 6.3 6.9 1-5 4.9 1.2 6.9L12 17.8l-6.2 3.3 1.2-6.9-5-4.9 6.9-1z"/>
+          </svg>
+
+          <span class="store-rating-value">
+            {% firstof store.rating_avg store.avg_rating store.rating "4.8" %}
+          </span>
+
+          <span class="store-rating-count">
+            ({% firstof store.rating_count store.reviews_count store.total_reviews "0" %} تقييم)
+          </span>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="store-footer">
+
+        <!-- STATS -->
+        <div class="store-stats">
+
+          <!-- Followers -->
+          <div class="store-stat-item">
+            <div class="store-stat-row">
+              <svg class="store-stat-icon store-stat-icon-followers" viewBox="0 0 24 24" fill="#16a34a" aria-hidden="true">
+                <path d="M16 11c1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3 1.3 3 3 3zM8 11c1.7 0 3-1.3 3-3S9.7 5 8 5 5 6.3 5 8s1.3 3 3 3zM8 13c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4zM16 13c-.3 0-.6 0-.9.1 1.4.8 2.9 2.1 2.9 3.9v2h6v-2c0-2.7-5.3-4-8-4z"/>
+              </svg>
+              <span class="store-stat-value">
+                {% firstof store.followers_count store.followers_total store.follows "0" %}
+              </span>
+              <span class="store-stat-label">متابع</span>
+            </div>
+          </div>
+
+          <!-- Ads -->
+          <div class="store-stat-item">
+            <div class="store-stat-row">
+              <svg class="store-stat-icon store-stat-icon-ads" viewBox="0 0 24 24" fill="#2563eb" aria-hidden="true">
+                <path d="M21 7l-9-5-9 5v10l9 5 9-5V7z"/>
+              </svg>
+              <span class="store-stat-value">
+                {% firstof store.ads_count store.items_count store.listings_count "0" %}
+              </span>
+              <span class="store-stat-label">إعلان</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- VISIT BUTTON -->
+        <a href="{{ store.get_absolute_url|default:'#' }}"
+           class="store-visit-btn">
+          زيارة المتجر
+        </a>
+
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -118,6 +118,7 @@ TEMPLATES = [
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
                 'marketplace.context_processors.navbar_counters',
+                'marketplace.context_processors.navbar_categories',
             ],
             'builtins': ['django.templatetags.static'],
         },

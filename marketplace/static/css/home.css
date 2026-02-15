@@ -1,253 +1,169 @@
-:root {
+:root{
   --rukn-orange:#ff7a18;
-  --rukn-gray:#f3f4f6;
+  --rukn-orange-dark:#e66a15;
+
+  /* NOTE: mockup defines green twice; keep the hero/request green */
+  --rukn-green:#10b981;
+
+  --slate-900:#0f172a;
+  --slate-800:#1e293b;
+  --slate-500:#64748b;
+  --slate-100:#f1f5f9;
+
+  --rukn-dark:#0f172a;
+  --text-gray:#94a3b8;
+  --card-dark:#1e293b;
+
+  --rukn-orange-light:#fff5ed;
+
   --muted:#6b7280;
-  --transition:.3s ease;
-
-  --rukn-green:#16a34a;
-  --rukn-green-700:#15803d;
-  --rukn-green-50:#ecfdf5;
-  --rukn-green-100:#d1fae5;
-  --rukn-green-200:#a7f3d0;
-  
-  --rukn-orange-light:#fff5e6;
+  --border:#e5e7eb;
+  --transition: all .3s ease;
 }
 
-body {
+body{
   font-family:'Cairo',sans-serif;
-  background:#ffffff;
-  color:#111827;
+  background-color:#fff;
+  color:var(--slate-800);
+  overflow-x:hidden;
+  scroll-behavior:smooth;
 }
 
-/* ظل عام للكروت */
-.card-shadow,
-.shadow-card {
-  box-shadow:0 6px 18px rgba(20,20,30,.06);
+/* utility */
+.pro-shadow{ box-shadow:0 25px 60px -15px rgba(0,0,0,.08); }
+.orange-gradient{ background:linear-gradient(135deg,#ff7a18 0%,#ff9d52 100%); }
+.green-gradient{ background:linear-gradient(135deg,#10b981 0%,#34d399 100%); }
+.bg-mesh{
+  background-image:
+    radial-gradient(at 0% 0%, rgba(255,122,24,0.03) 0, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(16,185,129,0.02) 0, transparent 50%);
 }
 
-/* بادج عدّاد صغير */
-.badge{
-  position:absolute;
-  inset-inline-end:-.25rem;
-  inset-block-start:-.25rem;
-  background:var(--rukn-orange);
-  color:#fff;
-  font-size:.7rem;
-  border-radius:999px;
-  width:1.1rem;
-  height:1.1rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:bold;
-}
-
-/* حركة بسيطة */
-.wiggle{
-  transition:transform .3s ease;
-}
-.wiggle:hover{
-  transform:scale(1.1);
-}
-
-/* سكرول أفقي للأقسام */
-.hscroll{
-  display:flex;
-  gap:1rem;
-  overflow-x:auto;
-  overflow-y:hidden;
-  white-space:nowrap;
-  -webkit-overflow-scrolling:touch;
-  scroll-snap-type:x proximity;
-  direction:rtl;
-  padding:.25rem 0;
-}
-.hscroll>a{
-  flex:0 0 200px;
-  height:150px;
-  scroll-snap-align:start;
-}
-
-/* إخفاء سكرول */
-.no-scrollbar::-webkit-scrollbar{display:none}
-.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-
-/* أزرار السلايدر */
-.scroll-wrapper{
-  position:relative;
-}
-
-
-/* FIXED — REAL MOCKUP LEFT/RIGHT POSITIONS */
-.scroll-btn.left {
-  left: -20px;
-}
-.scroll-btn.right {
-  right: -20px;
-}
-
-.scroll-btn:hover{
-  background:var(--rukn-orange);
-  color:#fff;
-  opacity:1;
-}
-
-@media(max-width:767px){
-  .scroll-btn{display:none}
-}
-
-/* هوفر للكروت */
-.card-hover{
-  transition:all var(--transition);
-}
-.card-hover:hover{
-  transform:translateY(-5px);
-  box-shadow:0 10px 25px rgba(0,0,0,.1);
-}
-
-/* زر برتقالي أساسي */
-.btn-primary{
-  background:var(--rukn-orange);
-  color:#fff;
-  transition:all var(--transition);
-  box-shadow:0 4px 6px rgba(255,122,24,.2);
-}
-.btn-primary:hover{
-  background:#e56a00;
-  transform:translateY(-2px);
-  box-shadow:0 6px 12px rgba(255,122,24,.3);
-}
-
-/* صناديق الأقسام العامة */
-.section-box,
-.section-box-green{
-  max-width:1280px;
-  margin:3rem auto;
-  padding:3rem 1rem;
-  border-radius:1rem;
-  background:#ffffff;
-  border:1px solid #e5e7eb;
-  box-shadow:0 8px 24px rgba(0,0,0,0.03);
-}
-@media (min-width:768px){
-  .section-box,
-  .section-box-green{
-    padding-inline:2rem;
-  }
-}
-@media (min-width:1024px){
-  .section-box,
-  .section-box-green{
-    padding-inline:3rem;
-  }
-}
-
-.btn-orange{
-  background:var(--rukn-orange);
-  color:#fff;
-  transition:all var(--transition);
-  box-shadow:0 4px 6px rgba(249, 115, 22, 0.25);
-}
-.btn-orange:hover{
-  background:var(--rukn-orange);
-  transform:translateY(-2px);
-  box-shadow:0 6px 12px rgba(249, 115, 22, 0.25);
-}
-
-/* زر أخضر */
-.btn-green{
-  background:var(--rukn-green);
-  color:#fff;
-  transition:all var(--transition);
-  box-shadow:0 4px 6px rgba(22,163,74,.2);
-}
-.btn-green:hover{
-  background:var(--rukn-green-700);
-  transform:translateY(-2px);
-  box-shadow:0 6px 12px rgba(22,163,74,.28);
-}
-
-/* كلاس مساعد (إن احتجته لاحقًا) */
-.pill-green{
-  color:var(--rukn-green);
-  background:var(--rukn-green-50);
-}
-.ring-green{
-  box-shadow:0 0 0 3px var(--rukn-green-100) inset;
-}
-
-/* تخصيص أزرار Swiper */
-.custom-swiper-btn {
-  width: 48px !important;
-  height: 48px !important;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-.custom-swiper-btn:after {
-  font-size: 20px !important;
-  color: #ff7a18 !important;
-  font-weight: bold;
-}
-
-/* خلفيات الأقسام السفلية */
-.gradient-orange-box{
-  background:linear-gradient(180deg,var(--rukn-orange-light,#fff5ee),#fff);
-}
-.gradient-green-box{
-  background:linear-gradient(180deg,#ecfdf5,#fff);
-}
-
-/* لون نص أخضر */
-.text-rukn-green{
-  color:var(--rukn-green);
-}
-
-/* المنحنى */
-.curved-split {
-  position: relative;
+/* =================== BILLBOARD =================== */
+.billboard-container{
+  height: clamp(220px, 30vw, 500px);
+  border-radius: 50px;
   overflow: hidden;
-  background: #fff7ed;
+  position: relative;
 }
-.curved-split::before {
-  content: "";
-  position: absolute;
-  top: -25%;
-  bottom: -25%;
-  left: 50%;
-  width: 150px;
-  background: #fef3e7;
-  border-radius: 999px;
-  transform: translateX(-50%);
-  z-index: 5;
-  pointer-events: none;
+@media (max-width:768px){
+  .billboard-container{ border-radius:25px; }
 }
-@media (max-width: 768px) {
-  .curved-split::before {
-    width: 110px;
+
+/* Swiper bullets like mockup */
+.swiper-pagination-bullet{ background:#fff; opacity:.5; }
+.swiper-pagination-bullet-active{ opacity:1; background:var(--rukn-orange); }
+
+/* =================== SECTION BACKGROUNDS =================== */
+.section-ads { background:#fff7ed; display:block !important; visibility:visible !important; opacity:1 !important; }
+.section-requests{ background:#f0fdf4; }
+.section-trending{ background:#ffffff; }
+.section-stores{ background:#f8fafc; }
+
+/* spacing */
+section{ margin-bottom:2rem; }
+@media (min-width:768px){ section{ margin-bottom:3rem; } }
+
+/* =================== HORIZONTAL ROWS (IMPORTANT) =================== */
+/* Fix hover clipping + make cards “float” like mockup */
+#storesRow,
+#trendingRow{
+  overflow-y: visible !important;
+  padding-top: 26px;     /* ✅ prevents top border clipping */
+  padding-bottom: 20px;
+  user-select: none;
+}
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+/* =================== TRENDING (MOCKUP EXACT) =================== */
+.trending-wrap{
+  border-radius: 2rem;
+  overflow: visible !important;
+  transition: .35s ease;
+  background: transparent;
+  margin-top: 6px;
+  padding: 8px;
+}
+.trending-wrap,
+.trending-wrap:hover{ box-shadow:none !important; }
+
+.trending-wrap{ transition: transform .25s ease, border-color .25s ease; }
+.trending-wrap:hover{ transform: translateY(-6px); }
+
+.trending-card{
+  border-radius: 2rem;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+/* hide arrows on mobile/tablet like mockup */
+@media (max-width:991px){
+  #trendingLeft,#trendingRight{
+    display:none !important;
+  }
+  #trendingRow{
+    padding-top: 0 !important;
   }
 }
 
-
-/* ---- Home categories arrows small adjustment ---- */
-.cat-arrow {
-  top: 45%;            /* a bit higher than exact middle */
+/* =================== HERO (MOBILE LAYOUT FIX - mockup) =================== */
+@media (max-width:640px){
+  .hero-actions{
+    display:grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap:12px !important;
+  }
+  .hero-actions .hero-btn{
+    padding:16px !important;
+    border-radius:22px !important;
+  }
+  .hero-actions .store-btn{
+    grid-column: 1 / -1 !important;
+  }
+  .hero-actions .hero-btn h3{
+    font-size:16px !important;
+    margin-bottom:6px !important;
+  }
+  .hero-actions .hero-btn p{
+    font-size:12px !important;
+    line-height:1.6 !important;
+  }
 }
 
-.cat-arrow-right {
-  right: -2px;        /* a bit more to the right, outside the box */
+/* =================== SECTION HEADER BUTTONS (MOBILE) =================== */
+@media (max-width:640px){
+  .section-header-buttons{
+    display:grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap:10px !important;
+    width:100% !important;
+  }
+  .section-header-buttons a,
+  .section-header-buttons button{
+    width:100% !important;
+    padding:12px 10px !important;
+    border-radius:18px !important;
+    font-size:12px !important;
+    white-space:nowrap !important;
+    text-align:center !important;
+  }
 }
 
-.cat-arrow-left {
-  left: -2px;         /* a bit more to the left, outside the box */
+/* =================== ACCESSIBILITY / PERF =================== */
+button:focus,a:focus{
+  outline:2px solid var(--rukn-orange);
+  outline-offset:2px;
 }
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible){ outline:none; }
 
-/* =========================================================
-   Prevent flex containers from stretching item cards
-   ========================================================= */
-.list-ads-page #adsList,
-.list-ads-page .ads-grid,
-.list-ads-page .cards-row {
-  align-items: flex-start;
+img{ max-width:100%; height:auto; display:block; }
+.swiper-slide img{ object-fit:cover; }
+
+/* print */
+@media print{
+  .swiper-button-next,.swiper-button-prev,
+  #storesLeft,#storesRight,#trendingLeft,#trendingRight,
+  #loadMoreAdsBtn,#loadMoreRequestsBtn{ display:none !important; }
 }
-

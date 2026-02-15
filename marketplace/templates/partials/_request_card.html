@@ -1,22 +1,21 @@
-{# templates/partials/request_card.html #}
+{# templates/partials/_request_card.html #}
 {% load i18n timeago_ar %}
 
-{# expects: req #}
-<a href="{% url 'request_detail' req.id %}" class="block req-card-link">
-  <article class="req-card group cursor-pointer flex flex-col relative">
+<a href="{% url 'request_detail' req.id %}" class="req-card-link">
+  <article class="req-card group">
 
-    <!-- Hover Mask -->
+    <!-- HOVER MASK -->
     <div class="req-hover-mask"></div>
 
-    <!-- Hint -->
+    <!-- HOVER HINT -->
     <div class="req-hint-container" aria-hidden="true">
       <div class="req-hint-text">
-        <span>عرض </span>
+        <span>عرض</span>
         <span>الطلب</span>
       </div>
       <span class="req-hint-arrow">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-             viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+             viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"
              class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round"
                 d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
@@ -24,11 +23,10 @@
       </span>
     </div>
 
-    <div class="p-4 pb-2 flex-1 relative">
-
-      {# ✅ CATEGORY BADGE (same logic as item card) #}
+    <!-- TOP PILLS -->
+    <div class="req-top">
       {% if req.listing.category %}
-        <span class="req-cat-badge">
+        <span class="req-pill req-pill-category">
           {% if LANGUAGE_CODE == "ar" %}
             {{ req.listing.category.name_ar }}
           {% else %}
@@ -37,22 +35,23 @@
         </span>
       {% endif %}
 
-      {# ✅ Featured badge (fixed) #}
       {% if req.featured or req.listing.is_featured %}
-        <span class="req-badge-featured">مميز</span>
+        <span class="req-pill req-pill-featured">مميز</span>
       {% endif %}
-
-      <h3 class="req-title {% if req.featured or req.listing.is_featured %}req-title--pad{% endif %}">
-        {{ req.listing.title }}
-      </h3>
-
     </div>
 
-    <div class="req-meta px-4">
+    <!-- TITLE -->
+    <h3 class="req-title">
+      {{ req.listing.title }}
+    </h3>
+
+    <!-- META INFO -->
+    <div class="req-meta">
       <span class="req-meta-item">
-        <svg class="w-3.5 h-3.5 req-ico" viewBox="0 0 20 20" fill="none">
-          <path d="M10 18s6-5.05 6-10a6 6 0 1 0-12 0c0 4.95 6 10 6 10z" stroke="currentColor" stroke-width="1.6" />
-          <circle cx="10" cy="8" r="2.3" stroke="currentColor" stroke-width="1.6" />
+        <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
+          <path d="M12 22s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z"
+                stroke="currentColor" stroke-width="2" />
+          <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2" />
         </svg>
         <span>
           {% if req.listing.city %}
@@ -64,27 +63,39 @@
       </span>
 
       <span class="req-meta-item">
-        <svg class="w-3.5 h-3.5 req-ico" viewBox="0 0 20 20" fill="none">
-          <rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.6" />
-          <path d="M7 2v4M13 2v4M4 8h12" stroke="currentColor" stroke-width="1.6" />
+        <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="4" width="18" height="18" rx="3"
+                stroke="currentColor" stroke-width="2" />
+          <path d="M8 2v4M16 2v4M3 10h18"
+                stroke="currentColor" stroke-width="2" />
         </svg>
         <span>
           {% with r=req.listing.updated_at|default:req.listing.created_at %}
-              {% if r %}{{ r|timeago_ar }}{% endif %}
-            {% endwith %}
+            {% if r %}{{ r|timeago_ar }}{% endif %}
+          {% endwith %}
         </span>
       </span>
     </div>
 
-    <!-- Footer -->
+    <!-- FOOTER -->
     <div class="req-footer">
+      <div class="req-budget-container">
+        <span class="req-budget-price">
+          {% if req.budget %}
+            {{ req.budget|floatformat:0 }} د.أ
+          {% else %}
+            {% trans "حسب الطلب" %}
+          {% endif %}
+        </span>
+        <span class="req-budget-label">لغاية</span>
+      </div>
+
       <div class="req-user">
-        {# ✅ Avatar: prefer user.profile_photo, else first-letter fallback #}
         {% with u=req.listing.user %}
           {% if u.profile_photo %}
             <img src="{{ u.profile_photo.url }}" class="req-avatar" alt="{{ u.username|default:u.phone }}">
           {% else %}
-            <div class="req-avatar req-avatar-fallback" aria-hidden="true">
+            <div class="req-avatar-fallback" aria-hidden="true">
               {% with fn=u.first_name|default:"" un=u.username|default:"" ph=u.phone|default:"" %}
                 {% if fn %}
                   {{ fn|slice:":1"|upper }}
@@ -98,10 +109,7 @@
               {% endwith %}
             </div>
           {% endif %}
-        {% endwith %}
 
-
-        {% with u=req.listing.user %}
           <span class="req-user-name">
             {% if u.username %}
               {{ u.username }}
@@ -110,17 +118,6 @@
             {% endif %}
           </span>
         {% endwith %}
-      </div>
-
-      <div class="req-budget">
-        <span class="req-budget-pill">لغاية</span>
-        <span class="req-budget-value">
-          {% if req.budget %}
-            {{ req.budget|floatformat:0 }} د.أ
-          {% else %}
-            {% trans "حسب الطلب" %}
-          {% endif %}
-        </span>
       </div>
     </div>
 

@@ -1,393 +1,440 @@
-/* ======================================================================
-   item-card.css (MOCKUP-SIZED + HARD-ISOLATED)
-   - Match Tailwind mockup sizing behavior:
-     * no fixed card height
-     * image keeps 4:3 aspect ratio
-     * card width controlled by container/grid (with safe max)
-   ====================================================================== */
+/* ==================== ITEM CARD (AD CARD) STYLES ==================== */
+/* ✅ UPDATED TO MATCH MOCKUP SIZING / SPACING / FONTS */
 
-:root{
-  --ad-card-w: 290px;         /* reference width like mockup */
-  --ad-card-max-w: 290px;     /* prevents huge stretch in wide rows */
-
-  --ad-radius: 18px;
-  --ad-border: #fed7aa;
+:root {
+  --ad-orange: #ff7a18;
+  --ad-orange-dark: #e66a15;
+  --ad-border: #fdba74;
   --ad-border-hover: #ff7a18;
-
-  --ad-orange: var(--rukn-orange, #ff7a18);
-  --ad-muted: var(--muted, #6b7280);
+  --ad-radius: 22px;
+  --ad-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  --ad-shadow-hover: 0 18px 44px rgba(15, 23, 42, 0.10);
 }
 
-.ad-card, .ad-card * { box-sizing: border-box; }
-
-/* ✅ Card behaves like mockup: width from grid, no fixed height */
-.ad-card{
-  width: 100% !important;            /* let grid/container decide */
-  max-width: var(--ad-card-max-w) !important;
-  background:#fff;
-  border:1px solid var(--ad-border);
-  border-radius: var(--ad-radius);
-  overflow:hidden;
-
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:stretch !important;
-
-  transition: .25s;
-
-  /* ✅ prevent weird shrinking in flex parents */
-  min-width: 0 !important;
-
-  /* ✅ make cursor a hand (like request card) */
-  cursor: pointer;
+.ad-card,
+.ad-card * {
+  box-sizing: border-box !important;
 }
 
-/* keep interactive elements as hand too */
-.ad-card button,
-.ad-card a{
-  cursor: pointer;
-}
-
-.ad-card:hover{
-  transform: translateY(-4px);
-  box-shadow: 0 10px 26px rgba(15,23,42,.12);
-  border-color: var(--ad-border-hover);
-}
-
-/* =========================
-   Image area (true aspect 4/3)
-   ========================= */
-.ad-imgwrap{
-  position: relative;
-  background:#f3f4f6;
-  overflow:hidden;
-
-  /* ✅ mockup behavior */
-  aspect-ratio: 4 / 3 !important;
-  width: 100% !important;
-
-  flex: 0 0 auto !important;
-}
-
-.ad-imgwrap img{
-  width:100%;
-  height:100%;
-  display:block;
-  object-fit:cover;
-  transition: transform .3s ease;
-}
-
-.ad-card:hover .ad-imgwrap img{ transform: scale(1.05); }
-
-/* =========================
-   Fav button + hearts
-   ========================= */
-.ad-fav-btn{
-  width:36px;
-  height:36px;
-  border-radius:999px;
-  border:0;
-  background: rgba(255,255,255,.95);
-  display:flex !important;
-  align-items:center;
-  justify-content:center;
-  box-shadow: 0 6px 14px rgba(15,23,42,.12);
-  color: var(--ad-orange);
-  transition: transform .15s ease, box-shadow .15s ease, filter .2s ease;
-  cursor:pointer;
-}
-
-.ad-fav-btn:hover{
-  transform: scale(1.06);
-  box-shadow: 0 10px 22px rgba(15,23,42,.16);
-  filter: drop-shadow(0 0 3px rgba(255,122,24,.4));
-}
-
-.ad-fav-btn .heart-filled{ display:none; }
-.ad-fav-btn.is-active .heart-outline{ display:none; }
-.ad-fav-btn.is-active .heart-filled{ display:block; animation: favPulse .25s ease-out; }
-
-@keyframes favPulse{
-  0%{ transform: scale(.6); opacity: 0; }
-  50%{ transform: scale(1.25); opacity: 1; }
-  100%{ transform: scale(1); opacity: 1; }
-}
-.heart-outline, .heart-filled{ transform-origin:center; }
-
-/* =========================
-   Badges
-   ========================= */
-.ad-cat-badge{
-  position:absolute;
-  top:12px;
-  right:12px;
-  z-index:20;
-
-  background:#fff;
-  border:1px solid var(--ad-orange);
-  color:#1f2937;
-  font-size:11px;
-  padding: 4px 12px;
-  border-radius:999px;
-  box-shadow: 0 2px 6px rgba(15,23,42,.08);
-}
-
-.ad-featured-tag{
-  position:absolute;
-  top:8px;
-  left:8px;
-  z-index:21;
-  background: var(--ad-orange);
-  color:#fff;
-  font-size:10px;
-  font-weight:800;
-  padding: 4px 8px;
-  border-radius:999px;
-  box-shadow: 0 10px 20px rgba(0,0,0,.18);
-}
-
-/* =========================
-   LOWER STACK (body + footer)
-   ========================= */
-.ad-lower{
-  position: relative !important;
-  display:flex !important;
-  flex-direction:column !important;
-  align-items:stretch !important;
-
-  isolation: isolate !important;
-  min-height: 0 !important;
-}
-
-/* ✅ Hover tint layer (covers body + footer, footer must not be solid white) */
-.ad-lower::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background: rgba(255,237,213,0);
-  transition: background .2s ease;
-  z-index: 1;
-  pointer-events:none;
-}
-
-.ad-card:hover .ad-lower::before{
-  background: rgba(255,237,213,.70);
-}
-
-/* Hint layer */
-.ad-hover-layer{
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index: 2 !important;
-}
-
-.ad-hover-hint{
-  position:absolute;
-  top:50%;
-  left:12px;
-  transform: translateY(-50%);
-  display:flex;
-  align-items:center;
-  gap:4px;
-  opacity:0;
-  transition: opacity .2s ease;
-}
-
-.ad-card:hover .ad-hover-hint{ opacity:1; }
-
-.ad-hover-hint .txt{
-  display:flex;
-  flex-direction:column;
-  font-size:11px;
-  font-weight:800;
-  color: var(--ad-orange);
-  line-height:1.05;
-  text-align:center;
-}
-
-.ad-hover-hint .arrow{
-  color:#d1d5db;
-  transition: color .2s ease;
-}
-
-.ad-card:hover .ad-hover-hint .arrow{ color: var(--ad-orange); }
-
-/* =========================
-   Body
-   ========================= */
-.ad-body{
-  position: relative !important;
-  z-index: 5 !important;
-
-  display:flex !important;
-  flex-direction:column !important;
-
-  padding: 8px 16px 8px;
-  gap: 10px;
-}
-
-.ad-title{
-  display:block !important;
+/* ✅ Card */
+.ad-card {
+  display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
 
-  font-weight:700;
-  font-size:14px !important;
-  line-height:1.25 !important;
+  background: #fff !important;
+  border: 2px solid var(--ad-border) !important;
+  border-radius: var(--ad-radius) !important;
+  overflow: hidden !important;
 
-  color:#111827 !important;
-  -webkit-text-fill-color:#111827 !important;
+  flex-direction: column !important;
 
-  min-height:48px;
-  padding: 4px 0;
-  border-radius:10px;
-  backdrop-filter: blur(6px);
-  transition: color .2s ease;
+  box-shadow: var(--ad-shadow) !important;
+  transition: all 0.25s ease !important;
+  cursor: default !important;
+
+  width: 100% !important;
+  min-width: 0 !important;
+  height: auto !important;
 }
 
-.ad-card:hover .ad-title{
+.ad-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: var(--ad-shadow-hover) !important;
+  border-color: var(--ad-border-hover) !important;
+}
+
+/* ==================== IMAGE SECTION ==================== */
+
+.ad-img-container {
+  position: relative !important;
+}
+
+.ad-imgwrap {
+  position: relative !important;
+  background: #f3f4f6 !important;
+  overflow: hidden !important;
+
+  width: 100% !important;
+  aspect-ratio: 4 / 3 !important;
+  flex: 0 0 auto !important;
+
+  display: block !important;
+  height: auto !important;
+}
+
+.ad-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  transition: transform 0.35s ease !important;
+}
+
+.ad-card:hover .ad-img {
+  transform: scale(1.06) !important;
+}
+
+.ad-img-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.875rem !important;
+  color: #9ca3af !important;
+  background: #f3f4f6 !important;
+}
+
+/* ==================== FAVORITE BUTTON ==================== */
+
+.ad-fav-btn {
+  position: absolute !important;
+  bottom: 0.75rem !important;
+  left: 0.75rem !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 999px !important;
+  border: 0 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   color: var(--ad-orange) !important;
-  -webkit-text-fill-color: var(--ad-orange) !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.2s ease !important;
+  cursor: pointer !important;
+  z-index: 20 !important;
 }
 
-.ad-meta{
-  display:flex !important;
-  gap:16px;
-  font-size:12px;
-  color: var(--ad-muted);
-
-  margin-top: 6px;
-  align-items:center;
+.ad-fav-btn:hover {
+  transform: scale(1.06) !important;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16) !important;
+  filter: drop-shadow(0 0 3px rgba(255, 122, 24, 0.35)) !important;
 }
 
-.ad-meta > span{
-  display:flex !important;
-  align-items:center;
-  gap:6px;
+.ad-fav-btn .heart-filled { display: none !important; }
+.ad-fav-btn .heart-outline { display: block !important; }
+
+.ad-fav-btn.is-active .heart-filled {
+  display: block !important;
+  animation: favPop 0.22s ease-out;
+}
+.ad-fav-btn.is-active .heart-outline { display: none !important; }
+.ad-fav-btn.is-active { color: var(--ad-orange) !important; }
+
+@keyframes favPop {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 
-.ad-ico{
-  width:14px;
-  height:14px;
-  color: var(--ad-orange);
+/* Hide owner fav if needed */
+.ad-fav-btn[data-is-owner="1"] { display: none !important; }
+
+/* ==================== CATEGORY BADGE ==================== */
+
+.ad-cat-badge {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 30 !important;
+
+  background: #fff !important;
+  border: 2px solid var(--ad-orange) !important;
+  color: #1f2937 !important;
+
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+
+  text-decoration: none !important;
+  display: inline-block !important;
 }
 
-/* =========================
-   Footer
-   ========================= */
-.ad-footer{
+.ad-cat-badge:hover {
+  background: #ffedd5 !important;
+  color: #1e293b !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* ==================== FEATURED BADGE ==================== */
+
+.ad-featured-badge,
+.ad-featured-tag {
+  position: absolute !important;
+  top: 12px !important;
+  left: 12px !important;
+  z-index: 30 !important;
+
+  background: var(--ad-orange) !important;
+  color: #fff !important;
+
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* ==================== CONTENT WRAPPER WITH HOVER ==================== */
+
+.ad-content-wrapper,
+.ad-lower {
+  position: relative !important;
+  isolation: isolate !important;
+  display: flex !important;
+  flex-direction: column !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 1 !important;
+}
+
+/* Hover overlay */
+.ad-hover-overlay,
+.ad-hover-layer {
+  position: absolute !important;
+  inset: 0 !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
+
+  z-index: 60 !important;          /* above content */
+  pointer-events: none !important; /* overlay doesn't block */
+  background: rgba(255, 237, 213, 0) !important;
+}
+
+.ad-card:hover .ad-hover-overlay,
+.ad-card:hover .ad-hover-layer {
+  opacity: 1 !important;
+  background: rgba(255, 237, 213, 0.70) !important;
+  pointer-events: none !important;
+}
+
+.ad-hover-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  background: rgba(255, 237, 213, 0) !important;
+  transition: all 0.2s ease !important;
+  pointer-events: none !important;
+}
+
+.ad-card:hover .ad-hover-bg {
+  background: rgba(255, 237, 213, 0.7) !important;
+}
+
+/* Hint (pointer on "عرض الإعلان") */
+.ad-hover-hint {
+  position: absolute !important;
+  top: calc(50% + 10px) !important;
+  left: 12px !important;
+  transform: translateY(-50%) !important;
+
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
+
+  text-decoration: none !important;
+  color: inherit !important;
+
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 70 !important;
+}
+
+.ad-card:hover .ad-hover-hint { opacity: 1 !important; }
+
+.ad-hint-text,
+.ad-hover-hint .txt {
+  display: flex !important;
+  flex-direction: column !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: var(--ad-orange) !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+}
+
+.ad-hint-arrow,
+.ad-hover-hint .arrow {
+  color: var(--ad-orange) !important;
+  transform-origin: center !important;
+}
+
+/* Arrow animation */
+@keyframes nudgeLeft {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(-6px); }
+}
+
+.ad-card:hover .ad-hint-arrow,
+.ad-card:hover .ad-hover-hint .arrow {
+  animation: nudgeLeft 0.65s ease-in-out infinite !important;
+}
+
+/* ==================== BODY (UPDATED TO MATCH MOCKUP) ==================== */
+/* mockup: <div class="relative flex-1 flex flex-col pt-2 p-4 gap-2"> */
+
+.ad-body {
+  position: relative !important;
+  z-index: 20 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 !important;
+
+  padding: 16px !important;      /* p-4 */
+  padding-top: 8px !important;   /* pt-2 */
+  gap: 8px !important;           /* gap-2 */
+}
+
+/* mockup: font-bold text-sm ... min-h-[48px] ... py-1 rounded-lg */
+.ad-title {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+
+  font-size: 14px !important;    /* text-sm */
+  font-weight: 700 !important;   /* font-bold */
+  color: #111827 !important;     /* text-gray-900 */
+  line-height: 1.4 !important;   /* tighter (fix tall card) */
+
+  margin: 0 !important;          /* remove extra height */
+  min-height: 48px !important;   /* min-h-[48px] */
+
   position: relative !important;
   z-index: 5 !important;
 
-  display:flex !important;
-  align-items:center;
-  justify-content:space-between;
+  backdrop-filter: blur(8px) !important;
+  padding: 4px 0 !important;     /* py-1 */
+  border-radius: 8px !important; /* rounded-lg */
 
-  padding: 12px 16px;
-
-  /* ✅ IMPORTANT:
-     This solid white background was blocking the hover tint.
-     We keep it white normally, but make it transparent on hover. */
-  background:#fff;
-
-  border-top: 2px solid rgba(254, 215, 170, 1);
-
-  transition: background .2s ease;
+  transition: color 0.2s ease !important;
 }
 
-/* ✅ Let hover tint show through footer */
-.ad-card:hover .ad-footer{
-  background: transparent;
+.ad-card:hover .ad-title { color: var(--ad-orange) !important; }
+
+/* mockup: text-[11px] text-gray-500 mt-3 gap-4 */
+.ad-meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;          /* gap-4 */
+
+  font-size: 11px !important;    /* text-[11px] */
+  font-weight: 500 !important;   /* closer to Tailwind feel than 800 */
+  color: #6b7280 !important;     /* text-gray-500 */
+
+  margin-top: 12px !important;   /* mt-3 */
+  padding-bottom: 0 !important;  /* remove extra height */
 }
 
-.ad-seller{
-  display:flex !important;
-  align-items:center;
-  gap:8px;
-  min-width:0;
+.ad-meta > span,
+.ad-meta-item {
+  display: inline-flex !important;
+  gap: 6px !important;
+  align-items: center !important;
 }
 
-.ad-footer img{
-  width:28px;
-  height:28px;
-  border-radius:999px;
-  border:1px solid #e5e7eb;
-  object-fit:cover;
+/* mockup icons: w-3.5 h-3.5 */
+.ad-meta-icon,
+.ad-ico {
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--ad-orange) !important;
 }
 
-.ad-avatar-fallback{
-  width:28px;
-  height:28px;
-  border-radius:999px;
-  border:1px solid #e5e7eb;
-  background:#e5e7eb;
-  display:flex !important;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:800;
-  color:#374151;
+@media (min-width: 640px) {
+  .ad-meta { font-size: 12px !important; } /* sm:text-xs */
 }
 
-.ad-seller-name{
-  font-size:14px;
-  font-weight:600;
-  color:#111827;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:120px;
+/* ==================== FOOTER (UPDATED TO MATCH MOCKUP) ==================== */
+/* mockup: <div class="... p-4 bg-white border-t-2 border-orange-200"> */
+
+.ad-footer {
+  position: relative !important;
+  z-index: 20 !important;
+
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+
+  padding: 16px !important;                  /* p-4 */
+  border-top: 2px solid #fed7aa !important;  /* border-orange-200 */
+  background: #fff !important;
 }
 
-.ad-price{
-  padding: 6px 16px;
-  border-radius: 12px;
-  background: var(--ad-orange);
-  color:#fff;
-  font-weight:700;
-  font-size:13px;
-  box-shadow: 0 4px 10px rgba(15,23,42,.10);
+.ad-seller {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
 }
 
-/* ✅ HARD RULE: never show favorite on owner cards */
-.ad-fav-btn[data-is-owner="1"]{
-  display: none !important;
+/* mockup avatar: w-7 h-7 rounded-full border */
+.ad-avatar,
+.ad-footer img {
+  width: 28px !important;        /* w-7 */
+  height: 28px !important;       /* h-7 */
+  border-radius: 999px !important;
+  background: #e5e7eb !important;
+  object-fit: cover !important;
+  flex-shrink: 0 !important;
+  border: 1px solid #e5e7eb !important;
 }
 
-
-/* =========================
-   PAGE TOAST (global message)
-   ========================= */
-.page-toast{
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-10px);
-  z-index: 9999;
-
-  min-width: 220px;
-  max-width: calc(100vw - 32px);
-  padding: 10px 14px;
-  border-radius: 14px;
-
-  background: rgba(17, 24, 39, 0.95);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-
-  box-shadow: 0 12px 26px rgba(15,23,42,.22);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
+.ad-avatar-fallback {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 999px !important;
+  background: #e5e7eb !important;
+  display: grid !important;
+  place-items: center !important;
+  font-weight: 900 !important;
+  color: #6b7280 !important;
+  font-size: 12px !important;
+  flex-shrink: 0 !important;
 }
 
-.page-toast.is-show{
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-  cursor: pointer;
+/* mockup seller: text-xs sm:text-sm font-semibold text-gray-900 */
+.ad-seller-name {
+  font-weight: 600 !important;
+  color: #111827 !important;
+  font-size: 12px !important;   /* text-xs */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 140px !important;
 }
 
+/* mockup price: px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold */
+.ad-price {
+  color: #fff !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;   /* text-xs */
+  padding: 6px 16px !important; /* py-1.5 ~ 6px, px-4 */
+  border-radius: 12px !important; /* rounded-xl */
+  background: var(--ad-orange) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  white-space: nowrap !important;
+}
+
+@media (min-width: 640px) {
+  .ad-seller-name { font-size: 14px !important; } /* sm:text-sm */
+  .ad-price { font-size: 14px !important; }       /* sm:text-sm */
+}
+
+@media (max-width: 640px) {
+  /* keep title consistent; don't inflate */
+  .ad-meta { gap: 12px !important; }
+}

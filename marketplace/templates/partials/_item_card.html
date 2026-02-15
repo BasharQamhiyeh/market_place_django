@@ -1,18 +1,16 @@
 {# templates/partials/_item_card.html #}
 {% load i18n timeago_ar %}
 
-
 {% with HIDE_OWNER_FAV=0 %}
 
 <article
-  class="ad-card group{% if featured_card %} featured-card vip-card{% endif %}"
-  data-href="{% url 'item_detail' item.id %}"
+  class="ad-card group flex flex-col overflow-hidden bg-white border-2 border-orange-300 rounded-2xl hover:shadow-lg transition hover:border-orange-500 cursor-default hover:-translate-y-1.5 transition-all duration-400 {% if featured_card %} featured-card vip-card{% endif %}"
   aria-label="{{ item.listing.title }}"
 >
 
   <!-- IMAGE + CONTROLS -->
   <div class="relative">
-    <div class="ad-imgwrap">
+    <div class="aspect-[4/3] overflow-hidden">
       {% with p=item.main_photo %}
         {% if p %}
           <img
@@ -20,6 +18,7 @@
             alt="{{ item.listing.title }}"
             loading="lazy"
             decoding="async"
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           >
         {% else %}
           <div class="w-full h-full flex items-center justify-center text-sm text-gray-400">
@@ -29,33 +28,31 @@
       {% endwith %}
     </div>
 
-
     {% if request.user.is_authenticated %}
 
       {% if item.listing.user_id == request.user.user_id and HIDE_OWNER_FAV %}
         {# authenticated OWNER #}
-
-          <button
-            type="button"
-            class="ad-fav-btn absolute bottom-3 left-3 z-20{% if item.is_favorited %} is-active{% endif %}"
-            data-fav-btn="1"
-            data-guest="0"
-            data-is-owner="1"
-            data-url="{% url 'toggle_favorite' item.id %}"
-            data-favorited="{% if item.is_favorited %}1{% else %}0{% endif %}"
-            aria-label="{% trans 'Toggle favorite' %}"
-            aria-pressed="{% if item.is_favorited %}true{% else %}false{% endif %}"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
-              <path class="heart-outline"
-                    d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
-                    fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round"/>
-              <path class="heart-filled"
-                    d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
-                    fill="currentColor"/>
-            </svg>
-          </button>
+        <button
+          type="button"
+          class="ad-fav-btn cursor-pointer absolute bottom-3 left-3 w-9 h-9 rounded-full bg-white/95 flex items-center justify-center shadow-sm text-orange-500 transition hover:scale-110{% if item.is_favorited %} active{% endif %}"
+          data-fav-btn="1"
+          data-guest="0"
+          data-is-owner="1"
+          data-url="{% url 'toggle_favorite' item.id %}"
+          data-favorited="{% if item.is_favorited %}1{% else %}0{% endif %}"
+          aria-label="{% trans 'Toggle favorite' %}"
+          aria-pressed="{% if item.is_favorited %}true{% else %}false{% endif %}"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+            <path class="heart-outline"
+                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                  fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="heart-filled"
+                  d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1 7.8 7.8 7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"
+                  fill="currentColor"/>
+          </svg>
+        </button>
 
       {% else %}
         {# authenticated NON-OWNER #}
@@ -108,13 +105,17 @@
 
     <!-- CATEGORY BADGE -->
     {% if item.listing.category %}
-      <span class="ad-cat-badge">
+      <a
+        class="ad-cat-badge"
+        href="{% url 'item_list' %}?category={{ item.listing.category.id }}"
+        aria-label="{% trans 'View category' %}"
+      >
         {% if LANGUAGE_CODE == "ar" %}
           {{ item.listing.category.name_ar }}
         {% else %}
           {{ item.listing.category.name_en }}
         {% endif %}
-      </span>
+      </a>
     {% endif %}
 
     <!-- FEATURED TAG -->
@@ -125,17 +126,27 @@
 
   <!-- LOWER (overlay here, like mockup) -->
   <div class="ad-lower relative isolate">
-    <div class="ad-hover-layer" aria-hidden="true">
-      <div class="ad-hover-hint">
-        <div class="txt"><span>عرض</span><span>الإعلان</span></div>
+    <div class="ad-hover-layer">
+      <a
+        href="{% url 'item_detail' item.id %}"
+        class="ad-hover-hint absolute top-1/2 -translate-y-1/2 left-3 flex items-center gap-1
+               opacity-0 group-hover:opacity-100 transition duration-200"
+        aria-label="{% trans 'View ad' %}"
+        style="cursor:pointer; pointer-events:auto;"
+      >
+        <div class="flex flex-col text-[11px] font-extrabold text-[#ff7a18] leading-tight text-center">
+          <span>عرض</span><span>الإعلان</span>
+        </div>
+
         <span class="arrow">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none"
                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
                class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
           </svg>
         </span>
-      </div>
+      </a>
     </div>
 
     <div class="ad-body">
@@ -168,23 +179,22 @@
 
     <div class="ad-footer">
       <div class="ad-seller">
-          {% with u=item.listing.user s=item.listing.user.store %}
-            {% if s and s.logo %}
-              <img src="{{ s.logo.url }}" alt="{{ s.name|default:u.username|default:u.phone }}">
-            {% elif u.profile_photo %}
-              <img src="{{ u.profile_photo.url }}" alt="{{ u.username|default:u.phone }}">
-            {% else %}
-              <div class="ad-avatar-fallback">
-                {% with fn=u.first_name|default:"" un=u.username|default:"" ph=u.phone|default:"" %}
-                  {% if fn %}{{ fn|slice:":1"|upper }}
-                  {% elif un %}{{ un|slice:":1"|upper }}
-                  {% elif ph %}{{ ph|slice:":1"|upper }}
-                  {% else %}?{% endif %}
-                {% endwith %}
-              </div>
-            {% endif %}
-          {% endwith %}
-
+        {% with u=item.listing.user s=item.listing.user.store %}
+          {% if s and s.logo %}
+            <img src="{{ s.logo.url }}" alt="{{ s.name|default:u.username|default:u.phone }}">
+          {% elif u.profile_photo %}
+            <img src="{{ u.profile_photo.url }}" alt="{{ u.username|default:u.phone }}">
+          {% else %}
+            <div class="ad-avatar-fallback">
+              {% with fn=u.first_name|default:"" un=u.username|default:"" ph=u.phone|default:"" %}
+                {% if fn %}{{ fn|slice:":1"|upper }}
+                {% elif un %}{{ un|slice:":1"|upper }}
+                {% elif ph %}{{ ph|slice:":1"|upper }}
+                {% else %}?{% endif %}
+              {% endwith %}
+            </div>
+          {% endif %}
+        {% endwith %}
 
         {% with u=item.listing.user %}
           <span class="ad-seller-name">

@@ -9,481 +9,417 @@
 
 {% block content %}
 
+<!-- =================== PREMIUM BILLBOARD (MOCKUP) =================== -->
+<section class="pt-6 pb-10 px-6">
+  <div class="max-w-[1440px] mx-auto">
+    <div class="swiper billboardSwiper billboard-container pro-shadow rounded-3xl overflow-hidden">
+      <div class="swiper-wrapper">
 
-<!-- ================= HERO SECTION ================ -->
-<section class="relative bg-white py-10">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Slide 1 -->
+        <div class="swiper-slide relative">
+          <img src="https://images.unsplash.com/photo-1617788138017-80ad40651399?w=1600"
+               class="absolute inset-0 w-full h-full object-cover" alt="Billboard 1">
+          <div class="absolute inset-0 bg-gradient-to-l from-black/90 via-black/30 to-transparent flex items-center pr-12 md:pr-24">
+            <div class="max-w-2xl text-white space-y-4 sm:space-y-6 text-center sm:text-right px-4 sm:px-0">
 
-    <!-- Title -->
-    <div class="text-center mb-12">
-      <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 leading-relaxed">
-        لكل منتج ركن خاص ✨
-      </h1>
-      <p class="text-lg md:text-xl mt-4 text-gray-600 max-w-3xl mx-auto">
-        نصنّف الإعلانات بذكاء لتصل لما تبحث عنه بسرعة، سواء للبيع أو الشراء.
-      </p>
-    </div>
+              <div class="flex items-center gap-3 justify-center sm:justify-start">
+                <span class="bg-[#ff7a18] px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                  إعلان ممول - Premium
+                </span>
+                <div class="flex gap-1 text-amber-400">
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                </div>
+              </div>
 
-    <!-- Orange / Green Two Columns -->
-    <div class="grid grid-cols-1 md:grid-cols-2 mt-10">
+              <h2 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-tight font-black leading-[1.1] tracking-tighter uppercase">
+                سيارة أحلامك بانتظارك
+              </h2>
 
-      <!-- orange -->
-      <div class="p-10 text-center md:text-right bg-[var(--rukn-orange-light)] border-l-4 border-[var(--rukn-orange)]">
-        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed">
-          ابحث عن المنتج المطلوب و تواصل مع البائع
-          <span class="text-[var(--rukn-orange)]">بيع ، اشتري</span>
-          ما تحتاجه بكل سهولة
-        </h2>
+              <p class="text-base sm:text-lg md:text-xl opacity-80 font-bold opacity-90">
+                اكتشف عروض السيارات الجديدة كلياً
+              </p>
+
+              <button class="bg-white text-slate-900 px-6 py-3 sm:px-12 sm:py-5 text-base sm:text-lg rounded-full font-black text-xl hover:bg-[#ff7a18] hover:text-white transition-all">
+                التفاصيل
+              </button>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="swiper-slide relative">
+          <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1600"
+               class="absolute inset-0 w-full h-full object-cover" alt="Billboard 2">
+          <div class="absolute inset-0 bg-gradient-to-l from-black/90 via-black/30 to-transparent flex items-center pr-12 md:pr-24">
+            <div class="max-w-2xl text-white space-y-4 sm:space-y-6 text-center sm:text-right px-4 sm:px-0">
+
+              <div class="flex items-center gap-3 justify-center sm:justify-start">
+                <span class="bg-[#ff7a18] px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                  إعلان ممول - Premium
+                </span>
+                <div class="flex gap-1 text-amber-400">
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                  <i data-lucide="star" class="w-3 h-3 fill-amber-400"></i>
+                </div>
+              </div>
+
+              <h2 class="text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-tight font-black leading-[1.1] tracking-tighter uppercase">
+                منزل أحلامك بانتظارك
+              </h2>
+
+              <p class="text-base sm:text-lg md:text-xl opacity-80 font-bold opacity-90">
+                أكبر تجمع للعقارات الفاخرة
+              </p>
+
+              <button class="bg-white text-slate-900 px-6 py-3 sm:px-12 sm:py-5 text-base sm:text-lg rounded-full font-black text-xl hover:bg-[#ff7a18] hover:text-white transition-all">
+                التفاصيل
+              </button>
+
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- green -->
-      <div class="p-10 text-center md:text-left bg-[var(--rukn-green-50)] border-r-4 border-[var(--rukn-green)]">
-        <h2 class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed">
-          لم تجد ما تبحث عنه ؟ لا تقلق،
-          <span class="text-[var(--rukn-green)]">بإمكانك تقديم طلب</span>
-          و سيقوم البائعين بالتواصل معك.
-        </h2>
-      </div>
-
+      <div class="swiper-pagination"></div>
+      <div class="swiper-button-next !text-white after:!text-xl hidden md:flex"></div>
+      <div class="swiper-button-prev !text-white after:!text-xl hidden md:flex"></div>
     </div>
+  </div>
+</section>
 
-    <!-- Slider Banner (Mockup Swiper) -->
-    <div class="mt-20">
-      <div class="bg-white border border-orange-200 shadow-2xl rounded-3xl p-6 relative">
 
-        <div class="swiper myAdsSwiper rounded-2xl overflow-hidden relative">
-          <div class="swiper-wrapper">
+<!-- =================== SMART HERO SECTION (MOCKUP) =================== -->
+<section class="relative pt-10 py-10 overflow-hidden bg-white">
 
-            <!-- Mockup slides (You can replace with dynamic banners later) -->
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&q=80"
-                   class="w-full h-[380px] md:h-[450px] object-cover rounded-2xl" />
+  <div class="absolute top-0 right-0 w-[700px] h-[700px] bg-orange-50 rounded-full blur-[120px] -z-10 opacity-50"></div>
+  <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-green-50 rounded-full blur-[100px] -z-10 opacity-40"></div>
+
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="grid lg:grid-cols-12 gap-16 items-center">
+
+      <!-- LEFT -->
+      <div class="lg:col-span-6 space-y-8">
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-100 pro-shadow">
+          <span class="flex h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+          <span class="text-xs font-black text-slate-600 tracking-widest uppercase">
+            نشط الآن: مئات الإعلانات و الطلبات والبلاغات تضاف يومياً
+          </span>
+        </div>
+
+        <h1 class="text-5xl md:text-7xl font-black text-slate-900 leading-[1.1] tracking-tighter">
+          إعلانك، طلبك، أو بلاغك.. <br>
+          <span class="relative inline-block mt-2">
+            <span class="relative z-10 text-[#ff7a18]">في ركنه الصحيح</span>
+            <span class="absolute bottom-2 left-0 w-full h-3 bg-orange-100 -z-10 rounded-full"></span>
+          </span>
+        </h1>
+
+        <p class="text-lg md:text-xl text-slate-500 font-bold leading-tight max-w-xl">
+          المنصة الأسرع للبيع، الطلب، والعثور على المفقودات.
+          <br>
+          صممنا "<span class="text-orange-500 font-extrabold">ركن</span>" ليختصر عليك الوقت والجهد في الوصول لغايتك.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-4">
+
+          <div class="flex items-center gap-2">
+            <div class="text-orange-500 bg-orange-50 p-1 rounded-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
             </div>
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=1600&q=80"
-                   class="w-full h-[380px] md:h-[450px] object-cover rounded-2xl" />
-            </div>
-            <div class="swiper-slide">
-              <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=1600&q=80"
-                   class="w-full h-[380px] md:h-[450px] object-cover rounded-2xl" />
-            </div>
-
+            <span class="text-sm font-bold text-slate-700">نشر سريع</span>
           </div>
 
-          <div class="swiper-pagination mt-4"></div>
-          <div class="swiper-button-next custom-swiper-btn"></div>
-          <div class="swiper-button-prev custom-swiper-btn"></div>
-        </div>
+          <div class="flex items-center gap-2">
+            <div class="text-green-500 bg-green-50 p-1 rounded-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <span class="text-sm font-bold text-slate-700">تواصل مباشر</span>
+          </div>
 
-        <div class="absolute top-4 right-4 z-20 flex items-center gap-2 border border-orange-300 bg-white rounded-xl px-4 py-2 shadow-lg">
-          <span class="text-xl">📢</span>
-          <span class="text-lg font-bold text-gray-800">مساحة إعلانية</span>
+          <div class="flex items-center gap-2">
+            <div class="text-orange-500 bg-orange-50 p-1 rounded-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <span class="text-sm font-bold text-slate-700">تجربة سهلة</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="text-green-500 bg-green-50 p-1 rounded-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
+            </div>
+            <span class="text-sm font-bold text-slate-700">ثقة أعلى</span>
+          </div>
+
         </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="lg:col-span-6">
+        <div class="hero-actions grid sm:grid-cols-2 gap-6">
+
+          <a href="{% url 'create_item' %}"
+             class="hero-btn group w-full bg-[#ff7a18] text-white p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] text-right transition-all duration-500 hover:scale-[1.02] hover:shadow-xl">
+
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <span class="text-xs sm:text-sm font-black uppercase tracking-widest opacity-80">بيع</span>
+              <div class="icon-box w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-[#ff7a18] transition-all">
+                <i data-lucide="camera"></i>
+              </div>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black mb-1 sm:mb-2">أضف إعلانك</h3>
+            <p class="text-xs sm:text-sm font-bold opacity-90">صوّر، انشر إعلانك، ودع المشترين يصلون إليك.</p>
+          </a>
+
+          <a href="{% url 'create_request' %}"
+             class="hero-btn group w-full bg-[#10b981] text-white p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] text-right transition-all duration-500 hover:scale-[1.02] hover:shadow-xl">
+
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <span class="text-xs sm:text-sm font-black uppercase tracking-widest opacity-80">شراء</span>
+              <div class="icon-box w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:text-[#10b981] transition-all">
+                <i data-lucide="search"></i>
+              </div>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black mb-1 sm:mb-2">أضف طلبك</h3>
+            <p class="text-xs sm:text-sm font-bold opacity-90">لم تجد ما تبحث عنه؟ قدّم طلبك ليصلك عروض من البائعين.</p>
+          </a>
+
+          <a href="#"
+             class="hero-btn store-btn group sm:col-span-2 w-full bg-[#1e3a8a] text-white p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] text-right transition-all duration-500 hover:scale-[1.01] hover:border-white/30 border border-white/10">
+
+            <div class="flex items-center justify-between mb-3 sm:mb-4">
+              <span class="text-xs sm:text-sm font-black uppercase tracking-widest text-white/70">بلاغات</span>
+              <div class="icon-box w-10 h-10 sm:w-12 sm:h-12 bg-white/15 rounded-xl flex items-center justify-center text-white group-hover:bg-white group-hover:text-[#1e3a8a] group-hover:scale-110 transition-all">
+                <i data-lucide="help-circle"></i>
+              </div>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black mb-1 sm:mb-2">فقدت شيئًا؟ أو عثرت على شيء؟</h3>
+            <p class="text-xs sm:text-sm font-bold text-white/80">ساعد في إعادة الأمانة لأصحابها أو انشر بلاغاً عما فقدته لتصل إليه أسرع.</p>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- =================== STORES SECTION (MOCKUP) =================== -->
+<section class="section-stores py-10 px-6">
+  <div class="max-w-[1440px] mx-auto">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6 px-4">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase">
+          المتاجر <span class="text-[#10b981]">المختارة</span>
+        </h2>
+        <p class="text-slate-500 font-bold mt-3">اختيارات مميزة للتسوّق</p>
+      </div>
+
+      <a href="{% url 'stores_list' %}"
+         class="bg-white border-2 border-slate-100 text-slate-800 px-10 py-4 rounded-2xl font-black text-sm hover:border-[#ff7a18] hover:text-[#ff7a18] transition-all shadow-sm">
+        جميع المتاجر
+      </a>
+    </div>
+
+    <div class="relative">
+
+      <div id="storesRow"
+           class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-10 cursor-grab select-none no-scrollbar px-6 sm:px-10"
+           style="scrollbar-width:none; -ms-overflow-style:none;">
+
+        {% if stores %}
+          {% for store in stores %}
+            {% include "partials/_store_card.html" with store=store %}
+          {% endfor %}
+        {% else %}
+          <p class="text-center text-gray-500 py-6 w-full">لا توجد متاجر حالياً.</p>
+        {% endif %}
 
       </div>
+
+      <button id="storesLeft"
+              class="absolute left-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+        <i data-lucide="arrow-left"></i>
+      </button>
+
+      <button id="storesRight"
+              class="absolute right-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+        <i data-lucide="arrow-right"></i>
+      </button>
+
     </div>
 
   </div>
 </section>
 
 
+<!-- =================== LATEST ADS =================== -->
+<section class="section-ads py-10 px-6">
+  <div class="max-w-[1440px] mx-auto">
 
-<!-- ================= CATEGORIES SECTION ================ -->
-<section class="mt-10 relative">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-
-    <div class="relative border-2 border-[var(--rukn-orange)] bg-white rounded-3xl
-                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-8 pb-6 px-3">
-
-      <div class="absolute -top-6 right-4 bg-white border-2 border-[var(--rukn-orange)] rounded-2xl shadow-md px-8 py-2 z-20">
-        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">الأقسام</h2>
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-6 px-4">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase">
+          أحدث <span class="text-[#ff7a18]">الإعلانات</span>
+        </h2>
+        <p class="text-slate-500 font-bold mt-3">الإعلانات المضافة حديثا</p>
       </div>
 
-      <div class="absolute -bottom-6 left-4 btn-orange border-2 border-orange-500 rounded-2xl shadow-md px-6 py-2 z-20">
-        <a href="{% url 'categories_browse' %}" class="text-sm md:text-base font-bold text-white">جميع الأقسام</a>
+      <div class="section-header-buttons flex gap-3">
+        <a href="{% url 'item_list' %}"
+           class="bg-white border-2 border-slate-100 text-slate-800 px-10 py-4 rounded-2xl font-black text-sm hover:border-[#ff7a18] hover:text-[#ff7a18] transition-all shadow-sm">
+          جميع الإعلانات
+        </a>
+
+        <a href="{% url 'create_item' %}"
+           class="bg-[#ff7a18] text-white px-10 py-4 rounded-2xl font-black text-sm hover:bg-[#e66a15] transition-all shadow-xl shadow-orange-100">
+          أضف إعلانك
+        </a>
+      </div>
+    </div>
+
+    {% include "partials/latest_items_block.html" %}
+
+    <div class="text-center mt-16">
+      <button id="loadMoreAdsBtn" type="button"
+              class="px-14 py-5 rounded-[1.6rem] font-black text-white bg-[#ff7a18] hover:bg-[#e06600] transition shadow-xl">
+        تحميل المزيد من الإعلانات
+      </button>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- =================== FEATURED CATEGORIES =================== -->
+<section class="section-trending py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6 px-4">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase">
+          الأقسام <span class="text-[#10b981]">الرائجة</span>
+        </h2>
+        <p class="text-slate-500 font-bold mt-3">تنسيقات ذكية تناسب ذوقك.</p>
       </div>
 
-      <div class="mt-6 pb-8 relative">
+      <a href="{% url 'categories_browse' %}"
+         class="bg-white border-2 border-slate-100 text-slate-800 px-10 py-4 rounded-2xl font-black text-sm hover:border-[#ff7a18] hover:text-[#ff7a18] transition-all shadow-sm">
+        جميع الأقسام
+      </a>
+    </div>
 
-      <!-- RIGHT -->
-      <button onclick="scrollCats(1)"
-              class="absolute cat-arrow cat-arrow-right -translate-y-1/2
-                     bg-white border border-orange-300 shadow-md
-                     w-10 h-10 rounded-full flex items-center justify-center
-                     text-orange-500 hover:bg-orange-50 transition z-10">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
-             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-        </svg>
-      </button>
+    <div class="relative">
+      <div id="trendingRow"
+           class="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4 cursor-grab select-none no-scrollbar px-4 sm:px-6"
+           style="scrollbar-width:none; -ms-overflow-style:none;">
 
-      <!-- LEFT -->
-      <button onclick="scrollCats(-1)"
-              class="absolute cat-arrow cat-arrow-left -translate-y-1/2
-                     bg-white border border-orange-300 shadow-md
-                     w-10 h-10 rounded-full flex items-center justify-center
-                     text-orange-500 hover:bg-orange-50 transition z-10">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
-             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </button>
+        {% for cat in trending_categories %}
+          <div class="trending-wrap snap-start flex-shrink-0">
+            <a href="{% url 'item_list' %}?categories={{ cat.id }}"
+               class="trending-card relative h-[210px] w-[250px] sm:h-[220px] sm:w-[280px] group cursor-pointer overflow-hidden rounded-2xl border-2 border-transparent transition-all duration-300 hover:border-[#ff7a18] block">
 
-      <!-- LIST -->
-      <div id="catsScroll"
-           class="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth px-4">
+              {% if cat.image %}
+                <img src="{{ cat.image.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ cat.name }}">
+              {% else %}
+                <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=900" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="{{ cat.name }}">
+              {% endif %}
 
-        {% for cat in categories %}
-          <a href="{% url 'item_list' %}?categories={{ cat.id }}"
-             class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
-                    hover:border-orange-400 hover:shadow-lg transition flex-shrink-0 w-48 text-center">
-            <div class="text-[44px] text-[var(--rukn-orange)]">
-              {% if cat.icon %} {{ cat.icon }} {% else %} 🏷️ {% endif %}
-            </div>
-            <div class="font-bold mt-3 text-lg">{{ cat }}</div>
-            <div class="text-xs text-gray-500">{{ cat.subtitle_ar }}</div>
-          </a>
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6 flex flex-col justify-end">
+                <h5 class="text-xl font-black text-white mb-1">{{ cat.name }}</h5>
+                <p class="text-xs text-orange-400 font-bold uppercase tracking-widest">{{ cat.subtitle_ar }}</p>
+              </div>
+            </a>
+          </div>
         {% endfor %}
 
       </div>
+
+      <button id="trendingLeft"
+              class="absolute left-0 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+        <i data-lucide="arrow-left"></i>
+      </button>
+
+      <button id="trendingRight"
+              class="absolute right-0 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+        <i data-lucide="arrow-right"></i>
+      </button>
+
     </div>
 
-
-
-
-    </div>
   </div>
 </section>
 
 
+<!-- =================== LATEST REQUESTS =================== -->
+<section class="section-requests py-10 px-6">
+  <div class="max-w-[1440px] mx-auto">
 
-<!-- ================= STORES SECTION (static, from mockup) ================= -->
-<section class="mt-16 relative">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-
-    <div class="relative border-2 border-[var(--rukn-green)] bg-white rounded-3xl
-                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-8 pb-6 px-3">
-
-      <!-- TITLE -->
-      <div class="absolute -top-6 right-4
-                  bg-white border-2 border-[var(--rukn-green)] rounded-2xl
-                  shadow-md px-8 py-2 z-20">
-        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">المتاجر</h2>
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-6 px-4">
+      <div>
+        <h2 class="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase">
+          أحدث <span class="text-[#10b981]">الطلبات</span>
+        </h2>
+        <p class="text-slate-500 font-bold mt-3">
+          طلبات شراء حقيقية من المستخدمين — قدّم عرضك مباشرة
+        </p>
       </div>
 
-      <!-- VIEW ALL STORES BUTTON -->
-      <div class="absolute -bottom-6 left-4
-                  bg-green-600 btn-green border-2 border-green-600 rounded-2xl
-                  shadow-md px-6 py-2 z-20">
-        <a href="{% url 'stores_list' %}" class="text-sm md:text-base font-bold text-white">
-          جميع المتاجر
+      <div class="section-header-buttons flex gap-3">
+        <a href="{% url 'request_list' %}"
+           class="bg-white border-2 border-slate-100 text-slate-800 px-10 py-4 rounded-2xl font-black text-sm hover:border-[#10b981] hover:text-[#10b981] transition-all shadow-sm">
+          جميع الطلبات
+        </a>
+
+        <a href="{% url 'create_request' %}"
+           class="bg-[#10b981] text-white px-10 py-4 rounded-2xl font-black text-sm hover:bg-[#0ea371] transition-all shadow-xl shadow-green-100">
+          أضف طلبك
         </a>
       </div>
-
-      <div class="mt-6 pb-8 relative">
-
-        <!-- RIGHT ARROW -->
-        <button onclick="scrollStores(1)"
-                class="absolute cat-arrow cat-arrow-right -translate-y-1/2
-                       bg-white border border-green-300 shadow-md
-                       w-10 h-10 rounded-full flex items-center justify-center
-                       text-[var(--rukn-green)] hover:bg-green-50 transition z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
-        </button>
-
-        <!-- LEFT ARROW -->
-        <button onclick="scrollStores(-1)"
-                class="absolute cat-arrow cat-arrow-left -translate-y-1/2
-                       bg-white border border-green-300 shadow-md
-                       w-10 h-10 rounded-full flex items-center justify-center
-                       text-[var(--rukn-green)] hover:bg-green-50 transition z-10">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-        </button>
-
-        <!-- LIST -->
-        <div id="storesScroll"
-             class="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth px-4">
-
-          {% for s in stores %}
-            <a href="{% url 'store_profile' s.id %}?tab=ads"
-               class="group bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm
-                      hover:border-[var(--rukn-green)] hover:shadow-lg transition flex-shrink-0 w-48 text-center">
-
-              {% if s.logo %}
-                <img src="{{ s.logo.url }}"
-                     class="w-20 h-20 rounded-full mx-auto shadow mb-2 object-cover" alt="{{ s.name }}" />
-              {% else %}
-                <div class="w-20 h-20 rounded-full mx-auto shadow mb-2 bg-gray-100 flex items-center justify-center text-2xl">
-                  🏪
-                </div>
-              {% endif %}
-
-              <div class="font-bold text-md mb-1 truncate">{{ s.name }}</div>
-
-              {# rating row #}
-              {% with r=s.avg_rating|default:0 %}
-                <div class="text-yellow-400 text-lg leading-none">
-                  {% if r >= 4.5 %}★★★★★
-                  {% elif r >= 3.5 %}★★★★☆
-                  {% elif r >= 2.5 %}★★★☆☆
-                  {% elif r >= 1.5 %}★★☆☆☆
-                  {% elif r >= 0.5 %}★☆☆☆☆
-                  {% else %}☆☆☆☆☆
-                  {% endif %}
-                </div>
-              {% endwith %}
-
-              <div class="text-xs text-gray-500 mt-1">
-                ({{ s.reviews_count|default:0 }}) تقييم
-              </div>
-
-            </a>
-          {% empty %}
-            <div class="text-center text-gray-500 py-8 w-full">
-              لا توجد متاجر حالياً.
-            </div>
-          {% endfor %}
-
-
-        </div>
-      </div>
     </div>
-  </div>
-</section>
 
-
-
-
-<!-- ================= LATEST ADS SECTION ================ -->
-<section class="mt-16 relative">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-
-    <div class="relative border-2 border-[var(--rukn-orange)] bg-white rounded-3xl
-                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-6 pb-6 px-4">
-
-      <div class="absolute -top-6 right-4
-                  bg-white border-2 border-[var(--rukn-orange)] rounded-2xl
-                  shadow-md px-8 py-2 z-20">
-        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">أحدث الإعلانات</h2>
-      </div>
-
-      <div class="absolute -bottom-6 left-4
-                  border-2 btn-orange border-[var(--rukn-orange)] bg-[var(--rukn-orange)] rounded-2xl
-                  shadow-md px-6 py-2 z-20">
-        <a href="{% url 'item_list' %}" class="text-sm md:text-base font-bold text-white">جميع الإعلانات</a>
-      </div>
-
-      <div class="mt-10">
-        <div id="adsSection">
-          {% include "partials/latest_items_block.html" %}
-        </div>
-        <div class="mt-6 flex justify-center">
-          <button id="loadMoreAdsBtn"
-                  type="button"
-                  class="px-6 py-2 rounded-full bg-[var(--rukn-orange)] text-white font-bold hover:bg-orange-600 transition">
-            تحميل المزيد من الإعلانات
-          </button>
-        </div>
-
-
-      </div>
-
+    <div id="requestsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {% if latest_requests %}
+        {% for req in latest_requests %}
+          {% include "partials/_request_card.html" with req=req %}
+        {% endfor %}
+      {% else %}
+        <p class="col-span-full text-center text-gray-500 py-6">لا توجد طلبات حالياً.</p>
+      {% endif %}
     </div>
-  </div>
-</section>
 
-
-
-<!-- ================= LATEST REQUESTS SECTION ================= -->
-<section class="mt-16 relative">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-
-    <div class="relative border-2 border-[var(--rukn-green)] bg-white rounded-3xl
-                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-14 pb-8 px-4">
-
-      <div class="absolute -top-6 right-4
-                  bg-white border-2 border-[var(--rukn-green)] rounded-2xl
-                  shadow-md px-8 py-2 z-20">
-        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">أحدث الطلبات</h2>
-      </div>
-
-      <div class="absolute -bottom-6 left-4
-                  bg-green-600 btn-green border-2 border-green-600 rounded-2xl
-                  shadow-md px-6 py-2 z-20">
-        <a href="{% url 'request_list' %}" class="text-sm md:text-base font-bold text-white">جميع الطلبات</a>
-      </div>
-
-      <div class="mt-6">
-        <div id="requestsGrid"
-             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-
-          {% if latest_requests %}
-            {% for req in latest_requests %}
-                {% include "partials/_request_card.html" with req=req %}
-            {% endfor %}
-          {% else %}
-            <p class="col-span-full text-center text-gray-500 py-6">
-              لا توجد طلبات حالياً.
-            </p>
-          {% endif %}
-        </div>
-        <div class="mt-8 flex justify-center">
-          <button id="loadMoreRequestsBtn"
-                  type="button"
-                  class="px-6 py-2 rounded-full bg-green-600 text-white font-bold hover:bg-green-700 transition">
-            تحميل المزيد من الطلبات
-          </button>
-        </div>
-
-
-      </div>
-
+    <div class="text-center mt-16">
+      <button id="loadMoreRequestsBtn" type="button"
+              class="px-14 py-5 rounded-[1.6rem] font-black text-white bg-[#10b981] hover:bg-[#0ea371] transition shadow-xl">
+        تحميل المزيد من الطلبات
+      </button>
     </div>
 
   </div>
 </section>
-
-
-
-<!-- ================= How Rukn Works (STATIC from mockup) ================= -->
-<section class="mt-16 relative">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-
-    <div class="relative border-2 border-[var(--rukn-orange)] bg-white rounded-3xl
-                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-10 pb-10 px-6">
-
-      <div class="absolute -top-6 right-4
-                  bg-white border-2 border-[var(--rukn-orange)] rounded-2xl
-                  shadow-md px-8 py-2 z-20">
-        <h1 class="text-xl md:text-2xl font-extrabold text-gray-900">كيف يعمل ركن؟</h1>
-      </div>
-
-      <div class="absolute -bottom-6 left-4 btn-orange
-                  bg-[var(--rukn-orange)] border-2 border-[var(--rukn-orange)] rounded-2xl
-                  shadow-md px-6 py-2 z-20">
-        <a href="{% url 'create_item' %}" class="text-sm md:text-base font-bold text-white">أضف إعلانك</a>
-      </div>
-
-      <div class="mt-10 rounded-2xl p-6 card-shadow gradient-orange-box">
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-[var(--rukn-orange)]">
-            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-[var(--rukn-orange)]">1</div>
-            <div>
-              <h3 class="font-semibold text-lg">سجل حسابك</h3>
-              <p class="text-[var(--muted)] text-sm mt-1">
-                ابدأ بإنشاء حساب مجاني للوصول إلى لوحة الإعلانات.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-[var(--rukn-orange)]">
-            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-[var(--rukn-orange)]">2</div>
-            <div>
-              <h3 class="font-semibold text-lg">أضف إعلانك</h3>
-              <p class="text-[var(--muted)] text-sm mt-1">
-                حمّل صور، أضف وصف وسعر واطلع على معاينة الإعلان قبل النشر.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-[var(--rukn-orange)]">
-            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-[var(--rukn-orange)]">3</div>
-            <div>
-              <h3 class="font-semibold text-lg">تواصل واستكمل البيع</h3>
-              <p class="text-[var(--muted)] text-sm mt-1">
-                استقبل رسائل المشتريين وأتمّ معاملتك بأمان.
-              </p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-</section>
-
-
-
-<!-- ================= How to Add a Request (STATIC mockup) ================= -->
-<section class="mt-16 relative">
-  <div class="max-w-7xl mx-auto px-4 lg:px-6">
-
-    <div class="relative border-2 border-[var(--rukn-green)] bg-white rounded-3xl
-                shadow-[0_8px_22px_rgba(0,0,0,0.12)] pt-10 pb-10 px-6">
-
-      <div class="absolute -top-6 right-4
-                  bg-white border-2 border-[var(--rukn-green)] rounded-2xl
-                  shadow-md px-6 py-2 z-20">
-        <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">كيف تضيف طلب؟</h2>
-      </div>
-
-      <div class="absolute -bottom-6 left-4 btn-green
-                  bg-green-600 border-2 border-green-600 rounded-2xl
-                  shadow-md px-6 py-2 z-20">
-        <a href="#" class="text-sm md:text-base font-bold text-white">أضف طلبك</a>
-      </div>
-
-      <div class="mt-10 rounded-2xl p-6 card-shadow gradient-green-box">
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-green-500">
-            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-green-600">1</div>
-            <div>
-              <h3 class="
-          font-semibold text-lg">اختر "أضف طلب"</h3>
-              <p class="text-[var(--muted)] text-sm mt-1">
-                من الصفحة الرئيسية أو من لوحة المستخدم.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-green-500">
-            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-green-600">2</div>
-            <div>
-              <h3 class="font-semibold text-lg">أدخل التفاصيل المطلوبة</h3>
-              <p class="text-[var(--muted)] text-sm mt-1">
-                اكتب عنوان واضح لطلبك، وأدخل الميزانية الأعلى.
-              </p>
-            </div>
-          </div>
-
-          <div class="flex gap-4 items-start bg-white rounded-xl p-4 ring-1 ring-green-500">
-            <div class="flex-none w-10 h-10 rounded-full flex items-center justify-center text-white font-bold bg-green-600">3</div>
-            <div>
-              <h3 class="font-semibold text-lg">انشر وتابع التفاعل</h3>
-              <p class="text-[var(--muted)] text-sm mt-1">
-                راقب رسائل البائعين وعدّل طلبك عند الحاجة.
-              </p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-</section>
-
-
 
 {% endblock %}
 
 {% block scripts %}
   {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="{% static 'js/main.js' %}"></script>
-
 {% endblock %}
