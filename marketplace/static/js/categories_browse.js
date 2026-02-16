@@ -12,17 +12,16 @@
 
   const getImg = (obj) => obj?.photo || obj?.icon || PLACEHOLDER;
 
-  // ✅ Read category from URL parameter
+  // ✅ Read category from URL parameter (FIXED: better type handling)
   function getCategoryFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const categoryParam = params.get('category');
 
     if (categoryParam) {
-      const categoryId = isNaN(Number(categoryParam)) ? categoryParam : Number(categoryParam);
-      // Check if this category exists in our data
-      const exists = categories.some(cat => cat.id === categoryId);
-      if (exists) {
-        return categoryId;
+      // Try to find matching category (comparing as strings for safety)
+      const found = categories.find(cat => String(cat.id) === String(categoryParam));
+      if (found) {
+        return found.id; // Return the actual ID from the category object
       }
     }
 
@@ -97,7 +96,9 @@
     bindNavScroll();
 
     // ✅ Scroll active category into view on page load
-    scrollActiveCategoryIntoView();
+    setTimeout(() => {
+      scrollActiveCategoryIntoView();
+    }, 100);
   }
 
   function renderNav() {
@@ -106,12 +107,13 @@
 
     nav.innerHTML = categories.map(cat => {
       const imgSrc = getImg(cat);
+      const isActive = String(activeMainId) === String(cat.id);
       return `
         <button
           type="button"
           tabindex="-1"
           data-id="${cat.id}"
-          class="main-cat-btn flex flex-col items-center gap-2 py-4 px-3 min-w-[150px] max-w-[150px] font-bold text-sm transition text-center ${activeMainId === cat.id ? "active" : "text-gray-600"}"
+          class="main-cat-btn flex flex-col items-center gap-2 py-4 px-3 min-w-[150px] max-w-[150px] font-bold text-sm transition text-center ${isActive ? "active" : "text-gray-600"}"
         >
           <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg">
             <img src="${imgSrc}" class="w-full h-full object-cover rounded-2xl" alt="${cat.title}">
@@ -128,20 +130,31 @@
   }
 
   function setActive(id) {
-    const newId = isNaN(Number(id)) ? id : Number(id);
-    if (newId === activeMainId) return;
+    // Compare as strings for safety
+    if (String(id) === String(activeMainId)) return;
 
-    activeMainId = newId;
+    activeMainId = id;
 
-    document.querySelectorAll(".main-cat-btn").forEach(btn => btn.classList.remove("active"));
-    const activeBtn = document.querySelector(`.main-cat-btn[data-id="${String(id)}"]`);
-    if (activeBtn) activeBtn.classList.add("active");
+    // ✅ Update URL with the selected category
+    const url = new URL(window.location);
+    url.searchParams.set('category', id);
+    window.history.pushState({}, '', url);
+
+    // Update active state
+    document.querySelectorAll(".main-cat-btn").forEach(btn => {
+      const isActive = String(btn.dataset.id) === String(id);
+      if (isActive) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
 
     renderContent();
     window.scrollTo({ top: 370, behavior: "smooth" });
   }
 
-  // ✅ New function to scroll active category into view
+  // ✅ Scroll active category into view
   function scrollActiveCategoryIntoView() {
     const activeBtn = document.querySelector(`.main-cat-btn[data-id="${String(activeMainId)}"]`);
     if (activeBtn) {
@@ -154,7 +167,10 @@
     if (!container) return;
 
     const cat = categories.find(c => String(c.id) === String(activeMainId));
-    if (!cat) { container.innerHTML = ""; return; }
+    if (!cat) {
+      container.innerHTML = '<div class="text-center text-gray-500 py-12">لم يتم العثور على القسم</div>';
+      return;
+    }
 
     const mainImg = getImg(cat);
 
@@ -292,4 +308,12 @@
   }
 
   document.addEventListener("DOMContentLoaded", init);
+
+  // ✅ Handle browser back/forward buttons
+  window.addEventListener('popstate', () => {
+    activeMainId = getCategoryFromUrl();
+    renderNav();
+    renderContent();
+    setTimeout(() => scrollActiveCategoryIntoView(), 100);
+  });
 })();

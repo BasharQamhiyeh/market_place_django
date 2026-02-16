@@ -346,8 +346,8 @@
       <nav class="flex items-center h-14 gap-8">
 
         {% if navbar_categories %}
-          {# ✅ show max 7 top-level categories #}
-          {% for cat in navbar_categories|slice:":7" %}
+          {# ✅ show max 6 top-level categories (FIXED: changed from 7) #}
+          {% for cat in navbar_categories|slice:":6" %}
             <div class="group h-full flex items-center">
               <a href="{% url 'item_list' %}?categories={{ cat.id }}"
                  class="nav-link-h flex items-center gap-1.5 text-sm"
@@ -364,7 +364,7 @@
               {% if cat.children %}
                 <div class="mega-menu absolute top-full right-0 left-0 bg-white shadow-2xl border-t border-slate-100 p-8 rounded-b-[2rem]">
 
-                  {# --- 3 levels: child has children -> mockup columns (only 3 groups, only 3 leaves) --- #}
+                  {# --- 3 levels: child has children -> show groups as columns (only 3 groups, only 3 leaves) --- #}
                   {% if cat.children and cat.children.0 and cat.children.0.children %}
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                       {% for group in cat.children|slice:":3" %}
@@ -390,33 +390,40 @@
                         </div>
                         <p class="text-sm font-bold text-slate-800">هل تريد نشر إعلان؟</p>
                         <p class="text-xs text-slate-500 mt-1">انشر إعلانك الآن مجاناً</p>
-                        <a href="#"
+                        <a href="{% url 'item_list' %}"
                            class="mt-4 bg-[#ff7a18] text-white text-[11px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all">
                           انشر إعلانك
                         </a>
                       </div>
                     </div>
 
-                  {# --- 2 levels only: show only 3 subcategories + show more -> categories_browse --- #}
+                  {# --- 2 levels only: FIXED - show each subcategory in its own column (max 3 columns) --- #}
                   {% else %}
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                      <div>
-                        <h6 class="text-[#ff7a18] mb-4 text-sm">الأقسام</h6>
+                      {% for subcategory in cat.children|slice:":3" %}
+                        <div>
+                          {# ✅ FIXED: Show subcategory name instead of generic "الأقسام" #}
+                          <a href="{% url 'item_list' %}?categories={{ subcategory.id }}" class="sub-link">
+                            <h6 class="text-[#ff7a18] mb-4 text-sm sub-link">{{ subcategory.name }}</h6>
+                          </a>
 
-                        {# ✅ only 3 subcategories #}
-                        {% for ch in cat.children|slice:":3" %}
-                          <a href="{{ ch.url }}" class="sub-link">{{ ch.name }}</a>
-                        {% endfor %}
+                          {% for sub_subcategory in subcategory.children|slice:":3" %}
+                          <a href="{% url 'item_list' %}?categories={{ sub_subcategory.id }}" class="sub-link"> {{ sub_subcategory.name }}</a>
+                          {% endfor %}
+                          <a href="{{ categories_browse_url }}?category={{ cat.id }}"
+                             class="text-[#ff7a18] text-xs font-bold mt-3 inline-flex items-center gap-1 hover:text-[#e66a15] hover:scale-105 transition-transform">
+                            مشاهدة التفاصيل
+                          </a>
+                        </div>
+                      {% endfor %}
 
-                        {# ✅ show more -> categories_browse #}
-                        <a href="{{ categories_browse_url }}?category={{ cat.id }}"
-                           class="text-[#ff7a18] text-xs font-bold mt-3 inline-flex items-center gap-1 hover:text-[#e66a15] hover:scale-105 transition-transform">
-                          مشاهدة الكل
-                        </a>
-                      </div>
-
-                      <div></div>
-                      <div></div>
+                      {# Add empty divs to maintain grid layout when there are fewer than 3 subcategories #}
+                      {% if cat.children|length == 1 %}
+                        <div></div>
+                        <div></div>
+                      {% elif cat.children|length == 2 %}
+                        <div></div>
+                      {% endif %}
 
                       <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
                         <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
@@ -424,7 +431,8 @@
                         </div>
                         <p class="text-sm font-bold text-slate-800">هل تريد نشر إعلان؟</p>
                         <p class="text-xs text-slate-500 mt-1">انشر إعلانك الآن مجاناً</p>
-                        <a href="#"
+                        {# ✅ FIXED: Link to item_list instead of "#" #}
+                        <a href="{% url 'item_list' %}"
                            class="mt-4 bg-[#ff7a18] text-white text-[11px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all">
                           انشر إعلانك
                         </a>

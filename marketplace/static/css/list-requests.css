@@ -25,7 +25,7 @@
   margin-bottom: 20px;
   box-shadow: 0 24px 60px rgba(15,23,42,.12);
   position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
 .list-requests-page .container-box::before{
   content:"";
@@ -502,13 +502,3 @@
 /* ===========================
    FIX: Keep desktop filters visible while scrolling
    =========================== */
-@media (min-width: 768px) {
-  .list-requests-page #filtersBox {
-    position: sticky;
-    top: 90px; /* عدّلها إذا الهيدر أعلى */
-    align-self: start;
-    max-height: calc(100vh - 110px);
-    overflow: auto;
-    z-index: 30;
-  }
-}

@@ -122,15 +122,25 @@ def navbar_categories(request):
 
     order_field = "name_ar" if lang.startswith("ar") else "name_en"
 
-    child_qs = (
+    # ✅ Level 3 - grandchildren
+    grandchild_qs = (
         Category.objects
         .only("id", "name_ar", "name_en", "parent_id")
         .order_by(order_field, "id")
     )
 
+    # ✅ Level 2 - children with their subcategories prefetched
+    child_qs = (
+        Category.objects
+        .only("id", "name_ar", "name_en", "parent_id")
+        .order_by(order_field, "id")
+        .prefetch_related(Prefetch("subcategories", queryset=grandchild_qs))
+    )
+
+    # Level 1 - top level
     top_qs = (
         Category.objects
-        .filter(parent__isnull=True)   # ✅ website categories (top-level)
+        .filter(parent__isnull=True)
         .only("id", "name_ar", "name_en")
         .order_by(order_field, "id")
         .prefetch_related(Prefetch("subcategories", queryset=child_qs))
@@ -140,19 +150,31 @@ def navbar_categories(request):
     for top in top_qs:
         children = []
         for ch in top.subcategories.all():
+            # ✅ Build grandchildren list
+            grandchildren = []
+            for gc in ch.subcategories.all():
+                grandchildren.append({
+                    "id": gc.id,
+                    "name": _pick_name(gc, lang),
+                    "url": _pick_url(gc),
+                })
+
             children.append({
                 "id": ch.id,
                 "name": _pick_name(ch, lang),
                 "url": _pick_url(ch),
+                "children": grandchildren,  # ✅ Add third level
             })
 
         tree.append({
             "id": top.id,
-            # "slug": getattr(top, "slug", "") or "",
             "name": _pick_name(top, lang),
             "url": _pick_url(top),
             "children": children,
         })
 
     cache.set(key, tree, CACHE_TTL_SECONDS)
+
+    print(tree)
+    print("XXXXXXXXXXXXX")
     return {"navbar_categories": tree}
