@@ -349,7 +349,7 @@
           {# ✅ show max 7 top-level categories #}
           {% for cat in navbar_categories|slice:":7" %}
             <div class="group h-full flex items-center">
-              <a href="{{ cat.url }}"
+              <a href="{% url 'item_list' %}?categories={{ cat.id }}"
                  class="nav-link-h flex items-center gap-1.5 text-sm"
                  data-mobile-category="{{ cat.slug|default:cat.id }}">
                 {{ cat.name }}
@@ -373,7 +373,7 @@
 
                           {# ✅ only 3 leaves #}
                           {% for leaf in group.children|slice:":3" %}
-                            <a href="{{ leaf.url }}" class="sub-link">{{ leaf.name }}</a>
+                            <a href="{% url 'item_list' %}?categories={{ leaf.id }}" class="sub-link">{{ leaf.name }}</a>
                           {% endfor %}
 
                           {# ✅ show more -> categories_browse #}

@@ -78,7 +78,7 @@
         </div>
 
         <!-- VISIT BUTTON -->
-        <a href="{{ store.get_absolute_url|default:'#' }}"
+        <a href="{% url 'store_profile' store.id %}"
            class="store-visit-btn">
           زيارة المتجر
         </a>

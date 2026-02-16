@@ -12,7 +12,25 @@
 
   const getImg = (obj) => obj?.photo || obj?.icon || PLACEHOLDER;
 
-  let activeMainId = categories.length ? categories[0].id : null;
+  // ✅ Read category from URL parameter
+  function getCategoryFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const categoryParam = params.get('category');
+
+    if (categoryParam) {
+      const categoryId = isNaN(Number(categoryParam)) ? categoryParam : Number(categoryParam);
+      // Check if this category exists in our data
+      const exists = categories.some(cat => cat.id === categoryId);
+      if (exists) {
+        return categoryId;
+      }
+    }
+
+    // Default to first category
+    return categories.length ? categories[0].id : null;
+  }
+
+  let activeMainId = getCategoryFromUrl();
 
   /* ================= Banner Slider ================= */
   (function initBanner() {
@@ -77,6 +95,9 @@
     renderNav();
     renderContent();
     bindNavScroll();
+
+    // ✅ Scroll active category into view on page load
+    scrollActiveCategoryIntoView();
   }
 
   function renderNav() {
@@ -118,6 +139,14 @@
 
     renderContent();
     window.scrollTo({ top: 370, behavior: "smooth" });
+  }
+
+  // ✅ New function to scroll active category into view
+  function scrollActiveCategoryIntoView() {
+    const activeBtn = document.querySelector(`.main-cat-btn[data-id="${String(activeMainId)}"]`);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
   }
 
   function renderContent() {
