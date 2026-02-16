@@ -201,6 +201,44 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 /* =========================================================
+   Intercept Add Item/Request buttons for guests (HOME PAGE)
+========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  // Check if user is authenticated
+  const isAuthenticated = window.RUKN?.isAuthenticated || false;
+
+  // If user is logged in, do nothing
+  if (isAuthenticated) return;
+
+  // Find all "create item" and "create request" links on the home page
+  const createLinks = document.querySelectorAll('a[href*="create_item"], a[href*="create_request"], a[href*="/item/create"], a[href*="/request/create"]');
+
+  createLinks.forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault(); // Stop navigation
+
+      // Get the target URL they wanted to go to
+      const targetUrl = link.getAttribute("href");
+
+      // Set the "next" field in login form so they're redirected after login
+      const loginNext = document.getElementById("loginNext");
+      if (loginNext && targetUrl) {
+        loginNext.value = targetUrl;
+      }
+
+      // Open login modal using the global function
+      if (window.RUKN_UI && window.RUKN_UI.openLogin) {
+        window.RUKN_UI.openLogin();
+      } else {
+        // Fallback: try to find and click a login button
+        const loginBtn = document.querySelector('[data-open-login]');
+        if (loginBtn) loginBtn.click();
+      }
+    });
+  });
+});
+
+/* =========================================================
    Open login modal if redirected with ?login=1 (KEEP)
 ========================================================= */
 document.addEventListener("DOMContentLoaded", () => {
