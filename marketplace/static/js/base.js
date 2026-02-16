@@ -559,4 +559,32 @@
     openCategoriesModal,
     closeCategoriesModal,
   };
+
+  // ===== BACKWARDS COMPATIBILITY =====
+  // Make old code that removes "hidden" class work with new modal system
+  // This allows pages like report-modal.js to work without changes
+  if (ui.loginModal) {
+    let isOpening = false; // Flag to prevent infinite loop
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class' && !isOpening) {
+          const classList = ui.loginModal.classList;
+
+          // If "hidden" was removed but modal is not properly open
+          if (!classList.contains('hidden') && !classList.contains('active')) {
+            // Set flag and open properly using the new system
+            isOpening = true;
+            openLogin();
+            setTimeout(() => { isOpening = false; }, 100);
+          }
+        }
+      });
+    });
+
+    observer.observe(ui.loginModal, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
 })();
