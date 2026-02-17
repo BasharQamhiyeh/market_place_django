@@ -331,7 +331,7 @@
 
 /* ===== Mobile Filter Dock + Sheet ===== */
 @media (max-width: 767px){
-  .list-requests-page body { padding-bottom: 96px; }
+  .list-requests-page { padding-bottom: 96px; }
 }
 
 .list-requests-page .mf-dock{
@@ -502,3 +502,17 @@
 /* ===========================
    FIX: Keep desktop filters visible while scrolling
    =========================== */
+
+@media (max-width: 767px){
+  .list-requests-page #filtersBox{
+    display:none !important;
+  }
+}
+
+
+/* Force desktop visibility (guards against any accidental global hide rules) */
+@media (min-width: 1024px) {
+  .list-requests-page #filtersBox {
+    display: block !important;
+  }
+}

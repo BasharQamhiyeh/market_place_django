@@ -310,7 +310,7 @@
               <div class="p-4 border-bottom bg-orange-50 rounded-t-16">
                 <div class="text-xs text-gray-500">رصيد المحفظة</div>
                 <div class="text-lg font-bold text-orange-600">
-                  {% if request.user.is_authenticated %}{{ request.user.wallet_balance|default:"0" }}{% else %}0{% endif %} نقطة
+                  {% if request.user.is_authenticated %}{{ request.user.points|default:"0" }}{% else %}0{% endif %} نقطة
                 </div>
               </div>
 
@@ -319,7 +319,7 @@
                 <a href="{% url 'my_account' %}#tab-ads" class="menu-item"><i class="fas fa-bullhorn"></i> إعلاناتي</a>
                 <a href="{% url 'my_account' %}#tab-requests" class="menu-item"><i class="fas fa-shopping-cart"></i> طلباتي</a>
                 <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-wallet"></i> المحفظة</a>
-                <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
+                <a class="menu-item"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
 
                 {% if request.user.is_staff %}
                   <a href="/admin/" class="menu-item"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a>
