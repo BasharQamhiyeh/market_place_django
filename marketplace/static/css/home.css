@@ -167,3 +167,12 @@ img{ max-width:100%; height:auto; display:block; }
   #storesLeft,#storesRight,#trendingLeft,#trendingRight,
   #loadMoreAdsBtn,#loadMoreRequestsBtn{ display:none !important; }
 }
+
+/* =================== TIP CHOOSER (LOGGED-IN SECTION) =================== */
+/* tip-card: just a semantic hook — styling is all Tailwind */
+.tip-card{ cursor: pointer; }
+
+/* Smooth tip text transition (JS uses inline styles, this is a fallback) */
+#tipText{
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}

@@ -578,7 +578,7 @@ body {
   align-items: center;
   gap: 10px;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
 }
 .nav-link:hover {
@@ -993,3 +993,97 @@ button, input, select, textarea {
 .nav-link-h { font-weight: 700 !important; }
 .dropdown-header { font-weight: 800 !important; }
 .menu-item { font-weight: 700 !important; }
+
+/* =================== MOBILE RESPONSIVE HEADER ADDITIONS =================== */
+
+/* Mobile & Landscape responsive adjustments */
+@media (max-width: 991px) {
+  /* Logo sizing for mobile */
+  .logo {
+    height: 26px !important;
+    flex-shrink: 0;
+  }
+
+  /* User profile text sizing */
+  .user-profile-trigger .text-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .user-profile-trigger .text-right .text-xs {
+    font-size: 7px !important;
+    line-height: 1 !important;
+    margin-bottom: 2px;
+  }
+
+  .user-profile-trigger .text-right .text-sm {
+    font-size: 9px !important;
+    line-height: 1 !important;
+    white-space: nowrap;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Action icons sizing */
+  .action-icon {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .action-icon i {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .user-profile-trigger img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Mobile user actions positioning */
+  #mobileUserPlaceholder #userActionsDropdowns {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 6px !important;
+  }
+
+  /* User dropdown mobile positioning */
+  .user-dropdown {
+    left: auto;
+    right: 0;
+    width: 90vw;
+    right: 5vw;
+    border-radius: 20px;
+  }
+}
+
+/* Desktop auth container positioning */
+@media (min-width: 992px) {
+  #desktopAuthContainer {
+    margin-right: auto;
+    display: flex !important;
+    order: 3;
+  }
+}
+
+/* Ensure relative positioning for mobile/desktop containers */
+#mobileUserPlaceholder, #desktopAuthContainer {
+  position: relative;
+}
+
+/* Mobile landscape fix for Add Ad button */
+@media (max-width: 991px) and (orientation: landscape) {
+  #addAdBtn {
+    width: auto !important;
+    padding: 10px 18px !important;
+    font-size: 13px;
+    border-radius: 999px;
+    align-self: center;
+  }
+}

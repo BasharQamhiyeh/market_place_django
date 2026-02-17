@@ -326,44 +326,162 @@
     });
   }
 
-  let categoryStack = [];
+  // ===== Categories Modal: reads structure from the Django-rendered mega-menu DOM =====
 
-  function popupHeader(title, showBack, backActionName) {
+  // Title is an <a> link so tapping it navigates (issue 3 fix)
+  function catModalHeader(title, titleHref, showBack) {
     return `
       <div class="popup-header">
-        ${showBack ? `<span class="back-btn" data-cat-back style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;">
-          <i data-lucide="chevron-right"></i>
-        </span>` : ""}
-        ${title}
-        <button class="close-btn" data-modal-close aria-label="إغلاق">
+        ${showBack ? `
+          <span data-cat-back style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;">
+            <i data-lucide="chevron-right"></i>
+          </span>` : ""}
+        <a href="${titleHref}" style="color:inherit;text-decoration:none;">${title}</a>
+        <button data-modal-close class="close-btn" aria-label="إغلاق">
           <i class="fas fa-times"></i>
         </button>
       </div>
     `;
   }
 
+  function wireCatModalButtons(backFn) {
+    ui.categoriesModalContent?.querySelector("[data-modal-close]")
+      ?.addEventListener("click", closeCategoriesModal);
+    if (backFn) {
+      ui.categoriesModalContent?.querySelector("[data-cat-back]")
+        ?.addEventListener("click", backFn);
+    }
+    safeLucide();
+  }
 
-  function openCategoriesModal(rootKey) {
-    if (!ui.categoriesModal) return;
-    categoryStack = [rootKey];
-    renderCategoriesLevel();
+  // 3-level mega-menu: <h6> is a direct child of the column div (NOT inside an <a>)
+  // 2-level mega-menu: <h6> is wrapped in <a class="sub-link">
+  function isThreeLevelMenu(megaMenu) {
+    const firstH6 = megaMenu.querySelector("h6");
+    if (!firstH6) return false;
+    return firstH6.parentElement.tagName !== "A";
+  }
+
+  // Get the column divs from the grid inside the mega-menu, skip promo-card.
+  function getColumnDivs(megaMenu) {
+    const gridDiv = megaMenu.querySelector(":scope > div");
+    if (!gridDiv) return [];
+    return Array.from(gridDiv.querySelectorAll(":scope > div"))
+      .filter(el => !el.classList.contains("promo-card"));
+  }
+
+  // Get actual child links from a column:
+  // - 3-level: every .sub-link is a leaf
+  // - 2-level: skip the .sub-link that wraps the h6 (that IS the group itself)
+  function getChildLinks(colDiv, threeLevel) {
+    const all = Array.from(colDiv.querySelectorAll(".sub-link"));
+    return threeLevel ? all : all.filter(l => !l.querySelector("h6"));
+  }
+
+  // Level 1 modal: groups (column headers) as navigable items
+  function renderCatLevel1(catName, catHref, megaMenu) {
+    if (!ui.categoriesModalContent) return;
+
+    const threeLevel = isThreeLevelMenu(megaMenu);
+    const columnDivs = getColumnDivs(megaMenu);
+    let bodyHTML = "";
+
+    columnDivs.forEach((colDiv, idx) => {
+      const h6 = colDiv.querySelector("h6");
+      if (!h6) return;
+
+      const groupName = h6.textContent.trim();
+      const childLinks = getChildLinks(colDiv, threeLevel);
+
+      if (childLinks.length > 0) {
+        // Has children → show as navigable row with arrow
+        bodyHTML += `
+          <div class="popup-option has-children" data-col-idx="${idx}">
+            ${groupName}
+          </div>`;
+      } else {
+        // No children → direct link
+        const groupHref = !threeLevel
+          ? (h6.closest("a")?.getAttribute("href") || catHref)
+          : catHref;
+        bodyHTML += `<a href="${groupHref}" class="popup-option">${groupName}</a>`;
+      }
+    });
+
+    bodyHTML += `<a href="${catHref}" class="popup-option highlight">عرض كل ${catName}</a>`;
+
+    ui.categoriesModalContent.innerHTML =
+      catModalHeader(catName, catHref, false) +
+      `<div style="padding:16px">${bodyHTML}</div>`;
+
+    ui.categoriesModalContent.querySelectorAll("[data-col-idx]").forEach(item => {
+      item.addEventListener("click", () => {
+        const colDiv = columnDivs[parseInt(item.dataset.colIdx, 10)];
+        if (!colDiv) return;
+        const h6 = colDiv.querySelector("h6");
+        const groupName = h6?.textContent.trim() || "";
+        const groupHref = !threeLevel
+          ? (h6?.closest("a")?.getAttribute("href") || catHref)
+          : catHref;
+        renderCatLevel2(groupName, groupHref, colDiv, threeLevel, catName, catHref, megaMenu);
+      });
+    });
+
+    wireCatModalButtons(null);
+  }
+
+  // Level 2 modal: child links inside a group
+  function renderCatLevel2(groupName, groupHref, colDiv, threeLevel, parentName, parentHref, megaMenu) {
+    if (!ui.categoriesModalContent) return;
+
+    const childLinks = getChildLinks(colDiv, threeLevel);
+    let bodyHTML = "";
+
+    childLinks.forEach(link => {
+      const name = link.textContent.trim();
+      const href = link.getAttribute("href") || "#";
+      bodyHTML += `<a href="${href}" class="popup-option">${name}</a>`;
+    });
+
+    // Prefer any explicit "مشاهدة الكل" / browse link in the column
+    const viewAllEl = Array.from(colDiv.querySelectorAll("a")).find(
+      a => !a.classList.contains("sub-link") && a.getAttribute("href") && a.getAttribute("href") !== "#"
+    );
+    const viewAllHref = viewAllEl?.getAttribute("href") || groupHref;
+    bodyHTML += `<a href="${viewAllHref}" class="popup-option highlight">عرض كل ${groupName}</a>`;
+
+    ui.categoriesModalContent.innerHTML =
+      catModalHeader(groupName, groupHref, true) +
+      `<div style="padding:16px">${bodyHTML}</div>`;
+
+    wireCatModalButtons(() => renderCatLevel1(parentName, parentHref, megaMenu));
+  }
+
+  function openCategoriesModal(linkEl) {
+    if (!ui.categoriesModal || !ui.categoriesModalContent) return;
+    const catName = linkEl.textContent.trim();
+    const catHref = linkEl.getAttribute("href") || "#";
+    const group = linkEl.closest(".group");
+    const megaMenu = group?.querySelector(".mega-menu");
+    if (!megaMenu) return; // no children → let browser navigate
+    renderCatLevel1(catName, catHref, megaMenu);
     ui.categoriesModal.classList.remove("hidden");
   }
 
   function closeCategoriesModal() {
     ui.categoriesModal?.classList.add("hidden");
-    categoryStack = [];
   }
 
   function initCategoriesModal() {
-    // open from top nav ONLY on mobile (<=991)
     $$("[data-mobile-category]").forEach(a => {
       a.addEventListener("click", (e) => {
         if (window.innerWidth > 991) return; // desktop uses mega-menu
+        const group = a.closest(".group");
+        const megaMenu = group?.querySelector(".mega-menu");
+        if (!megaMenu) return; // no children → navigate normally
         e.preventDefault();
         e.stopPropagation();
-        const key = a.getAttribute("data-mobile-category");
-        if (key) openCategoriesModal(key);
+        openCategoriesModal(a);
       });
     });
 
@@ -372,24 +490,137 @@
     });
   }
 
-  // ===== Wire header dropdown buttons
+  // ===== Mobile modal helpers =====
+
+  function popupHeaderHTML(title) {
+    return `
+      <div class="popup-header">
+        ${title}
+        <button class="close-btn" onclick="window.RUKN_UI.closeCenterModal()" aria-label="إغلاق">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    `;
+  }
+
+  function accountItemHTML(icon, title, href, extraClass = "") {
+    return `
+      <a href="${href}" class="account-item ${extraClass}">
+        <i class="fas fa-${icon}"></i>
+        <span class="text-sm font-bold">${title}</span>
+      </a>
+    `;
+  }
+
+  function handleFavorites(e) {
+    e.stopPropagation();
+    if (window.innerWidth > 991) { toggleDropdownById("favDropdown"); return; }
+    const dropdown = document.getElementById("favDropdown");
+    let contentHTML = "";
+    if (dropdown) {
+      const scroll = dropdown.querySelector(".fav-scroll");
+      const footer = dropdown.querySelector(".dropdown-footer");
+      contentHTML = scroll ? scroll.innerHTML : '<div class="p-4 text-center text-sm text-gray-400">لا يوجد منتجات في المفضلة</div>';
+      if (footer) {
+        const link = footer.querySelector(".btn-view-all");
+        if (link) contentHTML += `<a href="${link.href}" class="popup-option highlight">${link.textContent}</a>`;
+      }
+    } else {
+      contentHTML = '<div class="p-4 text-center text-sm text-gray-400">لا يوجد منتجات في المفضلة</div>';
+    }
+    openCenterModal(`${popupHeaderHTML("المفضلة")}<div style="padding:16px">${contentHTML}</div>`);
+  }
+
+  function handleMessages(e) {
+    e.stopPropagation();
+    if (window.innerWidth > 991) { toggleDropdownById("msgDropdown"); return; }
+    const dropdown = document.getElementById("msgDropdown");
+    let contentHTML = "";
+    if (dropdown) {
+      const scroll = dropdown.querySelector(".msg-scroll");
+      const footer = dropdown.querySelector(".dropdown-footer");
+      contentHTML = scroll ? scroll.innerHTML : '<div class="p-4 text-center text-sm text-gray-400">لا يوجد رسائل</div>';
+      if (footer) {
+        const link = footer.querySelector(".btn-view-all");
+        if (link) contentHTML += `<a href="${link.href}" class="popup-option highlight">${link.textContent}</a>`;
+      }
+    } else {
+      contentHTML = '<div class="p-4 text-center text-sm text-gray-400">لا يوجد رسائل</div>';
+    }
+    openCenterModal(`${popupHeaderHTML("الرسائل")}<div style="padding:16px">${contentHTML}</div>`);
+    safeLucide();
+  }
+
+  function handleNotifications(e) {
+    e.stopPropagation();
+    if (window.innerWidth > 991) { toggleDropdownById("notifDropdown"); return; }
+    const dropdown = document.getElementById("notifDropdown");
+    let contentHTML = "";
+    if (dropdown) {
+      const scroll = dropdown.querySelector(".notif-scroll");
+      const footer = dropdown.querySelector(".dropdown-footer");
+      contentHTML = scroll ? scroll.innerHTML : '<div class="p-4 text-center text-sm text-gray-400">لا يوجد إشعارات</div>';
+      if (footer) {
+        const link = footer.querySelector(".btn-view-all");
+        if (link) contentHTML += `<a href="${link.href}" class="popup-option highlight">${link.textContent}</a>`;
+      }
+    } else {
+      contentHTML = '<div class="p-4 text-center text-sm text-gray-400">لا يوجد إشعارات</div>';
+    }
+    openCenterModal(`${popupHeaderHTML("الإشعارات")}<div style="padding:16px">${contentHTML}</div>`);
+    safeLucide();
+  }
+
+  function handleUserAccount(e) {
+    e.stopPropagation();
+    if (window.innerWidth > 991) { toggleUserMenu(); return; }
+    const userName = window.RUKN?.username || "المستخدم";
+    const userAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ff7a18&color=fff`;
+    openCenterModal(`
+      ${popupHeaderHTML("الحساب")}
+      <div style="padding:16px">
+        <div class="text-center mb-4">
+          <img src="${userAvatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
+          <div class="font-bold">${userName}</div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          ${accountItemHTML("user", "الملف الشخصي", "/my-account/#tab-info")}
+          ${accountItemHTML("bullhorn", "إعلاناتي", "/my-account/#tab-ads")}
+          ${accountItemHTML("shopping-cart", "طلباتي", "/my-account/#tab-requests")}
+          ${accountItemHTML("wallet", "المحفظة", "/my-account/#tab-wallet")}
+          ${accountItemHTML("user-plus", "دعوة الأصدقاء", "/my-account/#tab-wallet")}
+        </div>
+        <a href="/logout/" class="account-item text-red-500 w-full" style="margin-top:12px;display:flex;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span class="text-sm font-bold">تسجيل الخروج</span>
+        </a>
+      </div>
+    `);
+  }
+
+  // ===== Wire header dropdown buttons (mobile-aware)
   function initHeaderDropdowns() {
-    // action dropdowns
     $$("[data-toggle-dropdown]").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         const id = btn.getAttribute("data-toggle-dropdown");
+
+        if (window.innerWidth <= 991) {
+          if (id === "favDropdown")   { handleFavorites(e);     return; }
+          if (id === "msgDropdown")   { handleMessages(e);      return; }
+          if (id === "notifDropdown") { handleNotifications(e); return; }
+        }
+
         if (id) toggleDropdownById(id);
       });
     });
 
-    // user menu
     $("[data-toggle-user-menu]")?.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (window.innerWidth <= 991) { handleUserAccount(e); return; }
       toggleUserMenu();
     });
 
-    // outside click closes
     window.addEventListener("click", () => closeAllMenus());
     ui.userDropdown?.addEventListener("click", (e) => e.stopPropagation());
   }
@@ -558,6 +789,10 @@
     closeCenterModal,
     openCategoriesModal,
     closeCategoriesModal,
+    handleFavorites,
+    handleMessages,
+    handleNotifications,
+    handleUserAccount,
   };
 
   // ===== BACKWARDS COMPATIBILITY =====

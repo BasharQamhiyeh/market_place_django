@@ -401,6 +401,192 @@
   </div>
 </section>
 
+
+<!-- =================== 10. HOW IT WORKS (GUEST) / TIPS (LOGGED IN) =================== -->
+
+{% if not request.user.is_authenticated %}
+
+{# ===== GUEST: رحلة التميز ===== #}
+<section id="excellenceJourney" class="py-10 px-6 bg-white overflow-hidden">
+  <div class="max-w-[1200px] mx-auto relative">
+
+    <div class="absolute -top-32 -left-32 w-[420px] h-[420px] bg-orange-200/60 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-32 -right-32 w-[420px] h-[420px] bg-green-200/60 rounded-full blur-3xl opacity-80"></div>
+
+    <div class="text-center mb-16 relative">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 mb-4 tracking-tighter">
+        رحلة التميز في <span class="text-[#ff7a18]">ركن</span>
+      </h2>
+      <p class="text-slate-500 font-bold text-base sm:text-lg">بساطة مطلقة صُممت خصيصاً لراحتك</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-8 relative">
+
+      <!-- Screen 1 -->
+      <div class="group">
+        <div class="relative bg-slate-950 border border-white/10 rounded-[2rem] sm:rounded-[2.6rem] p-4 sm:p-5 shadow-2xl transition-all duration-300 hover:-translate-y-2">
+          <div class="flex items-center justify-between px-3 pt-2 pb-4">
+            <div class="text-xs font-black text-white/60">إنشاء حساب</div>
+            <div class="flex gap-2">
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+            </div>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 orange-gradient rounded-[1.2rem] sm:rounded-[1.6rem] flex items-center justify-center shadow-xl mb-4 sm:mb-5 mx-auto group-hover:rotate-6 transition-transform">
+            <i data-lucide="user-plus" class="w-6 h-6 sm:w-8 sm:h-8 text-white"></i>
+          </div>
+          <h4 class="text-xl sm:text-2xl font-black text-center text-white mb-2 sm:mb-3">انضم إلينا</h4>
+          <p class="text-white/65 font-bold text-sm sm:text-base text-center leading-relaxed mb-5 sm:mb-6">أنشئ حسابك برقم هاتفك في ثوانٍ وابدأ رحلتك فوراً.</p>
+          <div class="space-y-3">
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <div class="text-white/50 text-xs font-black mb-2">رقم الهاتف</div>
+              <div class="h-3 w-2/3 bg-white/15 rounded-full"></div>
+            </div>
+            <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <div class="text-white/50 text-xs font-black mb-2">رمز التحقق</div>
+              <div class="h-3 w-1/2 bg-white/15 rounded-full"></div>
+            </div>
+            <button class="w-full py-2.5 sm:py-3 rounded-2xl bg-[#ff7a18] text-slate-950 font-black text-sm sm:text-base">تسجيل</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Screen 2 -->
+      <div class="group lg:translate-y-6">
+        <div class="relative bg-slate-950 border border-white/10 rounded-[2rem] sm:rounded-[2.6rem] p-4 sm:p-5 shadow-2xl transition-all duration-300 hover:-translate-y-2">
+          <div class="flex items-center justify-between px-3 pt-2 pb-4">
+            <div class="text-xs font-black text-white/60">إضافة إعلان</div>
+            <div class="flex gap-2">
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+            </div>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 orange-gradient rounded-[1.2rem] sm:rounded-[1.6rem] flex items-center justify-center shadow-xl mb-4 sm:mb-5 mx-auto group-hover:rotate-6 transition-transform">
+            <i data-lucide="plus-circle" class="w-6 h-6 sm:w-8 sm:h-8 text-white"></i>
+          </div>
+          <h4 class="text-xl sm:text-2xl font-black text-center text-white mb-2 sm:mb-3">انشر و صوّر</h4>
+          <p class="text-white/65 font-bold text-sm sm:text-base text-center leading-relaxed mb-5 sm:mb-6">صور واضحة، تفاصيل دقيقة… إعلانك يصير مغناطيس للمشاهدات.</p>
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="aspect-square rounded-2xl bg-white/5 border border-white/10"></div>
+            <div class="aspect-square rounded-2xl bg-white/5 border border-white/10"></div>
+            <div class="aspect-square rounded-2xl bg-white/5 border border-white/10"></div>
+          </div>
+          <div class="bg-white/5 rounded-2xl p-4 border border-white/10 mb-4">
+            <div class="h-3 w-3/4 bg-white/15 rounded-full mb-3"></div>
+            <div class="h-3 w-1/2 bg-white/15 rounded-full"></div>
+          </div>
+          <button class="w-full py-2.5 sm:py-3 rounded-2xl bg-[#ff7a18] text-slate-950 font-black text-sm sm:text-base">نشر الإعلان</button>
+        </div>
+      </div>
+
+      <!-- Screen 3 -->
+      <div class="group">
+        <div class="relative bg-slate-950 border border-white/10 rounded-[2rem] sm:rounded-[2.6rem] p-4 sm:p-5 shadow-2xl transition-all duration-300 hover:-translate-y-2">
+          <div class="flex items-center justify-between px-3 pt-2 pb-4">
+            <div class="text-xs font-black text-white/60">محادثة</div>
+            <div class="flex gap-2">
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+              <span class="w-2 h-2 rounded-full bg-white/25"></span>
+            </div>
+          </div>
+          <div class="w-12 h-12 sm:w-16 sm:h-16 orange-gradient rounded-[1.2rem] sm:rounded-[1.6rem] flex items-center justify-center shadow-xl mb-4 sm:mb-5 mx-auto group-hover:rotate-6 transition-transform">
+            <i data-lucide="check-circle-2" class="w-6 h-6 sm:w-8 sm:h-8 text-white"></i>
+          </div>
+          <h4 class="text-xl sm:text-2xl font-black text-center text-white mb-2 sm:mb-3">تمّم الصفقة</h4>
+          <p class="text-white/65 font-bold text-sm sm:text-base text-center leading-relaxed mb-5 sm:mb-6">تواصل، تفاوض، واتفق… بسلاسة وبأمان عبر المحادثات الذكية.</p>
+          <div class="space-y-3">
+            <div class="flex justify-end">
+              <div class="max-w-[85%] bg-white/5 border border-white/10 text-white font-bold px-4 py-3 rounded-[1.6rem] text-sm">مرحبا، متوفر المنتج؟</div>
+            </div>
+            <div class="flex justify-start">
+              <div class="max-w-[85%] bg-[#fff5ed] text-slate-950 font-black px-4 py-3 rounded-[1.6rem] text-sm">نعم متوفر، بتحب تشوف صور أكثر؟</div>
+            </div>
+            <div class="flex justify-end">
+              <div class="max-w-[85%] bg-white/5 border border-white/10 text-white font-bold px-4 py-3 rounded-[1.6rem] text-sm">ممتاز… كم آخر سعر؟</div>
+            </div>
+            <button class="w-full py-2.5 sm:py-3 rounded-2xl bg-[#ff7a18] text-slate-950 font-black text-sm sm:text-base">تأكيد الاتفاق</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% else %}
+
+{# ===== LOGGED IN: نصائح سريعة ===== #}
+<section id="loggedInSection" class="py-12 sm:py-20 px-4 sm:px-6 overflow-hidden">
+  <div class="max-w-[1200px] mx-auto">
+
+    <div class="text-center mb-16">
+      <span class="inline-block px-5 py-2 mb-6 text-xs font-black tracking-widest text-orange-700 bg-orange-50 rounded-full border border-orange-200">دليل النجاح</span>
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-3 sm:mb-5 tracking-tight drop-shadow-md">نصائح سريعة قبل النشر</h2>
+      <p class="text-slate-600 text-base sm:text-lg font-semibold max-w-2xl mx-auto">اختصر الطريق، وتعلّم كيف تنشر إعلانك أو طلبك بشكل يجذب الانتباه ويحقق نتائج.</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8 mb-12">
+
+      <button id="tipAdBtn" class="tip-card group relative p-4 sm:p-6 rounded-2xl sm:rounded-[2.8rem] bg-white border-2 border-slate-300 shadow-sm transition-all duration-300 hover:bg-orange-50 active:scale-95">
+        <div class="relative z-10 text-center">
+          <div class="flex items-center justify-center gap-4 mb-5">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white border-2 border-orange-500 text-orange-500 flex items-center justify-center">
+              <i data-lucide="megaphone" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg sm:text-2xl font-black text-orange-600">نصيحة لإضافة إعلان</h3>
+          </div>
+          <p class="text-slate-600 font-semibold leading-relaxed max-w-sm mx-auto">نصائح تساعدك على كتابة إعلان جذاب يزيد فرص المشاهدة والبيع.</p>
+        </div>
+      </button>
+
+      <button id="tipRequestBtn" class="tip-card group relative p-4 sm:p-6 rounded-2xl sm:rounded-[2.8rem] bg-white border-2 border-slate-300 shadow-sm transition-all duration-300 hover:bg-green-50 active:scale-95">
+        <div class="relative z-10 text-center">
+          <div class="flex items-center justify-center gap-4 mb-5">
+            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white border-2 border-green-500 text-green-500 flex items-center justify-center">
+              <i data-lucide="search" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-lg sm:text-2xl font-black text-green-600">نصيحة لإضافة طلب</h3>
+          </div>
+          <p class="text-slate-600 font-semibold leading-relaxed max-w-sm mx-auto">تعلّم كيف تكتب طلبًا واضحًا يجذب لك أفضل العروض بسرعة.</p>
+        </div>
+      </button>
+
+    </div>
+
+    <div id="tipBox" class="relative overflow-visible max-w-4xl mx-auto p-3 sm:p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+      <div class="rounded-2xl p-5 sm:p-8">
+        <div class="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4 mb-6">
+          <div class="flex items-center gap-3">
+            <div id="tipIconBox" class="w-12 h-12 rounded-full flex items-center justify-center bg-white border border-slate-200">
+              <i id="tipIcon" data-lucide="lightbulb" class="w-6 h-6"></i>
+            </div>
+            <span id="tipTitle" class="text-lg sm:text-2xl font-black leading-tight">نصيحة الخبراء</span>
+          </div>
+          <button id="newTipBtn" class="px-5 py-2 hidden rounded-full text-sm sm:text-base font-black bg-slate-500 text-white shadow-md transition-all duration-300">نصيحة جديدة</button>
+        </div>
+        <div id="tipHighlightBox" class="relative bg-slate-50 border-2 border-dashed border-orange-400 rounded-2xl p-5 sm:p-6 flex flex-col sm:block min-h-[100px]">
+          <p id="tipText" class="text-slate-700 text-right w-full mb-4 sm:mb-0 sm:pl-28 text-base sm:text-xl font-bold leading-relaxed transition-all duration-300">
+            اختر نوع النصيحة من الأعلى لنبدأ رحلتك بثقة.
+          </p>
+          <div class="flex justify-center sm:block">
+            <button id="goBtn"
+              data-url-ad="{% url 'create_item' %}"
+              data-url-request="{% url 'create_request' %}"
+              class="sm:absolute sm:left-3 sm:bottom-3 hidden px-6 py-2.5 rounded-xl font-black text-sm sm:text-lg bg-orange-600 text-white transition-all duration-300 hover:bg-orange-700 active:scale-95">ابدأ الآن</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endif %}
+
+
 {% endblock %}
 
 {% block scripts %}
