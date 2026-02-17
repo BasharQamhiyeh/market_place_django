@@ -384,7 +384,7 @@
                         </div>
                       {% endfor %}
 
-                      <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                      <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center lg:col-start-4">
                         <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
                           <i class="fas fa-bullhorn"></i>
                         </div>
@@ -417,15 +417,7 @@
                         </div>
                       {% endfor %}
 
-                      {# Add empty divs to maintain grid layout when there are fewer than 3 subcategories #}
-                      {% if cat.children|length == 1 %}
-                        <div></div>
-                        <div></div>
-                      {% elif cat.children|length == 2 %}
-                        <div></div>
-                      {% endif %}
-
-                      <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                      <div class="promo-card p-6 rounded-2xl flex flex-col justify-center items-center text-center lg:col-start-4">
                         <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
                           <i class="fas fa-bullhorn"></i>
                         </div>
@@ -582,7 +574,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
 
         <div class="lg:col-span-4 space-y-6">
-          <img src="{% static 'images/logo_footer.png' %}" class="h-9" alt="ركن">
+          <img src="{% static 'img/logo-footer.png' %}" class="h-9" alt="ركن">
           <p class="text-slate-400 leading-relaxed">
             في <span class="text-orange-500 font-bold">ركن</span>، نؤمن أن التجارة تبدأ بالثقة.
             لذا سخرنا أحدث التقنيات لنضمن لك رحلة بيع وشراء آمنة، سريعة، وموثوقة.
