@@ -2,7 +2,6 @@
 
 <div id="msgsBoot" data-open-conversation="{{ request.GET.c|default:'' }}"></div>
 
-{# Wrapper so JS can hide/show the whole "list UI" like the mockup #}
 <section id="msgsListUI">
 
   <div class="msgs-head">
@@ -36,12 +35,13 @@
     </div>
 
     <div class="msgs-filters">
-      <button class="chat-filter-btn active" data-filter="all" type="button">الكل</button>
-      <button class="chat-filter-btn" data-filter="ad" type="button">إعلانات</button>
-      <button class="chat-filter-btn" data-filter="request" type="button">طلبات</button>
-      <button class="chat-filter-btn" data-filter="store" type="button">المتجر</button>
+      <button class="chat-filter-btn active" data-filter="all"     type="button">الكل</button>
+      <button class="chat-filter-btn"        data-filter="ad"      type="button">إعلانات</button>
+      <button class="chat-filter-btn"        data-filter="request" type="button">طلبات</button>
+      <button class="chat-filter-btn"        data-filter="store"   type="button">المتجر</button>
     </div>
   </div>
+
 
   <div id="conversationsList" class="conversations-list"></div>
 
@@ -53,40 +53,42 @@
     <span>لا يوجد رسائل</span>
   </div>
 
-</section>
+  {#
+    Chat panel — lives here in the DOM but JS moves it inside #conversationsList
+    right after the active .chat-item.  display:none initially.
+  #}
+  <section id="chatPanel" class="chat-panel" style="display:none;">
 
+    <div class="chat-head">
+      <div class="chat-head__left">
+        <img id="chatUserImg" class="chat-head__avatar" src="" alt="">
+        <div class="chat-head__meta">
+          <div id="chatUserName" class="chat-head__name">اسم المستخدم</div>
+          <div id="chatUserStatus" class="chat-head__status">● متصل الآن</div>
+        </div>
+      </div>
 
-{# Chat panel (mockup-like) #}
-<section id="chatPanel" class="chat-panel" hidden>
-
-  <div class="chat-head">
-    <div class="chat-head__left">
-      {# keep src empty: no 404. JS sets it ONLY if real URL exists. #}
-      <img id="chatUserImg" class="chat-head__avatar" src="" alt="">
-      <div class="chat-head__meta">
-        <div id="chatUserName" class="chat-head__name">اسم المستخدم</div>
-        <div id="chatUserStatus" class="chat-head__status">● متصل الآن</div>
+      <div class="chat-head__right">
+        <div id="chatItemType" class="chat-head__type"></div>
       </div>
     </div>
 
-    <div class="chat-head__right">
-      <div id="chatItemType" class="chat-head__type"></div>
+    <div id="chatArea" class="chat-area"></div>
+
+    <div class="chat-compose">
+      <input id="chatInput" type="text" placeholder="اكتب رسالة...">
+      <button id="chatSendBtn" class="chat-send" type="button">إرسال</button>
+      {# Back / collapse — most useful on mobile #}
+      <button id="chatBackBtn" class="chat-back" type="button">
+        <span class="chat-back__inner">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          إغلاق
+        </span>
+      </button>
     </div>
-  </div>
 
-  <div id="chatArea" class="chat-area"></div>
-
-  <div class="chat-compose">
-    <input id="chatInput" type="text" placeholder="اكتب رسالة...">
-    <button id="chatSendBtn" class="chat-send" type="button">إرسال</button>
-    <button id="chatBackBtn" class="chat-back" type="button">
-      <span class="chat-back__inner">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        الرجوع
-      </span>
-    </button>
-  </div>
+  </section>
 
 </section>
