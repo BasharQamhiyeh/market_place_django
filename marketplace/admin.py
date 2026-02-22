@@ -1176,32 +1176,6 @@ class RequestAdmin(admin.ModelAdmin):
         ]
         return custom + urls
 
-    @admin.action(description="⭐ Feature selected requests for 7 days")
-    def feature_7_days(self, request, queryset):
-        until = timezone.now() + timedelta(days=7)
-        for req in queryset.select_related("listing"):
-            req.listing.featured_until = until
-            req.listing.save(update_fields=["featured_until"])
-        self.message_user(request, f"✅ Featured {queryset.count()} requests until {until}.")
-
-        from marketplace.services.notifications import notify, K_REQUEST
-
-        notify(
-            user=req.listing.user,
-            kind=K_REQUEST,
-            status="featured_set",
-            title="تم تمييز طلبك",
-            body=f"تم تمييز طلبك \"{req.listing.title}\" لمدة 7 أيام.",
-            listing=req.listing,
-        )
-
-    @admin.action(description="❌ Remove featured from selected requests")
-    def unfeature(self, request, queryset):
-        for req in queryset.select_related("listing"):
-            req.listing.featured_until = None
-            req.listing.save(update_fields=["featured_until"])
-        self.message_user(request, f"✅ Un-featured {queryset.count()} requests.")
-
 
     # Approve request
     def approve_view(self, request, request_id):

@@ -12,24 +12,38 @@ K_WALLET = "wallet"
 K_FAV = "fav"
 K_SYSTEM = "system"
 K_STORE_FOLLOW = "store_follow"
+K_REPORT = "report"
 
 # -----------------------------
 # STATUSES (badge)
 # -----------------------------
+
+# request / ad
 S_PENDING = "pending"
 S_APPROVED = "approved"
 S_REJECTED = "rejected"
+S_FEATURED = "featured"
 S_FEATURED_EXPIRED = "featured_expired"
 
+# wallet
 S_CHARGED = "charged"
 S_USED = "used"
 S_REWARD = "reward"
 
-S_ADDED = "added"              # fav
-S_INFO = "info"                # system
+# fav
+S_ADDED = "added"
 
-S_FOLLOWED = "followed"        # store_follow
-S_UNFOLLOWED = "unfollowed"    # store_follow
+# system
+S_INFO = "info"
+
+# store_follow
+S_FOLLOWED = "followed"
+S_UNFOLLOWED = "unfollowed"
+
+# report
+S_SUBMITTED = "submitted"
+S_RESOLVED = "resolved"
+S_DISMISSED = "dismissed"
 
 
 def notify(
@@ -43,9 +57,9 @@ def notify(
     is_read: bool = False,
 ):
     """
-    Create notification with clean, stable shape.
-    - kind: drives icon/color in frontend
-    - status: drives badge label/color in frontend
+    Create a notification with a clean, stable shape.
+    - kind   : drives icon/color in the frontend
+    - status : drives badge label/color in the frontend
     - no icon stored in DB
     """
     return Notification.objects.create(
@@ -57,3 +71,15 @@ def notify(
         listing=listing,
         is_read=is_read,
     )
+
+
+def notify_many(*, users, **kwargs):
+    """
+    Fan-out helper — sends the same notification to multiple users.
+    Useful for report resolution/dismissal where several users
+    may have reported the same target.
+
+    Usage:
+        notify_many(users=reporters_qs, kind=K_REPORT, status=S_RESOLVED, title="...")
+    """
+    return [notify(user=user, **kwargs) for user in users]

@@ -48,6 +48,9 @@ def feature_listing_api(request, listing_id):
     listing.refresh_from_db(fields=["featured_until"])
     request.user.refresh_from_db(fields=["points"])
 
+    listing.featured_expired_notified_at = None
+    listing.save(update_fields=["featured_expired_notified_at"])
+
     notify(
         user=request.user,
         kind=K_WALLET,

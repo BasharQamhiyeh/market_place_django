@@ -142,6 +142,7 @@ class ListingPromotion(models.Model):
 
             # update Listing cache
             listing.featured_until = max(listing.featured_until or now, ends)
+            featured_expired_notified_at = models.DateTimeField(null=True, blank=True)  # ← add this
             listing.save(update_fields=["featured_until"])
 
 
