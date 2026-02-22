@@ -208,7 +208,7 @@
                       {# AVATAR (replaces icon) #}
                       <div class="item-icon rounded-full overflow-hidden flex items-center justify-center">
                         {% if u and u.avatar %}
-                          <img src="{{ u.avatar.url }}" alt="{{ u.username|default:u.first_name }}" class="w-full h-full object-cover">
+                          <img src="{{ u.profile_photo.url }}" alt="{{ u.username|default:u.first_name }}" class="w-full h-full object-cover">
                         {% else %}
                           <span class="text-xs font-bold">
                             {% if u and u.username %}
@@ -312,17 +312,50 @@
                 <div class="text-xs text-gray-400">مرحباً بك</div>
                 <div class="text-sm font-bold">
                   {% if request.user.is_authenticated %}
-                    {{ request.user.get_full_name|default:request.user.username }}
+                    {% if request.user.store and request.user.store.name %}
+                      {{ request.user.store.name }}
+                    {% elif request.user.username %}
+                      {{ request.user.username }}
+                    {% elif request.user.first_name %}
+                      {{ request.user.first_name }}
+                    {% else %}
+                      مستخدم
+                    {% endif %}
                   {% else %}
                     مستخدم
                   {% endif %}
                 </div>
               </div>
 
-              <img
-                src="https://ui-avatars.com/api/?name={{ request.user.username|default:'User'|urlencode }}&background=ff7a18&color=fff"
-                class="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                alt="avatar">
+              {% if request.user.is_authenticated and request.user.profile_photo %}
+                <img src="{{ request.user.profile_photo.url }}"
+                     class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                     alt="avatar">
+
+              {% elif request.user.is_authenticated and request.user.store and request.user.store.logo %}
+                <img src="{{ request.user.store.logo.url }}"
+                     class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
+                     alt="{{ request.user.store.name }}">
+
+              {% else %}
+                <div class="w-10 h-10 rounded-full border-2 border-white shadow-sm bg-orange-500 flex items-center justify-center">
+                  <span class="text-white text-xs font-bold">
+                    {% if request.user.is_authenticated %}
+                      {% if request.user.store and request.user.store.name %}
+                        {{ request.user.store.name|slice:":2"|upper }}
+                      {% elif request.user.username %}
+                        {{ request.user.username|slice:":2"|upper }}
+                      {% elif request.user.first_name %}
+                        {{ request.user.first_name|slice:":2"|upper }}
+                      {% else %}
+                        ؟؟
+                      {% endif %}
+                    {% else %}
+                      ؟؟
+                    {% endif %}
+                  </span>
+                </div>
+              {% endif %}
             </div>
 
             <div id="userDropdown" class="user-dropdown">
