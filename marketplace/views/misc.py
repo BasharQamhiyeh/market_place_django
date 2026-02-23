@@ -15,6 +15,7 @@ from pydantic import validate_email
 
 from marketplace.models import ContactMessage, FAQCategory, PrivacyPolicyPage, Subscriber, Category, IssuesReport, \
     Listing, User, Store
+from marketplace.services.notifications import K_REPORT, notify, S_SUBMITTED
 from marketplace.validators import validate_no_links_or_html
 
 
@@ -231,7 +232,6 @@ def create_issue_report_ajax(request):
     if not reason:
         return JsonResponse({"ok": False, "message": "Please choose a reason."}, status=400)
 
-    # reason is REQUIRED → always validate
     try:
         validate_no_links_or_html(reason)
     except ValidationError:
@@ -240,7 +240,6 @@ def create_issue_report_ajax(request):
             status=400
         )
 
-    # details is OPTIONAL → validate ONLY if provided
     if details:
         try:
             validate_no_links_or_html(details)
@@ -265,14 +264,12 @@ def create_issue_report_ajax(request):
 
         listing = get_object_or_404(Listing, id=target_id_int)
 
-        # ✅ NEW: prevent reporting your own listing
         if listing.user_id == request.user.user_id:
             return JsonResponse(
                 {"ok": False, "message": "لا يمكنك الإبلاغ عن إعلان/طلب قمت بإنشائه."},
                 status=400
             )
 
-        # ✅ BLOCK DUPLICATE REPORTS (same user + same listing + same listing_type)
         already = IssuesReport.objects.filter(
             user=request.user,
             target_kind="listing",
@@ -288,7 +285,6 @@ def create_issue_report_ajax(request):
         report.listing = listing
         report.listing_type = listing_type
 
-
     elif target_kind == "user":
         reported = get_object_or_404(User, user_id=target_id_int, is_active=True)
         if reported.user_id == request.user.user_id:
@@ -302,21 +298,18 @@ def create_issue_report_ajax(request):
             target_kind="user",
             reported_user=reported,
         ).exists()
-
         if already:
             return JsonResponse({"ok": False, "message": "سبق أن قمت بالإبلاغ عن هذا المستخدم."}, status=400)
 
     else:  # store
         store = get_object_or_404(Store, id=target_id_int, is_active=True)
 
-        # ✅ prevent reporting your own store
         if store.owner_id == request.user.user_id:
             return JsonResponse(
                 {"ok": False, "message": "لا يمكنك الإبلاغ عن متجرك."},
                 status=400
             )
 
-        # ✅ block duplicates (same user + same store)
         already = IssuesReport.objects.filter(
             user=request.user,
             target_kind="store",
@@ -333,4 +326,23 @@ def create_issue_report_ajax(request):
         return JsonResponse({"ok": False, "message": "Invalid report data."}, status=400)
 
     report.save()
+
+    # ✅ notify the reporting user
+    if target_kind == "listing":
+        listing_label = "إعلان" if listing_type == "item" else "طلب"
+        body = f"تم استلام بلاغك بخصوص {listing_label} \"{listing.title}\"."
+    elif target_kind == "store":
+        body = f"تم استلام بلاغك بخصوص المتجر \"{store.name}\"."
+    else:  # user
+        body = f"تم استلام بلاغك بخصوص المستخدم \"{reported.username or reported.phone}\"."
+
+    notify(
+        user=request.user,
+        kind=K_REPORT,
+        status=S_SUBMITTED,
+        title="تم استلام بلاغك",
+        body=body,
+        listing=report.listing,  # None for user/store reports, that's fine
+    )
+
     return JsonResponse({"ok": True, "message": "✔ تم استلام الإبلاغ وسيتم مراجعته من فريق ركن"})

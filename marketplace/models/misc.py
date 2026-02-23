@@ -156,6 +156,11 @@ class IssuesReport(models.Model):
         ("request", "Request"),
     ]
 
+    STATUS_CHOICES = [
+        ("open", "Open"),
+        ("resolved", "Resolved"),
+        ("dismissed", "Dismissed"),
+    ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports_made")
     target_kind = models.CharField(max_length=10, choices=TARGET_KINDS, db_index=True)
@@ -172,14 +177,30 @@ class IssuesReport(models.Model):
     message = models.TextField(blank=True, null=True)
     status = models.CharField(
         max_length=20,
-        choices=[("open", "Open"), ("resolved", "Resolved")],
+        choices=STATUS_CHOICES,
         default="open",
         db_index=True,
     )
+
+    # ✅ Admin action fields
+    action_taken = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Describe the action taken by the admin when resolving or dismissing this report."
+    )
+    actioned_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="actioned_reports",
+        help_text="The admin who resolved or dismissed this report."
+    )
+    actioned_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-        # Enforce exactly one target is set, matching target_kind
         targets = {
             "listing": self.listing_id is not None,
             "user": self.reported_user_id is not None,
@@ -189,20 +210,16 @@ class IssuesReport(models.Model):
         if self.target_kind not in targets:
             raise ValidationError({"target_kind": "Invalid target_kind."})
 
-        # exactly one target overall
         if sum(bool(v) for v in targets.values()) != 1:
             raise ValidationError("Exactly one target (listing/user/store) must be set.")
 
-        # the chosen target_kind must match the filled FK
         if not targets[self.target_kind]:
             raise ValidationError("target_kind does not match the provided target.")
 
-        # listing_type required only for listing reports
         if self.target_kind == "listing":
             if self.listing_type not in ("item", "request"):
                 raise ValidationError({"listing_type": "listing_type is required for listing reports."})
         else:
-            # not listing -> listing_type must be empty
             if self.listing_type:
                 raise ValidationError({"listing_type": "listing_type must be empty unless target_kind='listing'."})
 

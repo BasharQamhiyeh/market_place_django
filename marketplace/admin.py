@@ -458,32 +458,6 @@ class ItemAdmin(admin.ModelAdmin):
     colored_status.short_description = "Status"
 
 
-    @admin.action(description="⭐ Feature selected items for 7 days")
-    def feature_7_days(self, request, queryset):
-        until = timezone.now() + timedelta(days=7)
-        for item in queryset.select_related("listing"):
-            item.listing.featured_until = until
-            item.listing.save(update_fields=["featured_until"])
-        self.message_user(request, f"✅ Featured {queryset.count()} items until {until}.")
-
-        from marketplace.services.notifications import notify, K_AD, S_APPROVED
-
-        notify(
-            user=item.listing.user,
-            kind=K_AD,
-            status="featured_set",
-            title="تم تمييز إعلانك",
-            body=f"تم تمييز إعلانك \"{item.listing.title}\" لمدة 7 أيام.",
-            listing=item.listing,
-        )
-
-    @admin.action(description="❌ Remove featured from selected items")
-    def unfeature(self, request, queryset):
-        for item in queryset.select_related("listing"):
-            item.listing.featured_until = None
-            item.listing.save(update_fields=["featured_until"])
-        self.message_user(request, f"✅ Un-featured {queryset.count()} items.")
-
 
     # -----------------------------
     # Approve view  ✅ records who + redirects to list
@@ -1469,12 +1443,16 @@ class PrivacyPolicyPageAdmin(admin.ModelAdmin):
 
 @admin.register(IssuesReport)
 class IssueReportAdmin(admin.ModelAdmin):
+    change_form_template = "admin/marketplace/issuesreport/change_form.html"
+
     list_display = (
         "id",
         "user",
         "target_kind",
         "listing_type",
         "status",
+        "actioned_by",
+        "actioned_at",
         "created_at",
     )
 
@@ -1492,6 +1470,129 @@ class IssueReportAdmin(admin.ModelAdmin):
     )
 
     ordering = ("-created_at",)
+
+    readonly_fields = (
+        "user",
+        "target_kind",
+        "listing_type",
+        "listing",
+        "reported_user",
+        "store",
+        "reason",
+        "message",
+        "status",
+        "created_at",
+        "actioned_by",
+        "actioned_at",
+    )
+
+    fields = (
+        "user",
+        "target_kind",
+        "listing_type",
+        "listing",
+        "reported_user",
+        "store",
+        "reason",
+        "message",
+        "status",
+        "action_taken",  # ← only editable field
+        "actioned_by",
+        "actioned_at",
+        "created_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def response_change(self, request, obj):
+        if "_resolve" in request.POST or "_dismiss" in request.POST:
+            new_status = "resolved" if "_resolve" in request.POST else "dismissed"
+
+            # validate action_taken is filled
+            if not obj.action_taken:
+                self.message_user(
+                    request,
+                    "⚠️ يجب كتابة الإجراء المتخذ قبل الحفظ.",
+                    level=messages.WARNING,
+                )
+                return redirect(request.path)
+
+            # set fields
+            obj.status = new_status
+            obj.actioned_by = request.user
+            obj.actioned_at = timezone.now()
+            obj.save(update_fields=["status", "action_taken", "actioned_by", "actioned_at"])
+
+            # notify reporters
+            self._notify_reporters(obj, new_status)
+
+            label = "تم حل البلاغ" if new_status == "resolved" else "تم رفض البلاغ"
+            self.message_user(request, f"✅ {label} وتم إشعار المبلّغين.", messages.SUCCESS)
+            return redirect(reverse("admin:marketplace_issuesreport_changelist"))
+
+        return super().response_change(request, obj)
+
+    def _notify_reporters(self, report, new_status):
+        from marketplace.services.notifications import notify_many, K_REPORT, S_RESOLVED, S_DISMISSED
+        from marketplace.models import User as UserModel
+
+        if report.target_kind == "listing":
+            sibling_qs = IssuesReport.objects.filter(
+                target_kind="listing",
+                listing=report.listing,
+                listing_type=report.listing_type,
+            )
+            listing_label = "الإعلان" if report.listing_type == "item" else "الطلب"
+            target_name = report.listing.title if report.listing else ""
+        elif report.target_kind == "store":
+            sibling_qs = IssuesReport.objects.filter(
+                target_kind="store",
+                store=report.store,
+            )
+            listing_label = "المتجر"
+            target_name = report.store.name if report.store else ""
+        else:  # user
+            sibling_qs = IssuesReport.objects.filter(
+                target_kind="user",
+                reported_user=report.reported_user,
+            )
+            listing_label = "المستخدم"
+            target_name = (
+                report.reported_user.username or report.reported_user.phone
+                if report.reported_user else ""
+            )
+
+        # collect reporters before updating
+        reporter_ids = list(sibling_qs.values_list("user_id", flat=True))
+
+        # update all sibling reports
+        sibling_qs.update(
+            status=report.status,
+            action_taken=report.action_taken,
+            actioned_by=report.actioned_by,
+            actioned_at=report.actioned_at,
+        )
+
+        # build notification
+        status_constant = S_RESOLVED if new_status == "resolved" else S_DISMISSED
+
+        if new_status == "resolved":
+            title = "تم اتخاذ إجراء بخصوص بلاغك"
+            body = f"تمت مراجعة بلاغك بخصوص {listing_label} \"{target_name}\". الإجراء المتخذ: {report.action_taken}"
+        else:
+            title = "تم إغلاق بلاغك"
+            body = f"تمت مراجعة بلاغك بخصوص {listing_label} \"{target_name}\". السبب: {report.action_taken}"
+
+        users = UserModel.objects.filter(user_id__in=reporter_ids)
+        notify_many(
+            users=users,
+            kind=K_REPORT,
+            status=status_constant,
+            title=title,
+            body=body,
+            listing=report.listing,
+        )
 
 
 

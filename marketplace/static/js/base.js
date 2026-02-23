@@ -727,6 +727,49 @@
     });
   }
 
+  function initNotificationRead() {
+      $$('.dropdown-noti-item[data-notif-id]').forEach(link => {
+        link.addEventListener('click', function (e) {
+          if (!this.classList.contains('is-unread')) return;
+
+          e.preventDefault();
+          const id = this.dataset.notifId;
+          const item = this;
+          const href = this.getAttribute('href');
+
+          fetch(`/my-account/noti/${id}/read/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.RUKN.csrfToken,
+              'Content-Type': 'application/json',
+            },
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.ok) {
+              item.classList.remove('is-unread');
+              item.querySelector('.noti-unread-dot')?.remove();
+
+              const badge = document.querySelector('.notif-badge');
+              if (badge) {
+                if (data.unread > 0) {
+                  badge.textContent = data.unread;
+                  badge.classList.remove('hidden');
+                } else {
+                  badge.classList.add('hidden');
+                  document.querySelector('.notif-icon')?.classList.remove('filled');
+                }
+              }
+            }
+            if (href && href !== '#') window.location.href = href;
+          })
+          .catch(() => {
+            if (href && href !== '#') window.location.href = href;
+          });
+        });
+      });
+    }
+
   // ===== Init
   document.addEventListener("DOMContentLoaded", () => {
     safeLucide();
@@ -748,6 +791,8 @@
     // Inject notification icons after DOM is ready
     injectNotificationIcons();
     injectMessageIcons();
+    initNotificationRead();
+
   });
 
   // ===== Message Icons

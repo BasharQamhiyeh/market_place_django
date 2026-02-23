@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+    {% if original and original.status == "open" %}
+    <div class="submit-row">
+        <input type="submit" name="_resolve" value="✅ Resolve" class="default"
+               style="background:#28a745; color:white;">
+        &nbsp;
+        <input type="submit" name="_dismiss" value="❌ Dismiss"
+               style="background:#dc3545; color:white; padding:10px 15px; border:none; border-radius:4px; cursor:pointer;">
+    </div>
+    {% else %}
+        <div class="submit-row">
+            <p style="color: gray;">This report has already been {{ original.status }}. No further actions available.</p>
+        </div>
+    {% endif %}
+{% endblock %}

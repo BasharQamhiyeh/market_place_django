@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h2>{{ action_label }} Report #{{ report.id }}</h2>
+
+<p><strong>Target:</strong> {{ report.target_kind }} — {{ report.listing or report.store or report.reported_user }}</p>
+<p><strong>Reason:</strong> {{ report.reason }}</p>
+<p><strong>Message:</strong> {{ report.message }}</p>
+
+<form method="post" action="{{ action_url }}">
+    {% csrf_token %}
+    <div class="form-row">
+        <label><strong>Action Taken / Reason:</strong></label><br><br>
+        <textarea name="action_taken" rows="4" style="width:600px;" required></textarea>
+    </div>
+    <br>
+    <input type="submit" value="{{ action_label }} Report" class="button default">
+    <a href="{% url 'admin:marketplace_issuesreport_changelist' %}" style="margin-left:10px;">Cancel</a>
+</form>
+{% endblock %}

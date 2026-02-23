@@ -717,22 +717,19 @@ button:disabled {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 10px;
-  border-radius: 12px;
+  padding: 12px 15px;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: 0.2s;
   position: relative;
-  border: 1px solid transparent;
+  border-bottom: 1px solid #f9fafb;
 }
 
 .dropdown-noti-item:hover {
-  background: #fff7f1;
-  border-color: var(--rukn-orange);
+  background: #fff7ed;
 }
 
 .dropdown-noti-item.is-unread {
-  background: rgba(255, 122, 24, 0.06);
-  border-color: var(--rukn-orange);
+  background: #fff7ed;
 }
 
 /* Icon Box */

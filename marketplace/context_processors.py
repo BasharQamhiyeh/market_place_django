@@ -175,6 +175,4 @@ def navbar_categories(request):
 
     cache.set(key, tree, CACHE_TTL_SECONDS)
 
-    print(tree)
-    print("XXXXXXXXXXXXX")
     return {"navbar_categories": tree}
