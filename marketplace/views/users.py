@@ -46,8 +46,8 @@ def user_profile(request, user_id):
 
         l._city_id = getattr(l, "city_id", None) or ""
 
-    categories = Category.objects.filter(parent__isnull=True).order_by("name_ar")
-    cities = City.objects.filter(is_active=True).order_by("name_ar")
+    categories = Category.objects.filter(parent__isnull=True).order_by("name")
+    cities = City.objects.filter(is_active=True).order_by("name")
 
     full_phone = seller.phone if getattr(seller, "phone", None) else ""
     masked_phone = "07•• ••• •••"

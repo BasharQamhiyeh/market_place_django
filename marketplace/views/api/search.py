@@ -43,7 +43,7 @@ def search_suggestions(request):
 
             # categories via DB
             categories = Category.objects.filter(
-                Q(name_ar__icontains=query) | Q(name_en__icontains=query)
+                Q(name__icontains=query) | Q(name__icontains=query)
             ).select_related("parent")[:8]
 
             for c in categories:
@@ -51,8 +51,8 @@ def search_suggestions(request):
                     seen_categories.add(c.id)
                     results.append({
                         "type": "category",
-                        "name": c.name_ar,
-                        "parent": c.parent.name_ar if c.parent else "",
+                        "name": c.name,
+                        "parent": c.parent.name if c.parent else "",
                         "category_id": c.id,
                         "emoji": c.icon or "📂",
                     })
@@ -69,7 +69,7 @@ def search_suggestions(request):
                     "type": "item",
                     "id": item.id,
                     "name": item.title,
-                    "category": item.category.name_ar if item.category else "",
+                    "category": item.category.name if item.category else "",
                     "photo_url": photo.image.url if photo else "",
                 })
 
@@ -86,7 +86,7 @@ def search_suggestions(request):
             # categories
             categories = (
                 Category.objects
-                .annotate(similarity=TrigramSimilarity("name_ar", query))
+                .annotate(similarity=TrigramSimilarity("name", query))
                 .filter(similarity__gt=0.2)
                 .order_by("-similarity")[:8]
             )
@@ -96,8 +96,8 @@ def search_suggestions(request):
                     seen_categories.add(c.id)
                     results.append({
                         "type": "category",
-                        "name": c.name_ar,
-                        "parent": c.parent.name_ar if c.parent else "",
+                        "name": c.name,
+                        "parent": c.parent.name if c.parent else "",
                         "category_id": c.id,
                         "emoji": c.icon or "📂",
                     })
@@ -118,7 +118,7 @@ def search_suggestions(request):
                     "type": "item",
                     "id": i.id,
                     "name": i.title,
-                    "category": i.category.name_ar if i.category else "",
+                    "category": i.category.name if i.category else "",
                     "photo_url": photo.image.url if photo else "",
                 })
 
@@ -131,7 +131,7 @@ def search_suggestions(request):
     # 3️⃣ FINAL FALLBACK: simple icontains
     # ============================================================
     categories = Category.objects.filter(
-        Q(name_ar__icontains=query) | Q(name_en__icontains=query)
+        Q(name__icontains=query) | Q(name__icontains=query)
     )[:8]
 
     for c in categories:
@@ -139,8 +139,8 @@ def search_suggestions(request):
             seen_categories.add(c.id)
             results.append({
                 "type": "category",
-                "name": c.name_ar,
-                "parent": c.parent.name_ar if c.parent else "",
+                "name": c.name,
+                "parent": c.parent.name if c.parent else "",
                 "category_id": c.id,
                 "emoji": c.icon or "📂",
             })
@@ -158,8 +158,8 @@ def search_suggestions(request):
             "type": "item",
             "id": i.id,
             "name": i.listing.title,
-            "category": i.listing.category.name_ar,
-            "city": i.listing.city.name_ar if i.listing.city else "",
+            "category": i.listing.category.name,
+            "city": i.listing.city.name if i.listing.city else "",
             "price": i.price,
             "emoji": i.listing.category.icon or "🛒",
             "photo_url": i.main_photo.image.url if i.main_photo else "",

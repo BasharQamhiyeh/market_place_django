@@ -203,7 +203,7 @@ class AttributeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = City.objects.all().order_by("name_en")
+    queryset = City.objects.all().order_by("name")
     serializer_class = CitySerializer
     permission_classes = [AllowAny]
 

@@ -17,11 +17,11 @@ def build_category_tree(categories, lang="ar"):
     """
 
     def serialize(cat):
-        name = cat.name_ar if lang == "ar" else cat.name_en
+        name = cat.name
         return {
             "id": cat.id,
             "name": name,
-            "child_label": cat.child_label or "",
+            "child_label": f"اختر من {name}",
             "children": [serialize(c) for c in cat.subcategories.all()]
         }
 

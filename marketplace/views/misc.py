@@ -145,11 +145,11 @@ def categories_browse(request):
         .filter(parent__isnull=True)
         .select_related("parent")
         .prefetch_related("subcategories__subcategories")
-        .order_by("name_ar")
+        .order_by("name")
     )
 
     def title_of(cat):
-        return cat.name_ar if lang == "ar" else cat.name_en
+        return cat.name
 
     def photo_of(cat):
         # uses your Category.photo_url property if you added it
@@ -158,11 +158,11 @@ def categories_browse(request):
     categories_data = []
 
     for top_cat in top_categories:
-        subcats = top_cat.subcategories.all().order_by("name_ar")
+        subcats = top_cat.subcategories.all().order_by("name")
 
         subs_list = []
         for sub in subcats:
-            sub_sub_cats = sub.subcategories.all().order_by("name_ar")
+            sub_sub_cats = sub.subcategories.all().order_by("name")
             levels_list = [title_of(ssc) for ssc in sub_sub_cats] if sub_sub_cats.exists() else [title_of(sub)]
 
             subs_list.append({
@@ -171,23 +171,13 @@ def categories_browse(request):
 
                 # ✅ NEW
                 "photo": photo_of(sub),
-
-                # optional legacy fallback
-                "icon": sub.icon or "",
-                "color": sub.color or "",
                 "levels": levels_list,
             })
 
         categories_data.append({
             "id": top_cat.id,  # ✅ keep as int for simpler JS
             "title": title_of(top_cat),
-
-            # ✅ NEW
             "photo": photo_of(top_cat),
-
-            # optional legacy fallback
-            "icon": top_cat.icon or "",
-            "color": top_cat.color or "",
             "subs": subs_list,
         })
 

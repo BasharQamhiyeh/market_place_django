@@ -10,7 +10,7 @@ class Command(BaseCommand):
         DATA = [
             {
                 "key": "about",
-                "name_ar": "عن ركن",
+                "name": "عن ركن",
                 "icon": "info",
                 "order": 1,
                 "questions": [
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             },
             {
                 "key": "account",
-                "name_ar": "الحساب والتسجيل",
+                "name": "الحساب والتسجيل",
                 "icon": "user-cog",
                 "order": 2,
                 "questions": [
@@ -58,7 +58,7 @@ class Command(BaseCommand):
             },
             {
                 "key": "ads",
-                "name_ar": "الإعلانات",
+                "name": "الإعلانات",
                 "icon": "megaphone",
                 "order": 3,
                 "questions": [
@@ -86,7 +86,7 @@ class Command(BaseCommand):
             },
             {
                 "key": "requests",
-                "name_ar": "الطلبات",
+                "name": "الطلبات",
                 "icon": "clipboard-list",
                 "order": 4,
                 "questions": [
@@ -110,7 +110,7 @@ class Command(BaseCommand):
             },
             {
                 "key": "safety",
-                "name_ar": "الأمان والدعم",
+                "name": "الأمان والدعم",
                 "icon": "shield",
                 "order": 5,
                 "questions": [
@@ -134,7 +134,7 @@ class Command(BaseCommand):
             },
             {
                 "key": "issues",
-                "name_ar": "مشاكل الحساب",
+                "name": "مشاكل الحساب",
                 "icon": "settings",
                 "order": 6,
                 "questions": [
@@ -161,7 +161,7 @@ class Command(BaseCommand):
             category, created = FAQCategory.objects.update_or_create(
                 key=cat["key"],
                 defaults={
-                    "name_ar": cat["name_ar"],
+                    "name": cat["name"],
                     "icon": cat["icon"],
                     "order": cat["order"],
                     "is_active": True,

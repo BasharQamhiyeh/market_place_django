@@ -57,25 +57,25 @@ class RegisterSerializer(serializers.ModelSerializer):
 class AttributeOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AttributeOption
-        fields = ["id", "value_en", "value_ar"]
+        fields = ["id", "value"]
 
 class AttributeSerializer(serializers.ModelSerializer):
     options = AttributeOptionSerializer(many=True, read_only=True)
     class Meta:
         model = Attribute
-        fields = ["id", "name_en", "name_ar", "input_type", "is_required", "options"]
+        fields = ["id",  "name", "input_type", "is_required", "options"]
 
 class CategoryBriefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ["id", "name_en", "name_ar", "parent_id"]
+        fields = ["id",  "name", "parent_id"]
 
 class CategoryTreeSerializer(serializers.ModelSerializer):
     subcategories = CategoryBriefSerializer(many=True, read_only=True)
     attributes = AttributeSerializer(many=True, read_only=True)
     class Meta:
         model = Category
-        fields = ["id", "name_en", "name_ar", "description", "parent_id", "subcategories", "attributes"]
+        fields = ["id",  "name", "description", "parent_id", "subcategories", "attributes"]
 
 # -------------------------
 # Cities
@@ -83,7 +83,7 @@ class CategoryTreeSerializer(serializers.ModelSerializer):
 class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
-        fields = ["id", "name_en", "name_ar"]
+        fields = ["id", "name"]
 
 # -------------------------
 # Item & dynamic attributes
@@ -105,7 +105,7 @@ class ItemAttributeValueSerializer(serializers.ModelSerializer):
         lang = self.context.get("lang")
         a = obj.attribute
         if not a: return None
-        return a.name_ar if lang == "ar" else a.name_en
+        return a.name
 
 class ItemListSerializer(serializers.ModelSerializer):
     category = CategoryBriefSerializer(read_only=True)

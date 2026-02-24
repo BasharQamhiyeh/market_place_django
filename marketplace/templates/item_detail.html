@@ -25,7 +25,7 @@
             {% for cat in breadcrumb_categories %}
               <a href="{% url 'item_list' %}?categories={{ cat.id }}" class="hover:text-[var(--rukn-orange)]">
                 <bdi dir="auto">
-                  {% if LANGUAGE_CODE == "ar" %}{{ cat.name_ar }}{% else %}{{ cat.name_en }}{% endif %}
+                  cat.name
                 </bdi>
               </a>
               /
@@ -54,11 +54,6 @@
               <div class="flex flex-col gap-3">
                 <div class="flex items-start justify-between gap-3">
                   <div class="flex-1">
-<!--                    <p class="text-[11px] text-[var(&#45;&#45;muted)] mb-1">-->
-<!--                      {% if item.listing.category %}-->
-<!--                        {% if LANGUAGE_CODE == "ar" %}{{ item.listing.category.name_ar }}{% else %}{{ item.listing.category.name_en }}{% endif %}-->
-<!--                      {% endif %}-->
-<!--                    </p>-->
                     <h2 class="text-lg md:text-xl font-extrabold text-slate-900 leading-snug">
                       {{ item.listing.title }}
                     </h2>

@@ -110,11 +110,7 @@
         href="{% url 'item_list' %}?category={{ item.listing.category.id }}"
         aria-label="{% trans 'View category' %}"
       >
-        {% if LANGUAGE_CODE == "ar" %}
-          {{ item.listing.category.name_ar }}
-        {% else %}
-          {{ item.listing.category.name_en }}
-        {% endif %}
+        {{ item.listing.category.name }}
       </a>
     {% endif %}
 

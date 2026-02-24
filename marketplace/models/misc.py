@@ -14,7 +14,7 @@ class FAQCategory(models.Model):
         unique=True,
         help_text="Unique key used in template anchors. Example: about, account, ads..."
     )
-    name_ar = models.CharField(max_length=120)
+    name = models.CharField(max_length=120)
     icon = models.CharField(
         max_length=40,
         blank=True,
@@ -36,7 +36,7 @@ class FAQCategory(models.Model):
         return rel.filter(is_active=True).order_by("order", "id")
 
     def __str__(self) -> str:
-        return self.name_ar
+        return self.name
 
 
 class FAQQuestion(models.Model):

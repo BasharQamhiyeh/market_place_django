@@ -200,7 +200,7 @@ def item_list(request):
     has_more = page_obj.has_next()
 
     categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories").distinct()
-    cities = City.objects.all().order_by("name_ar")
+    cities = City.objects.all().order_by("name")
 
     context = {
         "page_obj": page_obj,
@@ -285,9 +285,9 @@ def item_detail(request, item_id):
                 option = None
 
             if option:
-                value = option.value_ar
+                value = option.value
 
-        attributes.append({"name": attr.name_ar, "value": value})
+        attributes.append({"name": attr.name, "value": value})
 
     # ----------------------------
     # Similar items (fallback + ES)
@@ -433,7 +433,7 @@ def item_create(request):
     # 1. Top-level categories
     # =============================
     lang = translation.get_language()
-    order_field = "name_ar" if lang == "ar" else "name_en"
+    order_field = "name"
 
     top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
 

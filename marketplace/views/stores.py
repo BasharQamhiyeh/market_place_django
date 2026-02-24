@@ -98,7 +98,7 @@ def _stores_queryset_and_context(request):
             )
         )
         .distinct()
-        .order_by("name_ar")
+        .order_by("name")
     )
 
     total_count = paginator.count
@@ -139,7 +139,7 @@ def store_profile(request, store_id):
 
     # --------- build root categories for chips (from ALL listings) ---------
     # Build parent map once (categories table usually small)
-    cats = Category.objects.all().only("id", "parent_id", "name_ar", "name_en")
+    cats = Category.objects.all().only("id", "parent_id", "name")
     parent_map = {c.id: c.parent_id for c in cats}
 
     def root_id(cat_id: int):
@@ -152,7 +152,7 @@ def store_profile(request, store_id):
     root_ids = sorted({root_id(cid) for cid in cat_ids if cid})
 
     store_categories = list(
-        Category.objects.filter(id__in=root_ids, parent__isnull=True).order_by("name_ar")
+        Category.objects.filter(id__in=root_ids, parent__isnull=True).order_by("name")
     )
 
     # --------- attach filter data to the 30 rendered cards (NO extra DB hits) ---------
@@ -166,8 +166,8 @@ def store_profile(request, store_id):
         city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None) or ""
         l._city_id = city_id
 
-    categories = Category.objects.filter(parent__isnull=True).order_by("name_ar")
-    cities = City.objects.filter(is_active=True).order_by("name_ar")
+    categories = Category.objects.filter(parent__isnull=True).order_by("name")
+    cities = City.objects.filter(is_active=True).order_by("name")
 
     reviews = (
         StoreReview.objects

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('key', models.SlugField(help_text='Unique key used in template anchors. Example: about, account, ads...', max_length=32, unique=True)),
-                ('name_ar', models.CharField(max_length=120)),
+                ('name', models.CharField(max_length=120)),
                 ('icon', models.CharField(blank=True, default='circle-help', help_text='Lucide icon name, e.g. info, user-cog, megaphone...', max_length=40)),
                 ('order', models.PositiveIntegerField(default=0)),
                 ('is_active', models.BooleanField(default=True)),

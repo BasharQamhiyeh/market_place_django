@@ -27,11 +27,7 @@
     <div class="req-top">
       {% if req.listing.category %}
         <span class="req-pill req-pill-category">
-          {% if LANGUAGE_CODE == "ar" %}
-            {{ req.listing.category.name_ar }}
-          {% else %}
-            {{ req.listing.category.name_en }}
-          {% endif %}
+          {{ req.listing.category.name }}
         </span>
       {% endif %}
 
@@ -55,7 +51,7 @@
         </svg>
         <span>
           {% if req.listing.city %}
-            {{ req.listing.city.name_ar|default:req.listing.city }}
+            {{ req.listing.city.name|default:req.listing.city }}
           {% else %}
             —
           {% endif %}

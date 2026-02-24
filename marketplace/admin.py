@@ -84,15 +84,15 @@ class StoreReviewAdmin(admin.ModelAdmin):
 class AttributeOptionInline(nested_admin.NestedTabularInline):
     model = AttributeOption
     extra = 1
-    fields = ("value_en", "value_ar")
+    fields = ("value",)
     verbose_name = "Option"
     verbose_name_plural = "Options"
 
 
 class AttributeInline(nested_admin.NestedStackedInline):
     model = Attribute
-    extra = 1
-    fields = ("name_en", "name_ar", "input_type", "ui_type", "is_required")
+    extra = 0
+    fields = ("name", "input_type", "ui_type", "is_required")
     inlines = [AttributeOptionInline]
     verbose_name = "Attribute"
     verbose_name_plural = "Attributes"
@@ -109,8 +109,33 @@ class ItemPhotoInline(admin.TabularInline):
 
 class CategoryPhotoInline(nested_admin.NestedStackedInline):
     model = CategoryPhoto
-    extra = 0
+    extra = 1
     max_num = 1
+    min_num = 1
+    can_delete = True
+    readonly_fields = ("photo_preview_inline",)
+    fields = ("photo_preview_inline", "image")
+
+    def photo_preview_inline(self, obj):
+        if obj and obj.pk and obj.image:
+            return format_html(
+                '<img id="category-photo-preview" src="{}" style="'
+                "width:160px;height:160px;object-fit:cover;"
+                'border-radius:8px;border:1px solid #ddd;margin-bottom:8px;"'
+                "/>",
+                obj.image.url,
+            )
+        return format_html(
+            '<img id="category-photo-preview" src="" style="'
+            "width:160px;height:160px;object-fit:cover;"
+            "border-radius:8px;border:1px solid #ddd;margin-bottom:8px;"
+            'display:none;"'
+            "/>"
+        )
+    photo_preview_inline.short_description = "Current Photo"
+
+    class Media:
+        js = ("admin/js/category_photo_preview.js",)
 
 
 @admin.register(Category)
@@ -119,41 +144,37 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
     change_form_template = "admin/marketplace/category/change_form.html"
 
     list_display = (
-        "name_en",
-        "name_ar",
+        "name",
         "parent",
-        "icon_display",
-        "color_box",
-        "photo_preview",      # ✅ NEW
+        "photo_preview",
     )
 
     fields = (
-        "name_en",
-        "name_ar",
-        "subtitle_en",
-        "subtitle_ar",
-        "child_label",
-        "icon",
-        "color",
+        "name",
+        "subtitle",
         "description",
         "parent",
     )
 
-    search_fields = ("name_en", "name_ar")
+    search_fields = ("name",)
     list_filter = ("parent",)
     ordering = ("parent__id", "id")
 
-    # ✅ add the photo inline on same page as Category
     inlines = [CategoryPhotoInline, AttributeInline]
 
+    # ------------------------------------------------------------------ #
+    # Tree helpers
+    # ------------------------------------------------------------------ #
     def _build_tree(self, qs, opts, parent=None):
         nodes = []
-        children = qs.filter(parent=parent)
-        for child in children:
+        for child in qs.filter(parent=parent):
             nodes.append({
                 "id": child.id,
-                "name": f"{child.name_en} / {child.name_ar}",
-                "edit_url": reverse(f"admin:{opts.app_label}_{opts.model_name}_change", args=[child.id]),
+                "name": child.name,
+                "edit_url": reverse(
+                    f"admin:{opts.app_label}_{opts.model_name}_change",
+                    args=[child.id],
+                ),
                 "children": self._build_tree(qs, opts, child),
             })
         return nodes
@@ -161,17 +182,19 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
     def changelist_view(self, request, extra_context=None):
         qs = self.get_queryset(request).select_related("parent")
         opts = self.model._meta
-        tree = self._build_tree(qs, opts)
         extra_context = extra_context or {}
-        extra_context["categories_json"] = json.dumps(tree, ensure_ascii=False)
+        extra_context["categories_json"] = json.dumps(
+            self._build_tree(qs, opts), ensure_ascii=False
+        )
         return super().changelist_view(request, extra_context=extra_context)
 
     def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
         qs = self.get_queryset(request).select_related("parent")
         opts = self.model._meta
-        tree = self._build_tree(qs, opts)
         extra_context = extra_context or {}
-        extra_context["categories_json"] = json.dumps(tree, ensure_ascii=False)
+        extra_context["categories_json"] = json.dumps(
+            self._build_tree(qs, opts), ensure_ascii=False
+        )
         return super().changeform_view(request, object_id, form_url, extra_context=extra_context)
 
     def get_changeform_initial_data(self, request):
@@ -185,63 +208,52 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "parent" and formfield is not None:
             categories = Category.objects.all().select_related("parent")
-            lang = translation.get_language()
 
             def build_path(cat):
-                name = cat.name_ar if lang == "ar" else cat.name_en
-                path = [name]
+                path = [cat.name]
                 p = cat.parent
                 while p:
-                    pname = p.name_ar if lang == "ar" else p.name_en
-                    path.insert(0, pname)
+                    path.insert(0, p.name)
                     p = p.parent
                 return " › ".join(path)
 
-            choices = [(None, "---------")]
-            for c in categories:
-                choices.append((c.id, build_path(c)))
-
-            formfield.choices = choices
+            formfield.choices = [(None, "---------")] + [
+                (c.id, build_path(c)) for c in categories
+            ]
         return formfield
 
-    # ✅ keep only ONE of these (you had it duplicated)
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name == "color" and formfield is not None:
-            formfield.widget = forms.TextInput(attrs={"type": "color"})
-        return formfield
-
-    def icon_display(self, obj):
-        if obj.icon:
-            color = obj.color or "#ff6600"
-            return format_html('<span style="font-size:22px; color:{};">{}</span>', color, obj.icon)
-        return "—"
-    icon_display.short_description = "Icon"
-
-    def color_box(self, obj):
-        if obj.color:
-            return format_html(
-                '<div style="width:25px; height:25px; background:{}; border-radius:4px; border:1px solid #ddd;"></div>',
-                obj.color
+    # ------------------------------------------------------------------ #
+    # Require photo on save
+    # ------------------------------------------------------------------ #
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        obj = form.instance
+        # Reload the reverse relation
+        obj.refresh_from_db()
+        p = getattr(obj, "photo", None)
+        if not p or not getattr(p, "image", None):
+            self.message_user(
+                request,
+                "⚠️ This category has no photo. Please upload one.",
+                level=messages.WARNING,
             )
-        return "—"
-    color_box.short_description = "Color"
 
-    # ✅ NEW: small preview in list display
+    # ------------------------------------------------------------------ #
+    # List display helpers
+    # ------------------------------------------------------------------ #
     def photo_preview(self, obj):
         p = getattr(obj, "photo", None)
         if p and p.image:
             return format_html(
-                '<img src="{}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid #ddd;" />',
-                p.image.url
+                '<img src="{}" style="width:42px;height:42px;object-fit:cover;'
+                'border-radius:8px;border:1px solid #ddd;" />',
+                p.image.url,
             )
         return "—"
     photo_preview.short_description = "Photo"
 
     class Media:
-        js = (
-            "admin/js/emoji_picker.js",
-        )
+        js = ("admin/js/emoji_picker.js",)
 
 
 # ======================================================
@@ -317,8 +329,7 @@ class ItemAdmin(admin.ModelAdmin):
     search_fields = (
         "listing__title",
         "listing__user__username",
-        "listing__category__name_en",
-        "listing__category__name_ar",
+        "listing__category__name",
         "listing__user__first_name",
         "listing__user__last_name",
         "listing__user__email",
@@ -677,12 +688,12 @@ class ItemAdmin(admin.ModelAdmin):
             # ---------------------------
             # HELPERS (AR name = source of truth)
             # ---------------------------
-            def get_or_create_category_by_ar(name_ar, parent=None):
-                name_ar = clean_str(name_ar)
-                if not name_ar:
+            def get_or_create_category(name, parent=None):
+                name = clean_str(name)
+                if not name:
                     return None
 
-                cat = Category.objects.filter(name_ar__iexact=name_ar).first()
+                cat = Category.objects.filter(name__iexact=name).first()
                 if cat:
                     if (parent and cat.parent_id != parent.id) or (not parent and cat.parent_id is not None):
                         cat.parent = parent
@@ -691,30 +702,27 @@ class ItemAdmin(admin.ModelAdmin):
 
                 try:
                     return Category.objects.create(
-                        name_ar=name_ar,
-                        name_en=name_ar,
+                        name=name,
                         parent=parent,
                     )
                 except IntegrityError:
-                    cat = Category.objects.filter(name_ar__iexact=name_ar).first()
+                    cat = Category.objects.filter(name__iexact=name).first()
                     if cat and ((parent and cat.parent_id != parent.id) or (not parent and cat.parent_id is not None)):
                         cat.parent = parent
                         cat.save(update_fields=["parent"])
                     return cat
 
-            def get_or_create_city_by_ar(name_ar):
-                name_ar = clean_str(name_ar)
-                if not name_ar:
+            def get_or_create_city_by_ar(name):
+                name = clean_str(name)
+                if not name:
                     return None
 
-                city = City.objects.filter(name_ar__iexact=name_ar).first()
+                city = City.objects.filter(name__iexact=name).first()
                 if city:
                     return city
 
-                try:
-                    return City.objects.create(name_ar=name_ar, name_en=name_ar)
-                except IntegrityError:
-                    return City.objects.filter(name_ar__iexact=name_ar).first()
+                return City.objects.create(name=name)
+
 
             excel_path = zip_path = photos_dir = None
 
@@ -807,25 +815,25 @@ class ItemAdmin(admin.ModelAdmin):
                         desc = clean_str(row[desc_col]) if desc_col is not None else ""
                         price = float(row[price_col]) if (price_col is not None and row[price_col]) else 0.0
 
-                        cat_name_ar = clean_str(row[cat_col]) if cat_col is not None else None
-                        subcat_name_ar = clean_str(row[subcat_col]) if (subcat_col is not None) else None
-                        subcat2_name_ar = clean_str(row[subcat2_col]) if (subcat2_col is not None) else None
+                        cat_name = clean_str(row[cat_col]) if cat_col is not None else None
+                        subcat_name = clean_str(row[subcat_col]) if (subcat_col is not None) else None
+                        subcat2_name = clean_str(row[subcat2_col]) if (subcat2_col is not None) else None
 
-                        city_name_ar = clean_str(row[city_col]) if (city_col is not None) else None
+                        city_name = clean_str(row[city_col]) if (city_col is not None) else None
 
                         # -----------------------------
                         # CATEGORY (3 levels)
                         # -----------------------------
-                        lvl1 = get_or_create_category_by_ar(cat_name_ar, parent=None)
-                        lvl2 = get_or_create_category_by_ar(subcat_name_ar, parent=lvl1) if subcat_name_ar else None
-                        lvl3 = get_or_create_category_by_ar(subcat2_name_ar, parent=lvl2) if subcat2_name_ar else None
+                        lvl1 = get_or_create_category(cat_name, parent=None)
+                        lvl2 = get_or_create_category(subcat_name, parent=lvl1) if subcat_name else None
+                        lvl3 = get_or_create_category(subcat2_name, parent=lvl2) if subcat2_name else None
 
                         assigned_category = lvl3 or lvl2 or lvl1
 
                         # -----------------------------
                         # CITY (Arabic name)
                         # -----------------------------
-                        city = get_or_create_city_by_ar(city_name_ar)
+                        city = get_or_create_city_by_ar(city_name)
 
                         # ======================================================
                         # FIND ITEM BY external_id
@@ -1035,8 +1043,7 @@ class RequestAdmin(admin.ModelAdmin):
         "listing__user__username",
         "listing__user__first_name",
         "listing__user__last_name",
-        "listing__category__name_ar",
-        "listing__category__name_en",
+        "listing__category__name",
         "listing__user__phone",
     )
 
@@ -1253,9 +1260,9 @@ class RequestAdmin(admin.ModelAdmin):
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
-    list_display = ("name_ar", "name_en", "is_active")
-    ordering = ("name_ar",)
-    search_fields = ("name_ar", "name_en")
+    list_display = ("name", "is_active")
+    ordering = ("name",)
+    search_fields = [("name")]
     change_list_template = "admin/cities_list_and_form.html"
 
     def changelist_view(self, request, extra_context=None):
@@ -1413,9 +1420,9 @@ class ContactMessageAdmin(admin.ModelAdmin):
 
 @admin.register(FAQCategory)
 class FAQCategoryAdmin(admin.ModelAdmin):
-    list_display = ("key", "name_ar", "icon", "order", "is_active")
+    list_display = ("key", "name", "icon", "order", "is_active")
     list_editable = ("order", "is_active", "icon")
-    search_fields = ("key", "name_ar")
+    search_fields = ("key", "name")
     ordering = ("order", "id")
 
 

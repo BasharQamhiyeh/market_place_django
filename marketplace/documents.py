@@ -1,6 +1,5 @@
 # marketplace/documents.py
 import os
-from django.utils import translation
 
 from django_elasticsearch_dsl import Document, Index, fields
 from django_elasticsearch_dsl.registries import registry
@@ -18,7 +17,6 @@ IS_RENDER = os.environ.get("RENDER", "") == "true"
 if IS_RENDER:
     registry._active = False
 
-    # Dummy class to prevent import errors
     class ListingDocument:
         pass
 
@@ -48,7 +46,6 @@ else:
         }
     )
 
-    # Shared Analyzer
     edge_ngram_filter = token_filter(
         "edge_ngram_filter",
         type="edge_ngram",
@@ -69,22 +66,18 @@ else:
     @registry.register_document
     class ListingDocument(Document):
 
-        # ---------- category ----------
         category = fields.ObjectField(properties={
             "name": fields.TextField(analyzer=edge_ngram_analyzer),
         })
 
-        # ---------- parent category ----------
         category_parent = fields.ObjectField(properties={
             "name": fields.TextField(analyzer=edge_ngram_analyzer),
         })
 
-        # ---------- city ----------
         city = fields.ObjectField(properties={
             "name": fields.TextField(analyzer=edge_ngram_analyzer),
         })
 
-        # ---------- universal attributes ----------
         attributes = fields.ObjectField(
             properties={
                 "name": fields.TextField(analyzer=edge_ngram_analyzer),
@@ -93,11 +86,8 @@ else:
             multi=True
         )
 
-        # ---------- Item fields ----------
         price = fields.FloatField()
         condition = fields.TextField()
-
-        # ---------- Request fields ----------
         budget = fields.FloatField()
         condition_preference = fields.TextField()
 
@@ -109,13 +99,10 @@ else:
             fields = [
                 "title",
                 "description",
-                "type",        # item / request
+                "type",
                 "created_at",
             ]
 
-        # ========================================================
-        # Optimized queryset
-        # ========================================================
         def get_queryset(self):
             return (
                 super()
@@ -133,65 +120,40 @@ else:
                 )
             )
 
-        # ========================================================
-        # CATEGORY FIELD
-        # ========================================================
         def prepare_category(self, instance):
             if not instance.category:
                 return None
-            lang = translation.get_language()
-            return {
-                "name": instance.category.name_ar if lang == "ar" else instance.category.name_en
-            }
+            return {"name": instance.category.name}
 
         def prepare_category_parent(self, instance):
             if not instance.category or not instance.category.parent:
                 return None
-            lang = translation.get_language()
-            parent = instance.category.parent
-            return {
-                "name": parent.name_ar if lang == "ar" else parent.name_en
-            }
+            return {"name": instance.category.parent.name}
 
-        # ========================================================
-        # CITY FIELD
-        # ========================================================
         def prepare_city(self, instance):
             if not instance.city:
                 return None
-            lang = translation.get_language()
-            return {
-                "name": instance.city.name_ar if lang == "ar" else instance.city.name_en
-            }
+            return {"name": instance.city.name}
 
-        # ========================================================
-        # UNIVERSAL ATTRIBUTES (ITEM or REQUEST)
-        # ========================================================
         def prepare_attributes(self, instance):
-            lang = translation.get_language()
             attrs = []
 
-            # === Item attributes ===
             if hasattr(instance, "item") and instance.item:
                 for av in instance.item.attribute_values.all():
                     attrs.append({
-                        "name": av.attribute.name_ar if lang == "ar" else av.attribute.name_en,
+                        "name": av.attribute.name,
                         "value": av.value,
                     })
 
-            # === Request attributes ===
             if hasattr(instance, "request") and instance.request:
                 for av in instance.request.attribute_values.all():
                     attrs.append({
-                        "name": av.attribute.name_ar if lang == "ar" else av.attribute.name_en,
+                        "name": av.attribute.name,
                         "value": av.value or "",
                     })
 
             return attrs
 
-        # ========================================================
-        # ITEM FIELD PREPARERS
-        # ========================================================
         def prepare_price(self, instance):
             if hasattr(instance, "item") and instance.item:
                 return float(instance.item.price)
@@ -202,9 +164,6 @@ else:
                 return instance.item.condition
             return None
 
-        # ========================================================
-        # REQUEST FIELD PREPARERS
-        # ========================================================
         def prepare_budget(self, instance):
             if hasattr(instance, "request") and instance.request and instance.request.budget is not None:
                 return float(instance.request.budget)

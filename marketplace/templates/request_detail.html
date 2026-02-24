@@ -24,7 +24,7 @@
             {% for cat in breadcrumb_categories %}
               <a href="{% url 'request_list' %}?categories={{ cat.id }}" class="hover:text-[var(--rukn-green)]">
                 <bdi dir="auto">
-                  {% if LANGUAGE_CODE == "ar" %}{{ cat.name_ar }}{% else %}{{ cat.name_en }}{% endif %}
+                  cat.name
                 </bdi>
               </a>
               /

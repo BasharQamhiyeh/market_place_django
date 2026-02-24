@@ -137,7 +137,7 @@ def request_list(request):
     has_more = page_obj.has_next()
 
     categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories").distinct()
-    cities = City.objects.all().order_by("name_ar")
+    cities = City.objects.all().order_by("name")
 
     # banners (same behavior as items; if you already provide banners elsewhere, keep it)
     banners = []
@@ -234,11 +234,11 @@ def request_detail(request, request_id):
                 option = None  # ✅ means it's "Other" text like "Test other"
 
             if option:
-                value = option.value_ar  # or value_en if you want based on language
+                value = option.value  # or value_en if you want based on language
             # else: keep value as-is (the typed "Other" text)
 
         attributes.append({
-            "name": attr.name_ar,
+            "name": attr.name,
             "value": value,
         })
 
@@ -320,7 +320,7 @@ def request_create(request):
     # 1. Top-level categories
     # =============================
     lang = translation.get_language()
-    order_field = "name_ar" if lang == "ar" else "name_en"
+    order_field = "name"
 
     top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
 
@@ -487,7 +487,7 @@ def request_edit(request, request_id):
     # Category tree (for display only; locked in edit)
     # =============================
     lang = translation.get_language()
-    order_field = "name_ar" if lang == "ar" else "name_en"
+    order_field = "name"
     top_categories = Category.objects.filter(parent__isnull=True).order_by(order_field)
 
     category_tree = build_category_tree(top_categories, lang)

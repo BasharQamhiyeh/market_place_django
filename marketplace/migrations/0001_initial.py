@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name_en', models.CharField(max_length=255)),
-                ('name_ar', models.CharField(max_length=255)),
+                ('name', models.CharField(max_length=255)),
                 ('input_type', models.CharField(choices=[('text', 'Text'), ('number', 'Number'), ('select', 'Select')], default='text', max_length=50)),
                 ('ui_type', models.CharField(choices=[('dropdown', 'Dropdown'), ('radio', 'Radio Buttons'), ('checkbox', 'Checkbox List'), ('single_checkbox', 'Single Checkbox'), ('tags', 'Tags / Multi-Select')], default='dropdown', max_length=50)),
                 ('is_required', models.BooleanField(default=True)),
@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name_en', models.CharField(max_length=150, unique=True)),
-                ('name_ar', models.CharField(max_length=150, unique=True)),
+                ('name', models.CharField(max_length=150, unique=True)),
                 ('is_active', models.BooleanField(default=True)),
             ],
             options={
@@ -117,7 +117,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name_en', models.CharField(max_length=255, unique=True)),
-                ('name_ar', models.CharField(max_length=255, unique=True)),
+                ('name', models.CharField(max_length=255, unique=True)),
                 ('subtitle_en', models.CharField(blank=True, max_length=255, null=True)),
                 ('subtitle_ar', models.CharField(blank=True, max_length=255, null=True)),
                 ('icon', models.CharField(blank=True, max_length=50, null=True)),

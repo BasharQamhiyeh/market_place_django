@@ -47,24 +47,22 @@ class ItemAdmin(admin.ModelAdmin):
             # Skip header row, start from row 2
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 try:
-                    name_ar = row[1]       # Arabic name
-                    name_en = row[2]       # English name (optional)
-                    desc_ar = row[3]       # Arabic description
-                    desc_en = row[4]       # English description
+                    name = row[1]       # Arabic name
+                    desc = row[3]       # Arabic description
                     price = row[5]
                     image_url = row[12]    # URL column
                     category_name = row[13]
 
-                    if not name_ar or not price or not category_name:
+                    if not name or not price or not category_name:
                         continue
 
                     # Find or create category
-                    category, _ = Category.objects.get_or_create(name_ar=category_name, defaults={'name_en': category_name})
+                    category, _ = Category.objects.get_or_create(name=category_name)
 
                     # Create item
                     item = Item.objects.create(
-                        title=name_ar,
-                        description=desc_ar or name_en or "",
+                        title=name,
+                        description=desc,
                         price=float(price),
                         category=category,
                         user=request.user,  # imported by admin
@@ -84,7 +82,7 @@ class ItemAdmin(admin.ModelAdmin):
                                 photo.image.save(os.path.basename(image_url), File(tmp_img))
                                 tmp_img.close()
                         except Exception as e:
-                            print(f"[WARN] Could not fetch image for {name_ar}: {e}")
+                            print(f"[WARN] Could not fetch image for {name}: {e}")
 
                     created_count += 1
 

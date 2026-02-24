@@ -97,10 +97,10 @@
             <select name="category" id="filterCategory" class="filter-select">
               <option value="">كل الأقسام</option>
               {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if filters.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name_ar }}</option>
+                <option value="{{ cat.id }}" {% if filters.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
                 {% for sub in cat.subcategories.all %}
                   <option value="{{ sub.id }}" {% if filters.category == sub.id|stringformat:"s" %}selected{% endif %}>
-                    — {{ sub.name_ar }}
+                    — {{ sub.name }}
                   </option>
                 {% endfor %}
               {% endfor %}
@@ -112,7 +112,7 @@
             <select name="city" id="filterCity" class="filter-select">
               <option value="">كل المدن</option>
               {% for c in cities %}
-                <option value="{{ c.id }}" {% if filters.city == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name_ar }}</option>
+                <option value="{{ c.id }}" {% if filters.city == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
               {% endfor %}
             </select>
           </div>

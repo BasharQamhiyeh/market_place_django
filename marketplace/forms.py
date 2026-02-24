@@ -233,7 +233,7 @@ class ResetPasswordForm(forms.Form):
 class CityForm(forms.ModelForm):
     class Meta:
         model = City
-        fields = ["name_ar", "name_en", "is_active"]
+        fields = ["name", "is_active"]
 
 
 
@@ -300,7 +300,7 @@ def build_dynamic_attribute_fields(form, category, instance_attribute_values, is
 
     for attribute in category.attributes.all():
         field_name = f"attr_{attribute.id}"
-        label = attribute.name_ar if lang == "ar" else attribute.name_en
+        label = attribute.name
 
         existing_value = instance_attribute_values.get(attribute.id, "")
         required = attribute.is_required if not is_request else False
@@ -358,7 +358,7 @@ def build_dynamic_attribute_fields(form, category, instance_attribute_values, is
 
             # choices: option ids + sentinel "__other__"
             choices = [
-                (str(opt.id), opt.value_ar if lang == "ar" else opt.value_en)
+                (str(opt.id), opt.value)
                 for opt in options
             ]
             choices.append(("__other__", "أخرى"))
@@ -366,8 +366,7 @@ def build_dynamic_attribute_fields(form, category, instance_attribute_values, is
             option_ids = {str(opt.id) for opt in options}
             label_to_id = {}
             for opt in options:
-                label_to_id[str(opt.value_ar)] = str(opt.id)
-                label_to_id[str(opt.value_en)] = str(opt.id)
+                label_to_id[str(opt.value)] = str(opt.id)
 
             ui = attribute.ui_type
 

@@ -583,7 +583,7 @@ syncOtherForBlock(block);
   const selectedPath = safeJsonFromScript("selected-category-path") || [];
   const categoryDynamicHint = document.getElementById("categoryDynamicHint");
 
-  function nodeName(n) { return (n && (n.name || n.name_ar || n.name_en || n.label || n.title || n.text)) || ""; }
+  function nodeName(n) { return (n && (n.name || n.label || n.title || n.text)) || ""; }
   function nodeChildren(n) { return (n && (n.children || n.subcategories || n.subs || n.items || n.nodes)) || []; }
   function nodeId(n) { const v = (n && (n.id ?? n.pk ?? n.value)) ?? null; return v == null ? null : String(v); }
   function nodeChildLabel(n) { return (n && typeof n.child_label === "string") ? n.child_label.trim() : ""; }

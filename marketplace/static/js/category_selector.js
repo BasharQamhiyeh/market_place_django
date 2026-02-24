@@ -141,7 +141,7 @@
         const li = document.createElement("li");
         li.className = "p-2 hover:bg-orange-50 cursor-pointer";
         li.dataset.id = String(node.id);
-        li.textContent = node.name_ar || node.name || "";
+        li.textContent = node.name || "";
         list.appendChild(li);
       });
 
@@ -212,7 +212,7 @@
       if (preselectId != null) {
         const node = findNode(nodes, preselectId);
         if (node) {
-          input.value = node.name_ar || node.name || "";
+          input.value = node.name || "";
           state.levels[levelIndex].selectedNode = node;
 
           if (node.children && node.children.length > 0) {

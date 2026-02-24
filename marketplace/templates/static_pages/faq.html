@@ -73,7 +73,7 @@
               <button
                 class="cat-pill {% if forloop.first %}active{% endif %} w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500"
                 data-target="{{ cat.key }}">
-                {{ cat.name_ar }}
+                {{ cat.name }}
               </button>
             {% endfor %}
           </div>
@@ -106,7 +106,7 @@
                 <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
                 <div class="flex items-center gap-3">
                   <i data-lucide="{{ cat.icon|default:'circle-help' }}" class="w-6 h-6 text-orange-500"></i>
-                  <h3 class="text-2xl font-black text-slate-800">{{ cat.name_ar }}</h3>
+                  <h3 class="text-2xl font-black text-slate-800">{{ cat.name }}</h3>
                 </div>
               </div>
 

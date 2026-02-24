@@ -48,7 +48,7 @@ def home(request):
         Category.objects
         .filter(parent__isnull=True)
         .prefetch_related("subcategories")
-        .order_by("name_ar")
+        .order_by("id")
     )
 
     stores = (

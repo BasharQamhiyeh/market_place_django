@@ -97,9 +97,7 @@ CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 
 
 def _pick_name(cat: Category, lang: str) -> str:
-    if (lang or "").lower().startswith("ar"):
-        return (getattr(cat, "name_ar", "") or "").strip() or (getattr(cat, "name_en", "") or "").strip() or str(cat)
-    return (getattr(cat, "name_en", "") or "").strip() or (getattr(cat, "name_ar", "") or "").strip() or str(cat)
+    return (getattr(cat, "name", "") or "").strip()
 
 
 def _pick_url(cat: Category) -> str:
@@ -120,19 +118,19 @@ def navbar_categories(request):
     if cached is not None:
         return {"navbar_categories": cached}
 
-    order_field = "name_ar" if lang.startswith("ar") else "name_en"
+    order_field = "name"
 
     # ✅ Level 3 - grandchildren
     grandchild_qs = (
         Category.objects
-        .only("id", "name_ar", "name_en", "parent_id")
+        .only("id", "name", "parent_id")
         .order_by(order_field, "id")
     )
 
     # ✅ Level 2 - children with their subcategories prefetched
     child_qs = (
         Category.objects
-        .only("id", "name_ar", "name_en", "parent_id")
+        .only("id", "name", "parent_id")
         .order_by(order_field, "id")
         .prefetch_related(Prefetch("subcategories", queryset=grandchild_qs))
     )
@@ -141,7 +139,7 @@ def navbar_categories(request):
     top_qs = (
         Category.objects
         .filter(parent__isnull=True)
-        .only("id", "name_ar", "name_en")
+        .only("id", "name")
         .order_by(order_field, "id")
         .prefetch_related(Prefetch("subcategories", queryset=child_qs))
     )
@@ -155,20 +153,20 @@ def navbar_categories(request):
             for gc in ch.subcategories.all():
                 grandchildren.append({
                     "id": gc.id,
-                    "name": _pick_name(gc, lang),
+                    "name": getattr(gc, "name", ""),
                     "url": _pick_url(gc),
                 })
 
             children.append({
                 "id": ch.id,
-                "name": _pick_name(ch, lang),
+                "name": getattr(ch, "name", ""),
                 "url": _pick_url(ch),
                 "children": grandchildren,  # ✅ Add third level
             })
 
         tree.append({
             "id": top.id,
-            "name": _pick_name(top, lang),
+            "name": getattr(top, "name", ""),
             "url": _pick_url(top),
             "children": children,
         })

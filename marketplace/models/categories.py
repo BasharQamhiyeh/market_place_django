@@ -2,15 +2,13 @@ from django.db import models
 
 
 class Category(models.Model):
-    name_en = models.CharField(max_length=255, unique=True)
-    name_ar = models.CharField(max_length=255, unique=True)
-    child_label = models.CharField(max_length=255, blank=True, null=True)
-    subtitle_en = models.CharField(max_length=255, blank=True, null=True)
-    subtitle_ar = models.CharField(max_length=255, blank=True, null=True)
-    icon = models.CharField(max_length=50, blank=True, null=True)
-    color = models.CharField(max_length=20, blank=True, null=True)
+    name = models.CharField(max_length=255, unique=True)
+    subtitle = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    parent = models.ForeignKey("self", on_delete=models.CASCADE, related_name="subcategories", null=True, blank=True)
+    parent = models.ForeignKey(
+        "self", on_delete=models.CASCADE,
+        related_name="subcategories", null=True, blank=True
+    )
 
     @property
     def photo_url(self):
@@ -23,8 +21,7 @@ class Category(models.Model):
         return None
 
     def __str__(self):
-        from django.utils import translation
-        return self.name_ar if translation.get_language() == "ar" else self.name_en
+        return self.name
 
     class Meta:
         verbose_name_plural = "Categories"
@@ -36,7 +33,7 @@ class CategoryPhoto(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Photo for {self.category.name_ar}"
+        return f"Photo for {self.category.name}"
 
 
 class Attribute(models.Model):
@@ -49,23 +46,19 @@ class Attribute(models.Model):
         ('tags', 'Tags / Multi-Select'),
     ]
 
-    name_en = models.CharField(max_length=255)
-    name_ar = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
     input_type = models.CharField(max_length=50, choices=INPUT_TYPE_CHOICES, default='text')
     ui_type = models.CharField(max_length=50, choices=UI_TYPE_CHOICES, default='dropdown')
     is_required = models.BooleanField(default=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="attributes")
 
     def __str__(self):
-        from django.utils import translation
-        return self.name_ar if translation.get_language() == 'ar' else self.name_en
+        return self.name
 
 
 class AttributeOption(models.Model):
-    value_en = models.CharField(max_length=255)
-    value_ar = models.CharField(max_length=255)
+    value = models.CharField(max_length=255)
     attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE, related_name="options")
 
     def __str__(self):
-        from django.utils import translation
-        return self.value_ar if translation.get_language() == 'ar' else self.value_en
+        return self.value

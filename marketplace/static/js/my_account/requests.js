@@ -603,7 +603,7 @@
           applyActionStates();
 
           window.closeHighlightConfirmModal();
-          openSuccessModal("تم تمييز الطلب بنجاح! (تجربة)", "⭐ تم التمييز");
+          openSuccessModal("تم تمييز الطلب بنجاح!", "⭐ تم التمييز");
           highlightTargetRequestId = null;
         },
       });

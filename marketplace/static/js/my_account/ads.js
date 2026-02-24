@@ -671,7 +671,7 @@
           }
 
           window.closeHighlightConfirmModal();
-          openSuccessModal("تم تمييز الإعلان بنجاح! (تجربة)", "⭐ تم التمييز");
+          openSuccessModal("تم تمييز الإعلان بنجاح! ", "⭐ تم التمييز");
           __highlightPending = null;
           highlightTargetId = null;
         },
