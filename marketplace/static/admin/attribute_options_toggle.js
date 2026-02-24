@@ -5,29 +5,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const inputType = attributeBlock.querySelector('select[name$="-input_type"]');
     if (!inputType) return;
 
-    const uiType = attributeBlock.querySelector('select[name$="-ui_type"]'); // ✅ new
+    const uiTypeField = attributeBlock.querySelector(".field-ui_type");
     const optionsGroup = attributeBlock.querySelector('.djn-group[data-inline-model*="attributeoption"]');
-    if (!optionsGroup) return;
-
-    function setDisabled(el, disabled) {
-      if (!el) return;
-      el.disabled = disabled;
-      if (disabled) el.classList.add("disabled");
-      else el.classList.remove("disabled");
-    }
 
     function updateVisibility() {
       const isSelect = inputType.value === "select";
 
       // show/hide options list
-      optionsGroup.style.display = isSelect ? "" : "none";
+      if (optionsGroup) optionsGroup.style.display = isSelect ? "" : "none";
 
-      // ui_type only meaningful for select
-      setDisabled(uiType, !isSelect);
-
-      // optional: reset ui_type when not select (prevents weird stale values)
-      if (!isSelect && uiType) {
-        uiType.value = "dropdown";
+      // show/hide the entire ui_type row
+      if (uiTypeField) {
+        uiTypeField.style.display = isSelect ? "" : "none";
+        const uiTypeSelect = uiTypeField.querySelector("select");
+        if (uiTypeSelect && !isSelect) uiTypeSelect.value = "";
       }
     }
 

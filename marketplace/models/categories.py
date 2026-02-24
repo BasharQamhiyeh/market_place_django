@@ -48,7 +48,8 @@ class Attribute(models.Model):
 
     name = models.CharField(max_length=255)
     input_type = models.CharField(max_length=50, choices=INPUT_TYPE_CHOICES, default='text')
-    ui_type = models.CharField(max_length=50, choices=UI_TYPE_CHOICES, default='dropdown')
+    ui_type = models.CharField(max_length=50, choices=UI_TYPE_CHOICES, blank=True, null=True)
+
     is_required = models.BooleanField(default=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="attributes")
 
