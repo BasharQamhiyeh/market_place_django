@@ -43,7 +43,7 @@ def search_suggestions(request):
 
             # categories via DB
             categories = Category.objects.filter(
-                Q(name__icontains=query) | Q(name__icontains=query)
+                name__icontains=query
             ).select_related("parent")[:8]
 
             for c in categories:
@@ -131,7 +131,7 @@ def search_suggestions(request):
     # 3️⃣ FINAL FALLBACK: simple icontains
     # ============================================================
     categories = Category.objects.filter(
-        Q(name__icontains=query) | Q(name__icontains=query)
+        name__icontains=query
     )[:8]
 
     for c in categories:

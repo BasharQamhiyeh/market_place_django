@@ -21,7 +21,10 @@ class Listing(models.Model):
     description = models.TextField(blank=True)
 
     is_active = models.BooleanField(default=True)
-    is_approved = models.BooleanField(default=True)    # same moderation workflow
+    # Default False so new listings are invisible until AI/admin moderation
+    # approves them. The auto_moderate_item signal sets is_approved=True on
+    # pass or keeps it False on reject/manual review.
+    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
