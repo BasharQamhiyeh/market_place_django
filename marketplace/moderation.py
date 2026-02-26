@@ -1,34 +1,37 @@
 # marketplace/moderation.py
 
 from __future__ import annotations
-from typing import Tuple, Optional
-from openai import OpenAI
-from django.conf import settings
+
+import logging
 import traceback
+from typing import Optional, Tuple
+
+from django.conf import settings
+from openai import OpenAI
+
+logger = logging.getLogger(__name__)
 
 
 def moderate_item(item) -> Tuple[str, Optional[str]]:
     """
-    Real moderation using OpenAI (text only).
-    FIXED VERSION:
-    - After Listing refactor, Item no longer has (title, description)
-    - Now uses item.listing.title and item.listing.description
+    Moderate a newly created Item using the OpenAI Moderation API.
+
+    Returns a (decision, reason) tuple where decision is one of:
+    - "approve": content is clean — set is_approved=True
+    - "reject":  content flagged — auto-reject the listing
+    - "manual":  API unavailable or inconclusive — queue for human review
     """
-
-    # Listing may not exist if something failed earlier
     listing = getattr(item, "listing", None)
+    title = listing.title if listing else ""
+    description = listing.description if listing else ""
+    text = f"{title}\n{description}".strip()
 
-    if listing:
-        title = listing.title or ""
-        description = listing.description or ""
-    else:
-        # fallback to avoid crashes
-        title = ""
-        description = ""
+    if not settings.OPENAI_API_KEY:
+        logger.warning(
+            "OPENAI_API_KEY is not configured. Item %s sent to manual review.", item.id
+        )
+        return "manual", None
 
-    text = f"{title}\n{description}"
-
-    # Connect to OpenAI client
     client = OpenAI(
         api_key=settings.OPENAI_API_KEY,
         organization=settings.OPENAI_ORG_ID,
@@ -42,18 +45,18 @@ def moderate_item(item) -> Tuple[str, Optional[str]]:
         )
 
         result = response.results[0]
-        flagged = result.flagged
-        categories = result.categories
-
-        if flagged:
-            reason_list = [name for name, value in categories.items() if value]
+        if result.flagged:
+            reason_list = [name for name, value in result.categories if value]
             reason = "Inappropriate content detected: " + ", ".join(reason_list)
+            logger.info("Item %s auto-rejected: %s", item.id, reason)
             return "reject", reason
 
-        return "manual", None
+        return "approve", None
 
-    except Exception as e:
-        print("🚨 Moderation error type:", type(e).__name__)
-        print("🚨 Moderation error repr:", repr(e))
-        traceback.print_exc()
+    except Exception:
+        logger.error(
+            "Moderation API error for item %s — falling back to manual review:\n%s",
+            item.id,
+            traceback.format_exc(),
+        )
         return "manual", None

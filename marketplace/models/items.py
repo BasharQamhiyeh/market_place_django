@@ -1,11 +1,20 @@
+import logging
 from io import BytesIO
 
+import PIL.Image as PILImage
 from PIL import ImageOps, ImageFilter
 from PIL.Image import Image
 from django.core.files.base import ContentFile
 from django.db import models
 
 from marketplace.models import Attribute
+
+logger = logging.getLogger(__name__)
+
+# Maximum pixel dimensions accepted before normalization.
+# Images exceeding either limit are rejected to prevent CPU/memory DoS.
+MAX_IMAGE_WIDTH = 20_000
+MAX_IMAGE_HEIGHT = 20_000
 
 
 class Item(models.Model):
@@ -65,7 +74,15 @@ class ItemPhoto(models.Model):
         try:
             # open from storage
             self.image.open("rb")
-            im = Image.open(self.image)
+            im = PILImage.open(self.image)
+
+            # Guard against excessively large images (decompression-bomb / DoS)
+            if im.width > MAX_IMAGE_WIDTH or im.height > MAX_IMAGE_HEIGHT:
+                raise ValueError(
+                    f"Image dimensions {im.width}x{im.height} exceed the "
+                    f"allowed maximum of {MAX_IMAGE_WIDTH}x{MAX_IMAGE_HEIGHT}."
+                )
+
             im = ImageOps.exif_transpose(im)  # fix rotation from phone photos
             im = im.convert("RGB")
 
@@ -92,11 +109,11 @@ class ItemPhoto(models.Model):
             super().save(update_fields=["normalized"])
 
         except Exception as e:
-            print("Normalized image generation failed:", e)
+            logger.warning("Normalized image generation failed for photo %s: %s", self.pk, e)
         finally:
             try:
                 self.image.close()
-            except Exception:
+            except OSError:
                 pass
 
 

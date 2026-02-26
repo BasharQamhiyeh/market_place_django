@@ -152,24 +152,42 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate_images(self, images):
         """
-        Extra validation on uploaded images for API.
+        Validate uploaded images: size, extension, and MIME type (magic bytes).
         """
+        import imghdr
+
         MAX_MB = 5
         MAX_BYTES = MAX_MB * 1024 * 1024
         ALLOWED_EXTS = {"jpg", "jpeg", "png", "webp"}
+        # imghdr type strings that correspond to the allowed extensions
+        ALLOWED_MIME_TYPES = {"jpeg", "png", "webp", "rgbe"}
 
         for img in images:
             if img.size > MAX_BYTES:
                 raise serializers.ValidationError(
                     f"File {img.name} is too large (max {MAX_MB} MB)."
                 )
+
             name = getattr(img, "name", "") or ""
             ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
             if ext not in ALLOWED_EXTS:
                 raise serializers.ValidationError(
-                    f"File {name} has an unsupported type. "
+                    f"File {name} has an unsupported extension. "
                     f"Allowed: {', '.join(sorted(ALLOWED_EXTS))}."
                 )
+
+            # Validate by magic bytes, not just the extension, to prevent
+            # disguised file uploads (e.g. a PHP script renamed to .jpg).
+            header = img.read(512)
+            img.seek(0)
+            detected = imghdr.what(None, h=header)
+            # imghdr returns 'jpeg' for JPEG files
+            if detected not in ALLOWED_MIME_TYPES:
+                raise serializers.ValidationError(
+                    f"File {name} does not appear to be a valid image "
+                    f"(detected type: {detected!r})."
+                )
+
         return images
 
     def validate_title(self, value):
@@ -192,15 +210,6 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated):
         request = self.context["request"]
-
-        print("=== DEBUG: FILES RECEIVED ===")
-        print("FILES keys:", list(request.FILES.keys()))
-        for k, v in request.FILES.items():
-            print(f" - {k} → {v.name} ({v.size} bytes)")
-
-        print("=== DEBUG: DATA RECEIVED ===")
-        print("DATA keys:", list(request.data.keys()))
-        print("DATA:", request.data)
 
 
 
@@ -305,7 +314,7 @@ class MessageSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ["id", "user_id", "body", "is_read", "created_at"]
+        fields = ["id", "user_id", "title", "body", "is_read", "created_at"]
 
 # -------------------------
 # Misc

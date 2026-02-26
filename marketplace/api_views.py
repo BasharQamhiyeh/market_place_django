@@ -314,11 +314,13 @@ class MyItemsAPI(generics.ListAPIView):
 class ItemPhotoDeleteAPI(generics.DestroyAPIView):
     serializer_class = ItemPhotoSerializer
     permission_classes = [IsAuthenticated]
-    queryset = ItemPhoto.objects.all()
+
+    def get_queryset(self):
+        # Restrict lookups to photos owned by the requesting user, preventing
+        # IDOR: an attacker cannot even discover another user's photo IDs.
+        return ItemPhoto.objects.filter(item__user=self.request.user)
 
     def perform_destroy(self, instance):
-        if instance.item.user_id != self.request.user.user_id:
-            raise PermissionError("Not allowed")
         instance.delete()
 
 # -------------------------

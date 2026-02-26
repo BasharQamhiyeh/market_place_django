@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from django.db.models.signals import post_save, pre_save, post_delete
 from django.dispatch import receiver
@@ -8,44 +10,48 @@ from . import moderation   # imports the moderation.py you already created
 from django.core.cache import cache
 from .models import Category
 
+logger = logging.getLogger(__name__)
+
+
 @receiver(post_save, sender=Item)
 def auto_moderate_item(sender, instance: Item, created: bool, **kwargs):
     """
-    When a new item is created, run AI moderation automatically.
-    """
-    # Only moderate on initial creation
-    print("🟡 Signal triggered for item:", instance.id, "created:", created)  # add this
+    Run AI moderation on every newly created Item.
 
+    Outcomes:
+    - "approve": set is_approved=True so the listing becomes visible.
+    - "reject":  keep is_approved=False (default), flag as auto-rejected.
+    - "manual":  keep is_approved=False; an admin must review.
+    """
     if not created:
         return
 
-    # Run moderation (calls OpenAI now)
+    logger.info("Moderating item %s", instance.id)
     decision, reason = moderation.moderate_item(instance)
+    logger.info("Moderation result for item %s: %s | %s", instance.id, decision, reason)
 
-    print("🔵 Moderation decision:", decision, "| reason:", reason)
+    if decision == "approve":
+        instance.listing.is_approved = True
+        instance.listing.save(update_fields=["is_approved"])
 
-    # If rejected by AI
-    if decision == "reject":
-        instance.is_approved = False
-        instance.is_active = False
-        instance.auto_rejected = True
-        instance.moderation_reason = reason or "Automatically rejected by AI."
-        instance.cancel_reason = reason or "Automatically rejected by AI."
-        instance.rejected_at = timezone.now()
-        instance.rejected_by = None  # could later point to a special 'AI Moderator' user
-        instance.save(
+    elif decision == "reject":
+        # is_approved is already False (model default); mark as auto-rejected
+        instance.listing.is_active = False
+        instance.listing.auto_rejected = True
+        instance.listing.moderation_reason = reason or "Automatically rejected by AI."
+        instance.listing.rejected_at = timezone.now()
+        instance.listing.rejected_by = None
+        instance.listing.save(
             update_fields=[
-                "is_approved",
                 "is_active",
                 "auto_rejected",
                 "moderation_reason",
-                "cancel_reason",
                 "rejected_at",
                 "rejected_by",
             ]
         )
 
-    # If AI is unsure ("manual"), leave it pending for admin review
+    # "manual": is_approved stays False — admin queue will pick it up
 
 
 @receiver(pre_save, sender=Listing)
