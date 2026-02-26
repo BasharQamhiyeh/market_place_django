@@ -8,24 +8,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ---------------------------------------------------
 # Security
 # ---------------------------------------------------
-DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
-
-_secret_key = os.getenv('DJANGO_SECRET_KEY')
-if not _secret_key:
-    if DEBUG:
-        import secrets as _s
-        import warnings
-        _secret_key = _s.token_urlsafe(50)
-        warnings.warn(
-            'DJANGO_SECRET_KEY is not set. A random key was generated for this process. '
-            'Sessions and tokens will be invalidated on every restart. '
-            'Set DJANGO_SECRET_KEY for a stable development environment.',
-            UserWarning,
-            stacklevel=1,
-        )
-    else:
-        raise ValueError('DJANGO_SECRET_KEY environment variable must be set in production (DEBUG=False).')
-SECRET_KEY = _secret_key
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-@z7*j5)%3_of%$68h_mfuyhxz4vnspr^_@f%n6i)p5+jd7!z&i')
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']
 
 # ---------------------------------------------------
@@ -92,17 +76,25 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-_raw_cors = os.getenv('CORS_ALLOWED_ORIGINS', '')
-if _raw_cors:
-    CORS_ALLOWED_ORIGINS = [o.strip() for o in _raw_cors.split(',') if o.strip()]
-else:
-    # Local dev default — restrict even in dev to avoid bad habits
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:55400",
+#     "http://127.0.0.1:55400",
+# ]
+# Todo: only for dev
+CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_ALLOW_ALL_ORIGINS = False
+# Todo: Relpace for this in PROD
+# _raw_cors = os.getenv('CORS_ALLOWED_ORIGINS', '')
+# if _raw_cors:
+#     CORS_ALLOWED_ORIGINS = [o.strip() for o in _raw_cors.split(',') if o.strip()]
+# else:
+#     # Local dev default
+#     CORS_ALLOWED_ORIGINS = [
+#         "http://localhost:8000",
+#         "http://127.0.0.1:8000",
+#     ]
+#
+# CORS_ALLOW_ALL_ORIGINS = False
 
 
 ROOT_URLCONF = 'market_place.urls'
@@ -199,12 +191,6 @@ STORAGES = {
 }
 
 # ---------------------------------------------------
-# Upload size limits (prevent large payload DoS)
-# ---------------------------------------------------
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB — total POST body
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024    # 5 MB — per in-memory file
-
-# ---------------------------------------------------
 # Default primary key field type
 # ---------------------------------------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -291,8 +277,8 @@ else:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
 
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
 CSRF_TRUSTED_ORIGINS = [
     "https://market-place-rhjg.onrender.com",
@@ -342,4 +328,3 @@ LOGGING = {
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_ORG_ID = os.getenv("OPENAI_ORG_ID", "")
 OPENAI_PROJECT_ID = os.getenv("OPENAI_PROJECT_ID", "")
-
