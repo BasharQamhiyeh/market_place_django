@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import timedelta
 
@@ -23,6 +24,8 @@ from marketplace.utils.sms import send_sms_code
 from marketplace.utils.verification import send_code, verify_session_code
 from marketplace.views.constants import REFERRAL_POINTS
 from marketplace.views.helpers import _phone_candidates
+
+logger = logging.getLogger(__name__)
 
 
 def register(request):
@@ -162,9 +165,6 @@ def complete_signup(request):
 
         user.save()
 
-        print("POST condition:", request.POST.get("condition"))
-        print("FILES keys:", list(request.FILES.keys()))
-
         # ✅ store creation
         if form.cleaned_data.get("condition") == "store":
             Store.objects.create(
@@ -220,44 +220,27 @@ def user_login(request):
             suffix += f"&next={next_url}"
         return redirect(f"{referer}{suffix}")
 
-    print("\n=== LOGIN ATTEMPT ===")
-    print("raw:", repr(raw))
-
     candidates = _phone_candidates(raw)
-    print("candidates:", candidates)
 
     if not candidates:
-        print("INVALID INPUT FORMAT")
         return redirect_login_error()
-
-    # Show exactly which phone value matched in DB
-    matches = list(User.objects.filter(phone__in=candidates).values("pk", "phone")[:5])
-    print("DB matches (pk, phone):", matches)
 
     u = User.objects.filter(phone__in=candidates).first()
     if not u:
-        print("NO USER FOUND")
         return redirect_login_error()
-
-    print("found pk:", u.pk)
-    print("stored phone repr:", repr(getattr(u, "phone", None)))
-    print("USERNAME_FIELD:", getattr(User, "USERNAME_FIELD", None))
-    print("has_usable_password:", u.has_usable_password())
 
     # Authenticate using the model's USERNAME_FIELD (works for custom User models)
     login_key = User.USERNAME_FIELD
     login_val = getattr(u, login_key, None)
-    print("auth using:", login_key, "=", repr(login_val))
 
     user = authenticate(request, password=password, **{login_key: login_val})
-    print("authenticate() result:", user)
 
     if not user:
-        print("AUTH FAILED (backend/USERNAME_FIELD mismatch, unusable password, or user created differently)")
+        logger.warning("Failed login attempt for phone candidates: %s", candidates)
         return redirect_login_error()
 
     login(request, user)
-    print("LOGIN SUCCESS")
+    logger.info("Successful login for user %s", user.pk)
 
     # ✅ redirect to next (create item/request) if provided and safe
     if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):

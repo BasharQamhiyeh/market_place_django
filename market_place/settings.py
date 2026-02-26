@@ -199,6 +199,12 @@ STORAGES = {
 }
 
 # ---------------------------------------------------
+# Upload size limits (prevent large payload DoS)
+# ---------------------------------------------------
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024   # 10 MB — total POST body
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024    # 5 MB — per in-memory file
+
+# ---------------------------------------------------
 # Default primary key field type
 # ---------------------------------------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

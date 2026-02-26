@@ -211,15 +211,6 @@ class ItemCreateUpdateSerializer(serializers.ModelSerializer):
     def create(self, validated):
         request = self.context["request"]
 
-        print("=== DEBUG: FILES RECEIVED ===")
-        print("FILES keys:", list(request.FILES.keys()))
-        for k, v in request.FILES.items():
-            print(f" - {k} → {v.name} ({v.size} bytes)")
-
-        print("=== DEBUG: DATA RECEIVED ===")
-        print("DATA keys:", list(request.data.keys()))
-        print("DATA:", request.data)
-
 
 
         validated["user"] = request.user
@@ -323,7 +314,7 @@ class MessageSerializer(serializers.ModelSerializer):
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ["id", "user_id", "body", "is_read", "created_at"]
+        fields = ["id", "user_id", "title", "body", "is_read", "created_at"]
 
 # -------------------------
 # Misc

@@ -82,6 +82,4 @@ def notify_many(*, users, **kwargs):
     Usage:
         notify_many(users=reporters_qs, kind=K_REPORT, status=S_RESOLVED, title="...")
     """
-    for u in users:
-        print(f'{u.user_id}: {u.first_name}', '\n')
     return [notify(user=user, **kwargs) for user in users]
