@@ -36,7 +36,7 @@
   <script id="rukn-context" type="application/json">
     {
       "isAuthenticated": {{ request.user.is_authenticated|yesno:"true,false" }},
-      "userId": {% if request.user.is_authenticated and request.user.id %}{{ request.user.id }}{% else %}null{% endif %},
+      "userId": {% if request.user.is_authenticated and request.user.user_id %}{{ request.user.user_id }}{% else %}null{% endif %},
       "username": "{{ request.user.username|default:''|escapejs }}"
     }
   </script>
