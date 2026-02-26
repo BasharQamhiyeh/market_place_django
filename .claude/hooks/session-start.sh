@@ -32,6 +32,8 @@ cat >> "$CLAUDE_ENV_FILE" << 'EOF'
 export DJANGO_SETTINGS_MODULE=market_place.settings
 export DATABASE_URL=postgres://postgres:admin@localhost:5432/marketplace_db
 export RENDER=true
+export DJANGO_DEBUG=True
+export DJANGO_SECRET_KEY=dev-only-insecure-key-replace-in-production
 EOF
 
 echo "==> Session setup complete."
