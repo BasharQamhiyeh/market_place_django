@@ -1,9 +1,10 @@
-from django.db.models import Q
-from .models import Notification, Message, Favorite
+from django.db.models import Q, Max
+from .models import Notification, Message, Favorite, Conversation
 from django.core.cache import cache
 from django.utils import translation
 from django.db.models import Prefetch
 from .models import Category
+
 
 def navbar_counters(request):
     """
@@ -11,7 +12,7 @@ def navbar_counters(request):
     - unread_messages
     - unread_notifications
     - favorite_count
-    - recent_messages
+    - recent_conversations  (replaces recent_messages)
     - recent_notifications
     - recent_favorites
     """
@@ -43,30 +44,53 @@ def navbar_counters(request):
 
     # -------------------------
     # Recent notifications
-    # (linked to Listing now)
     # -------------------------
     recent_notifications = (
         Notification.objects.filter(user=user)
         .select_related("listing")
-        .order_by("-created_at")[:10]  # ✅ Changed from 6 to 10
+        .order_by("-created_at")[:10]
     )
 
     # -------------------------
-    # Recent messages
-    # (Conversation → Listing)
+    # Recent CONVERSATIONS (not individual messages)
+    # One row per conversation, sorted by latest message date
     # -------------------------
-    recent_messages = (
-        Message.objects.filter(
-            Q(conversation__buyer=user) | Q(conversation__seller=user)
+    recent_conversations_qs = (
+        Conversation.objects.filter(
+            Q(buyer=user) | Q(seller=user)
         )
         .select_related(
-            "conversation",
-            "sender",
-            "conversation__listing",
-            "conversation__store",
+            "listing",
+            "buyer",
+            "buyer__store",
+            "seller",
+            "seller__store",
         )
-        .order_by("-created_at")[:10]  # ✅ Changed from 6 to 10
+        .annotate(latest_msg_date=Max("messages__created_at"))
+        .filter(latest_msg_date__isnull=False)  # skip conversations with no messages
+        .order_by("-latest_msg_date")[:10]
     )
+
+    # Enrich each conversation with other_user, latest message, and unread flag
+    recent_conversations = []
+    for conv in recent_conversations_qs:
+        other_user = conv.seller if conv.buyer == user else conv.buyer
+
+        latest_msg = conv.messages.order_by("-created_at").first()
+
+        has_unread = (
+            conv.messages
+            .filter(is_read=False)
+            .exclude(sender=user)
+            .exists()
+        )
+
+        recent_conversations.append({
+            "conversation": conv,
+            "other_user": other_user,
+            "latest_msg": latest_msg,
+            "has_unread": has_unread,
+        })
 
     # -------------------------
     # Favorites
@@ -74,8 +98,8 @@ def navbar_counters(request):
     # -------------------------
     fav_qs = (
         Favorite.objects.filter(user=user)
-        .select_related("listing")                  # ✅ Favorite.listing FK
-        .prefetch_related("listing__item__photos")  # Item.photos for thumbnail
+        .select_related("listing")
+        .prefetch_related("listing__item__photos")
         .order_by("-created_at")
     )
 
@@ -86,7 +110,7 @@ def navbar_counters(request):
         "unread_notifications": unread_notifications,
         "unread_messages": unread_messages,
         "recent_notifications": recent_notifications,
-        "recent_messages": recent_messages,
+        "recent_conversations": recent_conversations,  # ✅ renamed from recent_messages
         "favorite_count": favorite_count,
         "recent_favorites": recent_favorites,
     }
@@ -120,14 +144,14 @@ def navbar_categories(request):
 
     order_field = "name"
 
-    # ✅ Level 3 - grandchildren
+    # Level 3 - grandchildren
     grandchild_qs = (
         Category.objects
         .only("id", "name", "parent_id")
         .order_by(order_field, "id")
     )
 
-    # ✅ Level 2 - children with their subcategories prefetched
+    # Level 2 - children with their subcategories prefetched
     child_qs = (
         Category.objects
         .only("id", "name", "parent_id")
@@ -148,7 +172,6 @@ def navbar_categories(request):
     for top in top_qs:
         children = []
         for ch in top.subcategories.all():
-            # ✅ Build grandchildren list
             grandchildren = []
             for gc in ch.subcategories.all():
                 grandchildren.append({
@@ -161,7 +184,7 @@ def navbar_categories(request):
                 "id": ch.id,
                 "name": getattr(ch, "name", ""),
                 "url": _pick_url(ch),
-                "children": grandchildren,  # ✅ Add third level
+                "children": grandchildren,
             })
 
         tree.append({
