@@ -121,11 +121,11 @@ def request_list(request):
 
     # sort
     if sort == "budgetAsc":
-        queryset = base_qs.order_by("budget", "-listing__created_at")
+        queryset = base_qs.order_by("budget", "-listing__created_at", "-listing__id")
     elif sort == "budgetDesc":
-        queryset = base_qs.order_by("-budget", "-listing__created_at")
+        queryset = base_qs.order_by("-budget", "-listing__created_at", "-listing__id")
     else:
-        queryset = base_qs.order_by("-listing__created_at")
+        queryset = base_qs.order_by("-listing__created_at", "-listing__id")
 
     PAGE_SIZE = 27
     paginator = Paginator(queryset, PAGE_SIZE)
@@ -136,7 +136,9 @@ def request_list(request):
     visible_count = page_obj.end_index() if total_count else 0
     has_more = page_obj.has_next()
 
-    categories = Category.objects.filter(parent__isnull=True).prefetch_related("subcategories").distinct()
+    categories = Category.objects.filter(parent__isnull=True).prefetch_related(
+        "subcategories", "subcategories__subcategories"
+    ).distinct()
     cities = City.objects.all().order_by("name")
 
     # banners (same behavior as items; if you already provide banners elsewhere, keep it)

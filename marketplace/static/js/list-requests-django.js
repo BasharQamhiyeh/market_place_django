@@ -15,6 +15,9 @@
     const pageRoot = document.querySelector(".list-requests-page[data-page='list-requests']");
     if (!pageRoot) return;
 
+    // Shared across sections – set by initCategoryTree
+    let _syncCatTree = () => {};
+
     // ---------- Elements ----------
     const form = document.getElementById("filtersForm");
     const filterCategory = document.getElementById("filterCategory");
@@ -254,6 +257,73 @@
       applyFilters({ append: true });
     });
 
+    // ---------- Category Tree (3-level collapsible) ----------
+    (function initCategoryTree() {
+      const tree = document.getElementById("filterCategoryTree");
+      const sel  = filterCategory; // already captured above
+      if (!tree || !sel) return;
+
+      // Arrow expand/collapse + label select – unified click handler
+      tree.addEventListener("click", (e) => {
+        const arrow = e.target.closest(".cat-tree-arrow");
+        if (arrow) {
+          e.stopPropagation();
+          const catId   = arrow.dataset.for;
+          const children = document.getElementById("cat-children-" + catId);
+          if (!children) return;
+          const isOpen  = children.style.display !== "none";
+          children.style.display = isOpen ? "none" : "";
+          arrow.classList.toggle("is-open", !isOpen);
+          arrow.setAttribute("aria-expanded", String(!isOpen));
+          return;
+        }
+
+        const item = e.target.closest(".cat-tree-item");
+        if (!item) return;
+        const catId = item.dataset.catId ?? "";
+
+        sel.value = catId;
+        syncVisualSelection();
+
+        if (pageField) pageField.value = "1";
+        applyFilters({ append: false });
+        document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      function syncVisualSelection() {
+        const v = sel.value ?? "";
+        tree.querySelectorAll(".cat-tree-item").forEach(el => {
+          el.classList.toggle("is-selected", (el.dataset.catId ?? "") === v);
+        });
+
+        if (!v) return;
+
+        const selectedEl = tree.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+        if (!selectedEl) return;
+
+        let node = selectedEl.parentElement;
+        while (node && node !== tree) {
+          if (node.classList.contains("cat-tree-children")) {
+            node.style.display = "";
+            const parentId = node.dataset.parentId;
+            if (parentId) {
+              const arrowBtn = tree.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
+              if (arrowBtn) {
+                arrowBtn.classList.add("is-open");
+                arrowBtn.setAttribute("aria-expanded", "true");
+              }
+            }
+          }
+          node = node.parentElement;
+        }
+      }
+
+      _syncCatTree = syncVisualSelection;
+      syncVisualSelection();
+    })();
+
+    // Sync tree when reset button clears filters (fires after existing reset listener)
+    resetBtn?.addEventListener("click", () => _syncCatTree());
 
     // ---------- VIP slider (same behavior as mockup) ----------
     let vipPage = 0;
@@ -515,7 +585,7 @@
 
       if (activeKey === "category") {
         const el = document.getElementById("mfCategory");
-        if (el && filterCategory) filterCategory.value = el.value;
+        if (el && filterCategory) { filterCategory.value = el.value; _syncCatTree(); }
       }
 
       if (activeKey === "city") {
@@ -552,7 +622,7 @@
     function resetOnlyActiveKey() {
       if (!activeKey) return;
 
-      if (activeKey === "category" && filterCategory) filterCategory.value = "";
+      if (activeKey === "category" && filterCategory) { filterCategory.value = ""; _syncCatTree(); }
       if (activeKey === "city" && filterCity) filterCity.value = "";
       if (activeKey === "condition") setRadioGroupValue("condition", "");
       if (activeKey === "price") { if (filterMin) filterMin.value = ""; if (filterMax) filterMax.value = ""; }

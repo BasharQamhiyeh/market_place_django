@@ -15,6 +15,9 @@
     const pageRoot = document.querySelector(".list-ads-page[data-page='list-ads']");
     if (!pageRoot) return; // not on this page
 
+    // Shared across IIFEs – will be set by initCategoryTree inside initFilters
+    let _syncCatTree = () => {};
+
     // =====================================================================
     // VIP Slider (no conflicting sizing, no fixed-width fighting, RTL-safe)
     // =====================================================================
@@ -337,6 +340,78 @@
           fetchResults({ append: true });
         });
 
+      // ---- Category Tree ----
+
+      (function initCategoryTree() {
+        const tree = document.getElementById("filterCategoryTree");
+        const sel  = document.getElementById("filterCategory");
+        if (!tree || !sel) return;
+
+        // Expand/collapse arrow click
+        tree.addEventListener("click", (e) => {
+          const arrow = e.target.closest(".cat-tree-arrow");
+          if (arrow) {
+            e.stopPropagation();
+            const catId   = arrow.dataset.for;
+            const children = document.getElementById("cat-children-" + catId);
+            if (!children) return;
+            const isOpen  = children.style.display !== "none";
+            children.style.display = isOpen ? "none" : "";
+            arrow.classList.toggle("is-open", !isOpen);
+            arrow.setAttribute("aria-expanded", String(!isOpen));
+            return;
+          }
+
+          // Category label click
+          const item = e.target.closest(".cat-tree-item");
+          if (!item) return;
+          const catId = item.dataset.catId ?? "";
+
+          sel.value = catId;
+          _syncCatTree();
+
+          resetToFirstPage();
+          fetchResults({ append: false });
+          document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        // Sync visual selection + auto-expand parents of selected item
+        function syncVisualSelection() {
+          const v = sel.value ?? "";
+          tree.querySelectorAll(".cat-tree-item").forEach(el => {
+            el.classList.toggle("is-selected", (el.dataset.catId ?? "") === v);
+          });
+
+          if (!v) return;
+
+          // Walk up the DOM from the selected item and open each cat-tree-children ancestor
+          const selectedEl = tree.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+          if (!selectedEl) return;
+
+          let node = selectedEl.parentElement;
+          while (node && node !== tree) {
+            if (node.classList.contains("cat-tree-children")) {
+              node.style.display = "";
+              const parentId = node.dataset.parentId;
+              if (parentId) {
+                const arrowBtn = tree.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
+                if (arrowBtn) {
+                  arrowBtn.classList.add("is-open");
+                  arrowBtn.setAttribute("aria-expanded", "true");
+                }
+              }
+            }
+            node = node.parentElement;
+          }
+        }
+
+        _syncCatTree = syncVisualSelection;
+        syncVisualSelection();
+      })();
+
+      // Sync tree after reset (fires after the existing reset listener that clears sel.value)
+      resetFiltersBtn?.addEventListener("click", () => _syncCatTree());
+
     })();
 
     // =====================================================================
@@ -464,7 +539,7 @@
         if (activeKey === "category") {
           const el = document.getElementById("mfCategory");
           const desktop = document.getElementById("filterCategory");
-          if (el && desktop) desktop.value = el.value;
+          if (el && desktop) { desktop.value = el.value; _syncCatTree(); }
         }
 
         if (activeKey === "city") {
@@ -503,7 +578,7 @@
 
       function resetOnlyActiveKey() {
         if (!activeKey) return;
-        if (activeKey === "category") document.getElementById("filterCategory").value = "";
+        if (activeKey === "category") { document.getElementById("filterCategory").value = ""; _syncCatTree(); }
         if (activeKey === "city") document.getElementById("filterCity").value = "";
         if (activeKey === "condition") setRadioValue("condition", "");
         if (activeKey === "price") { if (priceMin) priceMin.value = ""; if (priceMax) priceMax.value = ""; }
