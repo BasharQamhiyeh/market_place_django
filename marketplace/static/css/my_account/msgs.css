@@ -236,6 +236,17 @@
   color:#374151;
 }
 
+/* ---------- Chat panel (full-screen swap) ---------- */
+.chat-panel{
+  display:flex;
+  flex-direction:column;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  overflow:hidden;
+  background:#fff;
+  min-height:70vh;
+}
+
 /* ---------- Chat ---------- */
 .chat-head{
   position:sticky;
@@ -397,7 +408,7 @@
 }
 
 /* Empty state - matches fav tab style */
-#tab-msgs .msgs-empty{
+.msgs-empty{
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -408,12 +419,12 @@
   color: #6b7280;
 }
 
-#tab-msgs .msgs-empty-ico{
+.msgs-empty-ico{
   width: 40px;
   height: 40px;
   color: #d1d5db;
 }
 
-#tab-msgs .msgs-empty.hidden{
+.msgs-empty.hidden{
   display: none !important;
 }
