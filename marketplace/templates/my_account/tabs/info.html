@@ -50,7 +50,9 @@
 
         <button type="button" id="removeProfileBtn"
                 class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white text-xs shadow hover:bg-red-600 flex items-center justify-center {% if request.user.profile_photo %}{% else %}hidden{% endif %}">
-          ✕
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M1 1l8 8M9 1L1 9" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
       </div>
 
@@ -248,7 +250,9 @@
 
               <button type="button" id="removeStoreLogoBtn"
                       class="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white text-xs shadow hover:bg-red-600 flex items-center justify-center {% if store.logo %}{% else %}hidden{% endif %}">
-                ✕
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+                  <path d="M1 1l8 8M9 1L1 9" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
               </button>
             </div>
 
