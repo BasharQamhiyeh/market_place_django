@@ -99,6 +99,31 @@
     }
   }
 
+  function updateNavbarFavUI(count, html) {
+    // Update heart icon filled state
+    const heartIcon = document.querySelector("#headerFavBtn .fav-heart");
+    if (heartIcon) {
+      heartIcon.classList.toggle("filled", count > 0);
+    }
+
+    // Update tooltip text
+    const tooltip = document.querySelector("#headerFavBtn #favTooltip");
+    if (tooltip) {
+      tooltip.textContent =
+        count > 0
+          ? `يوجد ${count} منتجات في المفضلة`
+          : "لا يوجد منتجات في المفضلة";
+    }
+
+    // Replace dropdown scroll content with fresh server-rendered HTML
+    if (html) {
+      const favScroll = document.getElementById("navbarFavScroll");
+      if (favScroll) {
+        favScroll.innerHTML = html;
+      }
+    }
+  }
+
   function applyFavUI(btn, isFav) {
     if (!btn) return;
     btn.classList.toggle("is-active", !!isFav);
@@ -130,6 +155,7 @@
   }
 
   window.initItemCardFavs = initFavButtons;
+  window.updateNavbarFavUI = updateNavbarFavUI;
 
   document.body.addEventListener("htmx:afterSwap", (e) => {
     if (e && e.target) initFavButtons(e.target);
@@ -205,6 +231,7 @@
 
       if (typeof data.favorite_count === "number") {
         updateNavbarFavBadge(data.favorite_count);
+        updateNavbarFavUI(data.favorite_count, data.navbar_html || null);
       }
 
       toast(isFav ? "✔ تمت الإضافة للمفضلة" : "✳️ تم الحذف من المفضلة");
