@@ -170,6 +170,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const acceptTerms = document.getElementById("acceptTerms");
   const termsBox = document.getElementById("termsBox");
 
+  const termsPopup = document.getElementById("termsPopup");
+  const privacyPopup = document.getElementById("privacyPopup");
+  const openTermsLink = document.getElementById("openTerms");
+  const openPrivacyLink = document.getElementById("openPrivacy");
+  const closeTermsBtn = document.getElementById("closeTerms");
+  const closePrivacyBtn = document.getElementById("closePrivacy");
+
   // ===== Clear errors as user fixes inputs =====
   document.querySelectorAll("#addAdForm input, #addAdForm textarea, #addAdForm select").forEach(field => {
     field.addEventListener("input", () => clearFieldError(field));
@@ -388,6 +395,20 @@ syncOtherForBlock(block);
       });
     });
   }
+
+  // ===== Terms/Privacy popups =====
+  function openOverlay(el) { if (!el) return; el.classList.remove("hidden"); el.classList.add("flex"); }
+  function closeOverlay(el) { if (!el) return; el.classList.remove("flex"); el.classList.add("hidden"); }
+
+  openTermsLink?.addEventListener("click", (e) => { e.preventDefault(); openOverlay(termsPopup); });
+  openPrivacyLink?.addEventListener("click", (e) => { e.preventDefault(); openOverlay(privacyPopup); });
+  closeTermsBtn?.addEventListener("click", () => closeOverlay(termsPopup));
+  closePrivacyBtn?.addEventListener("click", () => closeOverlay(privacyPopup));
+
+  document.addEventListener("click", (e) => {
+    if (e.target === termsPopup) closeOverlay(termsPopup);
+    if (e.target === privacyPopup) closeOverlay(privacyPopup);
+  });
 
   // ===== Condition =====
   function paintCondition(val) {
