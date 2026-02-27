@@ -160,17 +160,13 @@
   height: 28px;
   font-size: 14px;
   cursor: pointer;
-  display:flex !important;
-  align-items:center;
-  justify-content:center;
-  opacity: 0;
-  pointer-events: none;
-  transition:.2s ease;
-}
-
-#removeProfileBtn.show, #removeStoreLogoBtn.show{
-  opacity: 1;
-  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  transition: .2s ease;
 }
 
 
