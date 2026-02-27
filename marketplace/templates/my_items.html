@@ -36,23 +36,23 @@
               <h6 class="text-base font-semibold mb-1">
                 <a href="{% url 'item_detail' item.id %}"
                    class="text-gray-900 hover:text-jordan">
-                  {{ item.title }}
+                  {{ item.listing.title }}
                 </a>
               </h6>
 
               <div class="text-gray-500 text-sm mb-2">
                 {% trans "Price" %}: {{ item.price }} ·
-                {% trans "Created" %}: {{ item.created_at|date:"Y-m-d H:i" }} ·
-                {% trans "Updated" %}: {{ item.updated_at|date:"Y-m-d H:i" }}
+                {% trans "Created" %}: {{ item.listing.created_at|date:"Y-m-d H:i" }} ·
+                {% trans "Updated" %}: {{ item.listing.updated_at|date:"Y-m-d H:i" }}
               </div>
 
               <!-- Status badge -->
               <div>
-                {% if item.is_active and item.is_approved %}
+                {% if item.listing.is_active and item.listing.is_approved %}
                   <span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
                     {% trans "Active" %}
                   </span>
-                {% elif item.is_active and not item.is_approved %}
+                {% elif item.listing.is_active and not item.listing.is_approved %}
                   <span class="px-3 py-1 text-xs rounded-full bg-yellow-200 text-yellow-800">
                     {% trans "Pending approval" %}
                   </span>
@@ -76,14 +76,14 @@
                 {% trans "Edit" %}
               </a>
 
-              {% if item.is_active %}
+              {% if item.listing.is_active %}
                 <a href="{% url 'cancel_item' item.id %}"
                    class="px-3 py-1.5 text-sm rounded bg-red-600 text-white hover:bg-red-700">
                   {% trans "Cancel" %}
                 </a>
               {% endif %}
 
-              {% if not item.is_active %}
+              {% if not item.listing.is_active %}
                 <form action="{% url 'reactivate_item' item.id %}" method="post" class="inline">
                   {% csrf_token %}
                   <button type="submit"

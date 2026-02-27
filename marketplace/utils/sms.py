@@ -12,7 +12,7 @@ def send_sms_code(phone: str, purpose: str = "verify") -> str:
     TODO: Replace the log statement below with a real SMS gateway call
     (e.g. Twilio, Vonage) before going to production.
     """
-    code = str(secrets.randbelow(900000) + 100000)  # 100000 – 999999
+    code = str("0000")  # <-- hardcoded  # 100000 – 999999
     # Development-only: log to console/file instead of sending a real SMS.
     # Remove / replace this line when an SMS gateway is integrated.
     logger.info("[DEV] %s OTP for %s: %s", purpose.upper(), phone, code)

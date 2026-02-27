@@ -80,7 +80,7 @@ class UserRegistrationForm(forms.ModelForm):
         pwd = self.cleaned_data.get('password')
         pwd2 = self.cleaned_data.get('password2')
         if pwd != pwd2:
-            raise forms.ValidationError(_("Two passwords must not match.."))
+            raise forms.ValidationError(_("The two passwords must match."))
         return pwd2
 
     def clean_phone(self):

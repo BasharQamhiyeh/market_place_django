@@ -645,7 +645,7 @@
                     data-login-modal="loginModal"
                     data-follow-url="{% url 'store_follow_toggle' store.id %}"
                     data-store-owner-id="{{ store.owner_id }}"
-                    data-current-user-id="{% if request.user.is_authenticated %}{{ request.user.id }}{% else %}0{% endif %}"
+                    data-current-user-id="{% if request.user.is_authenticated %}{{ request.user.user_id }}{% else %}0{% endif %}"
                     data-following="{% if is_following %}1{% else %}0{% endif %}"
                     class="group flex flex-col items-center justify-center gap-1 rounded-2xl px-3 py-2
                            bg-white border border-gray-200

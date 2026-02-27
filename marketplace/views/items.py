@@ -377,8 +377,11 @@ def item_detail(request, item_id):
     seller_is_verified_store = bool(store and getattr(store, "is_verified", False))
 
     reviews = []
+    store_rating_avg = 0
     if seller_is_store:
         reviews = store.reviews.select_related("reviewer").order_by("-created_at")[:10]
+        from django.db.models import Avg
+        store_rating_avg = store.reviews.aggregate(Avg("rating"))["rating__avg"] or 0
     seller_reviews_count = len(reviews)
 
     seller_items_count = Listing.objects.filter(
@@ -414,6 +417,7 @@ def item_detail(request, item_id):
         "seller_is_verified_store": seller_is_verified_store,
         "store_reviews": reviews,
         "store": store,
+        "store_rating_avg": store_rating_avg,
 
         "allow_show_phone": item.listing.show_phone,
         "seller_phone_masked": seller_phone_masked,
@@ -793,12 +797,13 @@ def item_detail_more_similar(request, item_id):
     return JsonResponse({"html": html, "has_more": has_more})
 
 
+@login_required
 def my_items(request):
     items = (
         Item.objects
-        .filter(user=request.user)
-        .order_by('-created_at')
-        .select_related('category')
+        .filter(listing__user=request.user, listing__is_deleted=False)
+        .order_by('-listing__created_at')
+        .select_related('listing', 'listing__category', 'listing__city')
         .prefetch_related('photos')
     )
 
@@ -813,9 +818,9 @@ def my_items(request):
 @login_required
 def reactivate_item(request, item_id):
     item = get_object_or_404(Item, id=item_id, listing__user=request.user)
-    if not item.is_active:
-        item.is_active = True
-        item.save()
+    if not item.listing.is_active:
+        item.listing.is_active = True
+        item.listing.save(update_fields=["is_active"])
         messages.success(request, "✅ Your item is active again.")
     else:
         messages.info(request, "ℹ️ Item is already active.")
@@ -828,7 +833,7 @@ def reactivate_item(request, item_id):
 def delete_item_photo(request, photo_id):
     photo = get_object_or_404(ItemPhoto, id=photo_id)
 
-    if photo.item.user != request.user:
+    if photo.item.listing.user != request.user:
         return HttpResponseForbidden("Not allowed")
 
     item_id = photo.item.id

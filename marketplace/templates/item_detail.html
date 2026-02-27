@@ -25,7 +25,7 @@
             {% for cat in breadcrumb_categories %}
               <a href="{% url 'item_list' %}?categories={{ cat.id }}" class="hover:text-[var(--rukn-orange)]">
                 <bdi dir="auto">
-                  cat.name
+                  {{ cat.name }}
                 </bdi>
               </a>
               /
@@ -277,8 +277,7 @@
                         <img src="{{ store.logo.url }}"
                              alt="{{ store.name|default:u.first_name }}"
                              class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0 object-cover bg-white" />
-                      {% elif u.photo %}
-                        {% elif u.profile_photo %}
+                      {% elif u.profile_photo %}
                           <img src="{{ u.profile_photo.url }}"
                                alt="{{ u.username|default:u.first_name }}"
                                class="w-16 h-16 rounded-full border-2 border-orange-300 shadow-sm flex-shrink-0 object-cover" />

@@ -332,13 +332,13 @@ def request_create(request):
     # =============================
     if request.method == "POST":
         token = request.POST.get("form_token")
-        session_token = request.session.get("item_create_form_token")
+        session_token = request.session.get("request_create_form_token")
 
         if not token or token != session_token:
             return HttpResponseBadRequest("Duplicate or invalid submission")
 
         # consume token immediately to prevent double submit
-        del request.session["item_create_form_token"]
+        del request.session["request_create_form_token"]
 
         form = RequestForm(request.POST, category=selected_category)
 
@@ -422,7 +422,7 @@ def request_create(request):
             messages.success(request, "✅ تم إرسال طلبك وهو الآن قيد المراجعة.")
             return redirect("my_account")
 
-        request.session["item_create_form_token"] = str(uuid.uuid4())
+        request.session["request_create_form_token"] = str(uuid.uuid4())
 
         # INVALID FORM
         return render(
@@ -433,7 +433,7 @@ def request_create(request):
                 "top_categories": top_categories,
                 "categories": top_categories,
                 "selected_category": selected_category,
-                "form_token": request.session["item_create_form_token"],
+                "form_token": request.session["request_create_form_token"],
             },
         )
 
@@ -448,7 +448,7 @@ def request_create(request):
     selected_path = get_selected_category_path(selected_category)
     selected_path_json = json.dumps(selected_path)
 
-    request.session["item_create_form_token"] = str(uuid.uuid4())
+    request.session["request_create_form_token"] = str(uuid.uuid4())
 
     return render(
         request,
@@ -460,7 +460,7 @@ def request_create(request):
             "selected_category": selected_category,
             "category_tree_json": category_tree_json,
             "selected_category_path_json": selected_path_json,
-            "form_token": request.session["item_create_form_token"],
+            "form_token": request.session["request_create_form_token"],
         },
     )
 
