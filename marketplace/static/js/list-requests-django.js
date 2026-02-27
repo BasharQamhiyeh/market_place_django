@@ -15,6 +15,9 @@
     const pageRoot = document.querySelector(".list-requests-page[data-page='list-requests']");
     if (!pageRoot) return;
 
+    // Shared across sections – set by initCategoryTree
+    let _syncCatTree = () => {};
+
     // ---------- Elements ----------
     const form = document.getElementById("filtersForm");
     const filterCategory = document.getElementById("filterCategory");
@@ -254,6 +257,114 @@
       applyFilters({ append: true });
     });
 
+    // ---------- Category Dropdown (trigger + collapsible tree panel) ----------
+    (function initCategoryTree() {
+      const sel     = filterCategory; // captured above
+      const trigger = document.getElementById("catDropdownTrigger");
+      const label   = document.getElementById("catDropdownLabel");
+      const panel   = document.getElementById("catDropdownPanel");
+      const wrap    = document.getElementById("catDropdownWrap");
+      const sidebar = document.getElementById("filtersBox");
+      if (!sel || !trigger || !panel || !wrap) return;
+
+      function openPanel() {
+        panel.style.display = "";
+        trigger.setAttribute("aria-expanded", "true");
+        if (sidebar) sidebar.style.overflow = "visible";
+      }
+
+      function closePanel() {
+        panel.style.display = "none";
+        trigger.setAttribute("aria-expanded", "false");
+        if (sidebar) sidebar.style.overflow = "";
+      }
+
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        panel.style.display === "none" ? openPanel() : closePanel();
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!wrap.contains(e.target)) closePanel();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closePanel();
+      });
+
+      panel.addEventListener("click", (e) => {
+        // Arrow: expand/collapse, stay open
+        const arrow = e.target.closest(".cat-tree-arrow");
+        if (arrow) {
+          e.stopPropagation();
+          const catId   = arrow.dataset.for;
+          const children = document.getElementById("cat-children-" + catId);
+          if (!children) return;
+          const isOpen  = children.style.display !== "none";
+          children.style.display = isOpen ? "none" : "";
+          arrow.classList.toggle("is-open", !isOpen);
+          arrow.setAttribute("aria-expanded", String(!isOpen));
+          return;
+        }
+
+        // Category item: select + close + fetch
+        const item = e.target.closest(".cat-tree-item");
+        if (!item) return;
+        const catId = item.dataset.catId ?? "";
+
+        sel.value = catId;
+        syncVisualSelection();
+        closePanel();
+
+        if (pageField) pageField.value = "1";
+        applyFilters({ append: false });
+        document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      function syncVisualSelection() {
+        const v = sel.value ?? "";
+
+        if (label) {
+          if (!v) {
+            label.textContent = "كل الأقسام";
+          } else {
+            const selItem = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+            label.textContent = selItem?.querySelector(".cat-tree-label")?.textContent.trim() || "كل الأقسام";
+          }
+        }
+
+        panel.querySelectorAll(".cat-tree-item").forEach(el => {
+          el.classList.toggle("is-selected", (el.dataset.catId ?? "") === v);
+        });
+
+        if (!v) return;
+
+        const selectedEl = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+        if (!selectedEl) return;
+
+        let node = selectedEl.parentElement;
+        while (node && node !== panel) {
+          if (node.classList.contains("cat-tree-children")) {
+            node.style.display = "";
+            const parentId = node.dataset.parentId;
+            if (parentId) {
+              const arrowBtn = panel.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
+              if (arrowBtn) {
+                arrowBtn.classList.add("is-open");
+                arrowBtn.setAttribute("aria-expanded", "true");
+              }
+            }
+          }
+          node = node.parentElement;
+        }
+      }
+
+      _syncCatTree = syncVisualSelection;
+      syncVisualSelection();
+    })();
+
+    // Keep label in sync after reset
+    resetBtn?.addEventListener("click", () => _syncCatTree());
 
     // ---------- VIP slider (same behavior as mockup) ----------
     let vipPage = 0;
@@ -515,7 +626,7 @@
 
       if (activeKey === "category") {
         const el = document.getElementById("mfCategory");
-        if (el && filterCategory) filterCategory.value = el.value;
+        if (el && filterCategory) { filterCategory.value = el.value; _syncCatTree(); }
       }
 
       if (activeKey === "city") {
@@ -552,7 +663,7 @@
     function resetOnlyActiveKey() {
       if (!activeKey) return;
 
-      if (activeKey === "category" && filterCategory) filterCategory.value = "";
+      if (activeKey === "category" && filterCategory) { filterCategory.value = ""; _syncCatTree(); }
       if (activeKey === "city" && filterCity) filterCity.value = "";
       if (activeKey === "condition") setRadioGroupValue("condition", "");
       if (activeKey === "price") { if (filterMin) filterMin.value = ""; if (filterMax) filterMax.value = ""; }

@@ -94,17 +94,77 @@
 
           <div>
             <label class="filter-title">القسم</label>
-            <select name="category" id="filterCategory" class="filter-select">
+
+            {# Hidden select – used by FormData serialization & mobile sheet #}
+            <select name="category" id="filterCategory" class="cat-hidden-select" aria-hidden="true" tabindex="-1">
               <option value="">كل الأقسام</option>
               {% for cat in categories %}
                 <option value="{{ cat.id }}" {% if filters.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
                 {% for sub in cat.subcategories.all %}
-                  <option value="{{ sub.id }}" {% if filters.category == sub.id|stringformat:"s" %}selected{% endif %}>
-                    — {{ sub.name }}
-                  </option>
+                  <option value="{{ sub.id }}" {% if filters.category == sub.id|stringformat:"s" %}selected{% endif %}>— {{ sub.name }}</option>
+                  {% for subsub in sub.subcategories.all %}
+                    <option value="{{ subsub.id }}" {% if filters.category == subsub.id|stringformat:"s" %}selected{% endif %}>— — {{ subsub.name }}</option>
+                  {% endfor %}
                 {% endfor %}
               {% endfor %}
             </select>
+
+            {# Custom dropdown: trigger button + collapsible-tree panel #}
+            <div class="cat-dropdown-wrap" id="catDropdownWrap">
+
+              <button type="button" class="cat-dropdown-trigger" id="catDropdownTrigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="cat-dropdown-label" id="catDropdownLabel">كل الأقسام</span>
+                <svg class="cat-dropdown-chevron" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+
+              <div class="cat-dropdown-panel" id="catDropdownPanel" style="display:none" role="listbox">
+
+                <div class="cat-tree-item {% if not filters.category %}is-selected{% endif %}" data-cat-id="" role="option">
+                  <span class="cat-tree-label">كل الأقسام</span>
+                </div>
+
+                {% for cat in categories %}
+                  <div class="cat-tree-item {% if filters.category == cat.id|stringformat:"s" %}is-selected{% endif %}" data-cat-id="{{ cat.id }}" role="option">
+                    <span class="cat-tree-label">{{ cat.name }}</span>
+                    {% if cat.subcategories.all %}
+                      <button type="button" class="cat-tree-arrow" data-for="{{ cat.id }}" aria-expanded="false" aria-label="توسيع {{ cat.name }}">
+                        <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                    {% endif %}
+                  </div>
+
+                  {% if cat.subcategories.all %}
+                    <div class="cat-tree-children" id="cat-children-{{ cat.id }}" data-parent-id="{{ cat.id }}" style="display:none">
+
+                      {% for sub in cat.subcategories.all %}
+                        <div class="cat-tree-item cat-l2 {% if filters.category == sub.id|stringformat:"s" %}is-selected{% endif %}" data-cat-id="{{ sub.id }}" role="option">
+                          <span class="cat-tree-label">{{ sub.name }}</span>
+                          {% if sub.subcategories.all %}
+                            <button type="button" class="cat-tree-arrow" data-for="{{ sub.id }}" aria-expanded="false" aria-label="توسيع {{ sub.name }}">
+                              <svg viewBox="0 0 24 24" fill="none" class="w-3.5 h-3.5"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </button>
+                          {% endif %}
+                        </div>
+
+                        {% if sub.subcategories.all %}
+                          <div class="cat-tree-children cat-l3-wrap" id="cat-children-{{ sub.id }}" data-parent-id="{{ sub.id }}" style="display:none">
+                            {% for subsub in sub.subcategories.all %}
+                              <div class="cat-tree-item cat-l3 {% if filters.category == subsub.id|stringformat:"s" %}is-selected{% endif %}" data-cat-id="{{ subsub.id }}" role="option">
+                                <span class="cat-tree-label">{{ subsub.name }}</span>
+                              </div>
+                            {% endfor %}
+                          </div>
+                        {% endif %}
+
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+
+                {% endfor %}
+              </div><!-- /.cat-dropdown-panel -->
+            </div><!-- /.cat-dropdown-wrap -->
           </div>
 
           <div>

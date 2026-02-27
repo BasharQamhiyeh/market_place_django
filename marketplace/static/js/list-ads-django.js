@@ -15,6 +15,9 @@
     const pageRoot = document.querySelector(".list-ads-page[data-page='list-ads']");
     if (!pageRoot) return; // not on this page
 
+    // Shared across IIFEs – will be set by initCategoryTree inside initFilters
+    let _syncCatTree = () => {};
+
     // =====================================================================
     // VIP Slider (no conflicting sizing, no fixed-width fighting, RTL-safe)
     // =====================================================================
@@ -337,6 +340,126 @@
           fetchResults({ append: true });
         });
 
+      // ---- Category Dropdown (trigger + collapsible tree panel) ----
+
+      (function initCategoryTree() {
+        const sel     = document.getElementById("filterCategory");
+        const trigger = document.getElementById("catDropdownTrigger");
+        const label   = document.getElementById("catDropdownLabel");
+        const panel   = document.getElementById("catDropdownPanel");
+        const wrap    = document.getElementById("catDropdownWrap");
+        const sidebar = document.getElementById("filtersBox");
+        if (!sel || !trigger || !panel || !wrap) return;
+
+        // Open / close helpers
+        function openPanel() {
+          panel.style.display = "";
+          trigger.setAttribute("aria-expanded", "true");
+          // Allow the absolutely-positioned panel to overflow the sticky sidebar
+          if (sidebar) sidebar.style.overflow = "visible";
+        }
+
+        function closePanel() {
+          panel.style.display = "none";
+          trigger.setAttribute("aria-expanded", "false");
+          if (sidebar) sidebar.style.overflow = "";
+        }
+
+        // Toggle on trigger click
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          panel.style.display === "none" ? openPanel() : closePanel();
+        });
+
+        // Close when clicking outside the wrapper
+        document.addEventListener("click", (e) => {
+          if (!wrap.contains(e.target)) closePanel();
+        });
+
+        // Close on Escape
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closePanel();
+        });
+
+        // Panel interaction: expand arrows + category selection
+        panel.addEventListener("click", (e) => {
+          // Arrow click – expand/collapse children, stay open
+          const arrow = e.target.closest(".cat-tree-arrow");
+          if (arrow) {
+            e.stopPropagation();
+            const catId   = arrow.dataset.for;
+            const children = document.getElementById("cat-children-" + catId);
+            if (!children) return;
+            const isOpen  = children.style.display !== "none";
+            children.style.display = isOpen ? "none" : "";
+            arrow.classList.toggle("is-open", !isOpen);
+            arrow.setAttribute("aria-expanded", String(!isOpen));
+            return;
+          }
+
+          // Category label click – select + close + fetch
+          const item = e.target.closest(".cat-tree-item");
+          if (!item) return;
+          const catId = item.dataset.catId ?? "";
+
+          sel.value = catId;
+          syncVisualSelection();
+          closePanel();
+
+          resetToFirstPage();
+          fetchResults({ append: false });
+          document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        // Update trigger label + highlight selected item + expand its ancestors
+        function syncVisualSelection() {
+          const v = sel.value ?? "";
+
+          // Update the trigger button text
+          if (label) {
+            if (!v) {
+              label.textContent = "كل الأقسام";
+            } else {
+              const selItem = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+              label.textContent = selItem?.querySelector(".cat-tree-label")?.textContent.trim() || "كل الأقسام";
+            }
+          }
+
+          // Update is-selected state on each item
+          panel.querySelectorAll(".cat-tree-item").forEach(el => {
+            el.classList.toggle("is-selected", (el.dataset.catId ?? "") === v);
+          });
+
+          if (!v) return;
+
+          // Auto-expand ancestor containers so the selected item is reachable
+          const selectedEl = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+          if (!selectedEl) return;
+
+          let node = selectedEl.parentElement;
+          while (node && node !== panel) {
+            if (node.classList.contains("cat-tree-children")) {
+              node.style.display = "";
+              const parentId = node.dataset.parentId;
+              if (parentId) {
+                const arrowBtn = panel.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
+                if (arrowBtn) {
+                  arrowBtn.classList.add("is-open");
+                  arrowBtn.setAttribute("aria-expanded", "true");
+                }
+              }
+            }
+            node = node.parentElement;
+          }
+        }
+
+        _syncCatTree = syncVisualSelection;
+        syncVisualSelection(); // initialise on page load
+      })();
+
+      // Keep the trigger label in sync after reset
+      resetFiltersBtn?.addEventListener("click", () => _syncCatTree());
+
     })();
 
     // =====================================================================
@@ -464,7 +587,7 @@
         if (activeKey === "category") {
           const el = document.getElementById("mfCategory");
           const desktop = document.getElementById("filterCategory");
-          if (el && desktop) desktop.value = el.value;
+          if (el && desktop) { desktop.value = el.value; _syncCatTree(); }
         }
 
         if (activeKey === "city") {
@@ -503,7 +626,7 @@
 
       function resetOnlyActiveKey() {
         if (!activeKey) return;
-        if (activeKey === "category") document.getElementById("filterCategory").value = "";
+        if (activeKey === "category") { document.getElementById("filterCategory").value = ""; _syncCatTree(); }
         if (activeKey === "city") document.getElementById("filterCity").value = "";
         if (activeKey === "condition") setRadioValue("condition", "");
         if (activeKey === "price") { if (priceMin) priceMin.value = ""; if (priceMax) priceMax.value = ""; }
