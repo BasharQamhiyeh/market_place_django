@@ -103,9 +103,8 @@
       if (params.has("time")) setRadioGroupValue("time", params.get("time") || "");
       if (params.has("sort")) setRadioGroupValue("sort", params.get("sort") || "latest");
 
-      // page (optional)
-      const p = params.get("page");
-      if (p && pageField) pageField.value = p;
+      // page: intentionally NOT read from URL – the template sets pageField to
+      // page_obj.number (the actual page served after clamping), so we honour that.
 
       // category (robust + retry)
       if (cat && filterCategory) {
