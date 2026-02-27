@@ -200,8 +200,8 @@
           if (priceMin?.name && params.has(priceMin.name)) priceMin.value = params.get(priceMin.name) || "";
           if (priceMax?.name && params.has(priceMax.name)) priceMax.value = params.get(priceMax.name) || "";
 
-          // page
-          if (pageField && params.has("page")) pageField.value = params.get("page") || "1";
+          // page: intentionally NOT read from URL – the template sets pageField to
+          // page_obj.number (the actual page served after clamping), so we honour that.
         })();
 
 
