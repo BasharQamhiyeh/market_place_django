@@ -3,6 +3,7 @@
 .req-card-link {
   display: block;
   text-decoration: none;
+  position: relative;
 }
 
 .req-card {
@@ -14,7 +15,6 @@
   transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
-  cursor: pointer;
   display: flex;
   flex-direction: column;
 }
@@ -25,25 +25,11 @@
   border-color: #16a34a; /* green-600 */
 }
 
-/* ==================== HOVER MASK & HINT ==================== */
-
-.req-hover-mask {
-  position: absolute;
-  inset: 0;
-  background: rgba(220, 252, 231, 0.72); /* green-100 */
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.req-card:hover .req-hover-mask {
-  opacity: 1;
-}
+/* ==================== HOVER HINT (title-link scope) ==================== */
 
 .req-hint-container {
   position: absolute;
-  top: calc(50% + 10px);
+  top: 50%;
   transform: translateY(-50%);
   left: 0.75rem;
   display: flex;
@@ -52,11 +38,10 @@
   opacity: 0;
   transition: opacity 0.2s ease;
   z-index: 20;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
 }
 
-.req-card:hover .req-hint-container {
+.req-card-link:hover .req-hint-container {
   opacity: 1;
 }
 
@@ -85,7 +70,7 @@
   }
 }
 
-.req-card:hover .req-hint-arrow {
+.req-card-link:hover .req-hint-arrow {
   animation: nudgeLeft 0.65s ease-in-out infinite;
 }
 
