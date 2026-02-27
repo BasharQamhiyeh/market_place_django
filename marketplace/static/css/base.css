@@ -1385,6 +1385,10 @@ button, input, select, textarea {
   .search-container { width: 100%; order: 3; }
   #headerActions { width: 100%; order: 2; margin-bottom: 10px; }
   .desktop-only { display: none !important; }
+  /* Hide greeting text on small screens — show only the avatar */
+  .user-profile-trigger .text-right { display: none !important; }
+  .user-profile-trigger img,
+  .user-profile-trigger > div:last-child { width: 32px !important; height: 32px !important; }
 }
 @media (min-width: 641px) { .mobile-only { display: none !important; } }
 

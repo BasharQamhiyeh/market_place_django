@@ -373,7 +373,7 @@
           {% for cat in navbar_categories|slice:":6" %}
             <div class="group h-full flex items-center">
               <a href="{% url 'item_list' %}?categories={{ cat.id }}"
-                 class="nav-link-h flex items-center gap-1.5 text-sm"
+                 class="nav-link-h flex items-center gap-1.5 text-xs md:text-sm"
                  data-mobile-category="{{ cat.slug|default:cat.id }}">
                 {{ cat.name }}
                 {% if cat.children %}
