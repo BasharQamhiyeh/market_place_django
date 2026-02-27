@@ -1,13 +1,28 @@
 {# templates/partials/_request_card.html #}
 {% load i18n timeago_ar %}
 
-<a href="{% url 'request_detail' req.id %}" class="req-card-link">
-  <article class="req-card group">
+<article class="req-card">
 
-    <!-- HOVER MASK -->
-    <div class="req-hover-mask"></div>
+  <!-- TOP PILLS -->
+  <div class="req-top">
+    {% if req.listing.category %}
+      <span class="req-pill req-pill-category">
+        {{ req.listing.category.name }}
+      </span>
+    {% endif %}
 
-    <!-- HOVER HINT -->
+    {% if req.featured or req.listing.is_featured %}
+      <span class="req-pill req-pill-featured">مميز</span>
+    {% endif %}
+  </div>
+
+  <!-- TITLE LINK (click + hover hint scoped to title only) -->
+  <a href="{% url 'request_detail' req.id %}" class="req-card-link">
+    <h3 class="req-title">
+      {{ req.listing.title }}
+    </h3>
+
+    <!-- HOVER HINT (sibling of h3, positioned relative to the <a>) -->
     <div class="req-hint-container" aria-hidden="true">
       <div class="req-hint-text">
         <span>عرض</span>
@@ -22,100 +37,82 @@
         </svg>
       </span>
     </div>
+  </a>
 
-    <!-- TOP PILLS -->
-    <div class="req-top">
-      {% if req.listing.category %}
-        <span class="req-pill req-pill-category">
-          {{ req.listing.category.name }}
-        </span>
-      {% endif %}
-
-      {% if req.featured or req.listing.is_featured %}
-        <span class="req-pill req-pill-featured">مميز</span>
-      {% endif %}
-    </div>
-
-    <!-- TITLE -->
-    <h3 class="req-title">
-      {{ req.listing.title }}
-    </h3>
-
-    <!-- META INFO -->
-    <div class="req-meta">
-      <span class="req-meta-item">
-        <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
-          <path d="M12 22s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z"
-                stroke="currentColor" stroke-width="2" />
-          <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2" />
-        </svg>
-        <span>
-          {% if req.listing.city %}
-            {{ req.listing.city.name|default:req.listing.city }}
-          {% else %}
-            —
-          {% endif %}
-        </span>
+  <!-- META INFO -->
+  <div class="req-meta">
+    <span class="req-meta-item">
+      <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
+        <path d="M12 22s7-6 7-12a7 7 0 1 0-14 0c0 6 7 12 7 12z"
+              stroke="currentColor" stroke-width="2" />
+        <circle cx="12" cy="10" r="2.5" stroke="currentColor" stroke-width="2" />
+      </svg>
+      <span>
+        {% if req.listing.city %}
+          {{ req.listing.city.name|default:req.listing.city }}
+        {% else %}
+          —
+        {% endif %}
       </span>
+    </span>
 
-      <span class="req-meta-item">
-        <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="4" width="18" height="18" rx="3"
-                stroke="currentColor" stroke-width="2" />
-          <path d="M8 2v4M16 2v4M3 10h18"
-                stroke="currentColor" stroke-width="2" />
-        </svg>
-        <span>
-          {% with r=req.listing.updated_at|default:req.listing.created_at %}
-            {% if r %}{{ r|timeago_ar }}{% endif %}
-          {% endwith %}
-        </span>
-      </span>
-    </div>
-
-    <!-- FOOTER -->
-    <div class="req-footer">
-      <div class="req-budget-container">
-        <span class="req-budget-price">
-          {% if req.budget %}
-            {{ req.budget|floatformat:0 }} د.أ
-          {% else %}
-            {% trans "حسب الطلب" %}
-          {% endif %}
-        </span>
-        <span class="req-budget-label">لغاية</span>
-      </div>
-
-      <div class="req-user">
-        {% with u=req.listing.user %}
-          {% if u.profile_photo %}
-            <img src="{{ u.profile_photo.url }}" class="req-avatar" alt="{{ u.username|default:u.phone }}">
-          {% else %}
-            <div class="req-avatar-fallback" aria-hidden="true">
-              {% with fn=u.first_name|default:"" un=u.username|default:"" ph=u.phone|default:"" %}
-                {% if fn %}
-                  {{ fn|slice:":1"|upper }}
-                {% elif un %}
-                  {{ un|slice:":1"|upper }}
-                {% elif ph %}
-                  {{ ph|slice:":1"|upper }}
-                {% else %}
-                  ?
-                {% endif %}
-              {% endwith %}
-            </div>
-          {% endif %}
-
-          <span class="req-user-name">
-            {% if u.username %}
-              {{ u.username }}
-            {% else %}
-              {{ u.first_name }}
-            {% endif %}
-          </span>
+    <span class="req-meta-item">
+      <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="3"
+              stroke="currentColor" stroke-width="2" />
+        <path d="M8 2v4M16 2v4M3 10h18"
+              stroke="currentColor" stroke-width="2" />
+      </svg>
+      <span>
+        {% with r=req.listing.updated_at|default:req.listing.created_at %}
+          {% if r %}{{ r|timeago_ar }}{% endif %}
         {% endwith %}
-      </div>
+      </span>
+    </span>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="req-footer">
+    <div class="req-budget-container">
+      <span class="req-budget-price">
+        {% if req.budget %}
+          {{ req.budget|floatformat:0 }} د.أ
+        {% else %}
+          {% trans "حسب الطلب" %}
+        {% endif %}
+      </span>
+      <span class="req-budget-label">لغاية</span>
     </div>
 
-  </article>
-</a>
+    <div class="req-user">
+      {% with u=req.listing.user %}
+        {% if u.profile_photo %}
+          <img src="{{ u.profile_photo.url }}" class="req-avatar" alt="{{ u.username|default:u.phone }}">
+        {% else %}
+          <div class="req-avatar-fallback" aria-hidden="true">
+            {% with fn=u.first_name|default:"" un=u.username|default:"" ph=u.phone|default:"" %}
+              {% if fn %}
+                {{ fn|slice:":1"|upper }}
+              {% elif un %}
+                {{ un|slice:":1"|upper }}
+              {% elif ph %}
+                {{ ph|slice:":1"|upper }}
+              {% else %}
+                ?
+              {% endif %}
+            {% endwith %}
+          </div>
+        {% endif %}
+
+        <span class="req-user-name">
+          {% if u.username %}
+            {{ u.username }}
+          {% else %}
+            {{ u.first_name }}
+          {% endif %}
+        </span>
+      {% endwith %}
+    </div>
+  </div>
+
+</article>
