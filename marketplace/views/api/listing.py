@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -220,9 +221,28 @@ def toggle_favorite(request, item_id):
     # AJAX request — return JSON only (NO PAGE REFRESH)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         new_count = Favorite.objects.filter(user=request.user).count()
+
+        recent_fav_qs = (
+            Favorite.objects.filter(user=request.user)
+            .select_related(
+                "listing",
+                "listing__item",
+                "listing__request",
+                "listing__user",
+            )
+            .prefetch_related("listing__item__photos")
+            .order_by("-created_at")[:5]
+        )
+        navbar_html = render_to_string(
+            "partials/_navbar_fav_scroll.html",
+            {"recent_favorites": recent_fav_qs},
+            request=request,
+        )
+
         return JsonResponse({
             "is_favorited": is_favorited,
-            "favorite_count": new_count
+            "favorite_count": new_count,
+            "navbar_html": navbar_html,
         })
 
     # Normal POST (from item detail page)
