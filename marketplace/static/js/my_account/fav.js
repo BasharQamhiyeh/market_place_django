@@ -81,10 +81,22 @@
 
       if (!res.ok) throw new Error("Bad response: " + res.status);
 
+      const data = await res.json();
+
       // Remove from DOM (favorites tab only)
       pendingCard.remove();
       closeModal();
       updateCountAndEmpty();
+
+      // Sync navbar badge + dropdown
+      if (typeof data.favorite_count === "number") {
+        if (typeof window.updateNavbarFavBadge === "function") {
+          window.updateNavbarFavBadge(data.favorite_count);
+        }
+        if (typeof window.updateNavbarFavUI === "function") {
+          window.updateNavbarFavUI(data.favorite_count, data.navbar_html || null);
+        }
+      }
 
       // If you already have a global success modal function, it will work:
       if (typeof window.openSuccessModal === "function") {
