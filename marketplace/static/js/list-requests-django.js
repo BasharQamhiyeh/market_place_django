@@ -257,14 +257,43 @@
       applyFilters({ append: true });
     });
 
-    // ---------- Category Tree (3-level collapsible) ----------
+    // ---------- Category Dropdown (trigger + collapsible tree panel) ----------
     (function initCategoryTree() {
-      const tree = document.getElementById("filterCategoryTree");
-      const sel  = filterCategory; // already captured above
-      if (!tree || !sel) return;
+      const sel     = filterCategory; // captured above
+      const trigger = document.getElementById("catDropdownTrigger");
+      const label   = document.getElementById("catDropdownLabel");
+      const panel   = document.getElementById("catDropdownPanel");
+      const wrap    = document.getElementById("catDropdownWrap");
+      const sidebar = document.getElementById("filtersBox");
+      if (!sel || !trigger || !panel || !wrap) return;
 
-      // Arrow expand/collapse + label select – unified click handler
-      tree.addEventListener("click", (e) => {
+      function openPanel() {
+        panel.style.display = "";
+        trigger.setAttribute("aria-expanded", "true");
+        if (sidebar) sidebar.style.overflow = "visible";
+      }
+
+      function closePanel() {
+        panel.style.display = "none";
+        trigger.setAttribute("aria-expanded", "false");
+        if (sidebar) sidebar.style.overflow = "";
+      }
+
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        panel.style.display === "none" ? openPanel() : closePanel();
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!wrap.contains(e.target)) closePanel();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closePanel();
+      });
+
+      panel.addEventListener("click", (e) => {
+        // Arrow: expand/collapse, stay open
         const arrow = e.target.closest(".cat-tree-arrow");
         if (arrow) {
           e.stopPropagation();
@@ -278,12 +307,14 @@
           return;
         }
 
+        // Category item: select + close + fetch
         const item = e.target.closest(".cat-tree-item");
         if (!item) return;
         const catId = item.dataset.catId ?? "";
 
         sel.value = catId;
         syncVisualSelection();
+        closePanel();
 
         if (pageField) pageField.value = "1";
         applyFilters({ append: false });
@@ -292,22 +323,32 @@
 
       function syncVisualSelection() {
         const v = sel.value ?? "";
-        tree.querySelectorAll(".cat-tree-item").forEach(el => {
+
+        if (label) {
+          if (!v) {
+            label.textContent = "كل الأقسام";
+          } else {
+            const selItem = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+            label.textContent = selItem?.querySelector(".cat-tree-label")?.textContent.trim() || "كل الأقسام";
+          }
+        }
+
+        panel.querySelectorAll(".cat-tree-item").forEach(el => {
           el.classList.toggle("is-selected", (el.dataset.catId ?? "") === v);
         });
 
         if (!v) return;
 
-        const selectedEl = tree.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+        const selectedEl = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
         if (!selectedEl) return;
 
         let node = selectedEl.parentElement;
-        while (node && node !== tree) {
+        while (node && node !== panel) {
           if (node.classList.contains("cat-tree-children")) {
             node.style.display = "";
             const parentId = node.dataset.parentId;
             if (parentId) {
-              const arrowBtn = tree.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
+              const arrowBtn = panel.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
               if (arrowBtn) {
                 arrowBtn.classList.add("is-open");
                 arrowBtn.setAttribute("aria-expanded", "true");
@@ -322,7 +363,7 @@
       syncVisualSelection();
     })();
 
-    // Sync tree when reset button clears filters (fires after existing reset listener)
+    // Keep label in sync after reset
     resetBtn?.addEventListener("click", () => _syncCatTree());
 
     // ---------- VIP slider (same behavior as mockup) ----------

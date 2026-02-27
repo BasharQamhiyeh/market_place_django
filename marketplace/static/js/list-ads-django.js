@@ -340,15 +340,50 @@
           fetchResults({ append: true });
         });
 
-      // ---- Category Tree ----
+      // ---- Category Dropdown (trigger + collapsible tree panel) ----
 
       (function initCategoryTree() {
-        const tree = document.getElementById("filterCategoryTree");
-        const sel  = document.getElementById("filterCategory");
-        if (!tree || !sel) return;
+        const sel     = document.getElementById("filterCategory");
+        const trigger = document.getElementById("catDropdownTrigger");
+        const label   = document.getElementById("catDropdownLabel");
+        const panel   = document.getElementById("catDropdownPanel");
+        const wrap    = document.getElementById("catDropdownWrap");
+        const sidebar = document.getElementById("filtersBox");
+        if (!sel || !trigger || !panel || !wrap) return;
 
-        // Expand/collapse arrow click
-        tree.addEventListener("click", (e) => {
+        // Open / close helpers
+        function openPanel() {
+          panel.style.display = "";
+          trigger.setAttribute("aria-expanded", "true");
+          // Allow the absolutely-positioned panel to overflow the sticky sidebar
+          if (sidebar) sidebar.style.overflow = "visible";
+        }
+
+        function closePanel() {
+          panel.style.display = "none";
+          trigger.setAttribute("aria-expanded", "false");
+          if (sidebar) sidebar.style.overflow = "";
+        }
+
+        // Toggle on trigger click
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          panel.style.display === "none" ? openPanel() : closePanel();
+        });
+
+        // Close when clicking outside the wrapper
+        document.addEventListener("click", (e) => {
+          if (!wrap.contains(e.target)) closePanel();
+        });
+
+        // Close on Escape
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") closePanel();
+        });
+
+        // Panel interaction: expand arrows + category selection
+        panel.addEventListener("click", (e) => {
+          // Arrow click – expand/collapse children, stay open
           const arrow = e.target.closest(".cat-tree-arrow");
           if (arrow) {
             e.stopPropagation();
@@ -362,39 +397,52 @@
             return;
           }
 
-          // Category label click
+          // Category label click – select + close + fetch
           const item = e.target.closest(".cat-tree-item");
           if (!item) return;
           const catId = item.dataset.catId ?? "";
 
           sel.value = catId;
-          _syncCatTree();
+          syncVisualSelection();
+          closePanel();
 
           resetToFirstPage();
           fetchResults({ append: false });
           document.getElementById("allAdsAnchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
         });
 
-        // Sync visual selection + auto-expand parents of selected item
+        // Update trigger label + highlight selected item + expand its ancestors
         function syncVisualSelection() {
           const v = sel.value ?? "";
-          tree.querySelectorAll(".cat-tree-item").forEach(el => {
+
+          // Update the trigger button text
+          if (label) {
+            if (!v) {
+              label.textContent = "كل الأقسام";
+            } else {
+              const selItem = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+              label.textContent = selItem?.querySelector(".cat-tree-label")?.textContent.trim() || "كل الأقسام";
+            }
+          }
+
+          // Update is-selected state on each item
+          panel.querySelectorAll(".cat-tree-item").forEach(el => {
             el.classList.toggle("is-selected", (el.dataset.catId ?? "") === v);
           });
 
           if (!v) return;
 
-          // Walk up the DOM from the selected item and open each cat-tree-children ancestor
-          const selectedEl = tree.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
+          // Auto-expand ancestor containers so the selected item is reachable
+          const selectedEl = panel.querySelector(`.cat-tree-item[data-cat-id="${CSS.escape(v)}"]`);
           if (!selectedEl) return;
 
           let node = selectedEl.parentElement;
-          while (node && node !== tree) {
+          while (node && node !== panel) {
             if (node.classList.contains("cat-tree-children")) {
               node.style.display = "";
               const parentId = node.dataset.parentId;
               if (parentId) {
-                const arrowBtn = tree.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
+                const arrowBtn = panel.querySelector(`.cat-tree-arrow[data-for="${CSS.escape(parentId)}"]`);
                 if (arrowBtn) {
                   arrowBtn.classList.add("is-open");
                   arrowBtn.setAttribute("aria-expanded", "true");
@@ -406,10 +454,10 @@
         }
 
         _syncCatTree = syncVisualSelection;
-        syncVisualSelection();
+        syncVisualSelection(); // initialise on page load
       })();
 
-      // Sync tree after reset (fires after the existing reset listener that clears sel.value)
+      // Keep the trigger label in sync after reset
       resetFiltersBtn?.addEventListener("click", () => _syncCatTree());
 
     })();
