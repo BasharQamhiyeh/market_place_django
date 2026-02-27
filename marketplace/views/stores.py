@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.db import IntegrityError
 
-from marketplace.models import Store, Category, Listing, City, StoreReview, StoreFollow, IssuesReport
+from marketplace.models import Store, Category, Listing, City, StoreReview, StoreFollow, IssuesReport, Favorite
 from marketplace.services.notifications import notify, K_STORE_FOLLOW, S_FOLLOWED, S_UNFOLLOWED
 from marketplace.utils.service import recalc_store_rating
 
@@ -136,6 +136,19 @@ def store_profile(request, store_id):
 
     listings = list(base_qs[:30])
     listings_count = base_qs.count()
+
+    # --------- mark favorited items for the current user ---------
+    if request.user.is_authenticated and listings:
+        listing_ids = [l.id for l in listings]
+        fav_listing_ids = set(
+            Favorite.objects.filter(
+                user=request.user, listing_id__in=listing_ids
+            ).values_list("listing_id", flat=True)
+        )
+        for l in listings:
+            item = getattr(l, "item", None)
+            if item:
+                item.is_favorited = l.id in fav_listing_ids
 
     # --------- build root categories for chips (from ALL listings) ---------
     # Build parent map once (categories table usually small)
