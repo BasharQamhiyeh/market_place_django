@@ -142,7 +142,7 @@ def navbar_categories(request):
     if cached is not None:
         return {"navbar_categories": cached}
 
-    order_field = "name"
+    order_field = "id"
 
     # Level 3 - grandchildren
     grandchild_qs = (
