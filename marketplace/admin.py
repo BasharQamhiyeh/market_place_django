@@ -1535,53 +1535,27 @@ class IssueReportAdmin(admin.ModelAdmin):
             self._notify_reporters(obj, new_status)
 
             label = "تم حل البلاغ" if new_status == "resolved" else "تم رفض البلاغ"
-            self.message_user(request, f"✅ {label} وتم إشعار المبلّغين.", messages.SUCCESS)
+            self.message_user(request, f"✅ {label} وتم إشعار المبلِّغ.", messages.SUCCESS)
             return redirect(reverse("admin:marketplace_issuesreport_changelist"))
 
         return super().response_change(request, obj)
 
     def _notify_reporters(self, report, new_status):
-        from marketplace.services.notifications import notify_many, K_REPORT, S_RESOLVED, S_DISMISSED
-        from marketplace.models import User as UserModel
+        from marketplace.services.notifications import notify, K_REPORT, S_RESOLVED, S_DISMISSED
 
         if report.target_kind == "listing":
-            sibling_qs = IssuesReport.objects.filter(
-                target_kind="listing",
-                listing=report.listing,
-                listing_type=report.listing_type,
-            )
             listing_label = "الإعلان" if report.listing_type == "item" else "الطلب"
             target_name = report.listing.title if report.listing else ""
         elif report.target_kind == "store":
-            sibling_qs = IssuesReport.objects.filter(
-                target_kind="store",
-                store=report.store,
-            )
             listing_label = "المتجر"
             target_name = report.store.name if report.store else ""
         else:  # user
-            sibling_qs = IssuesReport.objects.filter(
-                target_kind="user",
-                reported_user=report.reported_user,
-            )
             listing_label = "المستخدم"
             target_name = (
                 report.reported_user.username or report.reported_user.phone
                 if report.reported_user else ""
             )
 
-        # collect reporters before updating
-        reporter_ids = list(sibling_qs.values_list("user_id", flat=True))
-
-        # update all sibling reports
-        sibling_qs.update(
-            status=report.status,
-            action_taken=report.action_taken,
-            actioned_by=report.actioned_by,
-            actioned_at=report.actioned_at,
-        )
-
-        # build notification
         status_constant = S_RESOLVED if new_status == "resolved" else S_DISMISSED
 
         if new_status == "resolved":
@@ -1591,9 +1565,8 @@ class IssueReportAdmin(admin.ModelAdmin):
             title = "تم إغلاق بلاغك"
             body = f"تمت مراجعة بلاغك بخصوص {listing_label} \"{target_name}\". السبب: {report.action_taken}"
 
-        users = UserModel.objects.filter(user_id__in=reporter_ids)
-        notify_many(
-            users=users,
+        notify(
+            user=report.user,
             kind=K_REPORT,
             status=status_constant,
             title=title,

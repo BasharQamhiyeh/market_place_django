@@ -1,10 +1,8 @@
 /* static/js/my_account/msgs.js
-   ✅ Inline accordion: clicking a conversation expands messages below it
-   ✅ Clicking another conversation moves the panel there (single reusable panel)
-   ✅ List always stays visible — no full-panel swap
-   ✅ URL updates: ?tab=msgs&c=ID
-   ✅ Deep-link on page load opens the correct conversation inline
-   ✅ Back button (mobile) collapses the inline panel
+   Screen-swap: clicking a conversation hides the list and shows the full chat panel.
+   Back button returns to the list.
+   URL updates: ?tab=msgs&c=ID
+   Deep-link on page load opens the correct conversation directly.
 */
 
 let currentChatId = null;
@@ -52,6 +50,22 @@ function typeLineHtml(c){
 function getConvLastText(c){ return c?.last?.text  || c?.lastText  || ""; }
 function getConvLastTime(c){ return c?.last?.time  || c?.lastTime  || ""; }
 
+/* ─── SCREEN TOGGLE ─────────────────────────────────────────────────────── */
+
+function showChatScreen(){
+  const list = $("msgsListUI");
+  const panel = $("chatPanel");
+  if(list)  list.style.display  = "none";
+  if(panel) panel.style.display = "flex";
+}
+
+function showListScreen(){
+  const list = $("msgsListUI");
+  const panel = $("chatPanel");
+  if(list)  list.style.display  = "";
+  if(panel) panel.style.display = "none";
+}
+
 /* ─── CONVERSATION LIST ─────────────────────────────────────────────────── */
 
 function renderConversations(){
@@ -71,14 +85,10 @@ function renderConversations(){
     return matchFilter && matchSearch;
   });
 
-  // Detach panel before clearing innerHTML so it isn't destroyed
-  const panel = $("chatPanel");
-  if(panel && panel.parentNode === container) container.removeChild(panel);
-
   container.innerHTML = "";
 
   if(!filtered.length){
-    container.style.display  = "none";
+    container.style.display = "none";
     if(emptyState){ emptyState.classList.remove("hidden"); emptyState.style.display = "flex"; }
     updateCounters();
     return;
@@ -95,13 +105,11 @@ function renderConversations(){
     const imgUrl     = (c.img || "").trim();
     const avatarHtml = imgUrl ? `<img class="chat-item__avatar" src="${imgUrl}" alt="">` : "";
 
-    const isActive = String(c.id) === currentChatId;
-
     const el = document.createElement("div");
-    el.className    = `chat-item${isActive ? " chat-item--active" : ""}`;
+    el.className      = "chat-item";
     el.dataset.chatId = String(c.id);
-    el.style.cursor = "pointer";
-    el.innerHTML    = `
+    el.style.cursor   = "pointer";
+    el.innerHTML      = `
       ${avatarHtml}
       <div class="chat-item__body">
         <div class="chat-item__top">
@@ -114,13 +122,6 @@ function renderConversations(){
       ${badge}
     `;
     container.appendChild(el);
-
-    // Re-inject the panel right after its active item
-    if(isActive && panel){
-      panel.style.display = "block";
-      panel.removeAttribute("hidden");
-      container.appendChild(panel);
-    }
   });
 
   updateCounters();
@@ -131,36 +132,6 @@ async function loadConversations(){
   const data = await res.json().catch(() => ({}));
   conversations = data.conversations || [];
   renderConversations();
-}
-
-/* ─── INLINE PANEL HELPERS ──────────────────────────────────────────────── */
-
-/**
- * Move #chatPanel to sit immediately after `afterItem` inside the list.
- * If afterItem is null (deep-link before render), append to end of list.
- */
-function placePanel(afterItem){
-  const panel     = $("chatPanel");
-  const container = $("conversationsList");
-  if(!panel || !container) return;
-
-  if(afterItem && afterItem.parentNode === container){
-    // Insert right after the clicked item
-    afterItem.insertAdjacentElement("afterend", panel);
-  } else {
-    container.appendChild(panel);
-  }
-
-  panel.style.display = "block";
-  panel.removeAttribute("hidden");
-  panel.hidden = false;
-}
-
-function hidePanel(){
-  const panel = $("chatPanel");
-  if(!panel) return;
-  panel.hidden       = true;
-  panel.style.display = "none";
 }
 
 /* ─── CHAT PANEL ─────────────────────────────────────────────────────────── */
@@ -202,28 +173,8 @@ async function loadMessages(chatId){
 }
 
 async function openChat(chatId){
-  const strId   = String(chatId);
-  const closing = strId === currentChatId; // clicking the same item again → collapse
-
-  // Remove active highlight from previous item
-  document.querySelectorAll("#conversationsList .chat-item")
-          .forEach(el => el.classList.remove("chat-item--active"));
-
-  if(closing){
-    // Toggle: collapse if already open
-    currentChatId = null;
-    hidePanel();
-    pushUrl(null);
-    return;
-  }
-
+  const strId = String(chatId);
   currentChatId = strId;
-
-  // Highlight the clicked item
-  const item = document.querySelector(
-    `#conversationsList .chat-item[data-chat-id="${strId}"]`
-  );
-  if(item) item.classList.add("chat-item--active");
 
   // Populate header
   const c = conversations.find(x => String(x.id) === strId) || null;
@@ -235,19 +186,12 @@ async function openChat(chatId){
     else    $("chatUserImg").removeAttribute("src");
   }
 
-  // Show loading state
+  // Show loading state then switch to chat screen
   const area = $("chatArea");
   if(area) area.innerHTML = `<div class="chat-area__loading">جارٍ التحميل…</div>`;
 
-  // Place panel right below the clicked item (or end of list if not found)
-  placePanel(item);
-
-  // Smooth scroll so the panel is visible
-  requestAnimationFrame(() => {
-    $("chatPanel")?.scrollIntoView({ behavior:"smooth", block:"nearest" });
-  });
-
-  // Update URL
+  showChatScreen();
+  window.scrollTo({ top: 0, behavior: "smooth" });
   pushUrl(strId);
 
   // Load messages
@@ -316,13 +260,11 @@ async function sendMessage(){
   await loadConversations();       // refresh last-message preview
 }
 
-/* ─── RESET (returning to msgs tab) ─────────────────────────────────────── */
+/* ─── RESET (returning to list) ─────────────────────────────────────────── */
 
 function resetMsgsViewToList(){
   currentChatId = null;
-  hidePanel();
-  document.querySelectorAll("#conversationsList .chat-item")
-          .forEach(el => el.classList.remove("chat-item--active"));
+  showListScreen();
 }
 
 /* ─── FILTERS / SEARCH ──────────────────────────────────────────────────── */
@@ -350,12 +292,11 @@ function wireFiltersOnce(){
 /* ─── BOOT ───────────────────────────────────────────────────────────────── */
 
 function bootMessagesUI(){
-  if(!$("conversationsList"))                      return false;
-  if(!window.MYMSG_ENDPOINTS?.conversations)       return false;
+  if(!$("conversationsList"))                return false;
+  if(!window.MYMSG_ENDPOINTS?.conversations) return false;
 
   if(msgsBooted){
-    // Returning to the tab: always collapse any open conversation and clear the URL param.
-    // Deep-link (?c=) is only honoured on the very first page load (handled below).
+    // Returning to the tab: always go back to list view
     resetMsgsViewToList();
     pushUrl(null);
     return true;
@@ -366,7 +307,7 @@ function bootMessagesUI(){
 
   $("chatSearch")?.addEventListener("input", renderConversations);
 
-  // Back button: collapse the inline panel (useful on mobile)
+  // Back button: return to the conversations list
   $("chatBackBtn")?.addEventListener("click", () => {
     resetMsgsViewToList();
     pushUrl(null);
