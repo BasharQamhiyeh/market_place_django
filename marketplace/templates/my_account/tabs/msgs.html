@@ -53,39 +53,38 @@
     <span>لا يوجد رسائل</span>
   </div>
 
+</section>
 
-  <section id="chatPanel" class="chat-panel" style="display:none;">
+<!-- Screen 2: Chat View -->
+<section id="chatPanel" class="chat-panel" style="display:none;">
 
-    <div class="chat-head">
-      <div class="chat-head__left">
-        <img id="chatUserImg" class="chat-head__avatar" src="" alt="">
-        <div class="chat-head__meta">
-          <div id="chatUserName" class="chat-head__name">اسم المستخدم</div>
-          <div id="chatUserStatus" class="chat-head__status">● متصل الآن</div>
-        </div>
-      </div>
-
-      <div class="chat-head__right">
-        <div id="chatItemType" class="chat-head__type"></div>
+  <div class="chat-head">
+    <div class="chat-head__left">
+      <img id="chatUserImg" class="chat-head__avatar" src="" alt="">
+      <div class="chat-head__meta">
+        <div id="chatUserName" class="chat-head__name">اسم المستخدم</div>
+        <div id="chatUserStatus" class="chat-head__status">● متصل الآن</div>
       </div>
     </div>
 
-    <div id="chatArea" class="chat-area"></div>
-
-    <div class="chat-compose">
-      <input id="chatInput" type="text" placeholder="اكتب رسالة...">
-      <button id="chatSendBtn" class="chat-send" type="button">إرسال</button>
-      {# Back / collapse — most useful on mobile #}
-      <button id="chatBackBtn" class="chat-back" type="button">
-        <span class="chat-back__inner">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          إغلاق
-        </span>
-      </button>
+    <div class="chat-head__right">
+      <div id="chatItemType" class="chat-head__type"></div>
     </div>
+  </div>
 
-  </section>
+  <div id="chatArea" class="chat-area"></div>
+
+  <div class="chat-compose">
+    <input id="chatInput" type="text" placeholder="اكتب رسالة...">
+    <button id="chatSendBtn" class="chat-send" type="button">إرسال</button>
+    <button id="chatBackBtn" class="chat-back" type="button">
+      <span class="chat-back__inner">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        الرجوع
+      </span>
+    </button>
+  </div>
 
 </section>
