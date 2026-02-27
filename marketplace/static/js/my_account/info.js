@@ -578,7 +578,11 @@
 
       // profile photo
       const profileFile = document.getElementById("profileImgInput")?.files?.[0];
-      if (profileFile) fd.append("profile_photo", profileFile);
+      if (profileFile) {
+        fd.append("profile_photo", profileFile);
+      } else if (document.getElementById("profileImage")?.dataset.hasImage === "false") {
+        fd.append("remove_profile_photo", "1");
+      }
 
       if (hasStoreSection) {
         fd.append("store_name",        (document.getElementById("storeName")?.value || "").trim());
@@ -590,7 +594,11 @@
         fd.append("store_description", (document.getElementById("storeDesc")?.value || "").trim());
 
         const logoFile = document.getElementById("storeLogoInput")?.files?.[0];
-        if (logoFile) fd.append("store_logo", logoFile);
+        if (logoFile) {
+          fd.append("store_logo", logoFile);
+        } else if (document.getElementById("storeLogoImage")?.dataset.hasImage === "false") {
+          fd.append("remove_store_logo", "1");
+        }
 
         fd.append(
           "show_mobile",

@@ -158,19 +158,23 @@
   z-index: 999;
   width: 28px;
   height: 28px;
-  font-size: 14px;
+  padding: 0;
   cursor: pointer;
-  display:flex !important;
-  align-items:center;
-  justify-content:center;
-  opacity: 0;
-  pointer-events: none;
-  transition:.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444 !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: background .15s ease;
 }
-
-#removeProfileBtn.show, #removeStoreLogoBtn.show{
-  opacity: 1;
-  pointer-events: auto;
+#removeProfileBtn:hover, #removeStoreLogoBtn:hover {
+  background: #dc2626 !important;
+}
+#removeProfileBtn svg, #removeStoreLogoBtn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 

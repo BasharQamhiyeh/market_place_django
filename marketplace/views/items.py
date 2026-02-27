@@ -610,6 +610,13 @@ def item_edit(request, item_id):
     listing = item.listing
     category = listing.category
 
+    lang = translation.get_language()
+    top_categories = Category.objects.filter(parent__isnull=True).order_by("name")
+    category_tree = build_category_tree(top_categories, lang)
+    category_tree_json = json.dumps(category_tree, ensure_ascii=False)
+    selected_path = get_selected_category_path(category)
+    selected_path_json = json.dumps(selected_path)
+
     initial = {
         "price": item.price,
         "condition": item.condition,
@@ -724,7 +731,10 @@ def item_edit(request, item_id):
         {
             "form": form,
             "item": item,
+            "listing": listing,
             "category": category,
+            "category_tree_json": category_tree_json,
+            "selected_category_path_json": selected_path_json,
         },
     )
 
