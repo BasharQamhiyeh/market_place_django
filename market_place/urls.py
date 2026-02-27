@@ -3,7 +3,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 
 def redirect_lang(request, path=None):
@@ -23,10 +22,10 @@ urlpatterns = [
     # main app without language prefix
     path('', include('marketplace.urls')),
 
-    # OpenAPI schema endpoint
-    path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
-    path("api/docs/", SpectacularSwaggerView.as_view(url_name="api-schema"), name="swagger-ui"),
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="api-schema"), name="redoc"),
+    # API routes disabled — no public API exposed yet
+    # path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
+    # path("api/docs/", SpectacularSwaggerView.as_view(url_name="api-schema"), name="swagger-ui"),
+    # path("api/redoc/", SpectacularRedocView.as_view(url_name="api-schema"), name="redoc"),
 ]
 
 if settings.DEBUG or getattr(settings, "IS_RENDER", False):

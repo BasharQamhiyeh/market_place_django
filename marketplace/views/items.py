@@ -797,6 +797,7 @@ def item_detail_more_similar(request, item_id):
     return JsonResponse({"html": html, "has_more": has_more})
 
 
+@login_required
 def my_items(request):
     items = (
         Item.objects
