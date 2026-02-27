@@ -611,7 +611,7 @@ def item_edit(request, item_id):
     category = listing.category
 
     lang = translation.get_language()
-    top_categories = Category.objects.filter(parent__isnull=True).order_by("name")
+    top_categories = Category.objects.filter(parent__isnull=True).order_by("id")
     category_tree = build_category_tree(top_categories, lang)
     category_tree_json = json.dumps(category_tree, ensure_ascii=False)
     selected_path = get_selected_category_path(category)

@@ -98,7 +98,7 @@ def _stores_queryset_and_context(request):
             )
         )
         .distinct()
-        .order_by("name")
+        .order_by("id")
     )
 
     total_count = paginator.count
@@ -165,7 +165,7 @@ def store_profile(request, store_id):
     root_ids = sorted({root_id(cid) for cid in cat_ids if cid})
 
     store_categories = list(
-        Category.objects.filter(id__in=root_ids, parent__isnull=True).order_by("name")
+        Category.objects.filter(id__in=root_ids, parent__isnull=True).order_by("id")
     )
 
     # --------- attach filter data to the 30 rendered cards (NO extra DB hits) ---------
@@ -179,7 +179,7 @@ def store_profile(request, store_id):
         city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None) or ""
         l._city_id = city_id
 
-    categories = Category.objects.filter(parent__isnull=True).order_by("name")
+    categories = Category.objects.filter(parent__isnull=True).order_by("id")
     cities = City.objects.filter(is_active=True).order_by("name")
 
     reviews = (

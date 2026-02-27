@@ -145,7 +145,7 @@ def categories_browse(request):
         .filter(parent__isnull=True)
         .select_related("parent")
         .prefetch_related("subcategories__subcategories")
-        .order_by("name")
+        .order_by("id")
     )
 
     def title_of(cat):
@@ -158,11 +158,11 @@ def categories_browse(request):
     categories_data = []
 
     for top_cat in top_categories:
-        subcats = top_cat.subcategories.all().order_by("name")
+        subcats = top_cat.subcategories.all().order_by("id")
 
         subs_list = []
         for sub in subcats:
-            sub_sub_cats = sub.subcategories.all().order_by("name")
+            sub_sub_cats = sub.subcategories.all().order_by("id")
             levels_list = [title_of(ssc) for ssc in sub_sub_cats] if sub_sub_cats.exists() else [title_of(sub)]
 
             subs_list.append({
