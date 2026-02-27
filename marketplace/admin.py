@@ -109,9 +109,9 @@ class ItemPhotoInline(admin.TabularInline):
 
 class CategoryPhotoInline(nested_admin.NestedStackedInline):
     model = CategoryPhoto
-    extra = 1
+    extra = 0
     max_num = 1
-    min_num = 1
+    min_num = 0
     can_delete = True
     readonly_fields = ("photo_preview_inline",)
     fields = ("photo_preview_inline", "image")

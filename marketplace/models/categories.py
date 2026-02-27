@@ -28,8 +28,8 @@ class Category(models.Model):
 
 
 class CategoryPhoto(models.Model):
-    category = models.OneToOneField(Category, on_delete=models.CASCADE, related_name="photo")
-    image = models.ImageField(upload_to="categories/")  # ✅ uses your configured storage
+    category = models.OneToOneField(Category, on_delete=models.CASCADE, related_name="photo", null=True, blank=True,)
+    image = models.ImageField(upload_to="categories/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
