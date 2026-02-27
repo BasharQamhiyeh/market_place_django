@@ -247,6 +247,10 @@ favBtns.forEach((btn) => {
       btn.dataset.favorited = isFav ? "1" : "0";
       applyFavUI(btn, isFav);
 
+      if (typeof data.favorite_count === "number" && typeof updateNavbarFavUI === "function") {
+        updateNavbarFavUI(data.favorite_count, data.navbar_html || null);
+      }
+
       if (window.showRuknAlert) {
         showRuknAlert(isFav ? "✔ تمت الإضافة للمفضلة" : "✳️ تم الحذف من المفضلة");
       }

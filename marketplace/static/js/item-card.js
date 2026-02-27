@@ -155,6 +155,7 @@
   }
 
   window.initItemCardFavs = initFavButtons;
+  window.updateNavbarFavUI = updateNavbarFavUI;
 
   document.body.addEventListener("htmx:afterSwap", (e) => {
     if (e && e.target) initFavButtons(e.target);
