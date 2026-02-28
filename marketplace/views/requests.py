@@ -19,6 +19,13 @@ import json
 import uuid
 from datetime import timedelta
 
+
+def redirect_my_account_requests():
+    resp = redirect("my_account")
+    resp["Location"] += "#tab-requests"
+    return resp
+
+
 def request_list(request):
     now = timezone.now()
 
@@ -316,7 +323,9 @@ def request_create(request):
     store = getattr(request.user, "store", None)
     if store and getattr(store, "is_active", True):
         messages.error(request, "❌ هذا الحساب حساب متجر ولا يمكنه إضافة طلبات. يمكنك إضافة إعلانات فقط.")
-        return redirect("my_account#tab-requests")  # أو redirect("home") حسب ما تريد
+        resp = redirect("my_account")
+        resp["Location"] += "#tab-requests"
+        return resp
 
     # =============================
     # 1. Top-level categories
@@ -422,7 +431,9 @@ def request_create(request):
             )
 
             messages.success(request, "✅ تم إرسال طلبك وهو الآن قيد المراجعة.")
-            return redirect("my_account#tab-requests")
+            resp = redirect("my_account")
+            resp["Location"] += "#tab-requests"
+            return resp
 
         request.session["request_create_form_token"] = str(uuid.uuid4())
 
@@ -586,7 +597,9 @@ def request_edit(request, request_id):
             # refresh token for next edit attempt
             request.session["request_edit_form_token"] = str(uuid.uuid4())
 
-            return redirect("my_account#tab-requests")
+            resp = redirect("my_account")
+            resp["Location"] += "#tab-requests"
+            return resp
 
         # invalid form -> new token
         request.session["request_edit_form_token"] = str(uuid.uuid4())
