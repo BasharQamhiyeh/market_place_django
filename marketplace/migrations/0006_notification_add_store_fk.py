@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("marketplace", "0004_attribute_input_type_alter_attribute_ui_type"),
+        ("marketplace", "0005_alter_categoryphoto_category_and_more"),
     ]
 
     operations = [
