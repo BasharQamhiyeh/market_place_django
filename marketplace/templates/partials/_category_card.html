@@ -26,11 +26,7 @@
       {# ✅ SUBTITLE: show correct language + safe fallback #}
       {% get_current_language as LANG %}
       <p class="text-xs text-orange-400 font-bold uppercase tracking-widest">
-        {% if LANG == "ar" %}
-          {{ cat.subtitle_ar|default_if_none:"" }}
-        {% else %}
-          {{ cat.subtitle_en|default_if_none:"" }}
-        {% endif %}
+          {{ cat.subtitle|default_if_none:"" }}
       </p>
     </div>
   </a>
