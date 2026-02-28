@@ -181,7 +181,7 @@
         </div>
         <div>
           <h2 class="text-2xl font-extrabold text-gray-800">${cat.title}</h2>
-          <p class="text-gray-500 text-sm">تصفح أفضل العروض في قسم ${cat.title}</p>
+          <p class="text-gray-500 text-sm">${cat.subtitle}</p>
         </div>
       </div>
 

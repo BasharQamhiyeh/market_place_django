@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const togglePass2 = document.getElementById("togglePass2");
 
   const verifyPopup = document.getElementById("verifyPopup");
-  const verifyCodeInput = document.getElementById("verifyCodeInput");
+  const verifyCodeInput = document.getElementById("verifyCode");
   const verifyCodeErr = document.getElementById("verifyCodeErr");
   const checkVerifyCode = document.getElementById("checkVerifyCode");
   const closeVerify = document.getElementById("closeVerify");

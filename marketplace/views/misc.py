@@ -168,7 +168,6 @@ def categories_browse(request):
             subs_list.append({
                 "id": sub.id,
                 "title": title_of(sub),
-
                 # ✅ NEW
                 "photo": photo_of(sub),
                 "levels": levels_list,
@@ -177,6 +176,7 @@ def categories_browse(request):
         categories_data.append({
             "id": top_cat.id,  # ✅ keep as int for simpler JS
             "title": title_of(top_cat),
+            "subtitle": top_cat.subtitle,
             "photo": photo_of(top_cat),
             "subs": subs_list,
         })
