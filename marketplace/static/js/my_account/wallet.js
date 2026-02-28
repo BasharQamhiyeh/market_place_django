@@ -233,28 +233,7 @@
       });
   }
 
-  // ---------------------------------------------------------
-  // Modals (existing in template)
-  // ---------------------------------------------------------
-  function openSuccessModal(message, title = "تم التنفيذ بنجاح") {
-    const m = document.getElementById("successModal");
-    const msg = document.getElementById("successMsg");
-    const ttl = document.getElementById("successTitle");
-    if (!m || !msg || !ttl) return;
-
-    ttl.innerText = title;
-    msg.innerText = message;
-
-    m.classList.remove("hidden");
-    m.classList.add("flex");
-  }
-
-  window.closeSuccessModal = function () {
-    const m = document.getElementById("successModal");
-    if (!m) return;
-    m.classList.add("hidden");
-    m.classList.remove("flex");
-  };
+  // openSuccessModal / closeSuccessModal are global (defined in base.js)
 
   window.openBuyModal = function () {
     const modal = document.getElementById("buyPointsModal");

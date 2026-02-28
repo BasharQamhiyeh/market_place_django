@@ -110,30 +110,7 @@
     input.value = input.value.replace(/[^a-zA-Z\u0600-\u06FF\s]/g, "");
   }
 
-  /* =========================
-     Success Modal
-  ========================= */
-
-  window.openSuccessModal = function openSuccessModal(
-    message,
-    title = "تم التنفيذ بنجاح"
-  ) {
-    const msg = $("successMsg");
-    const ttl = $("successTitle");
-    const modal = $("successModal");
-    if (msg) msg.innerText = message;
-    if (ttl) ttl.innerText = title;
-    if (!modal) return;
-    modal.classList.remove("hidden");
-    modal.classList.add("flex");
-  };
-
-  window.closeSuccessModal = function closeSuccessModal() {
-    const modal = $("successModal");
-    if (!modal) return;
-    modal.classList.add("hidden");
-    modal.classList.remove("flex");
-  };
+  // openSuccessModal / closeSuccessModal are global (defined in base.js)
 
   /* =========================
      Displayed name + note
