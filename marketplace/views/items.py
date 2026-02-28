@@ -543,7 +543,7 @@ def item_create(request):
             )
 
             messages.success(request, "✅ Your ad was submitted (pending review).")
-            return redirect("my_account")
+            return redirect("my_account#tab-ads")
 
         request.session["item_create_form_token"] = str(uuid.uuid4())
 
@@ -723,7 +723,7 @@ def item_edit(request, item_id):
             listing=listing,
         )
 
-        return redirect("my_account")
+        return redirect("my_account#tab-ads")
 
     return render(
         request,
