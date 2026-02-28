@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const togglePass2 = document.getElementById("togglePass2");
 
   const verifyPopup = document.getElementById("verifyPopup");
-  const verifyCodeInput = document.getElementById("verifyCodeInput");
+  const verifyCodeInput = document.getElementById("verifyCode");
   const verifyCodeErr = document.getElementById("verifyCodeErr");
   const checkVerifyCode = document.getElementById("checkVerifyCode");
   const closeVerify = document.getElementById("closeVerify");
@@ -231,11 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
   mobile && mobile.addEventListener("input", () => { mobile.value = mobile.value.replace(/\D/g, ""); });
 
   verifyCodeInput && verifyCodeInput.addEventListener("keydown", digitsOnlyKeydown);
-  verifyCodeInput && verifyCodeInput.addEventListener("input", () => {
-    verifyCodeInput.value = verifyCodeInput.value.replace(/\D/g, "");
-    verifyCodeInput.classList.remove("input-error");
-    if (verifyCodeErr) verifyCodeErr.innerHTML = "";
-  });
+  verifyCodeInput && verifyCodeInput.addEventListener("input", () => { verifyCodeInput.value = verifyCodeInput.value.replace(/\D/g, ""); });
 
   function openVerifyPopup() {
     verifyCodeInput.value = "";
