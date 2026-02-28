@@ -868,3 +868,49 @@
     });
   }
 })();
+
+/* =========================================================
+   Invite Friends link – copy referral link to clipboard
+========================================================= */
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    const inviteLinkEl = document.getElementById("inviteFriendsLink");
+    if (!inviteLinkEl) return;
+
+    const referralCode = inviteLinkEl.dataset.referralCode || "";
+    if (!referralCode) return;
+
+    inviteLinkEl.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      const registerUrl = inviteLinkEl.dataset.registerUrl || "/register/";
+      const u = new URL(registerUrl, window.location.origin);
+      u.searchParams.set("ref", referralCode);
+      const fullLink = u.toString();
+
+      function showInviteToast(msg) {
+        const toast = document.createElement("div");
+        toast.textContent = msg;
+        toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#ff7a18;color:#fff;padding:10px 22px;border-radius:10px;font-weight:bold;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,.18);transition:opacity .3s";
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 2200);
+      }
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard
+          .writeText(fullLink)
+          .then(() => showInviteToast("✔ تم نسخ رابط الدعوة"))
+          .catch(() => showInviteToast("رابط الدعوة: " + fullLink));
+      } else {
+        const t = document.createElement("textarea");
+        t.value = fullLink;
+        t.style.cssText = "position:fixed;left:-9999px";
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand("copy");
+        t.remove();
+        showInviteToast("✔ تم نسخ رابط الدعوة");
+      }
+    });
+  });
+})();
