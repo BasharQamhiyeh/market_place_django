@@ -119,7 +119,7 @@ def my_account(request: HttpRequest):
             "title": (getattr(req, "title", "") or getattr(listing, "title", "") or ""),
 
             # money
-            "budget": float(getattr(req, "budget", 0) or 0),
+            "budget": int(getattr(req, "budget", 0) or 0),
 
             # meta
             "city": getattr(getattr(listing, "city", None), "name", "") or str(getattr(listing, "city", "") or ""),
