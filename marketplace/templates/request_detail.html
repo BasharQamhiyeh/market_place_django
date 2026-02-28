@@ -320,7 +320,7 @@
                   <div class="rounded-2xl bg-[var(--rukn-gray)] px-2 py-2">
 
                     {% if request.user.is_authenticated and request.user.user_id == request_obj.listing.user.user_id %}
-                      <div class="grid grid-cols-2 gap-1.5 sm:gap-2">
+                      <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
 
                         <!-- EDIT (optional if you have edit) -->
                         <a href="{% url 'request_edit' request_obj.id %}"
@@ -362,6 +362,28 @@
                             </svg>
                           </span>
                           <span class="leading-tight text-center">حذف الطلب</span>
+                        </button>
+
+                        <!-- SHARE -->
+                        <button id="shareBtn" type="button"
+                                class="group flex flex-col items-center justify-center gap-2 rounded-2xl px-4 py-3 sm:py-4
+                                       bg-white border border-gray-200
+                                       hover:border-sky-300 hover:bg-sky-50 hover:shadow-sm
+                                       text-xs sm:text-sm font-extrabold text-gray-800 transition">
+                          <span class="flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full
+                                       bg-sky-50 border border-sky-200 text-sky-500
+                                       group-hover:bg-sky-100 group-hover:border-sky-300 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 sm:w-6 sm:h-6"
+                                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="18" cy="5" r="3" />
+                              <circle cx="6" cy="12" r="3" />
+                              <circle cx="18" cy="19" r="3" />
+                              <path d="M8.5 11l7-4" />
+                              <path d="M8.5 13l7 4" />
+                            </svg>
+                          </span>
+                          <span class="leading-tight text-center">مشاركة</span>
                         </button>
 
                       </div>
