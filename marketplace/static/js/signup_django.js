@@ -231,7 +231,11 @@ document.addEventListener("DOMContentLoaded", () => {
   mobile && mobile.addEventListener("input", () => { mobile.value = mobile.value.replace(/\D/g, ""); });
 
   verifyCodeInput && verifyCodeInput.addEventListener("keydown", digitsOnlyKeydown);
-  verifyCodeInput && verifyCodeInput.addEventListener("input", () => { verifyCodeInput.value = verifyCodeInput.value.replace(/\D/g, ""); });
+  verifyCodeInput && verifyCodeInput.addEventListener("input", () => {
+    verifyCodeInput.value = verifyCodeInput.value.replace(/\D/g, "");
+    verifyCodeInput.classList.remove("input-error");
+    if (verifyCodeErr) verifyCodeErr.innerHTML = "";
+  });
 
   function openVerifyPopup() {
     verifyCodeInput.value = "";
