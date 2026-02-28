@@ -21,8 +21,7 @@
         <span id="adsCount">{% if my_ads %}{{ my_ads|length }}{% else %}0{% endif %}</span>
       </div>
 
-      {# put your real url #}
-      <a href="#"
+      <a href="{% url 'create_item' %}"
          class="px-3 py-1.5 md:px-4 md:py-2 bg-orange-500 text-white rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-orange-600 transition shadow whitespace-nowrap">
         أضف إعلان
       </a>
