@@ -24,7 +24,7 @@
             {% for cat in breadcrumb_categories %}
               <a href="{% url 'request_list' %}?categories={{ cat.id }}" class="hover:text-[var(--rukn-green)]">
                 <bdi dir="auto">
-                  cat.name
+                  {{ cat.name }}
                 </bdi>
               </a>
               /
