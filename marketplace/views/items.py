@@ -28,6 +28,12 @@ from marketplace.views.helpers import _category_descendant_ids
 from datetime import timedelta
 
 
+def redirect_my_account_ads():
+    resp = redirect("my_account")
+    resp["Location"] += "#tab-ads"
+    return resp
+
+
 def item_list(request):
     # ✅ keep your cleanup
     Listing.objects.filter(
@@ -543,7 +549,9 @@ def item_create(request):
             )
 
             messages.success(request, "✅ Your ad was submitted (pending review).")
-            return redirect("my_account#tab-ads")
+            resp = redirect("my_account")
+            resp["Location"] += "#tab-ads"
+            return resp
 
         request.session["item_create_form_token"] = str(uuid.uuid4())
 
@@ -723,7 +731,9 @@ def item_edit(request, item_id):
             listing=listing,
         )
 
-        return redirect("my_account#tab-ads")
+        resp = redirect("my_account")
+        resp["Location"] += "#tab-ads"
+        return resp
 
     return render(
         request,
