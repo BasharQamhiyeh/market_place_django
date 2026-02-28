@@ -54,12 +54,15 @@ def notify(
     title: str,
     body: str = "",
     listing=None,
+    store=None,
     is_read: bool = False,
 ):
     """
     Create a notification with a clean, stable shape.
     - kind   : drives icon/color in the frontend
     - status : drives badge label/color in the frontend
+    - store  : set for store_follow / store_new_listing notifications so the
+               frontend can build the store-profile redirect URL
     - no icon stored in DB
     """
     return Notification.objects.create(
@@ -69,6 +72,7 @@ def notify(
         title=title,
         body=body or "",
         listing=listing,
+        store=store,
         is_read=is_read,
     )
 

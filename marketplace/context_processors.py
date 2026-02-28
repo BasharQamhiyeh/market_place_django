@@ -47,7 +47,7 @@ def navbar_counters(request):
     # -------------------------
     recent_notifications = (
         Notification.objects.filter(user=user)
-        .select_related("listing")
+        .select_related("listing", "store")
         .order_by("-created_at")[:10]
     )
 

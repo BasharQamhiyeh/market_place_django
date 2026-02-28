@@ -15,8 +15,9 @@ class Notification(models.Model):
     title = models.CharField(max_length=255)
     body = models.TextField(blank=True)
 
-    # optional link target
+    # optional link targets
     listing = models.ForeignKey(Listing, on_delete=models.SET_NULL, null=True, blank=True)
+    store = models.ForeignKey("marketplace.Store", on_delete=models.SET_NULL, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False, db_index=True)

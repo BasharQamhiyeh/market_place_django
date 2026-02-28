@@ -727,48 +727,70 @@
     });
   }
 
+  function getNotificationRedirectUrl(el) {
+    const kind = el.dataset.kind || '';
+    const storeId = el.dataset.storeId || '';
+
+    // Store-related notifications → store profile
+    if (storeId) return `/stores/${storeId}/`;
+
+    const base = '/my-account/';
+    switch (kind) {
+      case 'ad':           return `${base}#tab-ads`;
+      case 'request':      return `${base}#tab-requests`;
+      case 'wallet':       return `${base}#tab-wallet`;
+      case 'message':      return `${base}#tab-msgs`;
+      case 'fav':
+      case 'report':
+      default:             return `${base}#tab-noti`;
+    }
+  }
+
   function initNotificationRead() {
-      $$('.dropdown-noti-item[data-notif-id]').forEach(link => {
-        link.addEventListener('click', function (e) {
-          if (!this.classList.contains('is-unread')) return;
+    $$('.dropdown-noti-item[data-notif-id]').forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        const id = this.dataset.notifId;
+        const item = this;
+        const dest = getNotificationRedirectUrl(this);
 
-          e.preventDefault();
-          const id = this.dataset.notifId;
-          const item = this;
-          const href = this.getAttribute('href');
+        if (!this.classList.contains('is-unread')) {
+          window.location.href = dest;
+          return;
+        }
 
-          fetch(`/my-account/noti/${id}/read/`, {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': window.RUKN.csrfToken,
-              'Content-Type': 'application/json',
-            },
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.ok) {
-              item.classList.remove('is-unread');
-              item.querySelector('.noti-unread-dot')?.remove();
+        fetch(`/my-account/noti/${id}/read/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': window.RUKN.csrfToken,
+            'Content-Type': 'application/json',
+          },
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.ok) {
+            item.classList.remove('is-unread');
+            item.querySelector('.noti-unread-dot')?.remove();
 
-              const badge = document.querySelector('.notif-badge');
-              if (badge) {
-                if (data.unread > 0) {
-                  badge.textContent = data.unread;
-                  badge.classList.remove('hidden');
-                } else {
-                  badge.classList.add('hidden');
-                  document.querySelector('.notif-icon')?.classList.remove('filled');
-                }
+            const badge = document.querySelector('.notif-badge');
+            if (badge) {
+              if (data.unread > 0) {
+                badge.textContent = data.unread;
+                badge.classList.remove('hidden');
+              } else {
+                badge.classList.add('hidden');
+                document.querySelector('.notif-icon')?.classList.remove('filled');
               }
             }
-            if (href && href !== '#') window.location.href = href;
-          })
-          .catch(() => {
-            if (href && href !== '#') window.location.href = href;
-          });
+          }
+          window.location.href = dest;
+        })
+        .catch(() => {
+          window.location.href = dest;
         });
       });
-    }
+    });
+  }
 
   // ===== Init
   document.addEventListener("DOMContentLoaded", () => {
