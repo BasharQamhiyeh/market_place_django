@@ -182,15 +182,32 @@ document.addEventListener("DOMContentLoaded", function () {
     e.preventDefault();
 
     const registerUrl = inviteLinkEl.dataset.registerUrl || "/register/";
-    const fullLink = window.location.origin + registerUrl + "?ref=" + referralCode;
+    const u = new URL(registerUrl, window.location.origin);
+    u.searchParams.set("ref", referralCode);
+    const fullLink = u.toString();
+
+    function showInviteToast(msg) {
+      const toast = document.createElement("div");
+      toast.textContent = msg;
+      toast.style.cssText = "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#ff7a18;color:#fff;padding:10px 22px;border-radius:10px;font-weight:bold;z-index:99999;box-shadow:0 4px 16px rgba(0,0,0,.18);transition:opacity .3s";
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 2200);
+    }
 
     if (navigator.clipboard?.writeText) {
       navigator.clipboard
         .writeText(fullLink)
-        .then(() => alert("✔️ تم نسخ رابط الدعوة:\n" + fullLink))
-        .catch(() => alert("رابط الدعوة:\n" + fullLink));
+        .then(() => showInviteToast("✔ تم نسخ رابط الدعوة"))
+        .catch(() => showInviteToast("رابط الدعوة: " + fullLink));
     } else {
-      alert("رابط الدعوة:\n" + fullLink);
+      const t = document.createElement("textarea");
+      t.value = fullLink;
+      t.style.cssText = "position:fixed;left:-9999px";
+      document.body.appendChild(t);
+      t.select();
+      document.execCommand("copy");
+      t.remove();
+      showInviteToast("✔ تم نسخ رابط الدعوة");
     }
   });
 });

@@ -342,7 +342,11 @@
                 <a href="{% url 'my_account' %}#tab-ads" class="menu-item"><i class="fas fa-bullhorn"></i> إعلاناتي</a>
                 <a href="{% url 'my_account' %}#tab-requests" class="menu-item"><i class="fas fa-shopping-cart"></i> طلباتي</a>
                 <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-wallet"></i> المحفظة</a>
-                <a class="menu-item"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
+                <a id="inviteFriendsLink"
+                   href="#"
+                   class="menu-item"
+                   data-register-url="{% url 'register' %}"
+                   data-referral-code="{{ request.user.referral_code|default:'' }}"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
 
                 {% if request.user.is_staff %}
                   <a href="/admin/" class="menu-item"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a>
