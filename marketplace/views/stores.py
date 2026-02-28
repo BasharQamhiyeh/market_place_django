@@ -285,6 +285,7 @@ def store_follow_toggle(request, store_id):
                 status=S_FOLLOWED,
                 title="تمت متابعة متجرك",
                 body="قام أحد المستخدمين بمتابعة متجرك وسيصله كل جديد من إعلاناتك.",
+                store=store,
             )
         else:
             notify(
@@ -293,6 +294,7 @@ def store_follow_toggle(request, store_id):
                 status=S_UNFOLLOWED,
                 title="تم إلغاء متابعة متجرك",
                 body="قام أحد المستخدمين بإلغاء متابعة متجرك.",
+                store=store,
             )
 
     followers_count = StoreFollow.objects.filter(store=store).count()

@@ -100,12 +100,15 @@ def notify_followers_on_approval(sender, instance: Listing, created, **kwargs):
             title = "إعلان جديد من متجر تتابعه"
             body = "تم نشر إعلان جديد وتمت الموافقة عليه."
 
+            owner_store = Store.objects.filter(owner_id=instance.user_id).first()
+
             Notification.objects.bulk_create([
                 Notification(
                     user_id=uid,
                     title=title,
                     body=body,
                     listing=instance,
+                    store=owner_store,
                     is_read=False,
                 )
                 for uid in follower_ids

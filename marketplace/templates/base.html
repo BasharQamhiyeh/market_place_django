@@ -243,10 +243,12 @@
 
   <div class="notif-scroll">
     {% for n in recent_notifications %}
-      <a href="{% if n.listing %}{% if n.listing.item %}{% url 'item_detail' n.listing.item.id %}{% elif n.listing.request %}{% url 'request_detail' n.listing.request.id %}{% endif %}{% else %}#{% endif %}"
+      <a href="#"
          class="dropdown-noti-item {% if not n.is_read %}is-unread{% endif %}"
+         data-notif-id="{{ n.id }}"
          data-kind="{{ n.kind }}"
-         data-status="{{ n.status }}">
+         data-status="{{ n.status }}"
+         {% if n.store %}data-store-id="{{ n.store.id }}"{% endif %}>
 
         <div class="noti-icon-box noti-kind-{{ n.kind }}">
           <!-- Icon will be injected by JS -->
