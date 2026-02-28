@@ -342,7 +342,11 @@
                 <a href="{% url 'my_account' %}#tab-ads" class="menu-item"><i class="fas fa-bullhorn"></i> إعلاناتي</a>
                 <a href="{% url 'my_account' %}#tab-requests" class="menu-item"><i class="fas fa-shopping-cart"></i> طلباتي</a>
                 <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-wallet"></i> المحفظة</a>
-                <a class="menu-item"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
+                <a id="inviteFriendsLink"
+                   href="#"
+                   class="menu-item"
+                   data-register-url="{% url 'register' %}"
+                   data-referral-code="{{ request.user.referral_code|default:'' }}"><i class="fas fa-user-plus"></i> دعوة الأصدقاء</a>
 
                 {% if request.user.is_staff %}
                   <a href="/admin/" class="menu-item"><i class="fas fa-tachometer-alt"></i> لوحة التحكم</a>
@@ -716,6 +720,19 @@
   });
 </script>
 {% endif %}
+
+{# ✅ Global success modal – available on every page #}
+<div id="successModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-[99999]">
+  <div class="bg-white p-6 rounded-2xl max-w-md w-[90%] text-center shadow-xl animate-fadeIn orange-top-border">
+    <div class="text-5xl mb-3">✔️</div>
+    <h2 id="successTitle" class="text-xl font-bold text-gray-800 mb-2">تم التنفيذ بنجاح</h2>
+    <p id="successMsg" class="text-gray-600 mb-5">تم تنفيذ العملية بنجاح.</p>
+    <button onclick="closeSuccessModal()"
+            class="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition">
+      موافق
+    </button>
+  </div>
+</div>
 
 </body>
 </html>

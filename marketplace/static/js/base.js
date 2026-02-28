@@ -868,3 +868,62 @@
     });
   }
 })();
+
+/* =========================================================
+   Global success modal helpers (modal lives in base.html)
+========================================================= */
+window.openSuccessModal = function (message, title) {
+  const modal = document.getElementById("successModal");
+  const msg   = document.getElementById("successMsg");
+  const ttl   = document.getElementById("successTitle");
+  if (!modal) return;
+  if (msg) msg.innerText   = message;
+  if (ttl) ttl.innerText   = title || "تم التنفيذ بنجاح";
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+};
+
+window.closeSuccessModal = function () {
+  const modal = document.getElementById("successModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+};
+
+/* =========================================================
+   Invite Friends link – copy referral link to clipboard
+========================================================= */
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    const inviteLinkEl = document.getElementById("inviteFriendsLink");
+    if (!inviteLinkEl) return;
+
+    const referralCode = inviteLinkEl.dataset.referralCode || "";
+    if (!referralCode) return;
+
+    inviteLinkEl.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      const registerUrl = inviteLinkEl.dataset.registerUrl || "/register/";
+      const u = new URL(registerUrl, window.location.origin);
+      u.searchParams.set("ref", referralCode);
+      const fullLink = u.toString();
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard
+          .writeText(fullLink)
+          .then(() => openSuccessModal("تم نسخ رابط الدعوة بنجاح!", "تم النسخ"))
+          .catch(() => openSuccessModal(fullLink, "رابط الدعوة"));
+      } else {
+        const t = document.createElement("textarea");
+        t.value = fullLink;
+        t.style.cssText = "position:fixed;left:-9999px";
+        document.body.appendChild(t);
+        t.select();
+        document.execCommand("copy");
+        t.remove();
+        openSuccessModal("تم نسخ رابط الدعوة بنجاح!", "تم النسخ");
+      }
+    });
+  });
+})();
