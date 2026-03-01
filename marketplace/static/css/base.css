@@ -679,10 +679,9 @@ button:disabled {
 .notif-scroll {
   max-height: 400px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
 }
 
+/* Chrome / Safari — webkit pseudo-elements only work when scrollbar-width is NOT set */
 .fav-scroll::-webkit-scrollbar,
 .msg-scroll::-webkit-scrollbar,
 .notif-scroll::-webkit-scrollbar {
@@ -706,6 +705,16 @@ button:disabled {
 .msg-scroll::-webkit-scrollbar-thumb:hover,
 .notif-scroll::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
+}
+
+/* Firefox only — scrollbar-width/color don't interfere with webkit rules in Firefox */
+@supports (-moz-appearance: none) {
+  .fav-scroll,
+  .msg-scroll,
+  .notif-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #e2e8f0 transparent;
+  }
 }
 
 /* Item icon styling */
@@ -1178,7 +1187,7 @@ button, input, select, textarea {
   width: 35px; height: 35px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.fav-scroll, .msg-scroll, .notif-scroll { max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; }
+.fav-scroll, .msg-scroll, .notif-scroll { max-height: 400px; overflow-y: auto; }
 
 /* ======================== Categories Row ======================== */
 .categoriesRow {
