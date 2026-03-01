@@ -3,122 +3,107 @@
 
 {% block title %}ركن | تواصل معنا - الدعم الفني{% endblock %}
 
-{# Minimal: keep mockup assets/styles local to this page (like we did before) #}
-{% block base_css %}
-  {{ block.super }}
+{% block page_css %}
+<style>
+  :root {
+    --rukn-orange: #ff7a18;
+    --rukn-orange-light: #fff5ed;
+    --slate-800: #1e293b;
+  }
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  .orange-gradient {
+    background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+  }
 
-  <style>
-    :root {
-      --rukn-orange: #ff7a18;
-      --rukn-orange-light: #fff5ed;
-      --slate-800: #1e293b;
-    }
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #fcfcfd;
-      color: #1e293b;
-    }
+  .pro-shadow {
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+  }
 
-    .orange-gradient {
-      background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
-    }
+  .premium-input {
+    background: #f8fafc;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+  .premium-input:focus {
+    background: #ffffff;
+    border-color: var(--rukn-orange);
+    box-shadow: 0 10px 20px -10px rgba(255, 122, 24, 0.2);
+    outline: none;
+  }
 
-    .pro-shadow {
-      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
-    }
+  .input-error {
+    border-color: #ef4444 !important;
+    background: #fef2f2;
+  }
 
-    /* استايل المدخلات الاحترافي */
-    .premium-input {
-      background: #f8fafc;
-      border: 2px solid transparent;
-      transition: all 0.3s ease;
-    }
-    .premium-input:focus {
-      background: #ffffff;
-      border-color: var(--rukn-orange);
-      box-shadow: 0 10px 20px -10px rgba(255, 122, 24, 0.2);
-      outline: none;
-    }
+  .subject-card {
+    position: relative;
+    cursor: pointer;
+  }
+  .subject-card input {
+    position: absolute;
+    opacity: 0;
+  }
+  .subject-card .inner {
+    display: block;
+    padding: 1rem;
+    border: 2px solid #f1f5f9;
+    border-radius: 1.25rem;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background: white;
+  }
+  .subject-card input:checked + .inner {
+    border-color: var(--rukn-orange);
+    background: var(--rukn-orange-light);
+    color: var(--rukn-orange);
+    transform: scale(1.02);
+  }
 
-    .input-error {
-      border-color: #ef4444 !important;
-      background: #fef2f2;
-    }
+  .method-toggle {
+    background: #f1f5f9;
+    padding: 0.4rem;
+    border-radius: 1rem;
+    display: flex;
+    gap: 0.4rem;
+  }
+  .method-toggle button {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    font-weight: 800;
+    font-size: 0.875rem;
+    transition: 0.3s;
+    background: white;
+    color: #64748b;
+  }
+  .method-toggle button.active {
+    border: 2px solid #f1f5f9;
+    border-radius: 1.25rem;
+    background: var(--rukn-orange-light);
+    color: var(--rukn-orange);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-color: var(--rukn-orange);
+  }
 
-    /* راديو بوتون مطور */
-    .subject-card {
-      position: relative;
-      cursor: pointer;
-    }
-    .subject-card input {
-      position: absolute;
-      opacity: 0;
-    }
-    .subject-card .inner {
-      display: block;
-      padding: 1rem;
-      border: 2px solid #f1f5f9;
-      border-radius: 1.25rem;
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.875rem;
-      transition: all 0.2s;
-      background: white;
-    }
-    .subject-card input:checked + .inner {
-      border-color: var(--rukn-orange);
-      background: var(--rukn-orange-light);
-      color: var(--rukn-orange);
-      transform: scale(1.02);
-    }
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
 
-    /* تبديل طريقة التواصل */
-    .method-toggle {
-      background: #f1f5f9;
-      padding: 0.4rem;
-      border-radius: 1rem;
-      display: flex;
-      gap: 0.4rem;
-    }
-    .method-toggle button {
-      flex: 1;
-      padding: 0.75rem;
-      border-radius: 0.75rem;
-      font-weight: 800;
-      font-size: 0.875rem;
-      transition: 0.3s;
-      background: white;
-      color: #64748b; /* slate-500 */
-    }
-    .method-toggle button.active {
-      border: 2px solid #f1f5f9;
-      border-radius: 1.25rem;
-      background: var(--rukn-orange-light);
-      color: var(--rukn-orange);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      border-color: var(--rukn-orange);
-    }
+  .email-input {
+    direction: ltr;
+    text-align: left;
+  }
 
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-
-    .email-input {
-      direction: ltr;
-      text-align: left;
-    }
-
-    .box-error {
-      border: 2px solid #ef4444 !important;
-      background: transparent !important;
-    }
-  </style>
+  .box-error {
+    border: 2px solid #ef4444 !important;
+    background: transparent !important;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -147,7 +132,6 @@
             </div>
           </div>
 
-          {# Django POST + CSRF + action #}
           <form id="contactForm" method="post" action="{% url 'contact_support' %}" class="space-y-8" novalidate>
             {% csrf_token %}
 
@@ -203,7 +187,6 @@
                 </div>
                 <p id="methodError" class="text-sm text-red-600 mt-1 hidden">يرجى اختيار طريقة التواصل</p>
 
-                {# IMPORTANT: give it name so Django receives it #}
                 <input type="hidden" id="contactMethod" name="contact_method" value="">
 
                 <!-- Dynamic Fields -->
@@ -242,7 +225,7 @@
 
       <!-- INFO SIDE (Column 3) -->
       <div class="space-y-6">
-        <!-- Social Support Card (Modified to Professional Grey) -->
+        <!-- Social Support Card -->
         <section class="bg-slate-700 rounded-[2.5rem] p-8 text-white pro-shadow relative overflow-hidden">
           <div class="relative z-10">
             <h3 class="text-xl font-black mb-6">دعم سريع عبر</h3>
@@ -284,7 +267,6 @@
               </a>
             </div>
           </div>
-          <!-- Deco icon -->
           <i data-lucide="headphones" class="absolute -bottom-6 -left-6 w-32 h-32 opacity-10 -rotate-12"></i>
         </section>
 
@@ -294,7 +276,7 @@
           <div class="space-y-4">
             <div class="p-4 bg-slate-50 rounded-2xl">
               <p class="text-xs font-black text-[#ff7a18] mb-1">هل يمكنني استعادة كلمة المرور ؟</p>
-              <p class="text-[10px] text-slate-500 font-bold">نعم، يمكنك استعادة كلمة المرور بسهولة من خلال خيار “نسيت كلمة المرور”، واتباع التعليمات الإرشادية.</p>
+              <p class="text-[10px] text-slate-500 font-bold">نعم، يمكنك استعادة كلمة المرور بسهولة من خلال خيار "نسيت كلمة المرور"، واتباع التعليمات الإرشادية.</p>
             </div>
 
             <div class="p-4 bg-slate-50 rounded-2xl">
@@ -318,7 +300,7 @@
     </div>
   </main>
 
-  <!-- SUCCESS TOAST (Premium Style) -->
+  <!-- SUCCESS TOAST -->
   <div id="successPopup" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[9999] hidden">
     <div class="glass-effect px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border-2 border-green-500">
       <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
@@ -331,153 +313,139 @@
     </div>
   </div>
 
-  <script>
-    // تهيئة الأيقونات
-    if (window.lucide) lucide.createIcons();
+{% endblock %}
 
-    const form = document.getElementById("contactForm");
+{% block scripts %}
+{{ block.super }}
+<script>
+  const form = document.getElementById("contactForm");
 
-    const fullName = document.getElementById("fullName");
-    const nameError = document.getElementById("nameError");
+  const fullName = document.getElementById("fullName");
+  const nameError = document.getElementById("nameError");
 
-    const message = document.getElementById("message");
-    const messageError = document.getElementById("messageError");
+  const message = document.getElementById("message");
+  const messageError = document.getElementById("messageError");
 
-    const subjectContainer = document.getElementById("subjectContainer");
-    const subjectError = document.getElementById("subjectError");
+  const subjectContainer = document.getElementById("subjectContainer");
+  const subjectError = document.getElementById("subjectError");
 
-    const contactContainer = document.getElementById("contactContainer");
-    const methodError = document.getElementById("methodError");
+  const contactContainer = document.getElementById("contactContainer");
+  const methodError = document.getElementById("methodError");
 
-    const phoneField = document.getElementById("phoneField");
-    const phone = document.getElementById("phone");
-    const phoneError = document.getElementById("phoneError");
+  const phoneField = document.getElementById("phoneField");
+  const phone = document.getElementById("phone");
+  const phoneError = document.getElementById("phoneError");
 
-    const phoneBtn = document.getElementById("phoneBtn");
+  const phoneBtn = document.getElementById("phoneBtn");
 
-    const emailField = document.getElementById("emailField");
-    const email = document.getElementById("email");
-    const emailError = document.getElementById("emailError");
+  const emailField = document.getElementById("emailField");
+  const email = document.getElementById("email");
+  const emailError = document.getElementById("emailError");
 
-    const emailBtn = document.getElementById("emailBtn");
+  const emailBtn = document.getElementById("emailBtn");
 
-    const contactMethodInput = document.getElementById("contactMethod");
+  const contactMethodInput = document.getElementById("contactMethod");
 
-    // حالة البداية
+  phoneField.classList.add("hidden");
+  emailField.classList.add("hidden");
+  contactMethodInput.value = "";
+
+  function resetContactMethod(){
+    contactMethodInput.value = "";
+    phoneBtn.classList.remove("active","bg-orange-500","text-white");
+    emailBtn.classList.remove("active","bg-orange-500","text-white");
+    phoneBtn.classList.add("text-slate-500","bg-white");
+    emailBtn.classList.add("text-slate-500","bg-white");
     phoneField.classList.add("hidden");
     emailField.classList.add("hidden");
-    contactMethodInput.value = "";
+    removeBoxError(contactContainer, methodError);
+    removeError(phone, phoneError);
+    removeError(email, emailError);
+  }
 
-    function resetContactMethod(){
-      contactMethodInput.value = "";
+  function selectMethod(method){
+    contactMethodInput.value = method;
+    removeBoxError(subjectContainer, subjectError);
+    removeBoxError(contactContainer, methodError);
 
-      phoneBtn.classList.remove("active","bg-orange-500","text-white");
-      emailBtn.classList.remove("active","bg-orange-500","text-white");
-
-      phoneBtn.classList.add("text-slate-500","bg-white");
-      emailBtn.classList.add("text-slate-500","bg-white");
-
-      phoneField.classList.add("hidden");
+    if(method === "phone"){
+      phoneBtn.classList.add("bg-orange-500","text-white");
+      phoneBtn.classList.remove("text-gray-600","bg-white");
+      emailBtn.classList.remove("bg-orange-500","text-white");
+      emailBtn.classList.add("text-gray-600","bg-white");
+      phoneField.classList.remove("hidden");
       emailField.classList.add("hidden");
-
-      removeBoxError(contactContainer, methodError);
-      removeError(phone, phoneError);
-      removeError(email, emailError);
-    }
-
-    function selectMethod(method){
-      contactMethodInput.value = method;
-
-      removeBoxError(subjectContainer, subjectError);
-      removeBoxError(contactContainer, methodError);
-
-      if(method === "phone"){
-        phoneBtn.classList.add("bg-orange-500","text-white");
-        phoneBtn.classList.remove("text-gray-600","bg-white");
-
-        emailBtn.classList.remove("bg-orange-500","text-white");
-        emailBtn.classList.add("text-gray-600","bg-white");
-
-        phoneField.classList.remove("hidden");
-        emailField.classList.add("hidden");
-        removeError(email,emailError);
-
-      }else{
-        emailBtn.classList.add("bg-orange-500","text-white");
-        emailBtn.classList.remove("text-gray-600","bg-white");
-
-        phoneBtn.classList.remove("bg-orange-500","text-white");
-        phoneBtn.classList.add("text-gray-600","bg-white");
-
-        emailField.classList.remove("hidden");
-        phoneField.classList.add("hidden");
-        removeError(phone,phoneError);
-      }
-    }
-
-    phoneBtn.addEventListener("click",()=>selectMethod("phone"));
-    emailBtn.addEventListener("click",()=>selectMethod("email"));
-
-    function addBoxError(box, errorEl){
-      box.classList.add("box-error");
-      errorEl.classList.remove("hidden");
-      box.scrollIntoView({behavior:"smooth", block:"center"});
-    }
-
-    function removeBoxError(box, errorEl){
-      box.classList.remove("box-error");
-      errorEl.classList.add("hidden");
-    }
-
-    function addError(el, errorEl){
-      el.classList.add("input-error");
-      errorEl.classList.remove("hidden");
-      el.scrollIntoView({behavior:"smooth", block:"center"});
-      if(el.tagName !== "DIV") el.focus();
-    }
-
-    function removeError(el,errorEl){
-      el.classList.remove("input-error");
-      errorEl.classList.add("hidden");
-    }
-
-    // إزالة الخطأ عند الكتابة أو الاختيار
-    fullName.addEventListener("input",()=>removeError(fullName,nameError));
-    message.addEventListener("input",()=>removeError(message,messageError));
-    phone.addEventListener("input",()=>{
-      phone.value = phone.value.replace(/\D/g,"").slice(0,10);
+      removeError(email,emailError);
+    }else{
+      emailBtn.classList.add("bg-orange-500","text-white");
+      emailBtn.classList.remove("text-gray-600","bg-white");
+      phoneBtn.classList.remove("bg-orange-500","text-white");
+      phoneBtn.classList.add("text-gray-600","bg-white");
+      emailField.classList.remove("hidden");
+      phoneField.classList.add("hidden");
       removeError(phone,phoneError);
-    });
-    email.addEventListener("input",()=>removeError(email,emailError));
-    document.querySelectorAll('[name="subject"]').forEach(r=>r.addEventListener("change",()=>removeBoxError(subjectContainer, subjectError)));
+    }
+  }
 
-    // التحقق عند الإرسال: نمنع فقط عند الخطأ — وإلا نترك POST يروح لـ Django
-    form.addEventListener("submit",(e)=>{
-      if(!fullName.value.trim()) { e.preventDefault(); return addError(fullName,nameError); }
-      if(!document.querySelector('[name="subject"]:checked')) { e.preventDefault(); return addBoxError(subjectContainer, subjectError); }
+  phoneBtn.addEventListener("click",()=>selectMethod("phone"));
+  emailBtn.addEventListener("click",()=>selectMethod("email"));
 
-      const method = contactMethodInput.value;
-      if(!method) { e.preventDefault(); return addBoxError(contactContainer, methodError); }
+  function addBoxError(box, errorEl){
+    box.classList.add("box-error");
+    errorEl.classList.remove("hidden");
+    box.scrollIntoView({behavior:"smooth", block:"center"});
+  }
 
-      if(method === "phone"){
-        if(!/^07\d{8}$/.test(phone.value)) { e.preventDefault(); return addError(phone,phoneError); }
-      }else{
-        if(!/^[^@]+@[^@]+\.[^@]+$/.test(email.value)) { e.preventDefault(); return addError(email,emailError); }
-      }
+  function removeBoxError(box, errorEl){
+    box.classList.remove("box-error");
+    errorEl.classList.add("hidden");
+  }
 
-      if(!message.value.trim()) { e.preventDefault(); return addError(message,messageError); }
-    });
+  function addError(el, errorEl){
+    el.classList.add("input-error");
+    errorEl.classList.remove("hidden");
+    el.scrollIntoView({behavior:"smooth", block:"center"});
+    if(el.tagName !== "DIV") el.focus();
+  }
 
-    // إذا رجعنا من السيرفر بنجاح (redirect to done page) نعرض التوست
-    {% if submitted %}
-    document.addEventListener("DOMContentLoaded", () => {
-      const successPopup = document.getElementById("successPopup");
-      if (successPopup) {
-        successPopup.classList.remove("hidden");
-        setTimeout(()=>successPopup.classList.add("hidden"),2000);
-      }
-    });
-    {% endif %}
-  </script>
+  function removeError(el,errorEl){
+    el.classList.remove("input-error");
+    errorEl.classList.add("hidden");
+  }
 
+  fullName.addEventListener("input",()=>removeError(fullName,nameError));
+  message.addEventListener("input",()=>removeError(message,messageError));
+  phone.addEventListener("input",()=>{
+    phone.value = phone.value.replace(/\D/g,"").slice(0,10);
+    removeError(phone,phoneError);
+  });
+  email.addEventListener("input",()=>removeError(email,emailError));
+  document.querySelectorAll('[name="subject"]').forEach(r=>r.addEventListener("change",()=>removeBoxError(subjectContainer, subjectError)));
+
+  form.addEventListener("submit",(e)=>{
+    if(!fullName.value.trim()) { e.preventDefault(); return addError(fullName,nameError); }
+    if(!document.querySelector('[name="subject"]:checked')) { e.preventDefault(); return addBoxError(subjectContainer, subjectError); }
+
+    const method = contactMethodInput.value;
+    if(!method) { e.preventDefault(); return addBoxError(contactContainer, methodError); }
+
+    if(method === "phone"){
+      if(!/^07\d{8}$/.test(phone.value)) { e.preventDefault(); return addError(phone,phoneError); }
+    }else{
+      if(!/^[^@]+@[^@]+\.[^@]+$/.test(email.value)) { e.preventDefault(); return addError(email,emailError); }
+    }
+
+    if(!message.value.trim()) { e.preventDefault(); return addError(message,messageError); }
+  });
+
+  {% if submitted %}
+  document.addEventListener("DOMContentLoaded", () => {
+    const successPopup = document.getElementById("successPopup");
+    if (successPopup) {
+      successPopup.classList.remove("hidden");
+      setTimeout(()=>successPopup.classList.add("hidden"),2000);
+    }
+  });
+  {% endif %}
+</script>
 {% endblock %}

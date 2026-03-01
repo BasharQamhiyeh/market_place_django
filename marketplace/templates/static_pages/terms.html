@@ -1,88 +1,71 @@
-{# templates/static_pages/terms.html #}
 {% extends "base.html" %}
 {% load static i18n %}
 
 {% block title %}ركن | شروط الاستخدام - الميثاق القانوني{% endblock %}
 
+{% block page_css %}
+<style>
+  :root {
+    --rukn-orange: #ff7a18;
+    --rukn-orange-light: #fff5ed;
+  }
+  .orange-gradient {
+    background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+  }
+  .pro-shadow {
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+  }
+  .icon-box {
+    background: var(--rukn-orange-light);
+    color: var(--rukn-orange);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    flex-shrink: 0;
+  }
+  .nav-pill {
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    line-height: 1.25rem;
+  }
+  .nav-pill.active {
+    background-color: var(--rukn-orange);
+    color: white !important;
+    box-shadow: 0 10px 20px -5px rgba(255, 122, 24, 0.3);
+  }
+  .sidebar-fixed,
+  .sidebar-fixed * { box-sizing: border-box; }
+  .sidebar-fixed {
+    width: 100%;
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  .section-anchor {
+    scroll-margin-top: 100px;
+    transition: border 0.35s ease, box-shadow 0.35s ease;
+    background-color: white !important;
+    position: relative;
+  }
+  .section-anchor.section-active {
+    border: 2px solid var(--rukn-orange);
+    background-color: white !important;
+    box-shadow:
+      0 18px 40px -12px rgba(255, 122, 24, 0.28),
+      0 6px 18px -8px rgba(0, 0, 0, 0.06);
+  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f1f1; }
+  ::-webkit-scrollbar-thumb { background: var(--rukn-orange); border-radius: 10px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --rukn-orange: #ff7a18;
-      --rukn-orange-light: #fff5ed;
-    }
-    body {
-      font-family: "Cairo", sans-serif;
-      background-color: #fcfcfd;
-      color: #1e293b;
-      scroll-behavior: smooth;
-    }
-    .orange-gradient {
-      background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
-    }
-    .pro-shadow {
-      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
-    }
-    .icon-box {
-      background: var(--rukn-orange-light);
-      color: var(--rukn-orange);
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 16px;
-      flex-shrink: 0;
-    }
-    .nav-pill {
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 48px;
-      line-height: 1.25rem;
-    }
-    .nav-pill.active {
-      background-color: var(--rukn-orange);
-      color: white !important;
-      box-shadow: 0 10px 20px -5px rgba(255, 122, 24, 0.3);
-    }
-    .sidebar-fixed,
-    .sidebar-fixed * { box-sizing: border-box; }
-    .sidebar-fixed {
-      width: 100%;
-      will-change: transform;
-      transform: translateZ(0);
-    }
-    .section-anchor {
-      scroll-margin-top: 100px;
-      transition: border 0.35s ease, box-shadow 0.35s ease;
-      background-color: white !important;
-      position: relative;
-    }
-    .section-anchor.section-active {
-      border: 2px solid var(--rukn-orange);
-      background-color: white !important;
-      box-shadow:
-        0 18px 40px -12px rgba(255, 122, 24, 0.28),
-        0 6px 18px -8px rgba(0, 0, 0, 0.06);
-    }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
-    ::-webkit-scrollbar-thumb { background: var(--rukn-orange); border-radius: 10px; }
-  </style>
-</head>
-
-<body class="antialiased">
 
   <!-- HERO -->
   <header class="orange-gradient pt-24 pb-40 px-4 text-center text-white relative overflow-hidden">
@@ -193,43 +176,42 @@
 
   </main>
 
-  <script>
-    lucide.createIcons();
+{% endblock %}
 
-    const sections = document.querySelectorAll('.section-anchor');
-    const navPills = document.querySelectorAll('.nav-pill');
+{% block scripts %}
+{{ block.super }}
+<script>
+  const sections = document.querySelectorAll('.section-anchor');
+  const navPills = document.querySelectorAll('.nav-pill');
 
-    function setActive(id) {
-      sections.forEach(s => {
-        s.classList.remove('section-active');
-        if (s.id === id) s.classList.add('section-active');
-      });
-      navPills.forEach(p => {
-        p.classList.remove('active');
-        if (p.getAttribute('href') === `#${id}`) p.classList.add('active');
-      });
-    }
-
-    function onScroll() {
-      if (!sections.length) return;
-      let current = sections[0].id;
-      sections.forEach(s => {
-        if (window.scrollY >= s.offsetTop - 150) current = s.id;
-      });
-      setActive(current);
-    }
-
-    window.addEventListener('load', () => { if (sections.length) setActive(sections[0].id); });
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    navPills.forEach(p => {
-      p.addEventListener('click', () => {
-        const id = p.getAttribute('href').replace('#', '');
-        setActive(id);
-      });
+  function setActive(id) {
+    sections.forEach(s => {
+      s.classList.remove('section-active');
+      if (s.id === id) s.classList.add('section-active');
     });
-  </script>
+    navPills.forEach(p => {
+      p.classList.remove('active');
+      if (p.getAttribute('href') === `#${id}`) p.classList.add('active');
+    });
+  }
 
-</body>
-</html>
+  function onScroll() {
+    if (!sections.length) return;
+    let current = sections[0].id;
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 150) current = s.id;
+    });
+    setActive(current);
+  }
+
+  window.addEventListener('load', () => { if (sections.length) setActive(sections[0].id); });
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  navPills.forEach(p => {
+    p.addEventListener('click', () => {
+      const id = p.getAttribute('href').replace('#', '');
+      setActive(id);
+    });
+  });
+</script>
 {% endblock %}
