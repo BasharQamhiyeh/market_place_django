@@ -58,10 +58,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 .map(item => {
                     if (item.type === "category") {
                         return `
-                        <div class="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                        <div class="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-3"
                              onclick="window.location='/ar/items/?categories=${item.category_id}'">
-                            ${item.name}
-                            <span class="text-gray-400 text-xs">${item.parent || ""}</span>
+                            <img src="${item.photo_url || ""}"
+                                 class="w-10 h-10 rounded-lg object-cover bg-gray-200" />
+                            <div>
+                                <div class="font-semibold">${item.name}</div>
+                                <div class="text-xs text-gray-500">${item.parent || ""}</div>
+                            </div>
                         </div>`;
                     }
 

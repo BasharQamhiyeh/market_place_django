@@ -44,7 +44,7 @@ def search_suggestions(request):
             # categories via DB
             categories = Category.objects.filter(
                 name__icontains=query
-            ).select_related("parent")[:8]
+            ).select_related("parent", "photo")[:8]
 
             for c in categories:
                 if c.id not in seen_categories:     # <<< FIX
@@ -54,10 +54,23 @@ def search_suggestions(request):
                         "name": c.name,
                         "parent": c.parent.name if c.parent else "",
                         "category_id": c.id,
+                        "photo_url": c.photo_url or "",
                     })
 
             # ES → items
+            approved_ids = set(
+                Item.objects
+                .filter(
+                    id__in=[hit.meta.id for hit in es_results],
+                    listing__is_approved=True,
+                    listing__is_active=True,
+                    listing__is_deleted=False,
+                )
+                .values_list("id", flat=True)
+            )
             for hit in es_results:
+                if hit.meta.id not in approved_ids:
+                    continue
                 try:
                     item = Item.objects.select_related("listing__category").prefetch_related("photos").get(id=hit.meta.id)
                 except Item.DoesNotExist:
@@ -87,6 +100,7 @@ def search_suggestions(request):
                 Category.objects
                 .annotate(similarity=TrigramSimilarity("name", query))
                 .filter(similarity__gt=0.2)
+                .select_related("parent", "photo")
                 .order_by("-similarity")[:8]
             )
 
@@ -98,6 +112,7 @@ def search_suggestions(request):
                         "name": c.name,
                         "parent": c.parent.name if c.parent else "",
                         "category_id": c.id,
+                        "photo_url": c.photo_url or "",
                     })
 
             # items
@@ -131,7 +146,7 @@ def search_suggestions(request):
     # ============================================================
     categories = Category.objects.filter(
         name__icontains=query
-    )[:8]
+    ).select_related("parent", "photo")[:8]
 
     for c in categories:
         if c.id not in seen_categories:    # <<< FIX
@@ -141,6 +156,7 @@ def search_suggestions(request):
                 "name": c.name,
                 "parent": c.parent.name if c.parent else "",
                 "category_id": c.id,
+                "photo_url": c.photo_url or "",
             })
 
     # ---- ITEMS MATCHING TITLE ----
