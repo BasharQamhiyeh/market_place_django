@@ -23,7 +23,7 @@ from .models import (
     Item, ItemAttributeValue, ItemPhoto, Notification,
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
     FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction,
-    TermsPage, TermsSection,
+    TermsPage, TermsSection, SiteSettings,
 )
 from .services.wallet import apply_points_transaction
 from .services.notifications import notify, K_WALLET, S_CHARGED
@@ -1354,52 +1354,57 @@ class CityAdmin(admin.ModelAdmin):
 
 
 from django.contrib import admin
-from .models import Message
+from django.db.models import Count, Q as DjangoQ
+from .models import Message, Conversation
 
-@admin.register(Message)
-class MessageAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "conversation_info",
-        "sender_info",
-        "receiver_info",
-        "short_body",
-        "is_read",
-        "created_at",
-    )
-    readonly_fields = (
-        "conversation_display",
-        "sender_display",
-        "receiver_display",
-        "body",
-        "is_read",
-        "created_at",
-    )
-    list_filter = ("is_read", "created_at")
+
+class MessageInline(admin.TabularInline):
+    model = Message
+    extra = 0
+    can_delete = False
+    fields = ("sender_link", "body", "created_at", "is_read")
+    readonly_fields = ("sender_link", "body", "created_at", "is_read")
+    ordering = ("created_at",)
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def sender_link(self, obj):
+        url = reverse("admin:marketplace_user_change", args=[obj.sender.user_id])
+        return format_html('<a href="{}">{}</a>', url, obj.sender.username)
+    sender_link.short_description = "Sender"
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ("id", "subject", "buyer_info", "seller_info", "message_count", "unread_count", "created_at")
+    list_filter = ("created_at",)
     search_fields = (
-        "body",
-        "sender__username", "sender__first_name", "sender__last_name", "sender__phone",
-        "conversation__buyer__username", "conversation__buyer__first_name",
-        "conversation__buyer__last_name", "conversation__buyer__phone",
-        "conversation__seller__username", "conversation__seller__first_name",
-        "conversation__seller__last_name", "conversation__seller__phone",
+        "buyer__username", "buyer__first_name", "buyer__last_name", "buyer__phone",
+        "seller__username", "seller__first_name", "seller__last_name", "seller__phone",
     )
     ordering = ("-created_at",)
-    list_select_related = ("sender", "conversation")
+    list_select_related = ("buyer", "seller", "listing", "store")
+    readonly_fields = ("subject_display", "buyer_display", "seller_display", "created_at")
+    inlines = [MessageInline]
 
-    # Hide add/edit/delete permissions
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            _msg_count=Count("messages"),
+            _unread_count=Count("messages", filter=DjangoQ(messages__is_read=False)),
+        )
+
     def has_add_permission(self, request):
         return False
 
     def has_change_permission(self, request, obj=None):
-        # allow viewing but disable form fields editing
-        if obj:
-            return True
-        return False
+        return True
 
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_fields(self, request, obj=None):
+        return ("subject_display", "buyer_display", "seller_display", "created_at")
 
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
@@ -1409,78 +1414,54 @@ class MessageAdmin(admin.ModelAdmin):
         extra_context['show_delete'] = False
         return super().changeform_view(request, object_id, form_url, extra_context)
 
-    # Show read-only details instead of form fields
-    def get_fields(self, request, obj=None):
-        return (
-            "conversation_display",
-            "sender_display",
-            "receiver_display",
-            "body",
-            "is_read",
-            "created_at",
-        )
+    # ===== List page helpers =====
+    def subject(self, obj):
+        if obj.listing_id:
+            return obj.listing.title
+        return f"Store: {obj.store.name}"
+    subject.short_description = "Subject"
 
-    # ========= List page helpers =========
-    def short_body(self, obj):
-        return (obj.body[:60] + "...") if len(obj.body) > 60 else obj.body
-    short_body.short_description = "Message"
+    def buyer_info(self, obj):
+        u = obj.buyer
+        return f"{u.username} ({u.first_name} {u.last_name})"
+    buyer_info.short_description = "Buyer"
 
-    def conversation_info(self, obj):
-        return str(obj.conversation)
-    conversation_info.short_description = "Conversation"
+    def seller_info(self, obj):
+        u = obj.seller
+        return f"{u.username} ({u.first_name} {u.last_name})"
+    seller_info.short_description = "Seller"
 
-    def sender_info(self, obj):
-        sender = obj.sender
-        return f"{sender.username} ({sender.first_name} {sender.last_name})"
-    sender_info.short_description = "Sender"
+    def message_count(self, obj):
+        return obj._msg_count
+    message_count.admin_order_field = "_msg_count"
+    message_count.short_description = "Messages"
 
-    def receiver_info(self, obj):
-        conv = obj.conversation
-        if obj.sender == conv.buyer:
-            receiver = conv.seller
-        elif obj.sender == conv.seller:
-            receiver = conv.buyer
-        else:
-            return "-"
-        return f"{receiver.username} ({receiver.first_name} {receiver.last_name})"
-    receiver_info.short_description = "Receiver"
+    def unread_count(self, obj):
+        count = obj._unread_count
+        if count:
+            return format_html('<span style="color:red;font-weight:bold">{}</span>', count)
+        return "0"
+    unread_count.admin_order_field = "_unread_count"
+    unread_count.short_description = "Unread"
 
-    # ========= Read-only detail view =========
-    def conversation_display(self, obj):
-        return str(obj.conversation)
-    conversation_display.short_description = "Conversation"
+    # ===== Detail page helpers =====
+    def subject_display(self, obj):
+        if obj.listing_id:
+            return format_html("<b>{}</b>", obj.listing.title)
+        return format_html("Store: <b>{}</b>", obj.store.name)
+    subject_display.short_description = "Subject"
 
-    def sender_display(self, obj):
-        sender = obj.sender
-        url = reverse("admin:marketplace_user_change", args=[sender.user_id])
-        return format_html(
-            '<a href="{}"><b>{}</b></a><br>{} {} — {}',
-            url,
-            sender.username,
-            sender.first_name,
-            sender.last_name,
-            sender.phone or "No phone",
-        )
-    sender_display.short_description = "Sender"
+    def buyer_display(self, obj):
+        u = obj.buyer
+        url = reverse("admin:marketplace_user_change", args=[u.user_id])
+        return format_html('<a href="{}"><b>{}</b></a> — {} {}', url, u.username, u.first_name, u.last_name)
+    buyer_display.short_description = "Buyer"
 
-    def receiver_display(self, obj):
-        conv = obj.conversation
-        if obj.sender == conv.buyer:
-            receiver = conv.seller
-        elif obj.sender == conv.seller:
-            receiver = conv.buyer
-        else:
-            return "-"
-        url = reverse("admin:marketplace_user_change", args=[receiver.user_id])
-        return format_html(
-            '<a href="{}"><b>{}</b></a><br>{} {} — {}',
-            url,
-            receiver.username,
-            receiver.first_name,
-            receiver.last_name,
-            receiver.phone or "No phone",
-        )
-    receiver_display.short_description = "Receiver"
+    def seller_display(self, obj):
+        u = obj.seller
+        url = reverse("admin:marketplace_user_change", args=[u.user_id])
+        return format_html('<a href="{}"><b>{}</b></a> — {} {}', url, u.username, u.first_name, u.last_name)
+    seller_display.short_description = "Seller"
 
 
 @admin.register(ContactMessage)
@@ -1511,7 +1492,7 @@ class FAQQuestionAdmin(admin.ModelAdmin):
 class PrivacyPolicySectionInline(admin.TabularInline):
     model = PrivacyPolicySection
     extra = 0
-    fields = ("order", "heading_ar", "body_ar", "is_active")
+    fields = ("order", "title_ar", "body_ar", "is_active")
     ordering = ("order",)
 
 @admin.register(PrivacyPolicyPage)
@@ -1687,6 +1668,21 @@ def custom_get_app_list(self, request):
 
 # ✅ Patch the method onto the current admin site instance
 admin.site.get_app_list = custom_get_app_list.__get__(admin.site, admin.AdminSite)
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    fields = ("registration_points", "referral_points")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        obj = SiteSettings.get()
+        return redirect(reverse("admin:marketplace_sitesettings_change", args=[obj.pk]))
+
 
 # ======================================================
 # ✅ Admin Branding

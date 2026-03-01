@@ -17,12 +17,11 @@ from django.contrib.auth import logout
 
 from marketplace.forms import UserRegistrationForm, SignupAfterOtpForm, ForgotPasswordForm, PhoneVerificationForm, \
     ResetPasswordForm
-from marketplace.models import User, Store
+from marketplace.models import User, Store, SiteSettings
 from marketplace.services.notifications import notify, S_REWARD, K_WALLET
 from marketplace.services.wallet import earn_points
 from marketplace.utils.sms import send_sms_code
 from marketplace.utils.verification import send_code, verify_session_code
-from marketplace.views.constants import REFERRAL_POINTS
 from marketplace.views.helpers import _phone_candidates
 
 logger = logging.getLogger(__name__)
@@ -173,17 +172,29 @@ def complete_signup(request):
                 logo=form.cleaned_data.get("store_logo"),
             )
 
+        site = SiteSettings.get()
+
+        # ✅ Registration bonus for the new user
+        if site.registration_points > 0:
+            earn_points(
+                user=user,
+                amount=site.registration_points,
+                reason="registration_bonus",
+                meta={"points": site.registration_points},
+            )
+
+        # ✅ Referral reward for the inviter
         if user.referred_by:
             earn_points(
                 user=user.referred_by,
-                amount=REFERRAL_POINTS,
+                amount=site.referral_points,
                 reason="referral_reward",
                 meta={
                     "action": "invite",
                     "targetType": "user",
                     "id": user.user_id,
                     "title": f"{user.first_name} {user.last_name}".strip() or user.phone,
-                    "points": REFERRAL_POINTS,
+                    "points": site.referral_points,
                 },
             )
 
@@ -192,7 +203,7 @@ def complete_signup(request):
                 kind=K_WALLET,
                 status=S_REWARD,
                 title="مكافأة دعوة صديق",
-                body=f"حصلت على +{REFERRAL_POINTS} نقطة لأن صديقك سجّل عبر رابطك.",
+                body=f"حصلت على +{site.referral_points} نقطة لأن صديقك سجّل عبر رابطك.",
             )
 
     # cleanup

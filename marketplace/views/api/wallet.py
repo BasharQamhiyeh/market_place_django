@@ -50,6 +50,8 @@ def api_wallet_summary(request):
             text = "إعادة نشر"
         elif tx.reason == "referral_reward":
             text = "مكافأة دعوة صديق"
+        elif tx.reason == "registration_bonus":
+            text = "هدية التسجيل"
         elif tx.reason == "buy_points":
             text = f"شراء نقاط — باقة {abs(int(tx.delta))} نقطة"
         elif tx.reason == "admin_points":

@@ -344,6 +344,37 @@ class PhoneVerification(models.Model):
         return self.created_at >= timezone.now() - timedelta(minutes=5)
 
 
+class SiteSettings(models.Model):
+    """
+    Singleton model for site-wide configurable settings.
+    Always use SiteSettings.get() to retrieve the instance.
+    """
+    registration_points = models.PositiveIntegerField(
+        default=10,
+        help_text="Points awarded to every new user upon registration.",
+    )
+    referral_points = models.PositiveIntegerField(
+        default=50,
+        help_text="Points awarded to the referrer when an invited friend registers.",
+    )
+
+    class Meta:
+        verbose_name = "Site Settings"
+        verbose_name_plural = "Site Settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self):
+        return "Site Settings"
+
+
 class MobileVerification(models.Model):
     PURPOSE_CHOICES = [
         ("verify", "Phone Verification"),
