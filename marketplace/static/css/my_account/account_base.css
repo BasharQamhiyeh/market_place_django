@@ -813,8 +813,7 @@ input:checked + .chip{
 }
 
 /* Pills/badges - full round (999px/rounded-full) */
-.feature-badge,
-.tab-btn.shrink-0 {
+.feature-badge {
   border-radius: 999px !important;
 }
 
