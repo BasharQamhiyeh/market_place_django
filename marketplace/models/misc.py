@@ -65,6 +65,24 @@ class PrivacyPolicyPage(models.Model):
         blank=True,
         default="نوضح هنا كيف نجمع بياناتك ونستخدمها ونحميها داخل منصة ركن."
     )
+    sidebar_note_ar = models.CharField(
+        max_length=300,
+        blank=True,
+        default="بياناتك في أمان. نلتزم بسرية معلوماتك ولن نشاركها مع أي طرف ثالث.",
+        help_text="النص الظاهر في مربع السايدبار.",
+    )
+    cta_title_ar = models.CharField(
+        max_length=200, blank=True, default="هل لديك استفسار؟"
+    )
+    cta_subtitle_ar = models.CharField(
+        max_length=300,
+        blank=True,
+        default="إذا كان لديك أي سؤال حول سياسة الخصوصية، فريق الدعم لدينا جاهز لمساعدتك.",
+    )
+    cta_button_ar = models.CharField(
+        max_length=100, blank=True, default="تواصل مع الدعم الفني"
+    )
+    cta_url = models.CharField(max_length=200, blank=True, default="#")
 
     is_active = models.BooleanField(default=True)
     published_at = models.DateTimeField(auto_now_add=True)
@@ -92,8 +110,18 @@ class PrivacyPolicySection(models.Model):
         related_name="sections",
     )
     order = models.PositiveIntegerField(default=1)
-
-    heading_ar = models.CharField(max_length=200)
+    anchor_key = models.SlugField(
+        max_length=60,
+        blank=True,
+        help_text="مفتاح فريد للـ anchor في الصفحة، مثال: collection, usage, rights",
+    )
+    icon = models.CharField(
+        max_length=40,
+        blank=True,
+        default="info",
+        help_text="اسم أيقونة Lucide، مثال: shield, lock, eye",
+    )
+    title_ar = models.CharField(max_length=200)
     body_ar = models.TextField(help_text="اكتب النص العربي (يمكنك استخدام أسطر جديدة).")
 
     is_active = models.BooleanField(default=True)
@@ -102,7 +130,7 @@ class PrivacyPolicySection(models.Model):
         ordering = ["order", "id"]
 
     def __str__(self) -> str:
-        return f"{self.order}. {self.heading_ar}"
+        return f"{self.order}. {self.title_ar}"
 
 
 

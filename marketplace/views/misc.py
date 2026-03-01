@@ -140,8 +140,8 @@ class PrivacyPolicyView(TemplateView):
         else:
             sections = []
 
-        ctx["policy_page"] = page
-        ctx["policy_sections"] = sections
+        ctx["page"] = page
+        ctx["sections"] = sections
         return ctx
 
 
