@@ -130,7 +130,7 @@ def search_suggestions(request):
             })
 
     if search_type == "request":
-        qs = (
+        base_qs = (
             Request.objects
             .filter(
                 Q(listing__title__icontains=query),
@@ -140,13 +140,19 @@ def search_suggestions(request):
             )
             .select_related("listing__category")
         )
+        rows = None
         if TRIGRAM_AVAILABLE:
             try:
                 from django.contrib.postgres.search import TrigramSimilarity
-                qs = qs.annotate(similarity=TrigramSimilarity("listing__title", query)).order_by("-similarity")
+                rows = list(
+                    base_qs.annotate(similarity=TrigramSimilarity("listing__title", query))
+                    .order_by("-similarity")[:6]
+                )
             except Exception:
                 pass
-        for r in qs[:6]:
+        if rows is None:
+            rows = list(base_qs[:6])
+        for r in rows:
             listing_results.append({
                 "type": "request",
                 "id": r.id,
@@ -155,7 +161,7 @@ def search_suggestions(request):
                 "budget": str(r.budget) if r.budget else "",
             })
     else:
-        qs = (
+        base_qs = (
             Item.objects
             .filter(
                 Q(listing__title__icontains=query),
@@ -166,13 +172,19 @@ def search_suggestions(request):
             .select_related("listing__category")
             .prefetch_related("photos")
         )
+        rows = None
         if TRIGRAM_AVAILABLE:
             try:
                 from django.contrib.postgres.search import TrigramSimilarity
-                qs = qs.annotate(similarity=TrigramSimilarity("listing__title", query)).order_by("-similarity")
+                rows = list(
+                    base_qs.annotate(similarity=TrigramSimilarity("listing__title", query))
+                    .order_by("-similarity")[:6]
+                )
             except Exception:
                 pass
-        for i in qs[:6]:
+        if rows is None:
+            rows = list(base_qs[:6])
+        for i in rows:
             photo = i.main_photo
             listing_results.append({
                 "type": "item",
