@@ -679,25 +679,34 @@ button:disabled {
 .notif-scroll {
   max-height: 400px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
 .fav-scroll::-webkit-scrollbar,
 .msg-scroll::-webkit-scrollbar,
 .notif-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+}
+
+.fav-scroll::-webkit-scrollbar-track,
+.msg-scroll::-webkit-scrollbar-track,
+.notif-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
 }
 
 .fav-scroll::-webkit-scrollbar-thumb,
 .msg-scroll::-webkit-scrollbar-thumb,
 .notif-scroll::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
+  background: #cbd5e1;
   border-radius: 999px;
 }
 
 .fav-scroll::-webkit-scrollbar-thumb:hover,
 .msg-scroll::-webkit-scrollbar-thumb:hover,
 .notif-scroll::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+  background: #94a3b8;
 }
 
 /* Item icon styling */
@@ -1170,7 +1179,7 @@ button, input, select, textarea {
   width: 35px; height: 35px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.fav-scroll, .msg-scroll, .notif-scroll { max-height: 400px; overflow-y: auto; }
+.fav-scroll, .msg-scroll, .notif-scroll { max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
 
 /* ======================== Categories Row ======================== */
 .categoriesRow {
