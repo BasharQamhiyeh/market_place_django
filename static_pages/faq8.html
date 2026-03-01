@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ركن | الأسئلة المتكررة - مركز المساعدة</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --rukn-orange: #ff7a18;
+      --rukn-orange-light: #fff5ed;
+      --slate-800: #1e293b;
+    }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #fcfcfd;
+      color: #1e293b;
+    }
+    .orange-gradient {
+      background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+    }
+    .hero-shape {
+      border-radius: 0 0 100px 100px;
+    }
+    .pro-shadow {
+      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Accordion Style */
+    .faq-item {
+      transition: all 0.3s ease;
+      border: 1px solid #f1f5f9;
+    }
+    .faq-item.active {
+      border-color: var(--rukn-orange);
+      background-color: white;
+    }
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .faq-item.active .faq-content {
+      max-height: 700px;
+    }
+    .faq-item.active .chevron-icon {
+      transform: rotate(180deg);
+      color: var(--rukn-orange);
+    }
+
+    /* Category Pill */
+    .cat-pill {
+      transition: all 0.3s ease;
+    }
+    .cat-pill.active {
+      background-color: var(--rukn-orange);
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 122, 24, 0.2);
+    }
+	
+	svg {
+  position: static !important;
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  main {
+    overflow-x: visible;
+  }
+}
+
+/* Rukn Primary Button */
+.rukn-btn {
+  background-color: #ff7a18; /* برتقالي ركن */
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 22px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 10px 25px rgba(255, 122, 24, 0.25);
+}
+
+/* Hover Effect */
+.rukn-btn:hover {
+  transform: scale(1.06);
+  box-shadow: 0 14px 30px rgba(255, 122, 24, 0.35);
+}
+
+/* Optional: remove blue highlight on mobile */
+.rukn-btn:focus {
+  outline: none;
+}
+
+ .section-anchor {
+      scroll-margin-top: 100px;
+    }
+
+/* Highlight active FAQ section */
+.faq-section {
+  transition: border 0.35s ease, box-shadow 0.35s ease;
+  background-color: white !important;
+}
+
+.faq-section.section-active {
+  border: 2px solid var(--rukn-orange);
+  box-shadow:
+    0 18px 40px -14px rgba(255, 122, 24, 0.28),
+    0 6px 18px -10px rgba(0, 0, 0, 0.06);
+}
+
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <!-- HERO SECTION (keep ai_studio look) -->
+  <header class="orange-gradient pt-24 pb-40 px-4 text-center text-white">
+    <div class="max-w-4xl mx-auto relative z-10">
+      <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tight">كيف يمكننا مساعدتك؟</h1>
+      <p class="text-lg md:text-xl opacity-95 font-bold max-w-2xl mx-auto leading-relaxed italic">
+        هنا تجد إجابات شاملة لكل ما يدور في ذهنك حول استخدام منصة ركن.
+      </p>
+    </div>
+    <!-- Decoration -->
+    <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl pointer-events-none"></div>
+  </header>
+
+  <!-- FIX: ensure FAQ layer sits above hero, without changing the design concept -->
+  <main class="max-w-7xl mx-auto px-4 -mt-24 pb-32 relative z-20">
+    <div class="grid lg:grid-cols-4 gap-8 items-start">
+
+      <!-- SIDEBAR NAVIGATION (Categories) -->
+      <aside class="hidden lg:block lg:col-span-1 space-y-4 sticky top-1">
+        <div class="bg-white rounded-[2.5rem] p-6 pro-shadow border border-slate-50">
+          <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 mr-2">
+            <i data-lucide="list-filter" class="w-5 h-5 text-orange-500"></i> الأقسام
+          </h3>
+          <div class="flex flex-col gap-2">
+            <button class="cat-pill active w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500 " data-target="about">عن ركن</button>
+            <button class="cat-pill w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500 " data-target="account">الحساب والتسجيل</button>
+            <button class="cat-pill w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500 " data-target="ads">الإعلانات</button>
+            <button class="cat-pill w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500 " data-target="requests">الطلبات</button>
+            <button class="cat-pill w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500 " data-target="safety">الأمان والدعم</button>
+            <button class="cat-pill w-full text-right px-5 py-3 rounded-2xl font-bold text-sm text-slate-500 " data-target="issues">مشاكل الحساب</button>
+          </div>
+        </div>
+
+        <!-- Help CTA -->
+        <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+          <h4 class="font-black mb-4">ما الذي تبحث عنه؟</h4>
+          <p class="text-slate-400 text-xs font-bold leading-loose mb-6">اختر الخطوة المناسبة وسنرشدك مباشرة</p>
+          <div class="grid grid-cols-1 gap-3 text-sm font-black">
+
+    <a href="#account"
+	
+       class="flex items-center justify-center gap-2 rukn-btn  py-3   transition">
+      <i data-lucide="user"></i>
+      إنشاء حساب
+    </a>
+
+    <a href="#ads"
+       class="flex items-center justify-center gap-2 rukn-btn  py-3   transition">
+      <i data-lucide="megaphone"></i>
+      أضف إعلانك
+    </a>
+
+    <a href="#requests"
+       class="flex items-center justify-center gap-2 rukn-btn  py-3   transition">
+      <i data-lucide="clipboard-list"></i>
+      أضف طلبك
+    </a>
+
+    
+
+  </div>
+        </div>
+      </aside>
+
+      <!-- FAQ CONTENT (Main) -->
+      <div class="lg:col-span-3 space-y-12 ">
+
+        <!-- Section: About -->
+        <section id="about" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+         
+          <div class="space-y-4">
+		  
+      <div class="flex items-center gap-4 mb-6">
+  <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+
+  <div class="flex items-center gap-3">
+    <i data-lucide="info" class="w-6 h-6 text-orange-500"></i>
+    <h3 class="text-2xl font-black text-slate-800">
+      عن ركن
+    </h3>
+  </div>
+</div>
+
+			<div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">ما هو موقع ركن؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                ركن منصة إلكترونية محلية تتيح للأفراد والمتاجر عرض المنتجات والخدمات أو إنشاء طلبات، مع إمكانية التواصل المباشر بين الأطراف بسهولة ووضوح.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل ركن مخصص لمنطقة معينة؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يركز ركن على خدمة المجتمع المحلي داخل الأردن، مع تنظيم المحتوى حسب المناطق لتسهيل الوصول والتواصل بين المستخدمين.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">ما الذي يميز ركن عن غيره؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يتميز ركن بتجربة استخدام بسيطة، وتصنيفات واضحة، وتركيز على الطلبات إلى جانب الإعلانات، مما يجعل الوصول لما تحتاجه أسرع وأسهل.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل ركن مخصص للأفراد أم للمتاجر؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                ركن مخصص للأفراد والمتاجر على حد سواء، ويمكن لأي مستخدم إنشاء إعلانات أو طلبات حسب احتياجه.
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Account -->
+        <section id="account" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+         
+          <div class="space-y-4">
+		  
+		  <div class="flex items-center gap-4 mb-6">
+  <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+
+  <div class="flex items-center gap-3">
+    <i data-lucide="user-cog" class="w-6 h-6 text-orange-500"></i>
+    <h3 class="text-2xl font-black text-slate-800">
+      الحساب والتسجيل
+    </h3>
+  </div>
+</div>
+
+				 		  
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+			 
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل يجب إنشاء حساب؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يمكنك تصفح الموقع بدون تسجيل، لكن إنشاء حساب مطلوب لإضافة إعلانات أو طلبات أو التواصل مع المستخدمين الآخرين.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل يمكنني استعادة كلمة المرور؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                نعم، يمكنك استعادة كلمة المرور بسهولة من خلال خيار “نسيت كلمة المرور”، واتباع التعليمات الإرشادية.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل يمكن تعديل بيانات الحساب؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                نعم، يمكنك تعديل بياناتك الشخصية ومعلومات التواصل من خلال إعدادات الحساب في أي وقت.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل يمكن إنشاء أكثر من حساب بنفس رقم الموبايل؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                لا، يُسمح بإنشاء حساب واحد فقط لكل رقم موبايل حفاظًا على أمان المستخدمين.
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Ads -->
+        <section id="ads" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+          
+          <div class="space-y-4">
+		  
+		  
+		  <div class="flex items-center gap-4 mb-6">
+  <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+
+  <div class="flex items-center gap-3">
+    <i data-lucide="megaphone" class="w-6 h-6 text-orange-500"></i>
+    <h3 class="text-2xl font-black text-slate-800">
+      الإعلانات
+    </h3>
+  </div>
+</div>
+		  
+		    		  
+		     <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+			
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل نشر الإعلانات مجاني؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                نعم، نشر الإعلانات مجاني، مع توفر باقات مدفوعة اختيارية لتمييز الإعلان وزيادة ظهوره.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">كم عدد الإعلانات المسموح نشرها؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يمكنك نشر عدة إعلانات، مع الالتزام بسياسات الاستخدام وعدم تكرار الإعلان نفسه.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">لماذا لم يظهر إعلاني مباشرة؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                قد يخضع الإعلان للمراجعة قبل نشره للتأكد من مطابقته للشروط.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل يمكن تعديل أو حذف الإعلان؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                نعم، يمكنك تعديل أو حذف إعلانك في أي وقت من خلال لوحة التحكم الخاصة بحسابك.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">كم مدة بقاء الإعلان؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يبقى الإعلان نشطًا دائماً، ويمكنك إعادة نشره كل 7 أيام ليبقى في المقدمة.
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Requests -->
+        <section id="requests" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+         
+          <div class="space-y-4">
+		  
+		  
+		  <div class="flex items-center gap-4 mb-6">
+  <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+
+  <div class="flex items-center gap-3">
+    <i data-lucide="clipboard-list" class="w-6 h-6 text-orange-500"></i>
+    <h3 class="text-2xl font-black text-slate-800">
+      الطلبات
+    </h3>
+  </div>
+</div>
+		  
+		  
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+			 
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">كيف أقوم بإنشاء طلب؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                بعد تسجيل الدخول، اختر القسم المناسب، أدخل تفاصيل طلبك بوضوح، ثم انشره ليتمكن الآخرون من تقديم عروضهم أو التواصل معك.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل يمكن تعديل أو إلغاء الطلب؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                نعم، يمكنك تعديل أو إلغاء الطلب في أي وقت من خلال لوحة التحكم الخاصة بك قبل إغلاقه.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">ماذا يحدث بعد استلام عروض على طلبي؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يمكنك مراجعة العروض، مقارنة التفاصيل، ثم التواصل مباشرة مع الطرف المناسب لإتمام الاتفاق خارج المنصة.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل تظهر بيانات التواصل الخاصة بي للجميع؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                تظهر بيانات التواصل فقط داخل الطلب أو الإعلان وفق الإعدادات التي تختارها (بإمكانك اختيار عدم اظهار رقمك).
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Safety & Support -->
+        <section id="safety" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+         
+          <div class="space-y-4">
+		  
+		  <div class="flex items-center gap-4 mb-6">
+  <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+
+  <div class="flex items-center gap-3">
+    <i data-lucide="shield" class="w-6 h-6 text-orange-500"></i>
+    <h3 class="text-2xl font-black text-slate-800">
+      الأمان والدعم
+    </h3>
+  </div>
+</div>
+		    
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+			 
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">هل ركن مسؤول عن البيع؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                لا، ركن منصة وسيطة لعرض الإعلانات والطلبات فقط، ولا يتحمل مسؤولية عمليات البيع أو الاتفاقات بين المستخدمين.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">كيف أبلّغ عن إعلان مخالف؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يمكنك استخدام زر “الإبلاغ” الموجود داخل الإعلان، الطلب أو صفحة المتجر وسيقوم فريق ركن بمراجعته واتخاذ الإجراء المناسب.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">كيف أتواصل مع الدعم؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                يمكنك التواصل مع فريق الدعم عبر صفحة “تواصل معنا”، وسيتم الرد عليك في أقرب وقت ممكن.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">كيف أحمي نفسي من الاحتيال؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                ننصح بعدم تحويل أي مبالغ مالية قبل المعاينة، والتواصل المباشر، والإبلاغ عن أي سلوك مشبوه.
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section: Account issues -->
+        <section id="issues" class="faq-section scroll-mt-28 section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+          
+          <div class="space-y-4">
+		  
+		   <div class="flex items-center gap-4 mb-6">
+  <span class="w-1 h-10 bg-orange-500 rounded-full"></span>
+
+  <div class="flex items-center gap-3">
+    <i data-lucide="settings" class="w-6 h-6 text-orange-500"></i>
+    <h3 class="text-2xl font-black text-slate-800">
+      مشاكل الحساب
+    </h3>
+  </div>
+</div>
+		  
+		  		  
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+			
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">لا أستطيع تسجيل الدخول، ماذا أفعل؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                تأكد من صحة رقم الموبايل وكلمة المرور، وفي حال نسيانها استخدم خيار “نسيت كلمة المرور” لإعادة تعيينها.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">تم إيقاف حسابي، ما السبب؟</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                قد يتم إيقاف الحساب في حال مخالفة شروط الاستخدام أو نشر محتوى مخالف. يمكنك التواصل مع الدعم لمعرفة السبب وتقديم طلب مراجعة.
+              </div></div>
+            </div>
+
+            <div class="faq-item bg-white rounded-3xl overflow-hidden pro-shadow">
+              <button class="faq-trigger w-full flex items-center justify-between p-6 text-right">
+                <span class="font-black text-slate-700">لم يصلني رمز التفعيل</span>
+                <i data-lucide="chevron-down" class="chevron-icon w-5 h-5 text-slate-400 transition-transform"></i>
+              </button>
+              <div class="faq-content"><div class="px-6 pb-6 text-slate-500 text-sm leading-loose font-bold">
+                في حال عدم وصول الرسالة يمكنك إعادة طلب الرمز أو التواصل مع الدعم من خلال صفحة تواصل معنا.
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+ 
+  
+<!-- MOBILE: Help CTA (Same Design – Fixed Layout) -->
+<div class="lg:hidden mt-12 px-4">
+  <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+    
+    <h4 class="font-black mb-4">ما الذي تبحث عنه؟</h4>
+          <p class="text-slate-400 text-xs font-bold leading-loose mb-6">اختر الخطوة المناسبة وسنرشدك مباشرة</p>
+          <div class="grid grid-cols-1 gap-3 text-sm font-black">
+
+    <a href="#account"
+	
+       class="flex items-center justify-center gap-2 rukn-btn  py-3   transition">
+      <i data-lucide="user"></i>
+      إنشاء حساب
+    </a>
+
+    <a href="#ads"
+       class="flex items-center justify-center gap-2 rukn-btn  py-3   transition">
+      <i data-lucide="megaphone"></i>
+      أضف إعلانك
+    </a>
+
+    <a href="#requests"
+       class="flex items-center justify-center gap-2 rukn-btn  py-3   transition">
+      <i data-lucide="clipboard-list"></i>
+      أضف طلبك
+    </a>
+
+    
+
+  </div>
+
+  </div>
+</div>
+
+
+<section class="py-24 px-6">
+      <div class="max-w-7xl mx-auto bg-orange-500 rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-20 -mb-20"></div>
+        
+        <div class="relative z-10 text-white">
+          <h2 class="text-4xl md:text-6xl font-black mb-8 leading-tight">
+            لم تجد إجابتك؟
+          </h2>
+          <p class="text-orange-50 font-medium text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">
+           فريق ركن جاهز للرد على استفساراتك الخاصة بشكل مباشر.
+
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            
+            <a href="#" class="bg-white text-orange-500 font-black px-12 py-5 rounded-2xl text-xl border border-orange-400  hover:scale-105 transition-transform inline-block">
+              تواصل مع الدعم الفني
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+ </main>
+
+
+  <script>
+    lucide.createIcons();
+
+    // Accordion Logic
+    document.querySelectorAll('.faq-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const item = trigger.parentElement;
+        item.classList.toggle('active');
+      });
+    });
+
+    // Sidebar Active State + smooth scroll
+    document.querySelectorAll('.cat-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const targetId = pill.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId);
+        if (!targetElement) return;
+
+        const y = targetElement.getBoundingClientRect().top + window.pageYOffset - 100;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      });
+    });
+
+    // Optional: update active pill on scroll
+    const sections = Array.from(document.querySelectorAll('.faq-section'));
+    const pillsById = new Map(Array.from(document.querySelectorAll('.cat-pill')).map(p => [p.getAttribute('data-target'), p]));
+    const setActiveById = (id) => {
+      document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      const pill = pillsById.get(id);
+      if (pill) pill.classList.add('active');
+    };
+
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        ticking = false;
+        const scrollY = window.pageYOffset + 140;
+        let current = sections[0]?.id;
+        for (const sec of sections) {
+          if (sec.offsetTop <= scrollY) current = sec.id;
+        }
+        if (current) setActiveById(current);
+      });
+    }, { passive: true });
+	
+	
+  const faqSections = document.querySelectorAll('.faq-section');
+
+  function setActiveSection(id) {
+    faqSections.forEach(section => {
+      section.classList.remove('section-active');
+      if (section.id === id) {
+        section.classList.add('section-active');
+      }
+    });
+  }
+
+  /* ✅ عند تحميل الصفحة → أول قسم */
+  window.addEventListener('load', () => {
+    if (faqSections.length) {
+      setActiveSection(faqSections[0].id);
+    }
+  });
+
+  /* ✅ عند التمرير */
+  window.addEventListener('scroll', () => {
+    const scrollPos = window.pageYOffset + 160;
+    let currentId = faqSections[0]?.id;
+
+    faqSections.forEach(section => {
+      if (section.offsetTop <= scrollPos) {
+        currentId = section.id;
+      }
+    });
+
+    if (currentId) setActiveSection(currentId);
+  });
+
+  /* ✅ عند الضغط من السايدبار */
+  document.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const targetId = pill.getAttribute('data-target');
+      if (targetId) {
+        setActiveSection(targetId);
+      }
+    });
+  });
+</script>
+
+ 
+
+</body>
+</html>
