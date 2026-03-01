@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ركن — حسابي</title>
+
+  
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+	 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="../css/profile.css" />
+    <script src="../js/profile-myfav.js" defer></script>
+
+  <style>
+    
+   
+  </style>
+</head>
+
+<body class="bg-gray-50">
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+
+  <h1 class="text-3xl font-extrabold text-gray-800 mb-5">👤  حسابي في ركن</h1>
+
+  <!-- ✅ Mobile Tabs (only mobile) -->
+  <div class="sticky top-0 z-50 bg-white border rounded-2xl mb-4">
+    <div class="flex gap-3 overflow-x-auto lg:overflow-visible lg:flex-wrap lg:justify-center px-3 py-3 no-scrollbar">
+
+      <button class="tab-btn  shrink-0" data-tab="info">
+  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+    <path d="M12 20h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  معلوماتي
+</button>
+
+      <button class="tab-btn shrink-0" data-tab="ads">
+  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M3 11v2a1 1 0 0 0 1 1h2l8 4V6l-8 4H4a1 1 0 0 0-1 1Z"
+          stroke="currentColor" stroke-width="2"
+          stroke-linejoin="round"/>
+    <path d="M14 6v12"
+          stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"/>
+    <path d="M19 8a5 5 0 0 1 0 8"
+          stroke="currentColor" stroke-width="2"
+          stroke-linecap="round"/>
+  </svg>
+  إعلاناتي
+</button>
+
+
+      <button class="tab-btn shrink-0" data-tab="requests">
+  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+    <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
+    <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
+    <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  طلباتي
+</button>
+
+      <button class="tab-btn shrink-0" data-tab="noti">
+  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7Z"
+          stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
+  </svg>
+  إشعارات
+</button>
+
+      <button class="tab-btn shrink-0" data-tab="msgs">
+  <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+    <path d="M21 15a4 4 0 0 1-4 4H7l-4 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"
+          stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+  </svg>
+  رسائل
+</button>
+
+      <button class="tab-btn active shrink-0" data-tab="fav">
+  <svg class="w-6 h-6 fav-heart-icon"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round">
+    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+             a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+             l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/>
+  </svg>
+  المفضلة
+</button>
+
+
+
+      <button class="tab-btn shrink-0" data-tab="wallet">
+  <svg  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet-icon lucide-wallet"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+  المحفظة
+</button>
+
+    </div>
+  </div>
+
+  <div id="mainContentWrap" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+ 
+    <!-- محتوى التبويبات -->
+    <div class="lg:col-span-3 w-full min-w-0 ">
+  <div id="tabsViewport"
+       class="bg-transparent min-h-[85vh]">
+
+
+</div>
+
+
+      <!-- المفضلة -->
+      <div id="tab-fav" class="tab-content active bg-white border border-red-500 rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold flex items-center gap-2 text-gray-800">
+  <svg class="w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="none">
+    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+             a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+             l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+          stroke="currentColor" stroke-width="2"/>
+  </svg>
+  المفضلة
+</h2>
+
+
+          <div class="px-4 py-1.5 bg-orange-100 text-orange-700 border border-orange-300 rounded-xl font-bold text-sm">
+            عدد الإعلانات: <span id="favCount">0</span>
+          </div>
+        </div>
+        <div id="favList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+
+      </div>
+
+<!-- Confirm Remove Favorite Modal -->
+<div id="confirmFavModal"
+     class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[999]">
+
+  <div class="bg-white rounded-2xl w-[90%] max-w-sm p-6 shadow-xl animate-fadeIn">
+
+    <div class="flex flex-col items-center text-center gap-3">
+      <div class="w-14 h-14 flex items-center justify-center rounded-full bg-red-100 text-red-600">
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none">
+          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1
+                   a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21
+                   l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"
+                stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
+
+      <h3 class="text-lg font-bold text-gray-800">
+        حذف من المفضلة
+      </h3>
+
+      <p class="text-sm text-gray-500">
+        هل أنت متأكد من حذف هذا الإعلان من المفضلة؟
+      </p>
+    </div>
+
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeFavModal()"
+              class="flex-1 py-2 rounded-xl border text-gray-700 hover:bg-gray-50">
+        إلغاء
+      </button>
+
+      <button onclick="confirmRemoveFav()"
+              class="flex-1 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700">
+        حذف
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+</body>
+</html>
