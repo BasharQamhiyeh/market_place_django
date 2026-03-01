@@ -3,6 +3,9 @@
 
 <article class="req-card">
 
+  <!-- Hover overlay layer (green tint on hover, pointer-events: none) -->
+  <div class="req-hover-layer" aria-hidden="true"></div>
+
   <!-- TOP PILLS -->
   <div class="req-top">
     {% if req.listing.category %}
@@ -16,30 +19,12 @@
     {% endif %}
   </div>
 
-  <!-- TITLE LINK (click + hover hint scoped to title only) -->
-  <a href="{% url 'request_detail' req.id %}" class="req-card-link">
-    <h3 class="req-title">
-      {{ req.listing.title }}
-    </h3>
+  <!-- TITLE (plain — not a link; only the hint navigates) -->
+  <h3 class="req-title">
+    {{ req.listing.title }}
+  </h3>
 
-    <!-- HOVER HINT (sibling of h3, positioned relative to the <a>) -->
-    <div class="req-hint-container" aria-hidden="true">
-      <div class="req-hint-text">
-        <span>عرض</span>
-        <span>الطلب</span>
-      </div>
-      <span class="req-hint-arrow">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-             viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"
-             class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round"
-                d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
-        </svg>
-      </span>
-    </div>
-  </a>
-
-  <!-- META INFO -->
+  <!-- META INFO + hint link inline at the end -->
   <div class="req-meta">
     <span class="req-meta-item">
       <svg class="req-meta-icon" viewBox="0 0 24 24" fill="none">
@@ -69,6 +54,22 @@
         {% endwith %}
       </span>
     </span>
+
+    <!-- HINT: only this is a link — pushed to the far left in RTL -->
+    <a href="{% url 'request_detail' req.id %}" class="req-hint-container" aria-label="عرض الطلب">
+      <div class="req-hint-text">
+        <span>عرض</span>
+        <span>الطلب</span>
+      </div>
+      <span class="req-hint-arrow">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+             viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"
+             class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+        </svg>
+      </span>
+    </a>
   </div>
 
   <!-- FOOTER -->
