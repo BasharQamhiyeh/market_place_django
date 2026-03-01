@@ -97,7 +97,17 @@ section{ margin-bottom:2rem; }
   transform: translateZ(0);
 }
 
-/* On mobile the row needs less top padding (no arrows to clear) */
+/* Hide scroll arrows on mobile, show on desktop */
+#storesLeft, #storesRight,
+#trendingLeft, #trendingRight {
+  display: none;
+}
+@media (min-width:768px){
+  #storesLeft, #storesRight,
+  #trendingLeft, #trendingRight {
+    display: flex !important;
+  }
+}
 @media (max-width:767px){
   #trendingRow,
   #storesRow{
