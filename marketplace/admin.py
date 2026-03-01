@@ -1492,7 +1492,7 @@ class FAQQuestionAdmin(admin.ModelAdmin):
 class PrivacyPolicySectionInline(admin.TabularInline):
     model = PrivacyPolicySection
     extra = 0
-    fields = ("order", "heading_ar", "body_ar", "is_active")
+    fields = ("order", "title_ar", "body_ar", "is_active")
     ordering = ("order",)
 
 @admin.register(PrivacyPolicyPage)
