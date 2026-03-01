@@ -1,7 +1,7 @@
 # marketplace/documents.py
 import os
 
-from django_elasticsearch_dsl import Document, Index, fields
+from django_elasticsearch_dsl import Document, fields
 from django_elasticsearch_dsl.registries import registry
 from elasticsearch_dsl import analyzer, token_filter
 
@@ -22,41 +22,20 @@ if IS_RENDER:
 
 else:
     # ============================================================
-    # Index Definition
+    # Custom analyzers
     # ============================================================
-
-    listing_index = Index("listings")
-    listing_index.settings(
-        number_of_shards=1,
-        number_of_replicas=0,
-        analysis={
-            "filter": {
-                "edge_ngram_filter": {
-                    "type": "edge_ngram",
-                    "min_gram": 2,
-                    "max_gram": 20
-                }
-            },
-            "analyzer": {
-                "edge_ngram_analyzer": {
-                    "tokenizer": "standard",
-                    "filter": ["lowercase", "edge_ngram_filter"]
-                }
-            }
-        }
-    )
 
     edge_ngram_filter = token_filter(
         "edge_ngram_filter",
         type="edge_ngram",
         min_gram=2,
-        max_gram=20
+        max_gram=20,
     )
 
     edge_ngram_analyzer = analyzer(
         "edge_ngram_analyzer",
         tokenizer="standard",
-        filter=["lowercase", edge_ngram_filter]
+        filter=["lowercase", edge_ngram_filter],
     )
 
     # ============================================================
@@ -65,6 +44,14 @@ else:
 
     @registry.register_document
     class ListingDocument(Document):
+
+        title = fields.TextField(
+            analyzer=edge_ngram_analyzer,
+            fields={
+                "keyword": fields.KeywordField(),
+                "edge_ngram": fields.TextField(analyzer=edge_ngram_analyzer),
+            },
+        )
 
         category = fields.ObjectField(properties={
             "name": fields.TextField(analyzer=edge_ngram_analyzer),
@@ -93,11 +80,30 @@ else:
 
         class Index:
             name = "listings"
+            settings = {
+                "number_of_shards": 1,
+                "number_of_replicas": 0,
+                "analysis": {
+                    "filter": {
+                        "edge_ngram_filter": {
+                            "type": "edge_ngram",
+                            "min_gram": 2,
+                            "max_gram": 20,
+                        }
+                    },
+                    "analyzer": {
+                        "edge_ngram_analyzer": {
+                            "tokenizer": "standard",
+                            "filter": ["lowercase", "edge_ngram_filter"],
+                        }
+                    },
+                },
+            }
 
         class Django:
             model = Listing
+            queryset_pagination = 2000
             fields = [
-                "title",
                 "description",
                 "type",
                 "created_at",

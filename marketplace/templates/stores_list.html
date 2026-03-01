@@ -37,6 +37,7 @@
                     <input id="searchInput"
                            name="q"
                            type="text"
+                           autocomplete="off"
                            value="{{ q }}"
                            placeholder="ابحث باسم المتجر أو النشاط..."
                            hx-get="{% url 'stores_list_partial' %}"

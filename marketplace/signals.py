@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from .models import Item, Listing, Store, Notification, StoreFollow, ItemPhoto
+from .models.requests import Request
 from . import moderation   # imports the moderation.py you already created
 from django.core.cache import cache
 from .models import Category
@@ -130,3 +131,16 @@ def delete_itemphoto_file(sender, instance, **kwargs):
 def clear_navbar_categories_cache(sender, instance, **kwargs):
     cache.delete("navbar_cats:v1:en")
     cache.delete("navbar_cats:v1:ar")
+
+
+@receiver(post_save, sender=Request)
+def reindex_listing_on_request_save(sender, instance: Request, created: bool, **kwargs):
+    """
+    Re-save the parent Listing whenever a Request is created so that
+    django_elasticsearch_dsl re-indexes the document with the request's
+    budget, condition_preference, and attributes included.
+    Only needed on creation — subsequent listing saves (e.g. approval)
+    already trigger re-indexing automatically.
+    """
+    if created:
+        instance.listing.save()

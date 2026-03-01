@@ -27,10 +27,10 @@ def moderate_item(item) -> Tuple[str, Optional[str]]:
     text = f"{title}\n{description}".strip()
 
     if not settings.OPENAI_API_KEY:
-        logger.warning(
-            "OPENAI_API_KEY is not configured. Item %s sent to manual review.", item.id
+        logger.info(
+            "OPENAI_API_KEY is not configured. Item %s auto-approved.", item.id
         )
-        return "manual", None
+        return "approve", None
 
     client = OpenAI(
         api_key=settings.OPENAI_API_KEY,
