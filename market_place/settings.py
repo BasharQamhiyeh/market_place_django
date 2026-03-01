@@ -313,17 +313,24 @@ LOGGING = {
     },
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": BASE_DIR / "logs/marketplace.log",
-            "formatter": "verbose",
-        },
     },
     "loggers": {
-        "django": {"handlers": ["console", "file"], "level": LOG_LEVEL},
-        "marketplace": {"handlers": ["console", "file"], "level": "DEBUG"},
+        "django": {"handlers": ["console"], "level": LOG_LEVEL},
+        "marketplace": {"handlers": ["console"], "level": "DEBUG"},
     },
 }
+
+# Add file logging only in local development where the filesystem is persistent
+if DEBUG:
+    _logs_dir = BASE_DIR / "logs"
+    _logs_dir.mkdir(exist_ok=True)
+    LOGGING["handlers"]["file"] = {
+        "class": "logging.FileHandler",
+        "filename": _logs_dir / "marketplace.log",
+        "formatter": "verbose",
+    }
+    LOGGING["loggers"]["django"]["handlers"].append("file")
+    LOGGING["loggers"]["marketplace"]["handlers"].append("file")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_ORG_ID = os.getenv("OPENAI_ORG_ID", "")
