@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
         controller = new AbortController();
 
         try {
-            const res = await fetch(`/ar/search/suggestions/?q=${encodeURIComponent(q)}`, {
+            const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`, {
                 signal: controller.signal,
             });
 

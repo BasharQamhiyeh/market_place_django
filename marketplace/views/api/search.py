@@ -60,16 +60,16 @@ def search_suggestions(request):
             # ES → items
             for hit in es_results:
                 try:
-                    item = Item.objects.select_related("category").prefetch_related("photos").get(id=hit.meta.id)
+                    item = Item.objects.select_related("listing__category").prefetch_related("photos").get(id=hit.meta.id)
                 except Item.DoesNotExist:
                     continue
 
-                photo = item.photos.first()
+                photo = item.main_photo
                 results.append({
                     "type": "item",
                     "id": item.id,
-                    "name": item.title,
-                    "category": item.category.name if item.category else "",
+                    "name": item.listing.title,
+                    "category": item.listing.category.name if item.listing.category else "",
                     "photo_url": photo.image.url if photo else "",
                 })
 
@@ -104,21 +104,22 @@ def search_suggestions(request):
 
             # items
             items = (
-                Item.objects.filter(is_approved=True, is_active=True)
-                .annotate(similarity=TrigramSimilarity("title", query))
+                Item.objects
+                .filter(listing__is_approved=True, listing__is_active=True, listing__is_deleted=False)
+                .annotate(similarity=TrigramSimilarity("listing__title", query))
                 .filter(similarity__gt=0.2)
-                .select_related("category")
+                .select_related("listing__category")
                 .prefetch_related("photos")
                 .order_by("-similarity")[:6]
             )
 
             for i in items:
-                photo = i.photos.first()
+                photo = i.main_photo
                 results.append({
                     "type": "item",
                     "id": i.id,
-                    "name": i.title,
-                    "category": i.category.name if i.category else "",
+                    "name": i.listing.title,
+                    "category": i.listing.category.name if i.listing.category else "",
                     "photo_url": photo.image.url if photo else "",
                 })
 
