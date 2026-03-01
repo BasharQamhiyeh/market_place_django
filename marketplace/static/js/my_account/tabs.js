@@ -4,6 +4,7 @@
    ✅ Lazy-load notifications only when tab opens
    ✅ Clears msgs deep-link (?tab=msgs&c=ID) when leaving msgs tab
    ✅ Supports #tab-info links and opens page from TOP
+   ✅ Handles same-page hash changes (e.g. notification click while already on page)
 */
 
 (function () {
@@ -125,5 +126,20 @@
     skipStore: true,
     skipHash: false,   // restore #tab-... (no scroll jump)
     forceTop: init.forced
+  });
+
+  // Handle same-page hash changes — e.g. a notification click sets
+  // window.location.href = "/my-account/#tab-ads" while the user is already
+  // on /my-account/. The browser only updates the hash without reloading, so
+  // the IIFE won't re-run. A hashchange listener covers this case.
+  // Note: history.replaceState() inside setActiveTab does NOT fire hashchange,
+  // so there is no risk of an infinite loop.
+  window.addEventListener("hashchange", function () {
+    const h = (window.location.hash || "").replace("#", "").trim();
+    if (!h) return;
+    const key = h.startsWith("tab-")
+      ? normalizeTabKey(h.slice(4))
+      : normalizeTabKey(h);
+    setActiveTab(key, { forceTop: true });
   });
 })();
