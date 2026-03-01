@@ -42,7 +42,7 @@ def search_suggestions(request):
             )
 
             es_results = ListingDocument.search().query(es_query)[:6].execute()
-            listing_ids = [hit.meta.id for hit in es_results]
+            listing_ids = [int(hit.meta.id) for hit in es_results]
 
             # categories via DB
             for c in Category.objects.filter(name__icontains=query).select_related("parent", "photo")[:8]:
@@ -69,10 +69,11 @@ def search_suggestions(request):
                     .values_list("listing_id", flat=True)
                 )
                 for hit in es_results:
-                    if hit.meta.id not in approved_ids:
+                    hit_id = int(hit.meta.id)
+                    if hit_id not in approved_ids:
                         continue
                     try:
-                        req = Request.objects.select_related("listing__category").get(listing_id=hit.meta.id)
+                        req = Request.objects.select_related("listing__category").get(listing_id=hit_id)
                     except Request.DoesNotExist:
                         continue
                     listing_results.append({
@@ -94,10 +95,11 @@ def search_suggestions(request):
                     .values_list("listing_id", flat=True)
                 )
                 for hit in es_results:
-                    if hit.meta.id not in approved_ids:
+                    hit_id = int(hit.meta.id)
+                    if hit_id not in approved_ids:
                         continue
                     try:
-                        item = Item.objects.select_related("listing__category").prefetch_related("photos").get(listing_id=hit.meta.id)
+                        item = Item.objects.select_related("listing__category").prefetch_related("photos").get(listing_id=hit_id)
                     except Item.DoesNotExist:
                         continue
                     photo = item.main_photo
