@@ -116,8 +116,14 @@ def search_suggestions(request):
             pass  # ES down → fallback
 
     # ============================================================
-    # 2️⃣ FALLBACK: icontains (+ trigram ordering when available)
+    # 2️⃣ FALLBACK: trigram word-similarity (with icontains fallback)
     # ============================================================
+    # TrigramWordSimilarity compares the query against each individual
+    # word in the title — far better for Arabic than whole-string similarity.
+    # Threshold 0.4 catches plural↔singular variants ("سيارات"↔"سيارة" → 0.57)
+    # without producing false positives for unrelated words.
+    WORD_SIM_THRESHOLD = 0.4
+
     for c in Category.objects.filter(name__icontains=query).select_related("parent", "photo")[:8]:
         if c.id not in seen_categories:
             seen_categories.add(c.id)
@@ -129,29 +135,38 @@ def search_suggestions(request):
                 "photo_url": c.photo_url or "",
             })
 
+    approved_base = {
+        "listing__is_approved": True,
+        "listing__is_active": True,
+        "listing__is_deleted": False,
+    }
+    # Match: title contains query  OR  title is word-similar  OR  category name contains query
+    text_match = (
+        Q(listing__title__icontains=query)
+        | Q(listing__category__name__icontains=query)
+    )
+
     if search_type == "request":
-        base_qs = (
-            Request.objects
-            .filter(
-                Q(listing__title__icontains=query),
-                listing__is_approved=True,
-                listing__is_active=True,
-                listing__is_deleted=False,
-            )
-            .select_related("listing__category")
-        )
         rows = None
         if TRIGRAM_AVAILABLE:
             try:
-                from django.contrib.postgres.search import TrigramSimilarity
+                from django.contrib.postgres.search import TrigramWordSimilarity
                 rows = list(
-                    base_qs.annotate(similarity=TrigramSimilarity("listing__title", query))
-                    .order_by("-similarity")[:6]
+                    Request.objects
+                    .filter(**approved_base)
+                    .select_related("listing__category")
+                    .annotate(word_sim=TrigramWordSimilarity(query, "listing__title"))
+                    .filter(text_match | Q(word_sim__gte=WORD_SIM_THRESHOLD))
+                    .order_by("-word_sim")[:6]
                 )
             except Exception:
                 pass
         if rows is None:
-            rows = list(base_qs[:6])
+            rows = list(
+                Request.objects
+                .filter(text_match, **approved_base)
+                .select_related("listing__category")[:6]
+            )
         for r in rows:
             listing_results.append({
                 "type": "request",
@@ -161,29 +176,28 @@ def search_suggestions(request):
                 "budget": str(r.budget) if r.budget else "",
             })
     else:
-        base_qs = (
-            Item.objects
-            .filter(
-                Q(listing__title__icontains=query),
-                listing__is_approved=True,
-                listing__is_active=True,
-                listing__is_deleted=False,
-            )
-            .select_related("listing__category")
-            .prefetch_related("photos")
-        )
         rows = None
         if TRIGRAM_AVAILABLE:
             try:
-                from django.contrib.postgres.search import TrigramSimilarity
+                from django.contrib.postgres.search import TrigramWordSimilarity
                 rows = list(
-                    base_qs.annotate(similarity=TrigramSimilarity("listing__title", query))
-                    .order_by("-similarity")[:6]
+                    Item.objects
+                    .filter(**approved_base)
+                    .select_related("listing__category")
+                    .prefetch_related("photos")
+                    .annotate(word_sim=TrigramWordSimilarity(query, "listing__title"))
+                    .filter(text_match | Q(word_sim__gte=WORD_SIM_THRESHOLD))
+                    .order_by("-word_sim")[:6]
                 )
             except Exception:
                 pass
         if rows is None:
-            rows = list(base_qs[:6])
+            rows = list(
+                Item.objects
+                .filter(text_match, **approved_base)
+                .select_related("listing__category")
+                .prefetch_related("photos")[:6]
+            )
         for i in rows:
             photo = i.main_photo
             listing_results.append({
