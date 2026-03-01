@@ -97,12 +97,20 @@ section{ margin-bottom:2rem; }
   transform: translateZ(0);
 }
 
-/* hide arrows on mobile/tablet like mockup */
-@media (max-width:991px){
-  #trendingLeft,#trendingRight{
-    display:none !important;
+/* Hide scroll arrows on mobile, show on desktop */
+#storesLeft, #storesRight,
+#trendingLeft, #trendingRight {
+  display: none;
+}
+@media (min-width:768px){
+  #storesLeft, #storesRight,
+  #trendingLeft, #trendingRight {
+    display: flex !important;
   }
-  #trendingRow{
+}
+@media (max-width:767px){
+  #trendingRow,
+  #storesRow{
     padding-top: 0 !important;
   }
 }
