@@ -17,7 +17,7 @@ from .views.home import home, home_more_items, home_more_requests
 from .views.items import item_list, item_detail, item_create, item_detail_more_similar, item_edit, delete_item, \
     cancel_item, delete_item_photo, my_items, reactivate_item, item_attributes_partial
 from .views.misc import about, contact_support, contact_support_done, FAQView, WhyRuknView, PrivacyPolicyView, \
-    category_list, subscribe, create_issue_report_ajax, categories_browse
+    TermsView, category_list, subscribe, create_issue_report_ajax, categories_browse
 from .views.my_account import my_favorites, edit_profile, change_password, notifications, mark_notifications_read, \
     my_account, my_account_save_info, my_account_noti_fragment, my_account_noti_mark_read, my_account_noti_mark_all_read
 from .views.requests import request_detail_more_similar, request_create, request_list, request_detail, request_edit
@@ -33,6 +33,7 @@ urlpatterns = [
     path("faq/", FAQView.as_view(), name="faq"),
     path("why-rukn/", WhyRuknView.as_view(), name="why_rukn"),
     path("privacy/", PrivacyPolicyView.as_view(), name="privacy_policy"),
+    path("terms/", TermsView.as_view(), name="terms"),
 
     # --- Auth ---
     path('login/', user_login, name='login'),

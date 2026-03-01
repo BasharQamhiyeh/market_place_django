@@ -1,0 +1,235 @@
+{# templates/static_pages/terms.html #}
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}ركن | شروط الاستخدام - الميثاق القانوني{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --rukn-orange: #ff7a18;
+      --rukn-orange-light: #fff5ed;
+    }
+    body {
+      font-family: "Cairo", sans-serif;
+      background-color: #fcfcfd;
+      color: #1e293b;
+      scroll-behavior: smooth;
+    }
+    .orange-gradient {
+      background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+    }
+    .pro-shadow {
+      box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+    }
+    .icon-box {
+      background: var(--rukn-orange-light);
+      color: var(--rukn-orange);
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      flex-shrink: 0;
+    }
+    .nav-pill {
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 48px;
+      line-height: 1.25rem;
+    }
+    .nav-pill.active {
+      background-color: var(--rukn-orange);
+      color: white !important;
+      box-shadow: 0 10px 20px -5px rgba(255, 122, 24, 0.3);
+    }
+    .sidebar-fixed,
+    .sidebar-fixed * { box-sizing: border-box; }
+    .sidebar-fixed {
+      width: 100%;
+      will-change: transform;
+      transform: translateZ(0);
+    }
+    .section-anchor {
+      scroll-margin-top: 100px;
+      transition: border 0.35s ease, box-shadow 0.35s ease;
+      background-color: white !important;
+      position: relative;
+    }
+    .section-anchor.section-active {
+      border: 2px solid var(--rukn-orange);
+      background-color: white !important;
+      box-shadow:
+        0 18px 40px -12px rgba(255, 122, 24, 0.28),
+        0 6px 18px -8px rgba(0, 0, 0, 0.06);
+    }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: var(--rukn-orange); border-radius: 10px; }
+  </style>
+</head>
+
+<body class="antialiased">
+
+  <!-- HERO -->
+  <header class="orange-gradient pt-24 pb-40 px-4 text-center text-white relative overflow-hidden">
+    <div class="max-w-4xl mx-auto relative z-10">
+      <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tight">
+        {% if terms_page %}{{ terms_page.title_ar }}{% else %}شروط الاستخدام{% endif %}
+      </h1>
+      <p class="text-lg md:text-xl opacity-95 font-bold max-w-2xl mx-auto leading-relaxed italic">
+        {% if terms_page %}{{ terms_page.subtitle_ar }}{% else %}ميثاقنا المشترك لضمان تجربة آمنة وموثوقة لكافة مستخدمي منصة ركن.{% endif %}
+      </p>
+    </div>
+    <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl pointer-events-none"></div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 -mt-24 pb-32 relative z-20">
+    <div class="grid lg:grid-cols-4 gap-8 items-start">
+
+      <!-- SIDEBAR -->
+      <aside class="hidden lg:block lg:col-span-1 space-y-4 sticky top-1">
+        <div class="sidebar-fixed">
+          <div class="bg-white rounded-[2.5rem] p-6 pro-shadow border border-slate-50">
+            <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 mr-2">
+              <i data-lucide="book-open" class="w-5 h-5 text-orange-500"></i> بنود الميثاق
+            </h3>
+            <div class="flex flex-col gap-2">
+              {% for s in terms_sections %}
+                <a href="#{{ s.anchor_key }}"
+                   class="nav-pill {% if forloop.first %}active{% endif %} w-full px-4 py-3 rounded-2xl font-bold text-sm text-slate-500">
+                  {{ s.title_ar }}
+                </a>
+              {% empty %}
+                <p class="text-sm text-slate-400 font-bold px-4">لا توجد بنود بعد.</p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mt-4 bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+            <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">وثيقة رسمية</p>
+            <p class="text-xs font-bold leading-loose opacity-80">
+              {% if terms_page %}{{ terms_page.sidebar_note_ar }}{% else %}باستخدامك للمنصة، أنت توافق ضمنياً على كافة البنود المذكورة هنا.{% endif %}
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- SECTIONS -->
+      <div class="lg:col-span-3 space-y-8">
+        {% for s in terms_sections %}
+          <section id="{{ s.anchor_key }}"
+                   class="section-anchor bg-white rounded-[3rem] p-8 md:p-12 pro-shadow border border-slate-50">
+
+            <div class="flex items-center gap-4 mb-6">
+              <div class="icon-box">
+                <i data-lucide="{{ s.icon|default:'file-text' }}" class="w-6 h-6"></i>
+              </div>
+              <h2 class="text-2xl font-black uppercase tracking-tighter">{{ s.title_ar }}</h2>
+            </div>
+
+            <p class="text-slate-500 text-lg leading-loose font-bold">{{ s.body_ar }}</p>
+
+            {% if s.warning_ar %}
+              <div class="mt-6 p-5 bg-orange-50 rounded-2xl border border-orange-100">
+                <p class="text-[#ff7a18] text-sm font-black flex items-start gap-2">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                  {{ s.warning_ar }}
+                </p>
+              </div>
+            {% endif %}
+
+          </section>
+        {% empty %}
+          <div class="bg-white rounded-[3rem] p-12 pro-shadow border border-slate-50 text-center text-slate-400 font-bold">
+            لم يتم إضافة بنود الشروط بعد. يرجى المراجعة لاحقاً.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- MOBILE: sidebar note -->
+    <div class="lg:hidden mt-12 px-4">
+      <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white pro-shadow">
+        <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-2">وثيقة رسمية</p>
+        <p class="text-xs font-bold leading-loose opacity-80">
+          {% if terms_page %}{{ terms_page.sidebar_note_ar }}{% else %}باستخدامك للمنصة، أنت توافق ضمنياً على كافة البنود المذكورة هنا.{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <section class="py-24 px-6">
+      <div class="max-w-7xl mx-auto bg-orange-500 rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-20 -mb-20"></div>
+        <div class="relative z-10 text-white">
+          <h2 class="text-4xl md:text-6xl font-black mb-8 leading-tight">هل لديك استفسار قانوني؟</h2>
+          <p class="text-orange-50 font-medium text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">
+            إذا كان لديك أي سؤال حول هذه الشروط أو كيفية تطبيقها، فريق الدعم لدينا جاهز لمساعدتك.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="{% url 'contact_support' %}"
+               class="bg-white text-orange-500 font-black px-12 py-5 rounded-2xl text-xl border border-orange-400 hover:scale-105 transition-transform inline-block">
+              تواصل مع الدعم الفني
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const sections = document.querySelectorAll('.section-anchor');
+    const navPills = document.querySelectorAll('.nav-pill');
+
+    function setActive(id) {
+      sections.forEach(s => {
+        s.classList.remove('section-active');
+        if (s.id === id) s.classList.add('section-active');
+      });
+      navPills.forEach(p => {
+        p.classList.remove('active');
+        if (p.getAttribute('href') === `#${id}`) p.classList.add('active');
+      });
+    }
+
+    function onScroll() {
+      if (!sections.length) return;
+      let current = sections[0].id;
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 150) current = s.id;
+      });
+      setActive(current);
+    }
+
+    window.addEventListener('load', () => { if (sections.length) setActive(sections[0].id); });
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    navPills.forEach(p => {
+      p.addEventListener('click', () => {
+        const id = p.getAttribute('href').replace('#', '');
+        setActive(id);
+      });
+    });
+  </script>
+
+</body>
+</html>
+{% endblock %}

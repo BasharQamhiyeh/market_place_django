@@ -624,27 +624,27 @@
           <div>
             <h4 class="footer-heading">روابط</h4>
             <ul class="space-y-4">
-              <li><a href="#" class="nav-link">الأقسام</a></li>
-              <li><a href="#" class="nav-link">الإعلانات</a></li>
-              <li><a href="#" class="nav-link">الطلبات</a></li>
-              <li><a href="#" class="nav-link">المتاجر</a></li>
+              <li><a href="{% url 'categories_browse' %}" class="nav-link">الأقسام</a></li>
+              <li><a href="{% url 'item_list' %}" class="nav-link">الإعلانات</a></li>
+              <li><a href="{% url 'request_list' %}" class="nav-link">الطلبات</a></li>
+              <li><a href="{% url 'stores_list' %}" class="nav-link">المتاجر</a></li>
             </ul>
           </div>
 
           <div>
             <h4 class="footer-heading">اكتشف ركن</h4>
             <ul class="space-y-4">
-              <li><a href="#" class="nav-link">من نحن</a></li>
-              <li><a href="#" class="nav-link">كيف يعمل ركن</a></li>
-              <li><a href="#" class="nav-link">الأسئلة الشائعة</a></li>
+              <li><a href="{% url 'about' %}" class="nav-link">من نحن</a></li>
+              <li><a href="{% url 'why_rukn' %}" class="nav-link">كيف يعمل ركن</a></li>
+              <li><a href="{% url 'faq' %}" class="nav-link">الأسئلة الشائعة</a></li>
             </ul>
           </div>
 
           <div>
             <h4 class="footer-heading">قانونية</h4>
             <ul class="space-y-4">
-              <li><a href="#" class="nav-link">سياسة الخصوصية</a></li>
-              <li><a href="#" class="nav-link">الشروط والأحكام</a></li>
+              <li><a href="{% url 'privacy_policy' %}" class="nav-link">سياسة الخصوصية</a></li>
+              <li><a href="{% url 'terms' %}" class="nav-link">الشروط والأحكام</a></li>
             </ul>
           </div>
         </div>
@@ -654,7 +654,7 @@
           <p class="text-[var(--text-gray)] text-sm mb-6 leading-relaxed">
             يسعدنا دائماً تواصلك معنا للإجابة على كافة استفساراتك.
           </p>
-          <a href="#" class="inline-flex items-center justify-center w-full py-3 bg-[var(--rukn-orange)] hover:bg-orange-600 text-white rounded-xl font-bold transition-all gap-2">
+          <a href="{% url 'contact_support' %}" class="inline-flex items-center justify-center w-full py-3 bg-[var(--rukn-orange)] hover:bg-orange-600 text-white rounded-xl font-bold transition-all gap-2">
             <i class="far fa-envelope"></i>
             تواصل معنا الآن
           </a>
