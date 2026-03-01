@@ -33,7 +33,6 @@ def search_suggestions(request):
                 fields=[
                     "title^3",
                     "title.edge_ngram",
-                    "title.ngram",
                     "category.name",
                     "attributes.name",
                     "city.name",
