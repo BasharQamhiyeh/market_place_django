@@ -138,6 +138,7 @@ def republish_listing_api(request, listing_id):
                 meta={
                     "listing_id": listing.id,
                     "listing_title": listing.title,
+                    "listing_type": listing.type,
                     "days_since_last": days_since,
                 }
             )

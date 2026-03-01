@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:marketplace_user_changelist' %}">المستخدمون</a>
+    &rsaquo; <a href="{% url 'admin:marketplace_user_change' user_obj.pk %}">{{ user_obj }}</a>
+    &rsaquo; إضافة نقاط
+</div>
+{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+
+<div style="margin-bottom: 16px; padding: 12px; background: #f8f8f8; border-radius: 6px; border: 1px solid #ddd;">
+    <strong>المستخدم:</strong> {{ user_obj }}<br>
+    <strong>الرصيد الحالي:</strong> {{ user_obj.points }} نقطة
+</div>
+
+{% if messages %}
+<ul class="messagelist">
+    {% for message in messages %}
+    <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+    <div style="margin-bottom: 16px;">
+        <label for="amount" style="display:block; font-weight:bold; margin-bottom:6px;">
+            عدد النقاط المراد إضافتها
+        </label>
+        <input
+            type="number"
+            id="amount"
+            name="amount"
+            min="1"
+            required
+            style="padding:8px 12px; font-size:16px; border:1px solid #ccc; border-radius:4px; width:200px;"
+            placeholder="مثال: 100"
+        >
+    </div>
+    <div>
+        <button type="submit" class="button default" style="background:#417690; color:#fff; padding:8px 20px; border:none; border-radius:4px; cursor:pointer; font-size:14px;">
+            إضافة النقاط
+        </button>
+        &nbsp;
+        <a href="{% url 'admin:marketplace_user_changelist' %}"
+           style="padding:8px 16px; color:#417690; text-decoration:none; font-size:14px;">
+            إلغاء
+        </a>
+    </div>
+</form>
+{% endblock %}

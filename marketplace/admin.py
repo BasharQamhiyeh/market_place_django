@@ -22,8 +22,10 @@ from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
-    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto
+    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction
 )
+from .services.wallet import apply_points_transaction
+from .services.notifications import notify, K_WALLET, S_CHARGED
 
 class UserAdminForm(forms.ModelForm):
     class Meta:
@@ -34,7 +36,7 @@ class UserAdminForm(forms.ModelForm):
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     # ✅ 2) phone first column + clickable link uses the first column => phone
-    list_display = ("phone", "username", "first_name", "last_name", "email", "points", "last_login", "is_active")
+    list_display = ("phone", "username", "first_name", "last_name", "email", "points", "last_login", "is_active", "add_points_button")
     search_fields = ("first_name", "last_name", "username", "email", "phone")
     list_filter = ("is_active", "is_staff", "is_superuser")
 
@@ -64,6 +66,77 @@ class UserAdmin(admin.ModelAdmin):
             if changed - {"points"}:
                 raise PermissionDenied("Only 'points' can be updated for users.")
         super().save_model(request, obj, form, change)
+
+    # ✅ Add Points button shown in the user list
+    def add_points_button(self, obj):
+        url = reverse("admin:marketplace_user_add_points", args=[obj.pk])
+        return format_html(
+            '<a class="button" href="{}" style="'
+            'background:#417690;color:#fff;padding:4px 10px;'
+            'border-radius:4px;text-decoration:none;font-size:12px;">'
+            'إضافة نقاط</a>',
+            url,
+        )
+    add_points_button.short_description = "إضافة نقاط"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:user_id>/add-points/",
+                self.admin_site.admin_view(self.add_points_view),
+                name="marketplace_user_add_points",
+            ),
+        ]
+        return custom_urls + urls
+
+    def add_points_view(self, request, user_id):
+        user = get_object_or_404(User, pk=user_id)
+
+        if request.method == "POST":
+            try:
+                amount = int(request.POST.get("amount", 0))
+                if amount <= 0:
+                    raise ValueError("الكمية يجب أن تكون أكبر من صفر.")
+
+                apply_points_transaction(
+                    user=user,
+                    delta=amount,
+                    kind=PointsTransaction.Kind.EARN,
+                    reason="admin_points",
+                    meta={"source": "admin", "admin_phone": request.user.phone},
+                )
+
+                notify(
+                    user=user,
+                    kind=K_WALLET,
+                    status=S_CHARGED,
+                    title=f"استلمت {amount} نقطة من ادمن ركن",
+                    body=f"تمت إضافة {amount} نقطة إلى رصيدك بواسطة ادمن ركن.",
+                )
+
+                messages.success(
+                    request,
+                    f"✅ تمت إضافة {amount} نقطة للمستخدم {user} بنجاح.",
+                )
+                return redirect(
+                    reverse("admin:marketplace_user_changelist")
+                )
+
+            except (ValueError, TypeError) as e:
+                messages.error(request, f"خطأ: {e}")
+
+        context = {
+            **self.admin_site.each_context(request),
+            "user_obj": user,
+            "title": f"إضافة نقاط للمستخدم: {user}",
+            "opts": self.model._meta,
+        }
+        return TemplateResponse(
+            request,
+            "admin/marketplace/user/add_points.html",
+            context,
+        )
 
 
 @admin.register(Store)
