@@ -22,7 +22,8 @@ from .models import (
     User, Category, Attribute, AttributeOption,
     Item, ItemAttributeValue, ItemPhoto, Notification,
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
-    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction
+    FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction,
+    TermsPage, TermsSection,
 )
 from .services.wallet import apply_points_transaction
 from .services.notifications import notify, K_WALLET, S_CHARGED
@@ -1519,6 +1520,21 @@ class PrivacyPolicyPageAdmin(admin.ModelAdmin):
     list_filter = ("is_active",)
     search_fields = ("title_ar", "subtitle_ar")
     inlines = [PrivacyPolicySectionInline]
+
+
+class TermsSectionInline(admin.TabularInline):
+    model = TermsSection
+    extra = 0
+    fields = ("order", "anchor_key", "icon", "title_ar", "body_ar", "warning_ar", "is_active")
+    ordering = ("order",)
+
+
+@admin.register(TermsPage)
+class TermsPageAdmin(admin.ModelAdmin):
+    list_display = ("title_ar", "is_active", "published_at", "updated_at")
+    list_filter = ("is_active",)
+    search_fields = ("title_ar", "subtitle_ar")
+    inlines = [TermsSectionInline]
 
 
 @admin.register(IssuesReport)

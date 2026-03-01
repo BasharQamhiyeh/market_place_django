@@ -13,8 +13,8 @@ from django.utils import translation
 
 from pydantic import validate_email
 
-from marketplace.models import ContactMessage, FAQCategory, PrivacyPolicyPage, Subscriber, Category, IssuesReport, \
-    Listing, User, Store
+from marketplace.models import ContactMessage, FAQCategory, PrivacyPolicyPage, TermsPage, Subscriber, Category, \
+    IssuesReport, Listing, User, Store
 from marketplace.services.notifications import K_REPORT, notify, S_SUBMITTED
 from marketplace.validators import validate_no_links_or_html
 
@@ -97,6 +97,29 @@ class FAQView(TemplateView):
 
 class WhyRuknView(TemplateView):
     template_name = "static_pages/why_rukn.html"
+
+
+class TermsView(TemplateView):
+    template_name = "static_pages/terms.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        page = (
+            TermsPage.objects
+            .prefetch_related("sections")
+            .filter(is_active=True)
+            .first()
+        )
+
+        if page:
+            sections = [s for s in page.sections.all() if s.is_active]
+        else:
+            sections = []
+
+        ctx["terms_page"] = page
+        ctx["terms_sections"] = sections
+        return ctx
 
 
 class PrivacyPolicyView(TemplateView):

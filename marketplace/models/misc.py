@@ -106,6 +106,69 @@ class PrivacyPolicySection(models.Model):
 
 
 
+class TermsPage(models.Model):
+    """
+    صفحة شروط الاستخدام (نسخ Versioning – نسخة واحدة نشطة فقط).
+    """
+    title_ar = models.CharField(max_length=200, default="شروط الاستخدام")
+    subtitle_ar = models.CharField(
+        max_length=300,
+        blank=True,
+        default="ميثاقنا المشترك لضمان تجربة آمنة وموثوقة لكافة مستخدمي منصة ركن.",
+    )
+    sidebar_note_ar = models.CharField(
+        max_length=300,
+        blank=True,
+        default="باستخدامك للمنصة، أنت توافق ضمنياً على كافة البنود المذكورة هنا.",
+        help_text="النص الظاهر في مربع السايدبار.",
+    )
+
+    is_active = models.BooleanField(default=True)
+    published_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-is_active", "-published_at"]
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            if self.is_active:
+                TermsPage.objects.exclude(pk=self.pk).update(is_active=False)
+
+    def __str__(self) -> str:
+        status = "ACTIVE" if self.is_active else "draft"
+        return f"{self.title_ar} ({status})"
+
+
+class TermsSection(models.Model):
+    page = models.ForeignKey(TermsPage, on_delete=models.CASCADE, related_name="sections")
+    order = models.PositiveIntegerField(default=1)
+    anchor_key = models.SlugField(
+        max_length=60,
+        help_text="مفتاح فريد للـ anchor في الصفحة، مثال: acceptance, account, content",
+    )
+    icon = models.CharField(
+        max_length=40,
+        blank=True,
+        default="file-text",
+        help_text="اسم أيقونة Lucide، مثال: check-circle, user-check, file-warning",
+    )
+    title_ar = models.CharField(max_length=200)
+    body_ar = models.TextField(help_text="النص الرئيسي للقسم (يمكن استخدام أسطر جديدة).")
+    warning_ar = models.TextField(
+        blank=True,
+        help_text="نص تحذير اختياري يظهر في مربع برتقالي أسفل النص (مثال: قسم إخلاء المسؤولية).",
+    )
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.order}. {self.title_ar}"
+
+
 class ContactMessage(models.Model):
     SUBJECT_CHOICES = [
         ("account", "مشكلة حساب"),

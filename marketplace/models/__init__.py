@@ -8,4 +8,4 @@ from .requests import Request, RequestAttributeValue
 from .chat import Conversation, Message
 from .notifications import Notification
 from .favorite import Favorite
-from .misc import Subscriber, IssuesReport, PhoneVerificationCode, PhoneVerification, MobileVerification, ContactMessage, FAQCategory, FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection
+from .misc import Subscriber, IssuesReport, PhoneVerificationCode, PhoneVerification, MobileVerification, ContactMessage, FAQCategory, FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, TermsPage, TermsSection
