@@ -191,7 +191,7 @@
 
                 <!-- Dynamic Fields -->
                 <div id="phoneField" class="hidden">
-                  <input id="phone" name="phone" type="tel" placeholder="07xxxxxxxx" class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800 tracking-widest">
+                  <input id="phone" name="phone" type="text" inputmode="numeric" maxlength="10" placeholder="07xxxxxxxx" class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800 tracking-widest">
                   <p id="phoneError" class="text-xs text-red-500 font-bold mt-2 hidden">رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام</p>
                 </div>
 
@@ -415,15 +415,15 @@
 
   fullName.addEventListener("input",()=>removeError(fullName,nameError));
   message.addEventListener("input",()=>removeError(message,messageError));
-  function normalizePhone(raw) {
-    let v = raw.replace(/\D/g, "");          // strip non-digits
-    if (v.startsWith("9627")) v = "0" + v.slice(2);   // +9627xxxxxxxx → 07xxxxxxxx
-    else if (v.startsWith("00962")) v = "0" + v.slice(4);
-    return v.slice(0, 10);
+  function digitsOnlyKeydown(e) {
+    const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if ((e.key >= "0" && e.key <= "9") || allowed.includes(e.key)) return;
+    e.preventDefault();
   }
 
+  phone.addEventListener("keydown", digitsOnlyKeydown);
   phone.addEventListener("input",()=>{
-    phone.value = normalizePhone(phone.value);
+    phone.value = phone.value.replace(/\D/g,"");
     removeError(phone,phoneError);
   });
   email.addEventListener("input",()=>removeError(email,emailError));
@@ -437,9 +437,7 @@
     if(!method) { e.preventDefault(); return addBoxError(contactContainer, methodError); }
 
     if(method === "phone"){
-      const v = normalizePhone(phone.value);
-      phone.value = v;
-      if(!/^07\d{8}$/.test(v)) { e.preventDefault(); return addError(phone,phoneError); }
+      if(!/^07\d{8}$/.test(phone.value)) { e.preventDefault(); return addError(phone,phoneError); }
     }else{
       if(!/^[^@]+@[^@]+\.[^@]+$/.test(email.value)) { e.preventDefault(); return addError(email,emailError); }
     }
