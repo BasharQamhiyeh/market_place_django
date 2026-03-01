@@ -102,6 +102,7 @@ else:
 
         class Django:
             model = Listing
+            queryset_pagination = 2000
             fields = [
                 "description",
                 "type",
