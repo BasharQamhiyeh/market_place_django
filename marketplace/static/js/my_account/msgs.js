@@ -209,7 +209,25 @@ async function openChat(chatId){
     renderChat(msgs);
   }
 
-  if(c){ c.unreadCount = 0; renderConversations(); }
+  if(c){
+    const prevUnread = c.unreadCount || 0;
+    c.unreadCount = 0;
+    renderConversations();
+    if(prevUnread > 0) _decrementNavbarBadge(prevUnread);
+  }
+}
+
+function _decrementNavbarBadge(decrease){
+  const badge = document.querySelector(".msg-badge");
+  if(!badge) return;
+  const next = Math.max(0, (parseInt(badge.textContent, 10) || 0) - decrease);
+  if(next === 0){
+    badge.textContent = "";
+    badge.classList.add("hidden");
+    document.querySelector(".msg-icon")?.classList.remove("filled");
+  } else {
+    badge.textContent = String(next);
+  }
 }
 
 function pushUrl(chatId){
