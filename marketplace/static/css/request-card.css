@@ -1,11 +1,5 @@
 /* ==================== REQUEST CARD STYLES ==================== */
 
-.req-card-link {
-  display: block;
-  text-decoration: none;
-  position: relative;
-}
-
 .req-card {
   background: #ffffff;
   border: 2px solid #b7f3d0; /* light green */
@@ -17,6 +11,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  cursor: default;
 }
 
 .req-card:hover {
@@ -25,24 +20,57 @@
   border-color: #16a34a; /* green-600 */
 }
 
-/* ==================== HOVER HINT (title-link scope) ==================== */
+/* ==================== HOVER LAYER (green tint, like item card) ==================== */
+
+.req-hover-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 1;
+  pointer-events: none;
+  background: rgba(220, 252, 231, 0); /* green-100 */
+  border-radius: inherit;
+}
+
+.req-card:hover .req-hover-layer {
+  opacity: 1;
+  background: rgba(220, 252, 231, 0.70);
+}
+
+/* ==================== CONTENT LAYERS (above hover layer) ==================== */
+
+.req-top,
+.req-title,
+.req-meta,
+.req-footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* ==================== HOVER HINT (inside .req-meta, only link in the card) ==================== */
 
 .req-hint-container {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  left: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
   opacity: 0;
   transition: opacity 0.2s ease;
-  z-index: 20;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
+  text-decoration: none;
+  margin-right: auto; /* RTL: push hint to the far left (end of row) */
 }
 
-.req-card-link:hover .req-hint-container {
+.req-card:hover .req-hint-container {
   opacity: 1;
+}
+
+/* Always visible on touch devices (no hover) */
+@media (hover: none) {
+  .req-hint-container {
+    opacity: 1;
+  }
 }
 
 .req-hint-text {
@@ -70,7 +98,7 @@
   }
 }
 
-.req-card-link:hover .req-hint-arrow {
+.req-card:hover .req-hint-arrow {
   animation: nudgeLeft 0.65s ease-in-out infinite;
 }
 
