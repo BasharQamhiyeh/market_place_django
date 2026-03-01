@@ -415,8 +415,15 @@
 
   fullName.addEventListener("input",()=>removeError(fullName,nameError));
   message.addEventListener("input",()=>removeError(message,messageError));
+  function normalizePhone(raw) {
+    let v = raw.replace(/\D/g, "");          // strip non-digits
+    if (v.startsWith("9627")) v = "0" + v.slice(2);   // +9627xxxxxxxx → 07xxxxxxxx
+    else if (v.startsWith("00962")) v = "0" + v.slice(4);
+    return v.slice(0, 10);
+  }
+
   phone.addEventListener("input",()=>{
-    phone.value = phone.value.replace(/\D/g,"").slice(0,10);
+    phone.value = normalizePhone(phone.value);
     removeError(phone,phoneError);
   });
   email.addEventListener("input",()=>removeError(email,emailError));
@@ -430,7 +437,9 @@
     if(!method) { e.preventDefault(); return addBoxError(contactContainer, methodError); }
 
     if(method === "phone"){
-      if(!/^07\d{8}$/.test(phone.value)) { e.preventDefault(); return addError(phone,phoneError); }
+      const v = normalizePhone(phone.value);
+      phone.value = v;
+      if(!/^07\d{8}$/.test(v)) { e.preventDefault(); return addError(phone,phoneError); }
     }else{
       if(!/^[^@]+@[^@]+\.[^@]+$/.test(email.value)) { e.preventDefault(); return addError(email,emailError); }
     }
