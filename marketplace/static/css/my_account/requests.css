@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: center;
   padding: 4px 10px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-weight: 900;         /* ✅ 900 (extrabold) to match mockup */
   font-size: 12px;
   background: #fff;
@@ -50,6 +50,21 @@
 #tab-requests .ad-id span {
   color: #dc2626;          /* Red color for request ID number */
   font-weight: 900;
+}
+
+/* Mobile: move badge to left side to avoid colliding with RTL req-header content
+   (request ID + status badges start from the right edge in RTL, same spot as the badge) */
+@media (max-width: 767px) {
+  #tab-requests .req-cat-badge {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 8px;
+  }
+
+  #tab-requests .request-row {
+    padding-top: 30px !important; /* enough clearance for the badge above the req-header */
+  }
 }
 
 /* Mobile: actions in 2 columns like ads */
