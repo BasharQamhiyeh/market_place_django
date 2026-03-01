@@ -97,12 +97,10 @@ section{ margin-bottom:2rem; }
   transform: translateZ(0);
 }
 
-/* hide arrows on mobile/tablet like mockup */
-@media (max-width:991px){
-  #trendingLeft,#trendingRight{
-    display:none !important;
-  }
-  #trendingRow{
+/* On mobile the row needs less top padding (no arrows to clear) */
+@media (max-width:767px){
+  #trendingRow,
+  #storesRow{
     padding-top: 0 !important;
   }
 }
