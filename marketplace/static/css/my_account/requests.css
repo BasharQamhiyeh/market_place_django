@@ -52,6 +52,20 @@
   font-weight: 900;
 }
 
+/* Mobile: move badge to left side to avoid colliding with RTL req-header content
+   (request ID + status badges start from the right edge in RTL, same spot as the badge) */
+@media (max-width: 767px) {
+  #tab-requests .req-cat-badge {
+    right: auto;
+    left: 16px;
+    top: 8px;
+  }
+
+  #tab-requests .request-row {
+    padding-top: 30px !important; /* enough clearance for the badge above the req-header */
+  }
+}
+
 /* Mobile: actions in 2 columns like ads */
 @media (max-width: 480px) {
   #tab-requests .request-row > div:last-child {
