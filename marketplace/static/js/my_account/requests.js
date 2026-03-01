@@ -113,64 +113,19 @@
   }
 
   /* ================================
-     ✅ STORE ACCOUNT HELPERS (NEW)
+     ✅ STORE ACCOUNT HELPERS
   ================================= */
   function isStoreAccount() {
-    const tab = getTab();
-    const isStore = tab?.dataset?.isStore === "1";
-    // also support the wrapper attribute if tab is missing
+    // Prefer global RUKN context (server-rendered, reliable)
+    if (typeof window.RUKN?.isStore === "boolean") return window.RUKN.isStore;
+    // Fallback: data attribute on the requests-tab wrapper
     const wrapper = document.querySelector(".requests-tab");
-    const wStore = wrapper?.dataset?.isStore === "1";
-    return Boolean(isStore || wStore);
-  }
-
-  function openStoreNoRequestsModal() {
-    const m = document.getElementById("storeNoRequestsModal");
-    if (!m) return alert("هذا الحساب حساب متجر ولا يمكن إضافة طلبات.");
-    m.classList.remove("hidden");
-    m.classList.add("flex");
-    document.body.classList.add("overflow-hidden");
-  }
-
-  function closeStoreNoRequestsModal() {
-    const m = document.getElementById("storeNoRequestsModal");
-    if (!m) return;
-    m.classList.add("hidden");
-    m.classList.remove("flex");
-    document.body.classList.remove("overflow-hidden");
+    return wrapper?.dataset?.isStore === "1";
   }
 
   function wireStoreCreateRequestBlock() {
-    const btn = document.getElementById("createRequestBtn");
-    if (!btn) return;
-
-    if (btn.dataset.wiredStoreBlock === "1") return;
-    btn.dataset.wiredStoreBlock = "1";
-
-    btn.addEventListener("click", (e) => {
-      if (!isStoreAccount()) return;
-      e.preventDefault();
-      e.stopPropagation();
-      openStoreNoRequestsModal();
-    }, true);
-
-    // close buttons
-    document.getElementById("closeStoreNoRequestsModalBtn")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      closeStoreNoRequestsModal();
-    });
-
-    document.getElementById("closeStoreNoRequestsModalX")?.addEventListener("click", (e) => {
-      e.preventDefault();
-      closeStoreNoRequestsModal();
-    });
-
-    // backdrop click
-    document.getElementById("storeNoRequestsModal")?.addEventListener("click", (e) => {
-      const modal = document.getElementById("storeNoRequestsModal");
-      if (e.target === modal) closeStoreNoRequestsModal();
-      if (e.target?.classList?.contains("bg-black/40")) closeStoreNoRequestsModal();
-    });
+    // Global event delegation in base.js already handles [data-create-request-btn].
+    // This function is kept for any page-specific logic if needed in the future.
   }
 
   /* =========================================================

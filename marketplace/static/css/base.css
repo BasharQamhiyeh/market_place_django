@@ -1405,3 +1405,6 @@ button, input, select, textarea {
   .user-dropdown { left: auto; right: 0; }
   #mobileUserPlaceholder #userActionsDropdowns { display: flex !important; flex-direction: row !important; align-items: center; gap: 6px !important; }
 }
+
+/* ======================== GLOBAL MODAL HELPERS ======================== */
+.orange-top-border { border-top: 4px solid #f97316; }

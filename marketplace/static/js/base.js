@@ -889,6 +889,47 @@ window.closeSuccessModal = function () {
 };
 
 /* =========================================================
+   Store "cannot add requests" modal – global helpers
+========================================================= */
+window.openStoreNoRequestsModal = function () {
+  const m = document.getElementById("storeNoRequestsModal");
+  if (!m) return;
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+  document.body.classList.add("overflow-hidden");
+};
+
+window.closeStoreNoRequestsModal = function () {
+  const m = document.getElementById("storeNoRequestsModal");
+  if (!m) return;
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.classList.remove("overflow-hidden");
+};
+
+// Wire close buttons and backdrop on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", function () {
+  const m = document.getElementById("storeNoRequestsModal");
+  if (!m) return;
+
+  document.getElementById("closeStoreNoRequestsModalBtn")?.addEventListener("click", window.closeStoreNoRequestsModal);
+  document.getElementById("closeStoreNoRequestsModalX")?.addEventListener("click", window.closeStoreNoRequestsModal);
+  m.addEventListener("click", function (e) {
+    if (e.target === m) window.closeStoreNoRequestsModal();
+  });
+
+  // Intercept all [data-create-request-btn] elements site-wide
+  if (window.RUKN?.isStore) {
+    document.addEventListener("click", function (e) {
+      const el = e.target.closest("[data-create-request-btn]");
+      if (!el) return;
+      e.preventDefault();
+      window.openStoreNoRequestsModal();
+    }, true);
+  }
+});
+
+/* =========================================================
    Invite Friends link – copy referral link to clipboard
 ========================================================= */
 (function () {
