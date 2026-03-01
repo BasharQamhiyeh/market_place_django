@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         return `
                         <div class="px-4 py-2 cursor-pointer hover:bg-gray-100"
                              onclick="window.location='/ar/items/?categories=${item.category_id}'">
-                            ${item.emoji} ${item.name}
+                            ${item.name}
                             <span class="text-gray-400 text-xs">${item.parent || ""}</span>
                         </div>`;
                     }

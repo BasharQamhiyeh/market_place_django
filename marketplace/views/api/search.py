@@ -54,7 +54,6 @@ def search_suggestions(request):
                         "name": c.name,
                         "parent": c.parent.name if c.parent else "",
                         "category_id": c.id,
-                        "emoji": c.icon or "📂",
                     })
 
             # ES → items
@@ -99,7 +98,6 @@ def search_suggestions(request):
                         "name": c.name,
                         "parent": c.parent.name if c.parent else "",
                         "category_id": c.id,
-                        "emoji": c.icon or "📂",
                     })
 
             # items
@@ -143,7 +141,6 @@ def search_suggestions(request):
                 "name": c.name,
                 "parent": c.parent.name if c.parent else "",
                 "category_id": c.id,
-                "emoji": c.icon or "📂",
             })
 
     # ---- ITEMS MATCHING TITLE ----
@@ -162,7 +159,6 @@ def search_suggestions(request):
             "category": i.listing.category.name,
             "city": i.listing.city.name if i.listing.city else "",
             "price": i.price,
-            "emoji": i.listing.category.icon or "🛒",
             "photo_url": i.main_photo.image.url if i.main_photo else "",
         })
 
