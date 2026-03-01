@@ -887,16 +887,27 @@ button:not(.tab-btn):not(.modal-btn):not(.chat-filter-btn) {
 }
 
 /* Card inner spacing */
-.ad-row,
-.request-row {
+.ad-row {
   padding: 16px !important;
   gap: 20px !important;
 }
 
+/* Request cards need extra top padding to clear the absolute-positioned category badge */
+.request-row {
+  padding: 16px !important;
+  padding-top: 24px !important;
+  gap: 20px !important;
+}
+
 @media (max-width: 768px) {
-  .ad-row,
+  .ad-row {
+    padding: 14px !important;
+    gap: 16px !important;
+  }
+
   .request-row {
     padding: 14px !important;
+    padding-top: 22px !important;
     gap: 16px !important;
   }
 }
