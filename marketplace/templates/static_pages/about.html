@@ -1,91 +1,72 @@
 {% extends "base.html" %}
 {% load static i18n %}
+
 {% block title %}ركن | القصة، الرؤية، والمستقبل{% endblock %}
+
+{% block page_css %}
+<style>
+    :root {
+        --rukn-orange: #ff7a18;
+        --rukn-orange-dark: #e66a15;
+        --rukn-orange-light: #fff5ed;
+        --slate-900: #0f172a;
+        --slate-800: #1e293b;
+        --slate-600: #475569;
+    }
+
+    .orange-gradient {
+        background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
+    }
+
+    .pro-shadow {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .hover-up {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+        .hover-up:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px -15px rgba(255, 122, 24, 0.2);
+        }
+
+    .text-gradient {
+        background: linear-gradient(to left, var(--slate-900), var(--rukn-orange));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-in {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .section-spacing {
+        padding-top: 100px;
+        padding-bottom: 100px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ركن | القصة، الرؤية، والمستقبل</title>
-
-    <!-- الخطوط -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- أيقونات Lucide -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <style>
-        :root {
-            --rukn-orange: #ff7a18;
-            --rukn-orange-dark: #e66a15;
-            --rukn-orange-light: #fff5ed;
-            --slate-900: #0f172a;
-            --slate-800: #1e293b;
-            --slate-600: #475569;
-        }
-
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #ffffff;
-            color: var(--slate-800);
-            scroll-behavior: smooth;
-        }
-
-        .orange-gradient {
-            background: linear-gradient(135deg, #ff7a18 0%, #ff9d52 100%);
-        }
-
-        .pro-shadow {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .hover-up {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-            .hover-up:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 30px 60px -15px rgba(255, 122, 24, 0.2);
-            }
-
-        .text-gradient {
-            background: linear-gradient(to left, var(--slate-900), var(--rukn-orange));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* أنيميشن الدخول */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-in {
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
-
-        .section-spacing {
-            padding-top: 100px;
-            padding-bottom: 100px;
-        }
-    </style>
-
-
-
 
     <!-- =================== HERO SECTION =================== -->
     <section class="relative pt-40 pb-32 overflow-hidden">
@@ -290,7 +271,7 @@
         </div>
     </section>
 
-	<section class="py-24 px-6">
+    <section class="py-24 px-6">
       <div class="max-w-7xl mx-auto bg-orange-500 rounded-[4rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
         <div class="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-32 -mt-32"></div>
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-black/5 rounded-full -ml-20 -mb-20"></div>
@@ -301,7 +282,6 @@
           </h2>
           <p class="text-orange-50 font-medium text-2xl mb-12 max-w-2xl mx-auto leading-relaxed">
             انضم اليوم إلى آلاف الأردنيين الذين وجدوا في ركن "ركنهم" الآمن للتجارة والتواصل.
-
           </p>
 
           <div class="flex flex-col sm:flex-row gap-6 justify-center">
@@ -317,39 +297,34 @@
         </div>
       </div>
     </section>
-    <script>
-        // تهيئة الأيقونات
-        lucide.createIcons();
-    </script>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const btn = document.querySelector('[data-open-login-modal]');
-        if (!btn) return;
+{% endblock %}
 
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
+{% block scripts %}
+{{ block.super }}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.querySelector('[data-open-login-modal]');
+    if (!btn) return;
 
-          // Try common patterns: Bootstrap modal or your custom modal
-          const modal = document.getElementById("loginModal") || document.getElementById("authModal");
-          if (!modal) {
-            // fallback: go to login page if modal isn't present on this page
-            window.location.href = "{% url 'login' %}";
-            return;
-          }
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
 
-          // Bootstrap 5 support (if you use it)
-          if (window.bootstrap?.Modal) {
-            bootstrap.Modal.getOrCreateInstance(modal).show();
-            return;
-          }
+      const modal = document.getElementById("loginModal") || document.getElementById("authModal");
+      if (!modal) {
+        window.location.href = "{% url 'login' %}";
+        return;
+      }
 
-          // Generic fallback for custom modals
-          modal.classList.remove("hidden");
-          modal.style.display = "block";
-          modal.setAttribute("aria-hidden", "false");
-        });
-      });
-    </script>
+      if (window.bootstrap?.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modal).show();
+        return;
+      }
 
+      modal.classList.remove("hidden");
+      modal.style.display = "block";
+      modal.setAttribute("aria-hidden", "false");
+    });
+  });
+</script>
 {% endblock %}
