@@ -40,8 +40,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (controller) controller.abort();
         controller = new AbortController();
 
+        const isBuy = document.getElementById("buyBtn")?.classList.contains("text-white") ?? false;
+        const type = isBuy ? "request" : "item";
+
         try {
-            const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}`, {
+            const res = await fetch(`/search/suggestions/?q=${encodeURIComponent(q)}&type=${type}`, {
                 signal: controller.signal,
             });
 
@@ -78,6 +81,18 @@ document.addEventListener("DOMContentLoaded", function () {
                             <div>
                                 <div class="font-semibold">${item.name}</div>
                                 <div class="text-xs text-gray-500">${item.category || ""}</div>
+                            </div>
+                        </div>`;
+                    }
+
+                    if (item.type === "request") {
+                        return `
+                        <div class="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center gap-3"
+                             onclick="window.location='/ar/request/${item.id}'">
+                            <div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 text-xl flex-shrink-0">🔍</div>
+                            <div>
+                                <div class="font-semibold">${item.name}</div>
+                                <div class="text-xs text-gray-500">${item.category || ""}${item.budget ? " · " + item.budget : ""}</div>
                             </div>
                         </div>`;
                     }
