@@ -17,7 +17,10 @@ import os
 import re
 
 import requests
+import urllib3
 from django.core.files.base import ContentFile
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from django.core.management.base import BaseCommand
 
 from marketplace.models import Category, CategoryPhoto
@@ -286,7 +289,7 @@ class Command(BaseCommand):
             return True
 
         try:
-            response = requests.get(url, timeout=15)
+            response = requests.get(url, timeout=15, verify=False)
             response.raise_for_status()
         except Exception as exc:
             self.stderr.write(self.style.WARNING(f"  [WARN] Could not fetch {url}: {exc}"))
