@@ -23,7 +23,7 @@ from .models import (
     Item, ItemAttributeValue, ItemPhoto, Notification,
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
     FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction,
-    TermsPage, TermsSection,
+    TermsPage, TermsSection, SiteSettings,
 )
 from .services.wallet import apply_points_transaction
 from .services.notifications import notify, K_WALLET, S_CHARGED
@@ -1668,6 +1668,21 @@ def custom_get_app_list(self, request):
 
 # ✅ Patch the method onto the current admin site instance
 admin.site.get_app_list = custom_get_app_list.__get__(admin.site, admin.AdminSite)
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    fields = ("registration_points", "referral_points")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        obj = SiteSettings.get()
+        return redirect(reverse("admin:marketplace_sitesettings_change", args=[obj.pk]))
+
 
 # ======================================================
 # ✅ Admin Branding
