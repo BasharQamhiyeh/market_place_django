@@ -33,7 +33,7 @@
     {% if my_ads %}
       {% for ad in my_ads %}
 
-        <div class="ad-row flex flex-col md:flex-row items-start md:items-center gap-5 p-4 rounded-2xl shadow-sm
+        <div class="ad-row flex flex-col md:flex-row items-center gap-5 p-4 rounded-2xl shadow-sm
                 {% if ad.status == 'pending' %}
                   bg-yellow-50 border border-yellow-300
                 {% elif ad.status == 'rejected' %}
@@ -68,8 +68,8 @@
           </div>
 
           <!-- Body -->
-          <div class="flex-1">
-            <div class="ad-header flex items-center gap-3 flex-wrap mb-2">
+          <div class="flex-1 text-center md:text-right">
+            <div class="ad-header flex flex-wrap gap-3 mb-2 justify-center md:justify-start">
 
               <span class="flex items-center gap-1 text-gray-700 font-bold">
                 <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -116,12 +116,12 @@
               {% endif %}
             </div>
 
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex flex-col md:flex-row items-center gap-2 md:gap-3 mb-2 justify-center md:justify-start">
               <h3 class="font-bold text-lg text-gray-800">{{ ad.title }}</h3>
               <span class="text-orange-600 font-extrabold text-2xl leading-none">{{ ad.price }} د.أ</span>
             </div>
 
-            <div class="flex items-center gap-4 text-sm text-gray-500 mt-1 mb-2 flex-wrap">
+            <div class="flex flex-wrap gap-4 text-sm text-gray-500 mt-1 mb-2 justify-center md:justify-start">
               <span class="inline-flex items-center gap-1">
                 <svg class="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M12 21s7-7 7-11a7 7 0 1 0-14 0c0 4 7 11 7 11Z" stroke="currentColor" stroke-width="2"/>
@@ -156,7 +156,7 @@
             </div>
 
             {% if ad.status == "rejected" and ad.rejectReason %}
-              <p class="text-sm text-red-700 mt-2 flex items-center gap-1">
+              <p class="text-sm text-red-700 mt-2 flex items-center gap-1 justify-center md:justify-start text-center md:text-right">
                 <svg class="w-4 h-4 text-red-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                   <path d="M12 7v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>

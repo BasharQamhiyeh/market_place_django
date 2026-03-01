@@ -215,14 +215,13 @@
       display:inline-flex;
       align-items:center;
       gap:6px;
-      padding:6px 10px;
-      border-radius:999px;
-      font-weight:900;
+      padding:2px 8px;
+      border-radius:8px;
+      font-weight:bold;
       font-size:12px;
-      line-height:1;
-      background:#fff7ed;
-      color:#c2410c;
-      border:1px solid #fed7aa;
+      line-height:1.4;
+      background:#f97316;
+      color:#fff;
     }
 
 
@@ -812,10 +811,9 @@ input:checked + .chip{
   border-radius: 16px !important;
 }
 
-/* Pills/badges - full round (999px/rounded-full) */
-.feature-badge,
-.tab-btn.shrink-0 {
-  border-radius: 999px !important;
+/* Feature badge - solid orange, rectangular (matches mockup) */
+.feature-badge {
+  border-radius: 8px !important;
 }
 
 /* Buttons get consistent 12px */
@@ -892,10 +890,9 @@ button:not(.tab-btn):not(.modal-btn):not(.chat-filter-btn) {
   gap: 20px !important;
 }
 
-/* Request cards need extra top padding to clear the absolute-positioned category badge */
+/* Request cards - same uniform padding as ad cards */
 .request-row {
   padding: 16px !important;
-  padding-top: 24px !important;
   gap: 20px !important;
 }
 
@@ -907,7 +904,6 @@ button:not(.tab-btn):not(.modal-btn):not(.chat-filter-btn) {
 
   .request-row {
     padding: 14px !important;
-    padding-top: 22px !important;
     gap: 16px !important;
   }
 }
