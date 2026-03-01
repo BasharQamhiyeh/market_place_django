@@ -625,56 +625,32 @@
     ui.userDropdown?.addEventListener("click", (e) => e.stopPropagation());
   }
 
-  // ===== Notification Icons (same as my_account noti.js)
-  function getNotificationColor(kind) {
-    const colors = {
-      'request': '#15803d',
-      'ad': '#c2410c',
-      'wallet': '#b45309',
-      'fav': '#b91c1c',
-      'store_follow': '#15803d',
-      'system': '#6b7280'
-    };
-    return colors[kind] || '#6b7280';
-  }
-
-  function getNotificationIcon(kind, status) {
-    if (kind === 'request') return `
-      <svg viewBox="0 0 24 24" fill="none">
-        <circle cx="9" cy="20" r="1.5" fill="currentColor"/>
-        <circle cx="17" cy="20" r="1.5" fill="currentColor"/>
-        <path d="M3 4h2l2.4 12h10.2l2-8H6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>`;
-
-    if (kind === 'ad') return `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M3 11v2a1 1 0 0 0 1 1h2l8 4V6l-8 4H4a1 1 0 0 0-1 1Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-        <path d="M14 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>`;
-
-    if (kind === 'wallet') return `
-      <svg viewBox="0 0 24 24" fill="none">
-        <rect x="2" y="6" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
-        <path d="M16 12h4" stroke="currentColor" stroke-width="2"/>
-      </svg>`;
-
-    if (kind === 'fav') return `
-      <svg viewBox="0 0 24 24" fill="none">
-        <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-      </svg>`;
-
-    if (kind === 'store_follow') return `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M3 9l1-5h16l1 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M5 9v10h14V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9 19v-6h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>`;
-
-    return `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
-      </svg>`;
+  // ===== Notification Icons — Lucide-based, matched to mockup
+  // Returns { icon, bg, border, color } based on notification kind + status
+  function getNotifIconData(kind, status) {
+    if (kind === 'ad') {
+      if (status === 'pending')   return { icon: 'clock',         bg: '#fff7ed', border: '#fdba74', color: '#c2410c' };
+      if (status === 'approved')  return { icon: 'check-circle',  bg: '#dcfce7', border: '#86efac', color: '#15803d' };
+      if (status === 'rejected')  return { icon: 'x-circle',      bg: '#fee2e2', border: '#fca5a5', color: '#b91c1c' };
+      if (status === 'featured' || status === 'featured_expired')
+                                  return { icon: 'star',           bg: '#fff7ed', border: '#fdba74', color: '#c2410c' };
+      return                             { icon: 'megaphone',      bg: '#fff7ed', border: '#fdba74', color: '#c2410c' };
+    }
+    if (kind === 'request') {
+      if (status === 'pending')   return { icon: 'clock',         bg: '#fff7ed', border: '#fdba74', color: '#c2410c' };
+      if (status === 'approved')  return { icon: 'check-circle',  bg: '#dcfce7', border: '#86efac', color: '#15803d' };
+      if (status === 'rejected')  return { icon: 'x-circle',      bg: '#fee2e2', border: '#fca5a5', color: '#b91c1c' };
+      if (status === 'featured' || status === 'featured_expired')
+                                  return { icon: 'star',           bg: '#dcfce7', border: '#86efac', color: '#15803d' };
+      return                             { icon: 'shopping-cart',  bg: '#dcfce7', border: '#86efac', color: '#15803d' };
+    }
+    if (kind === 'wallet') {
+      if (status === 'reward')    return { icon: 'gift',           bg: '#f5f3ff', border: '#c4b5fd', color: '#7c3aed' };
+      return                             { icon: 'wallet',         bg: '#fef9c3', border: '#fde68a', color: '#b45309' };
+    }
+    if (kind === 'fav')          return   { icon: 'heart',         bg: '#fdf2f8', border: '#f9a8d4', color: '#db2777' };
+    if (kind === 'store_follow') return   { icon: 'user-plus',     bg: '#eef2ff', border: '#a5b4fc', color: '#4338ca' };
+    return                               { icon: 'bell',           bg: '#f3f4f6', border: '#e5e7eb', color: '#6b7280' };
   }
 
   function getNotificationBadge(kind, status) {
@@ -697,24 +673,22 @@
     const items = $$('.dropdown-noti-item');
 
     items.forEach(item => {
-      const kind = item.dataset.kind || 'system';
+      const kind   = item.dataset.kind   || 'system';
       const status = item.dataset.status || '';
-      const iconBox = item.querySelector('.noti-icon-box');
+      const iconBox  = item.querySelector('.noti-icon-box');
       const badgeBox = item.querySelector('.noti-badge-box');
 
       if (iconBox) {
-        const color = getNotificationColor(kind);
-        iconBox.innerHTML = getNotificationIcon(kind, status);
-
-        // Force color on SVG
-        const svg = iconBox.querySelector('svg');
-        if (svg) {
-          svg.style.color = color;
-          svg.querySelectorAll('path, circle, rect, polygon').forEach(el => {
-            if (el.getAttribute('stroke')) el.setAttribute('stroke', color);
-            if (el.getAttribute('fill') === 'currentColor') el.setAttribute('fill', color);
-          });
-        }
+        const data = getNotifIconData(kind, status);
+        // Apply icon-box colours
+        iconBox.style.background   = data.bg;
+        iconBox.style.borderColor  = data.border;
+        iconBox.style.color        = data.color;
+        // Inject Lucide icon element
+        iconBox.innerHTML = '';
+        const iconEl = document.createElement('i');
+        iconEl.setAttribute('data-lucide', data.icon);
+        iconBox.appendChild(iconEl);
       }
 
       if (badgeBox) {
@@ -725,6 +699,8 @@
         }
       }
     });
+
+    safeLucide();
   }
 
   function getNotificationRedirectUrl(el) {
@@ -911,6 +887,47 @@ window.closeSuccessModal = function () {
   modal.classList.add("hidden");
   modal.classList.remove("flex");
 };
+
+/* =========================================================
+   Store "cannot add requests" modal – global helpers
+========================================================= */
+window.openStoreNoRequestsModal = function () {
+  const m = document.getElementById("storeNoRequestsModal");
+  if (!m) return;
+  m.classList.remove("hidden");
+  m.classList.add("flex");
+  document.body.classList.add("overflow-hidden");
+};
+
+window.closeStoreNoRequestsModal = function () {
+  const m = document.getElementById("storeNoRequestsModal");
+  if (!m) return;
+  m.classList.add("hidden");
+  m.classList.remove("flex");
+  document.body.classList.remove("overflow-hidden");
+};
+
+// Wire close buttons and backdrop on DOMContentLoaded
+document.addEventListener("DOMContentLoaded", function () {
+  const m = document.getElementById("storeNoRequestsModal");
+  if (!m) return;
+
+  document.getElementById("closeStoreNoRequestsModalBtn")?.addEventListener("click", window.closeStoreNoRequestsModal);
+  document.getElementById("closeStoreNoRequestsModalX")?.addEventListener("click", window.closeStoreNoRequestsModal);
+  m.addEventListener("click", function (e) {
+    if (e.target === m) window.closeStoreNoRequestsModal();
+  });
+
+  // Intercept all [data-create-request-btn] elements site-wide
+  if (window.RUKN?.isStore) {
+    document.addEventListener("click", function (e) {
+      const el = e.target.closest("[data-create-request-btn]");
+      if (!el) return;
+      e.preventDefault();
+      window.openStoreNoRequestsModal();
+    }, true);
+  }
+});
 
 /* =========================================================
    Invite Friends link – copy referral link to clipboard

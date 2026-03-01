@@ -244,12 +244,12 @@
 #tab-noti .status-unfollow{ background:#f3f4f6; color:#6b7280; }
 #tab-noti .status-system{ background:#dbeafe; color:#1d4ed8; }
 
-/* icon colors by kind (mockup-like) */
+/* icon colors by kind (fallback; JS inline styles override per kind+status) */
 #tab-noti .noti-kind-request .noti-icon{ background:#dcfce7; border-color:#86efac; color:#15803d; }
 #tab-noti .noti-kind-ad .noti-icon{ background:#ffedd5; border-color:#fdba74; color:#c2410c; }
 #tab-noti .noti-kind-wallet .noti-icon{ background:#fef9c3; border-color:#fde68a; color:#b45309; }
-#tab-noti .noti-kind-fav .noti-icon{ background:#fee2e2; border-color:#fca5a5; color:#b91c1c; }
-#tab-noti .noti-kind-store_follow .noti-icon{ background:#dcfce7; border-color:#86efac; color:#15803d; }
+#tab-noti .noti-kind-fav .noti-icon{ background:#fdf2f8; border-color:#f9a8d4; color:#db2777; }
+#tab-noti .noti-kind-store_follow .noti-icon{ background:#eef2ff; border-color:#a5b4fc; color:#4338ca; }
 #tab-noti .noti-kind-system .noti-icon{ background:#f3f4f6; border-color:#e5e7eb; color:#6b7280; }
 
 /* mobile layout */

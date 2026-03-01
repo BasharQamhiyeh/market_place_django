@@ -679,25 +679,33 @@ button:disabled {
 .notif-scroll {
   max-height: 400px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
 }
 
 .fav-scroll::-webkit-scrollbar,
 .msg-scroll::-webkit-scrollbar,
 .notif-scroll::-webkit-scrollbar {
-  width: 6px;
+  width: 3px;
+}
+
+.fav-scroll::-webkit-scrollbar-track,
+.msg-scroll::-webkit-scrollbar-track,
+.notif-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .fav-scroll::-webkit-scrollbar-thumb,
 .msg-scroll::-webkit-scrollbar-thumb,
 .notif-scroll::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
+  background: #e2e8f0;
   border-radius: 999px;
 }
 
 .fav-scroll::-webkit-scrollbar-thumb:hover,
 .msg-scroll::-webkit-scrollbar-thumb:hover,
 .notif-scroll::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+  background: #cbd5e1;
 }
 
 /* Item icon styling */
@@ -744,41 +752,41 @@ button:disabled {
   border: 1px solid;
 }
 
-/* Icon Colors by Kind */
+/* Icon Colors by Kind (fallback; JS inline styles override per kind+status) */
 .noti-kind-request .noti-icon-box {
   background: #dcfce7;
   border-color: #86efac;
-  color: #15803d !important;
+  color: #15803d;
 }
 
 .noti-kind-ad .noti-icon-box {
   background: #ffedd5;
   border-color: #fdba74;
-  color: #c2410c !important;
+  color: #c2410c;
 }
 
 .noti-kind-wallet .noti-icon-box {
   background: #fef9c3;
   border-color: #fde68a;
-  color: #b45309 !important;
+  color: #b45309;
 }
 
 .noti-kind-fav .noti-icon-box {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c !important;
+  background: #fdf2f8;
+  border-color: #f9a8d4;
+  color: #db2777;
 }
 
 .noti-kind-store_follow .noti-icon-box {
-  background: #dcfce7;
-  border-color: #86efac;
-  color: #15803d !important;
+  background: #eef2ff;
+  border-color: #a5b4fc;
+  color: #4338ca;
 }
 
 .noti-kind-system .noti-icon-box {
   background: #f3f4f6;
   border-color: #e5e7eb;
-  color: #6b7280 !important;
+  color: #6b7280;
 }
 
 /* Icon SVG - Force color inheritance */
@@ -801,29 +809,13 @@ button:disabled {
   stroke: none;
 }
 
-/* Ensure each kind applies its color to SVG */
-.noti-kind-request .noti-icon-box svg {
-  color: #15803d;
-}
-
-.noti-kind-ad .noti-icon-box svg {
-  color: #c2410c;
-}
-
-.noti-kind-wallet .noti-icon-box svg {
-  color: #b45309;
-}
-
+/* SVG inside icon box inherits color from parent via currentColor */
 .noti-kind-fav .noti-icon-box svg {
-  color: #b91c1c;
+  color: #db2777;
 }
 
 .noti-kind-store_follow .noti-icon-box svg {
-  color: #15803d;
-}
-
-.noti-kind-system .noti-icon-box svg {
-  color: #6b7280;
+  color: #4338ca;
 }
 
 /* Content */
@@ -1186,7 +1178,7 @@ button, input, select, textarea {
   width: 35px; height: 35px; border-radius: 10px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.fav-scroll, .msg-scroll, .notif-scroll { max-height: 400px; overflow-y: auto; }
+.fav-scroll, .msg-scroll, .notif-scroll { max-height: 400px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; }
 
 /* ======================== Categories Row ======================== */
 .categoriesRow {
@@ -1413,3 +1405,6 @@ button, input, select, textarea {
   .user-dropdown { left: auto; right: 0; }
   #mobileUserPlaceholder #userActionsDropdowns { display: flex !important; flex-direction: row !important; align-items: center; gap: 6px !important; }
 }
+
+/* ======================== GLOBAL MODAL HELPERS ======================== */
+.orange-top-border { border-top: 4px solid #f97316; }
