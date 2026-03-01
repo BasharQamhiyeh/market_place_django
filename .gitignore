@@ -21,5 +21,3 @@ db.sqlite3
 # OS system files
 .DS_Store
 Thumbs.db
-
-logs
