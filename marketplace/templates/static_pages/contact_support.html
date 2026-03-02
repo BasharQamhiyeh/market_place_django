@@ -191,8 +191,8 @@
 
                 <!-- Dynamic Fields -->
                 <div id="phoneField" class="hidden">
-                  <input id="phone" name="phone" type="text" inputmode="numeric" maxlength="10" placeholder="07xxxxxxxx" class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800 tracking-widest">
-                  <p id="phoneError" class="text-xs text-red-500 font-bold mt-2 hidden">رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام</p>
+                  <input id="contactPhone" name="phone" type="text" inputmode="numeric" maxlength="10" placeholder="07xxxxxxxx" class="premium-input w-full px-6 py-4 rounded-2xl font-bold text-slate-800 tracking-widest">
+                  <p id="contactPhoneError" class="text-xs text-red-500 font-bold mt-2 hidden">رقم الهاتف يجب أن يبدأ بـ 07 ويتكون من 10 أرقام</p>
                 </div>
 
                 <div id="emailField" class="hidden">
@@ -333,8 +333,8 @@
   const methodError = document.getElementById("methodError");
 
   const phoneField = document.getElementById("phoneField");
-  const phone = document.getElementById("phone");
-  const phoneError = document.getElementById("phoneError");
+  const phone = document.getElementById("contactPhone");
+  const phoneError = document.getElementById("contactPhoneError");
 
   const phoneBtn = document.getElementById("phoneBtn");
 
