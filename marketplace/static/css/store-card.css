@@ -24,10 +24,21 @@
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.store-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
-  border-color: #ff7a18; /* orange */
+/* Only apply hover lift on real pointer devices — prevents clipping on mobile tap */
+@media (hover: hover) {
+  .store-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
+    border-color: #ff7a18; /* orange */
+  }
+}
+
+/* Touch devices: show border highlight on tap without the translateY shift */
+@media (hover: none) {
+  .store-card:active {
+    border-color: #ff7a18;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+  }
 }
 
 /* ==================== TOP BANNER WITH LOGO ==================== */
