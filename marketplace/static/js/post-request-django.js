@@ -390,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btns.forEach(b => { b.style.background = "white"; b.style.color = "var(--muted)"; });
 
     const chosen = val === "new" ? newBtn : val === "used" ? usedBtn : anyBtn;
-    if (chosen) { chosen.style.background = "var(--rukn-orange)"; chosen.style.color = "white"; }
+    if (chosen) { chosen.style.background = "var(--rukn-green)"; chosen.style.color = "white"; }
     if (conditionVal) conditionVal.value = val || "any";
   }
 
@@ -502,17 +502,17 @@ document.addEventListener("DOMContentLoaded", () => {
     input.dataset.level = String(levelIndex);
 
     const panel = document.createElement("div");
-    panel.className = "cat-panel mt-2 w-full bg-white border border-orange-200 rounded-xl shadow-lg hidden";
+    panel.className = "cat-panel mt-2 w-full bg-white border border-green-200 rounded-xl shadow-lg hidden";
     panel.style.position = "relative";
     panel.style.zIndex = "9999";
 
     const searchBoxWrap = document.createElement("div");
-    searchBoxWrap.className = "p-2 border-b border-orange-100";
+    searchBoxWrap.className = "p-2 border-b border-green-100";
 
     const search = document.createElement("input");
     search.type = "text";
     search.placeholder = "🔍 بحث...";
-    search.className = "w-full border border-orange-100 rounded-lg py-1.5 px-3 text-sm";
+    search.className = "w-full border border-green-100 rounded-lg py-1.5 px-3 text-sm";
     searchBoxWrap.appendChild(search);
 
     const ul = document.createElement("ul");
@@ -520,7 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const liNodes = nodes.map(n => {
       const li = document.createElement("li");
-      li.className = "p-2 hover:bg-orange-50 cursor-pointer";
+      li.className = "p-2 hover:bg-green-50 cursor-pointer";
       li.textContent = nodeName(n);
       li.dataset.id = nodeId(n) || "";
       ul.appendChild(li);
