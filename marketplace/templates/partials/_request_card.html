@@ -9,9 +9,9 @@
   <!-- TOP PILLS -->
   <div class="req-top">
     {% if req.listing.category %}
-      <span class="req-pill req-pill-category">
+      <a class="req-pill req-pill-category" href="{% url 'request_list' %}?category={{ req.listing.category.id }}">
         {{ req.listing.category.name }}
-      </span>
+      </a>
     {% endif %}
 
     {% if req.featured or req.listing.is_featured %}

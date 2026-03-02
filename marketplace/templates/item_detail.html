@@ -186,6 +186,7 @@
               </div>
 
               <!-- Attributes Grid (real data) -->
+              {% if attributes %}
               <div class="mb-8 pt-8">
                 <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                   <span class="w-6 h-6 rounded-full bg-orange-50 text-[var(--rukn-orange)] flex items-center justify-center text-base">
@@ -201,20 +202,15 @@
                 </h3>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 px-8">
-                  {% if attributes %}
-                    {% for a in attributes %}
-                      <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-center transition hover:border-[var(--rukn-orange)]">
-                        <span class="block text-[10px] text-gray-500 mb-1">{{ a.name }}</span>
-                        <span class="font-bold text-gray-900 text-sm">{{ a.value }}</span>
-                      </div>
-                    {% endfor %}
-                  {% else %}
-                    <div class="col-span-full text-center text-[var(--muted)] text-sm py-4">
-                      لا توجد مواصفات.
+                  {% for a in attributes %}
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-center transition hover:border-[var(--rukn-orange)]">
+                      <span class="block text-[10px] text-gray-500 mb-1">{{ a.name }}</span>
+                      <span class="font-bold text-gray-900 text-sm">{{ a.value }}</span>
                     </div>
-                  {% endif %}
+                  {% endfor %}
                 </div>
               </div>
+              {% endif %}
 
             </div>
           </div>
