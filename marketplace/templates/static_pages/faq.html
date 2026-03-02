@@ -3,47 +3,40 @@
 
 {% block title %}ركن | الأسئلة المتكررة - مركز المساعدة{% endblock %}
 
-{% block base_css %}
-  {{ block.super }}
+{% block page_css %}
+<style>
+  :root { --rukn-orange:#ff7a18; --rukn-orange-light:#fff5ed; --slate-800:#1e293b; }
+  .orange-gradient { background:linear-gradient(135deg,#ff7a18 0%,#ff9d52 100%); }
+  .pro-shadow { box-shadow:0 20px 50px -12px rgba(0,0,0,.05); }
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  .faq-item { transition:all .3s ease; border:1px solid #f1f5f9; }
+  .faq-item.active { border-color:var(--rukn-orange); background-color:#fff; }
+  .faq-content { max-height:0; overflow:hidden; transition:max-height .3s ease-out; }
+  .faq-item.active .faq-content { max-height:700px; }
+  .faq-item.active .chevron-icon { transform:rotate(180deg); color:var(--rukn-orange); }
 
-  <style>
-    :root { --rukn-orange:#ff7a18; --rukn-orange-light:#fff5ed; --slate-800:#1e293b; }
-    body { font-family:'Cairo',sans-serif; background-color:#fcfcfd; color:#1e293b; }
-    .orange-gradient { background:linear-gradient(135deg,#ff7a18 0%,#ff9d52 100%); }
-    .pro-shadow { box-shadow:0 20px 50px -12px rgba(0,0,0,.05); }
+  .cat-pill { transition:all .3s ease; }
+  .cat-pill.active { background-color:var(--rukn-orange); color:#fff; box-shadow:0 4px 12px rgba(255,122,24,.2); }
 
-    .faq-item { transition:all .3s ease; border:1px solid #f1f5f9; }
-    .faq-item.active { border-color:var(--rukn-orange); background-color:#fff; }
-    .faq-content { max-height:0; overflow:hidden; transition:max-height .3s ease-out; }
-    .faq-item.active .faq-content { max-height:700px; }
-    .faq-item.active .chevron-icon { transform:rotate(180deg); color:var(--rukn-orange); }
+  svg { position: static !important; display:block; }
+  @media (max-width:1024px){ main{ overflow-x:visible; } }
 
-    .cat-pill { transition:all .3s ease; }
-    .cat-pill.active { background-color:var(--rukn-orange); color:#fff; box-shadow:0 4px 12px rgba(255,122,24,.2); }
+  .rukn-btn {
+    background-color:#ff7a18; color:#fff; border:none; border-radius:14px;
+    padding:14px 22px; font-family:inherit; font-size:.9rem; font-weight:800;
+    cursor:pointer; transition:transform .25s ease, box-shadow .25s ease;
+    box-shadow:0 10px 25px rgba(255,122,24,.25);
+  }
+  .rukn-btn:hover { transform:scale(1.06); box-shadow:0 14px 30px rgba(255,122,24,.35); }
+  .rukn-btn:focus { outline:none; }
 
-    svg { position: static !important; display:block; }
-    @media (max-width:1024px){ main{ overflow-x:visible; } }
-
-    .rukn-btn {
-      background-color:#ff7a18; color:#fff; border:none; border-radius:14px;
-      padding:14px 22px; font-family:inherit; font-size:.9rem; font-weight:800;
-      cursor:pointer; transition:transform .25s ease, box-shadow .25s ease;
-      box-shadow:0 10px 25px rgba(255,122,24,.25);
-    }
-    .rukn-btn:hover { transform:scale(1.06); box-shadow:0 14px 30px rgba(255,122,24,.35); }
-    .rukn-btn:focus { outline:none; }
-
-    .section-anchor { scroll-margin-top:100px; }
-    .faq-section { transition:border .35s ease, box-shadow .35s ease; background-color:#fff !important; }
-    .faq-section.section-active {
-      border:2px solid var(--rukn-orange);
-      box-shadow:0 18px 40px -14px rgba(255,122,24,.28), 0 6px 18px -10px rgba(0,0,0,.06);
-    }
-  </style>
+  .section-anchor { scroll-margin-top:100px; }
+  .faq-section { transition:border .35s ease, box-shadow .35s ease; background-color:#fff !important; }
+  .faq-section.section-active {
+    border:2px solid var(--rukn-orange);
+    box-shadow:0 18px 40px -14px rgba(255,122,24,.28), 0 6px 18px -10px rgba(0,0,0,.06);
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -62,7 +55,7 @@
     <div class="grid lg:grid-cols-4 gap-8 items-start">
 
       <!-- Sidebar -->
-      <aside class="hidden lg:block lg:col-span-1 space-y-4 sticky top-1">
+      <aside class="max-lg:hidden lg:col-span-1 space-y-4 sticky top-1">
         <div class="bg-white rounded-[2.5rem] p-6 pro-shadow border border-slate-50">
           <h3 class="text-lg font-black text-slate-800 mb-6 flex items-center gap-2 mr-2">
             <i data-lucide="list-filter" class="w-5 h-5 text-orange-500"></i> الأقسام
@@ -163,70 +156,71 @@
 
   </main>
 
-  <script>
-    if (window.lucide) lucide.createIcons();
+{% endblock %}
 
-    // Accordion
-    document.querySelectorAll('.faq-trigger').forEach(trigger => {
-      trigger.addEventListener('click', () => {
-        trigger.parentElement.classList.toggle('active');
-      });
+{% block scripts %}
+{{ block.super }}
+<script>
+  // Accordion
+  document.querySelectorAll('.faq-trigger').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      trigger.parentElement.classList.toggle('active');
     });
+  });
 
-    // Sidebar pill click -> scroll
-    document.querySelectorAll('.cat-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-
-        const targetId = pill.getAttribute('data-target');
-        const targetElement = document.getElementById(targetId);
-        if (!targetElement) return;
-
-        const y = targetElement.getBoundingClientRect().top + window.pageYOffset - 100;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      });
-    });
-
-    // Active pill + active section on scroll
-    const sections = Array.from(document.querySelectorAll('.faq-section'));
-    const pillsById = new Map(Array.from(document.querySelectorAll('.cat-pill')).map(p => [p.getAttribute('data-target'), p]));
-
-    const setActiveById = (id) => {
+  // Sidebar pill click -> scroll
+  document.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
       document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-      const pill = pillsById.get(id);
-      if (pill) pill.classList.add('active');
-    };
+      pill.classList.add('active');
 
-    const setActiveSection = (id) => {
-      sections.forEach(sec => {
-        sec.classList.toggle('section-active', sec.id === id);
-      });
-    };
+      const targetId = pill.getAttribute('data-target');
+      const targetElement = document.getElementById(targetId);
+      if (!targetElement) return;
 
-    window.addEventListener('load', () => {
-      const first = sections[0]?.id;
-      if (first) setActiveSection(first);
+      const y = targetElement.getBoundingClientRect().top + window.pageYOffset - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     });
+  });
 
-    let ticking = false;
-    window.addEventListener('scroll', () => {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(() => {
-        ticking = false;
-        const scrollY = window.pageYOffset + 160;
-        let current = sections[0]?.id;
+  // Active pill + active section on scroll
+  const sections = Array.from(document.querySelectorAll('.faq-section'));
+  const pillsById = new Map(Array.from(document.querySelectorAll('.cat-pill')).map(p => [p.getAttribute('data-target'), p]));
 
-        for (const sec of sections) {
-          if (sec.offsetTop <= scrollY) current = sec.id;
-        }
-        if (current) {
-          setActiveById(current);
-          setActiveSection(current);
-        }
-      });
-    }, { passive: true });
-  </script>
+  const setActiveById = (id) => {
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    const pill = pillsById.get(id);
+    if (pill) pill.classList.add('active');
+  };
 
+  const setActiveSection = (id) => {
+    sections.forEach(sec => {
+      sec.classList.toggle('section-active', sec.id === id);
+    });
+  };
+
+  window.addEventListener('load', () => {
+    const first = sections[0]?.id;
+    if (first) setActiveSection(first);
+  });
+
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(() => {
+      ticking = false;
+      const scrollY = window.pageYOffset + 160;
+      let current = sections[0]?.id;
+
+      for (const sec of sections) {
+        if (sec.offsetTop <= scrollY) current = sec.id;
+      }
+      if (current) {
+        setActiveById(current);
+        setActiveSection(current);
+      }
+    });
+  }, { passive: true });
+</script>
 {% endblock %}
