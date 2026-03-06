@@ -297,6 +297,44 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         return formfield
 
     # ------------------------------------------------------------------ #
+    # Block deletion when category (or subcategories) have listings
+    # ------------------------------------------------------------------ #
+    def _collect_ids(self, category):
+        """Return the category id plus all descendant ids."""
+        ids = [category.pk]
+        for sub in category.subcategories.all():
+            ids.extend(self._collect_ids(sub))
+        return ids
+
+    def delete_model(self, request, obj):
+        from marketplace.models import Listing
+        ids = self._collect_ids(obj)
+        count = Listing.objects.filter(category_id__in=ids).count()
+        if count:
+            self.message_user(
+                request,
+                f"❌ لا يمكن حذف هذا القسم لأنه يحتوي على {count} منتج/إعلان. يرجى نقل المنتجات أو حذفها أولاً.",
+                level=messages.ERROR,
+            )
+            return
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        from marketplace.models import Listing
+        all_ids = []
+        for obj in queryset:
+            all_ids.extend(self._collect_ids(obj))
+        count = Listing.objects.filter(category_id__in=all_ids).count()
+        if count:
+            self.message_user(
+                request,
+                f"❌ لا يمكن حذف الأقسام المحددة لأنها تحتوي على {count} منتج/إعلان. يرجى نقل المنتجات أو حذفها أولاً.",
+                level=messages.ERROR,
+            )
+            return
+        super().delete_queryset(request, queryset)
+
+    # ------------------------------------------------------------------ #
     # Require photo on save
     # ------------------------------------------------------------------ #
     def save_related(self, request, form, formsets, change):
