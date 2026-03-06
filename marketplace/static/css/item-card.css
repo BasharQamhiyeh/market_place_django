@@ -31,7 +31,7 @@
 
   box-shadow: var(--ad-shadow) !important;
   transition: all 0.25s ease !important;
-  cursor: default !important;
+  cursor: pointer !important;
 
   width: 100% !important;
   min-width: 0 !important;

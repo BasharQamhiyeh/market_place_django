@@ -4,9 +4,12 @@
 {% with HIDE_OWNER_FAV=0 %}
 
 <article
-  class="ad-card group flex flex-col overflow-hidden bg-white border-2 border-orange-300 rounded-2xl hover:shadow-lg transition hover:border-orange-500 cursor-default hover:-translate-y-1.5 transition-all duration-400 {% if featured_card %} featured-card vip-card{% endif %}"
+  class="ad-card group flex flex-col overflow-hidden bg-white border-2 border-orange-300 rounded-2xl hover:shadow-lg transition hover:border-orange-500 cursor-pointer relative hover:-translate-y-1.5 transition-all duration-400 {% if featured_card %} featured-card vip-card{% endif %}"
   aria-label="{{ item.listing.title }}"
 >
+
+  <!-- Full-card clickable overlay (below fav z-20, category z-30, hover-layer z-60) -->
+  <a href="{% url 'item_detail' item.id %}" class="absolute inset-0 z-[5]" aria-label="{{ item.listing.title }}"></a>
 
   <!-- IMAGE + CONTROLS -->
   <div class="relative">
@@ -34,7 +37,7 @@
         {# authenticated OWNER #}
         <button
           type="button"
-          class="ad-fav-btn cursor-pointer absolute bottom-3 left-3 w-9 h-9 rounded-full bg-white/95 flex items-center justify-center shadow-sm text-orange-500 transition hover:scale-110{% if item.is_favorited %} active{% endif %}"
+          class="ad-fav-btn cursor-pointer absolute bottom-3 left-3 z-20 w-9 h-9 rounded-full bg-white/95 flex items-center justify-center shadow-sm text-orange-500 transition hover:scale-110{% if item.is_favorited %} active{% endif %}"
           data-fav-btn="1"
           data-guest="0"
           data-is-owner="1"

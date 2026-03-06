@@ -3,6 +3,9 @@
 
 <article class="req-card">
 
+  <!-- Full-card clickable overlay (below category z-30, above hover-layer z-1) -->
+  <a href="{% url 'request_detail' req.id %}" class="absolute inset-0 z-[5]" aria-label="{{ req.listing.title }}"></a>
+
   <!-- Hover overlay layer (green tint on hover, pointer-events: none) -->
   <div class="req-hover-layer" aria-hidden="true"></div>
 
