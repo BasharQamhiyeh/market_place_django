@@ -80,14 +80,7 @@ def delete_listing_api(request, listing_id):
     if listing.is_deleted:
         return JsonResponse({"ok": True, "already": True})
 
-    # ❌ block delete if currently featured
     now = timezone.now()
-    if listing.featured_until and listing.featured_until > now:
-        return JsonResponse(
-            {"ok": False, "error": "featured_active", "message": "لا يمكن حذف إعلان مميز حالياً"},
-            status=403
-        )
-
     listing.is_deleted = True
     listing.is_active = False
     listing.deleted_at = now  # field exists in your model

@@ -194,12 +194,7 @@
               <a href="{% url 'request_edit' req.id %}"
                  data-action="edit"
                  data-id="{{ req.id }}"
-                 class="px-4 py-2 pill-blue text-sm relative group
-                        {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
-                 {% if req.featuredDaysLeft|default:0 > 0 %}
-                   title="لا يمكنك تعديل الطلب لأنه مميز"
-                   aria-disabled="true"
-                 {% endif %}
+                 class="px-4 py-2 pill-blue text-sm relative group"
               >
                 <span class="inline-flex items-center gap-1">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -208,26 +203,13 @@
                   </svg>
                 </span>
                 تعديل
-
-                {% if req.featuredDaysLeft|default:0 > 0 %}
-                  <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
-                    <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                      لا يمكنك تعديل الطلب لأنه مميز
-                    </span>
-                  </span>
-                {% endif %}
               </a>
 
               {# DELETE #}
               <button type="button"
                       data-action="delete"
                       data-id="{{ req.id }}"
-                      class="px-4 py-2 pill-red text-sm relative group
-                             {% if req.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
-                      {% if req.featuredDaysLeft|default:0 > 0 %}
-                        title="لا يمكنك حذف الطلب لأنه مميز"
-                        aria-disabled="true"
-                      {% endif %}
+                      class="px-4 py-2 pill-red text-sm relative group"
               >
                 <span class="inline-flex items-center gap-1">
                   <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -236,14 +218,6 @@
                   </svg>
                 </span>
                 حذف
-
-                {% if req.featuredDaysLeft|default:0 > 0 %}
-                  <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
-                    <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                      لا يمكنك حذف الطلب لأنه مميز
-                    </span>
-                  </span>
-                {% endif %}
               </button>
 
               {# REPUBLISH #}
