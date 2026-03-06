@@ -370,3 +370,20 @@ body {
   outline: 2px dashed rgba(239, 68, 68, 0.35); /* red-ish */
   outline-offset: 6px;
 }
+
+/* 🚫 badge label */
+.category-locked {
+  position: relative;
+}
+.category-locked::after {
+  content: "🚫 لا يمكن تغيير القسم";
+  position: absolute;
+  top: -10px;
+  left: 0;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
