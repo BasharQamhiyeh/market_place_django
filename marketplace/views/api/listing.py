@@ -223,6 +223,7 @@ def toggle_favorite(request, item_id):
                 "listing__item",
                 "listing__request",
                 "listing__user",
+                "listing__user__store",
             )
             .prefetch_related("listing__item__photos")
             .order_by("-created_at")[:5]
