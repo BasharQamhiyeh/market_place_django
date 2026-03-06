@@ -45,17 +45,17 @@ function scrollRow(rowId, direction, scrollAmount) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const storesLeft = document.getElementById("storesLeft");
+  const storesLeft  = document.getElementById("storesLeft");
   const storesRight = document.getElementById("storesRight");
 
-  if (storesLeft) storesLeft.addEventListener("click", () => scrollRow("storesRow", -1, 360));
-  if (storesRight) storesRight.addEventListener("click", () => scrollRow("storesRow", 1, 360));
+  if (storesLeft)  storesLeft.addEventListener("click",  () => scrollRow("storesRow",   -1, 360));
+  if (storesRight) storesRight.addEventListener("click", () => scrollRow("storesRow",    1, 360));
 
-  const trendingLeft = document.getElementById("trendingLeft");
+  const trendingLeft  = document.getElementById("trendingLeft");
   const trendingRight = document.getElementById("trendingRight");
 
-  if (trendingLeft) trendingLeft.addEventListener("click", () => scrollRow("trendingRow", -1, 340));
-  if (trendingRight) trendingRight.addEventListener("click", () => scrollRow("trendingRow", 1, 340));
+  if (trendingLeft)  trendingLeft.addEventListener("click",  () => scrollRow("trendingRow", -1, 340));
+  if (trendingRight) trendingRight.addEventListener("click", () => scrollRow("trendingRow",  1, 340));
 
   addDragScroll("storesRow");
   addDragScroll("trendingRow");

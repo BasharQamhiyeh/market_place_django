@@ -256,15 +256,16 @@
 
       </div>
 
+      {% if stores|length >= 4 %}
       <button id="storesLeft"
               class="absolute left-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
         <i data-lucide="arrow-left"></i>
       </button>
-
       <button id="storesRight"
               class="absolute right-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
         <i data-lucide="arrow-right"></i>
       </button>
+      {% endif %}
 
     </div>
 
@@ -339,15 +340,16 @@
 
       </div>
 
+      {% if categories|length >= 4 %}
       <button id="trendingLeft"
               class="absolute left-0 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
         <i data-lucide="arrow-left"></i>
       </button>
-
       <button id="trendingRight"
               class="absolute right-0 top-[45%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
         <i data-lucide="arrow-right"></i>
       </button>
+      {% endif %}
 
     </div>
 
