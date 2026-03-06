@@ -378,8 +378,26 @@ class ItemAttributeValueInline(admin.TabularInline):
     fields = ("attribute", "value")
     readonly_fields = ("attribute", "value")
 
+class ItemAdminForm(forms.ModelForm):
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        required=False,
+        label="Category",
+    )
+
+    class Meta:
+        model = Item
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields["category"].initial = self.instance.listing.category
+
+
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
+    form = ItemAdminForm
     change_form_template = "admin/marketplace/item/change_form.html"
     change_list_template = "admin/items_changelist.html"
 
@@ -413,7 +431,6 @@ class ItemAdmin(admin.ModelAdmin):
     # ALL moderation fields now come from LISTING
     readonly_fields = (
         "listing_title",
-        "listing_category",
         "listing_description",
         "listing_user",
         "listing_user_username",
@@ -451,7 +468,7 @@ class ItemAdmin(admin.ModelAdmin):
 
     fields = (
         "listing_title",
-        "listing_category",
+        "category",
         "price",
         "condition",
         "listing_description",
@@ -581,6 +598,15 @@ class ItemAdmin(admin.ModelAdmin):
     colored_status.short_description = "Status"
 
 
+
+    # -----------------------------
+    # Save category back to listing
+    # -----------------------------
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if "category" in form.cleaned_data:
+            obj.listing.category = form.cleaned_data["category"]
+            obj.listing.save(update_fields=["category"])
 
     # -----------------------------
     # Approve view  ✅ records who + redirects to list
