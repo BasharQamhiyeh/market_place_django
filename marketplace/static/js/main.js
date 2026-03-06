@@ -44,18 +44,36 @@ function scrollRow(rowId, direction, scrollAmount) {
   });
 }
 
+function updateScrollArrows(rowId, leftBtn, rightBtn) {
+  const container = document.getElementById(rowId);
+  if (!container || !leftBtn || !rightBtn) return;
+
+  const atStart = container.scrollLeft <= 1;
+  const atEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+
+  leftBtn.classList.toggle("hidden", atStart);
+  rightBtn.classList.toggle("hidden", atEnd);
+}
+
+function initScrollRow(rowId, leftId, rightId, scrollAmount) {
+  const container = document.getElementById(rowId);
+  const leftBtn = document.getElementById(leftId);
+  const rightBtn = document.getElementById(rightId);
+
+  if (!container) return;
+
+  const update = () => updateScrollArrows(rowId, leftBtn, rightBtn);
+
+  if (leftBtn) leftBtn.addEventListener("click", () => { scrollRow(rowId, -1, scrollAmount); setTimeout(update, 350); });
+  if (rightBtn) rightBtn.addEventListener("click", () => { scrollRow(rowId, 1, scrollAmount); setTimeout(update, 350); });
+
+  container.addEventListener("scroll", update, { passive: true });
+  update();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  const storesLeft = document.getElementById("storesLeft");
-  const storesRight = document.getElementById("storesRight");
-
-  if (storesLeft) storesLeft.addEventListener("click", () => scrollRow("storesRow", -1, 360));
-  if (storesRight) storesRight.addEventListener("click", () => scrollRow("storesRow", 1, 360));
-
-  const trendingLeft = document.getElementById("trendingLeft");
-  const trendingRight = document.getElementById("trendingRight");
-
-  if (trendingLeft) trendingLeft.addEventListener("click", () => scrollRow("trendingRow", -1, 340));
-  if (trendingRight) trendingRight.addEventListener("click", () => scrollRow("trendingRow", 1, 340));
+  initScrollRow("storesRow", "storesLeft", "storesRight", 360);
+  initScrollRow("trendingRow", "trendingLeft", "trendingRight", 340);
 
   addDragScroll("storesRow");
   addDragScroll("trendingRow");
