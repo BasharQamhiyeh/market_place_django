@@ -97,8 +97,8 @@ def navbar_counters(request):
     # Favorite → Listing → (Item/Request)
     # -------------------------
     fav_qs = (
-        Favorite.objects.filter(user=user)
-        .select_related("listing")
+        Favorite.objects.filter(user=user, listing__is_deleted=False, listing__is_active=True)
+        .select_related("listing", "listing__user__store")
         .prefetch_related("listing__item__photos")
         .order_by("-created_at")
     )

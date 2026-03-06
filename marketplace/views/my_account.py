@@ -153,7 +153,7 @@ def my_account(request: HttpRequest):
     # Favorites (items only) for the favorites tab
     fav_qs = (
         Favorite.objects
-        .filter(user=request.user, listing__type="item")
+        .filter(user=request.user, listing__type="item", listing__is_deleted=False, listing__is_active=True)
         .select_related(
             "listing",
             "listing__user",
@@ -439,7 +439,7 @@ def mark_notifications_read(request):
 def my_favorites(request):
 
     fav_qs = (
-        Favorite.objects.filter(user=request.user)
+        Favorite.objects.filter(user=request.user, listing__is_deleted=False, listing__is_active=True)
         .select_related(
             "listing",
             "listing__item",
