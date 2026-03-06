@@ -298,26 +298,6 @@
       }
 
       if (featured) {
-        if (editLink) {
-          editLink.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
-          editLink.setAttribute("aria-disabled", "true");
-
-          const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك تعديل الإعلان لأنه مميز</span>';
-          editLink.appendChild(tooltip);
-        }
-
-        if (delBtn) {
-          delBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
-          delBtn.setAttribute("aria-disabled", "true");
-
-          const tooltip = document.createElement("span");
-          tooltip.className = "tooltip-span pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block";
-          tooltip.innerHTML = '<span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">لا يمكنك حذف الإعلان لأنه مميز</span>';
-          delBtn.appendChild(tooltip);
-        }
-
         if (republishBtn) {
           republishBtn.classList.add("opacity-40", "cursor-not-allowed", "relative", "group");
           republishBtn.setAttribute("aria-disabled", "true");
@@ -849,12 +829,6 @@
         return;
       }
 
-      if (isFeaturedRow(row)) {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-
       return;
     }
 
@@ -886,8 +860,6 @@
     if (action === "delete") {
       e.preventDefault();
       e.stopPropagation();
-
-      if (featured) return;
 
       openDeleteModalForAd(id);
       return;

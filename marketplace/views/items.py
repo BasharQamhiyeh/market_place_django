@@ -604,13 +604,10 @@ def item_create(request):
 @login_required
 @transaction.atomic
 def item_edit(request, item_id):
-    now = timezone.now()
     item = get_object_or_404(
         Item.objects.select_related("listing", "listing__category", "listing__user").filter(
             listing__user=request.user,
             listing__is_deleted=False,
-        ).filter(
-            Q(listing__featured_until__isnull=True) | Q(listing__featured_until__lte=now)
         ),
         id=item_id,
     )

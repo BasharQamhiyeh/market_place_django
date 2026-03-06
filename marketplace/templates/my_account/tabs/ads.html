@@ -174,12 +174,7 @@
             <a href="/item/{{ ad.id }}/edit/"
                data-action="edit"
                data-id="{{ ad.id }}"
-               class="px-4 py-2 pill-blue text-sm relative group
-                  {% if ad.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
-               {% if ad.featuredDaysLeft|default:0 > 0 %}
-                 title="لا يمكنك تعديل الإعلان لأنه مميز"
-                 aria-disabled="true"
-               {% endif %}
+               class="px-4 py-2 pill-blue text-sm relative group"
             >
               <span class="inline-flex items-center gap-1">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -188,26 +183,13 @@
                 </svg>
               </span>
               تعديل
-
-              {% if ad.featuredDaysLeft|default:0 > 0 %}
-                <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
-                  <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                    لا يمكنك تعديل الإعلان لأنه مميز
-                  </span>
-                </span>
-              {% endif %}
             </a>
 
             {# DELETE #}
             <button type="button"
                     data-action="delete"
                     data-id="{{ ad.id }}"
-                    class="px-4 py-2 pill-red text-sm relative group
-                        {% if ad.featuredDaysLeft|default:0 > 0 %}opacity-40 cursor-not-allowed{% endif %}"
-                    {% if ad.featuredDaysLeft|default:0 > 0 %}
-                      title="لا يمكنك حذف الإعلان لأنه مميز"
-                      aria-disabled="true"
-                    {% endif %}
+                    class="px-4 py-2 pill-red text-sm relative group"
             >
               <span class="inline-flex items-center gap-1">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -216,14 +198,6 @@
                 </svg>
               </span>
               حذف
-
-              {% if ad.featuredDaysLeft|default:0 > 0 %}
-                <span class="pointer-events-none absolute z-30 right-0 top-1/2 -translate-y-1/2 translate-x-full mr-2 hidden group-hover:block">
-                  <span class="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                    لا يمكنك حذف الإعلان لأنه مميز
-                  </span>
-                </span>
-              {% endif %}
             </button>
 
             {# REPUBLISH (unchanged) #}
