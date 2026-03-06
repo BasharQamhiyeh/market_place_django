@@ -17,7 +17,7 @@
     </h6>
 
     <div class="text-gray-600 text-sm">
-      {{ item.price }} د.أ
+      {{ item.price|floatformat:"-2" }} د.أ
       · {{ item.listing.created_at|date:"Y-m-d H:i" }}
     </div>
   </div>

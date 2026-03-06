@@ -11,7 +11,7 @@
           {% if item %}{{ item.listing.title }}{% elif request_obj %}{{ request_obj.listing.title }}{% endif %}
         </div>
         <div class="text-[10px] text-orange-600">
-          {% if item %}{{ item.price }} د.أ{% else %}طلب شراء{% endif %}
+          {% if item %}{{ item.price|floatformat:"-2" }} د.أ{% else %}طلب شراء{% endif %}
         </div>
         <div class="text-[10px] text-gray-400">
           البائع: {% if item %}{{ item.listing.user.first_name }}{% elif request_obj %}{{ request_obj.listing.user.first_name }}{% endif %}

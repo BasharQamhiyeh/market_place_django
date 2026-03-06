@@ -41,7 +41,7 @@
               </h6>
 
               <div class="text-gray-500 text-sm mb-2">
-                {% trans "Price" %}: {{ item.price }} ·
+                {% trans "Price" %}: {{ item.price|floatformat:"-2" }} ·
                 {% trans "Created" %}: {{ item.listing.created_at|date:"Y-m-d H:i" }} ·
                 {% trans "Updated" %}: {{ item.listing.updated_at|date:"Y-m-d H:i" }}
               </div>
