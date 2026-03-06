@@ -214,15 +214,16 @@ def toggle_favorite(request, item_id):
 
     # AJAX request — return JSON only (NO PAGE REFRESH)
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        new_count = Favorite.objects.filter(user=request.user).count()
+        new_count = Favorite.objects.filter(user=request.user, listing__is_deleted=False, listing__is_active=True).count()
 
         recent_fav_qs = (
-            Favorite.objects.filter(user=request.user)
+            Favorite.objects.filter(user=request.user, listing__is_deleted=False, listing__is_active=True)
             .select_related(
                 "listing",
                 "listing__item",
                 "listing__request",
                 "listing__user",
+                "listing__user__store",
             )
             .prefetch_related("listing__item__photos")
             .order_by("-created_at")[:5]
