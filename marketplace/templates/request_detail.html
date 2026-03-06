@@ -618,8 +618,8 @@
             <h2 class="text-lg md:text-xl font-extrabold text-gray-900">طلبات مشابهة في نفس القسم</h2>
           </div>
 
-          <div id="similarRequestsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-            {% for r in similar_requests|slice:":4" %}
+          <div id="similarRequestsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-3">
+            {% for r in similar_requests|slice:":5" %}
               {% include "partials/_request_card.html" with req=r %}
             {% empty %}
               <p class="text-center text-gray-500 py-6 col-span-full">لا توجد طلبات مشابهة حالياً.</p>
