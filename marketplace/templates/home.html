@@ -383,7 +383,7 @@
       </div>
     </div>
 
-    <div id="requestsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div id="requestsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
       {% if latest_requests %}
         {% for req in latest_requests %}
           {% include "partials/_request_card.html" with req=req %}
