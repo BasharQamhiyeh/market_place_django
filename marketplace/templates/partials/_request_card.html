@@ -77,7 +77,7 @@
     <div class="req-budget-container">
       <span class="req-budget-price">
         {% if req.budget %}
-          {{ req.budget|floatformat:0 }} د.أ
+          {{ req.budget|floatformat:"-2" }} د.أ
         {% else %}
           {% trans "حسب الطلب" %}
         {% endif %}

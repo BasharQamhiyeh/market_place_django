@@ -135,7 +135,7 @@
                 <h3 class="font-bold text-lg text-gray-800">{{ req.title }}</h3>
                 {% if req.budget %}
                   <span class="text-orange-600 font-extrabold text-xl leading-none">
-                    الميزانية: {{ req.budget }} د.أ
+                    الميزانية: {{ req.budget|floatformat:"-2" }} د.أ
                   </span>
                 {% endif %}
               </div>

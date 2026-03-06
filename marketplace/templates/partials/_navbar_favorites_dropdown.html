@@ -31,7 +31,7 @@
           <div>
             {% if item %}
               <div class="font-medium text-gray-900 truncate">{{ item.listing.title }}</div>
-              <div class="text-xs text-[var(--muted)]">{{ item.price }} د.أ</div>
+              <div class="text-xs text-[var(--muted)]">{{ item.price|floatformat:"-2" }} د.أ</div>
             {% elif request_obj %}
               <div class="font-medium text-gray-900 truncate">{{ request_obj.listing.title }}</div>
               <div class="text-xs text-[var(--muted)]">طلب شراء</div>
