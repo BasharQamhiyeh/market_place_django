@@ -44,73 +44,21 @@ function scrollRow(rowId, direction, scrollAmount) {
   });
 }
 
-function updateScrollArrows(container, leftBtn, rightBtn) {
-  if (!container) return;
-
-  const maxScroll = container.scrollWidth - container.clientWidth;
-  const isRTL = getComputedStyle(container).direction === "rtl";
-
-  // No overflow at all — hide both
-  if (maxScroll <= 0) {
-    if (leftBtn) leftBtn.classList.add("hidden");
-    if (rightBtn) rightBtn.classList.add("hidden");
-    return;
-  }
-
-  // Normalize scrollLeft to 0 (logical start) → maxScroll (logical end)
-  // Chrome RTL: scrollLeft is 0 at right end, negative toward left
-  // Firefox RTL: scrollLeft is maxScroll at right end, 0 at left end
-  let pos;
-  if (isRTL) {
-    pos = container.scrollLeft <= 0 ? -container.scrollLeft : maxScroll - container.scrollLeft;
-  } else {
-    pos = container.scrollLeft;
-  }
-
-  const atStart = pos <= 1;           // nothing to scroll toward start
-  const atEnd   = pos >= maxScroll - 1; // nothing to scroll toward end
-
-  // scrollBy({left: -N}) always reveals content on the LEFT side of the container
-  // In RTL the left side is the logical END; in LTR it's the logical START
-  if (isRTL) {
-    if (leftBtn)  leftBtn.classList.toggle("hidden", atEnd);   // left arrow → toward end
-    if (rightBtn) rightBtn.classList.toggle("hidden", atStart); // right arrow → toward start
-  } else {
-    if (leftBtn)  leftBtn.classList.toggle("hidden", atStart); // left arrow → toward start
-    if (rightBtn) rightBtn.classList.toggle("hidden", atEnd);  // right arrow → toward end
-  }
-}
-
-function initScrollRow(rowId, leftId, rightId, scrollAmount) {
-  const container = document.getElementById(rowId);
-  const leftBtn   = document.getElementById(leftId);
-  const rightBtn  = document.getElementById(rightId);
-
-  if (!container) return;
-
-  const update = () => updateScrollArrows(container, leftBtn, rightBtn);
-
-  if (leftBtn)  leftBtn.addEventListener("click",  () => { scrollRow(rowId, -1, scrollAmount); setTimeout(update, 350); });
-  if (rightBtn) rightBtn.addEventListener("click", () => { scrollRow(rowId,  1, scrollAmount); setTimeout(update, 350); });
-
-  container.addEventListener("scroll", update, { passive: true });
-
-  // Double rAF ensures layout is fully calculated before we check dimensions
-  requestAnimationFrame(() => requestAnimationFrame(update));
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-  initScrollRow("storesRow",   "storesLeft",   "storesRight",   360);
-  initScrollRow("trendingRow", "trendingLeft", "trendingRight", 340);
+  const storesLeft  = document.getElementById("storesLeft");
+  const storesRight = document.getElementById("storesRight");
+
+  if (storesLeft)  storesLeft.addEventListener("click",  () => scrollRow("storesRow",   -1, 360));
+  if (storesRight) storesRight.addEventListener("click", () => scrollRow("storesRow",    1, 360));
+
+  const trendingLeft  = document.getElementById("trendingLeft");
+  const trendingRight = document.getElementById("trendingRight");
+
+  if (trendingLeft)  trendingLeft.addEventListener("click",  () => scrollRow("trendingRow", -1, 340));
+  if (trendingRight) trendingRight.addEventListener("click", () => scrollRow("trendingRow",  1, 340));
 
   addDragScroll("storesRow");
   addDragScroll("trendingRow");
-});
-
-// Re-check after all resources (images) finish loading, as they can change widths
-window.addEventListener("load", () => {
-  updateScrollArrows(document.getElementById("storesRow"),   document.getElementById("storesLeft"),   document.getElementById("storesRight"));
-  updateScrollArrows(document.getElementById("trendingRow"), document.getElementById("trendingLeft"), document.getElementById("trendingRight"));
 });
 
 /* =========================================================
