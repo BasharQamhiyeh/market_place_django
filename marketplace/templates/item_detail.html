@@ -785,7 +785,7 @@
             <h2 class="text-lg md:text-xl font-extrabold text-gray-900">إعلانات مشابهة قد تهمّك</h2>
           </div>
 
-          <div id="similarItemsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 mt-3">
+          <div id="similarItemsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mt-3">
             {% for it in similar_items %}
               {% include "partials/_item_card.html" with item=it %}
             {% empty %}
