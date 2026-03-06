@@ -322,7 +322,7 @@ def request_create(request):
     # ✅ BLOCK store users from creating requests (backend)
     store = getattr(request.user, "store", None)
     if store and getattr(store, "is_active", True):
-        messages.error(request, "❌ هذا الحساب حساب متجر ولا يمكنه إضافة طلبات. يمكنك إضافة إعلانات فقط.")
+        messages.error(request, "❌ هذا الحساب حساب متجر ولا يمكنه إضافة طلبات. يمكنك إضافة إعلانات فقط. لإضافة طلبات بإمكانك انشاء حساب شخصي.")
         resp = redirect("my_account")
         resp["Location"] += "#tab-requests"
         return resp
