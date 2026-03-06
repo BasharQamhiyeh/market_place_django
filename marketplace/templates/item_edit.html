@@ -289,8 +289,16 @@
 
             <!-- TERMS -->
             <div class="pt-9">
+              <h3 class="text-xl font-bold text-[var(--rukn-orange)] flex items-center gap-2 mb-2">
+                <span class="section-step">٤</span>
+                <span>شروط النشر</span>
+              </h3>
               <div id="termsBox" class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 text-sm">
-                <nav id="termsNav" class="flex-row gap-1 text-[8px] sm:text-xs mb-2 overflow-x-auto sm:py-3 sm:px-1 py-2 px-1 rounded-2xl bg-gray-100/75">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xl">📜</span>
+                  <div><p class="label">ملخص الشروط</p></div>
+                </div>
+                <nav id="termsNav" class="flex flex-row gap-1 text-[8px] sm:text-xs mb-2 overflow-x-auto sm:py-3 sm:px-1 py-2 px-1 rounded-2xl bg-gray-100/75">
                   <button type="button" class="nav-link active" data-tab="accuracy">صحة البيانات</button>
                   <button type="button" class="nav-link" data-tab="legal">محتوى آمن</button>
                   <button type="button" class="nav-link" data-tab="language">آداب النشر</button>
@@ -334,7 +342,11 @@
               </div>
 
               <p class="text-[10px] sm:text-xs text-gray-500 leading-relaxed mt-2 px-3">
-                بالنقر على <strong>"نشر الإعلان"</strong>، فإنك تقر وتوافق على الشروط.
+                بالنقر على <strong>"تعديل الإعلان"</strong>، فإنك تقر وتوافق على
+                <a href="#" id="openTerms" class="underline hover:no-underline text-[var(--rukn-orange)]">شروط الاستخدام</a>
+                و
+                <a href="#" id="openPrivacy" class="underline hover:no-underline text-[var(--rukn-orange)]">سياسة الخصوصية</a>،
+                وتؤكد مسؤوليتك الكاملة عن صحة ومشروعية المحتوى المُقدَّم.
               </p>
             </div>
 
@@ -389,6 +401,44 @@
       </div>
     </main>
 
+  </div>
+</div>
+<!-- Terms Popup -->
+<div id="termsPopup" class="popup-bg hidden">
+  <div class="popup-box">
+    <h2 class="text-lg font-bold text-[var(--rukn-orange)] mb-4 text-center">الشروط والأحكام</h2>
+    <div class="popup-content text-sm leading-relaxed text-gray-800">
+      <ol class="list-decimal pr-5 space-y-4 text-sm leading-relaxed text-gray-800">
+        <li><span class="font-semibold">نطاق التطبيق:</span> منصة "ركن" تعمل داخل المملكة الأردنية الهاشمية وتخضع للقوانين والأنظمة المعمول بها فيها.</li>
+        <li><span class="font-semibold">إنشاء الحساب:</span> يجب أن يكون المستخدم قد أتم 18 عاماً على الأقل، وأن تكون البيانات المدخلة صحيحة ومحدثة، ويُعد استخدام الحساب مسؤولية شخصية لصاحبه.</li>
+        <li><span class="font-semibold">محتوى الإعلانات:</span> يلتزم المستخدم بعدم نشر أي إعلان مخالف للقانون أو النظام العام أو الآداب العامة في الأردن، بما في ذلك الإعلانات المضللة أو عن سلع أو خدمات ممنوعة أو غير مرخصة.</li>
+        <li><span class="font-semibold">التعاملات بين المستخدمين:</span> دور "ركن" يقتصر على توفير منصة للإعلانات المبوبة، ولا تكون مسؤولة عن صحة العقود أو جودة السلع أو وفاء أي طرف بالتزاماته.</li>
+        <li><span class="font-semibold">الحقوق الفكرية:</span> جميع حقوق الملكية الفكرية المتعلقة بالمنصة مملوكة لـ"ركن" ولا يجوز نسخها أو استخدامها دون إذن خطي مسبق.</li>
+        <li><span class="font-semibold">إيقاف أو إلغاء الحساب:</span> يحق لـ"ركن" إيقاف أو إلغاء حساب أي مستخدم أو حذف أي إعلان في حال مخالفة هذه الشروط أو القوانين السارية.</li>
+        <li><span class="font-semibold">تعديل الشروط:</span> يحق لـ"ركن" تعديل هذه الشروط من وقت لآخر، ويُعد استمرار استخدام المنصة موافقة ضمنية على الشروط المعدلة.</li>
+        <li><span class="font-semibold">القانون الواجب التطبيق:</span> تخضع هذه الشروط لأحكام القوانين المعمول بها في المملكة الأردنية الهاشمية، ويكون الاختصاص القضائي للمحاكم الأردنية المختصة في عمّان.</li>
+      </ol>
+    </div>
+    <button id="closeTerms" class="w-full mt-4 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#e56a00] transition">إغلاق</button>
+  </div>
+</div>
+
+<!-- Privacy Popup -->
+<div id="privacyPopup" class="popup-bg hidden">
+  <div class="popup-box max-h-[80vh]">
+    <h2 class="text-lg font-bold text-[var(--rukn-orange)] mb-3 text-center">سياسة الخصوصية</h2>
+    <div class="popup-content text-sm leading-relaxed text-gray-800">
+      <ol class="list-decimal pr-5 space-y-4 text-sm leading-relaxed text-gray-800">
+        <li><span class="font-semibold">جمع البيانات:</span> تقوم منصة "ركن" بجمع بعض البيانات التي يقدّمها المستخدم عند إنشاء الحساب أو نشر الإعلانات مثل: الاسم، رقم الهاتف، المدينة، وبيانات المتجر إن وجدت.</li>
+        <li><span class="font-semibold">استخدام البيانات:</span> تُستخدم البيانات لتحسين تجربة المستخدم، وإدارة الحساب، والتواصل بخصوص الإعلانات والخدمات، والامتثال للالتزامات القانونية.</li>
+        <li><span class="font-semibold">مشاركة البيانات:</span> لا تقوم "ركن" ببيع بيانات المستخدمين لطرف ثالث، وقد يتم مشاركة بعض البيانات مع جهات رسمية عند وجود التزام قانوني.</li>
+        <li><span class="font-semibold">البيانات الظاهرة للآخرين:</span> قد تظهر بعض البيانات مثل اسم المستخدم ووسائل التواصل المختارة ضمن الإعلانات المعروضة على المنصة.</li>
+        <li><span class="font-semibold">حماية البيانات:</span> تبذل "ركن" جهوداً معقولة لحماية بيانات المستخدمين باستخدام وسائل تقنية وتنظيمية مناسبة.</li>
+        <li><span class="font-semibold">حقوق المستخدم:</span> يحق للمستخدم طلب تحديث أو تصحيح بياناته، وطلب إغلاق حسابه عبر وسائل التواصل المتاحة في المنصة.</li>
+        <li><span class="font-semibold">تعديل سياسة الخصوصية:</span> يحق لـ"ركن" تعديل هذه السياسة، ويُعد استمرار استخدام المنصة بعد التعديل موافقة على السياسة بصيغتها المعدلة.</li>
+      </ol>
+    </div>
+    <button id="closePrivacy" class="w-full mt-4 bg-[var(--rukn-orange)] text-white py-3 rounded-xl font-bold hover:bg-[#e56a00] transition">إغلاق</button>
   </div>
 </div>
 {% endblock %}

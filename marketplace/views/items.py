@@ -745,6 +745,7 @@ def item_edit(request, item_id):
             "category": category,
             "category_tree_json": category_tree_json,
             "selected_category_path_json": selected_path_json,
+            "existing_photos": item.photos.all(),
         },
     )
 
