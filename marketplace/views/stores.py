@@ -129,8 +129,8 @@ def store_profile(request, store_id):
 
     base_qs = (
         Listing.objects
-        .filter(user=store.owner, is_active=True, is_approved=True, type="item")
-        .select_related("category", "city", "user")
+        .filter(user=store.owner, is_active=True, is_approved=True, type="item", item__isnull=False)
+        .select_related("category", "city", "user", "item")
         .order_by("-published_at")
     )
 
