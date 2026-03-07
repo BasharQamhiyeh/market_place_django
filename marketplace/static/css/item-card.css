@@ -441,9 +441,17 @@
   .ad-price { font-size: 14px !important; }       /* sm:text-sm */
 }
 
-@media (max-width: 640px) {
-  /* keep title consistent; don't inflate */
-  .ad-meta { gap: 12px !important; }
+@media (max-width: 639px) {
+  /* ── Mobile: bigger everything ── */
+  .ad-body          { padding: 14px !important; padding-top: 10px !important; gap: 10px !important; }
+  .ad-title         { font-size: 16px !important; min-height: 52px !important; line-height: 1.45 !important; }
+  .ad-meta          { font-size: 13px !important; gap: 14px !important; margin-top: 10px !important; }
+  .ad-ico           { width: 15px !important; height: 15px !important; }
+  .ad-footer        { padding: 14px 16px !important; }
+  .ad-footer img    { width: 34px !important; height: 34px !important; }
+  .ad-avatar-fallback { width: 34px !important; height: 34px !important; font-size: 14px !important; }
+  .ad-seller-name   { font-size: 14px !important; }
+  .ad-price         { font-size: 14px !important; padding: 7px 16px !important; }
 }
 
 /* ==================== CONTAINER QUERIES (desktop only — mobile always uses default sizes) ==================== */
