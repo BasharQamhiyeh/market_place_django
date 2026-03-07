@@ -1000,12 +1000,20 @@ class ItemAdmin(admin.ModelAdmin):
                                 is_approved=False,
                             )
 
-                            item = Item.objects.create(
-                                external_id=external_id,
-                                listing=listing,
-                                price=price,
-                                condition="new",
-                            )
+                            try:
+                                item = Item.objects.create(
+                                    external_id=external_id,
+                                    listing=listing,
+                                    price=price,
+                                    condition="new",
+                                )
+                            except IntegrityError:
+                                # Another row in the same sheet already created it;
+                                # clean up the orphan listing and fall through to update.
+                                listing.delete()
+                                item = Item.objects.filter(external_id=external_id).first()
+                                if not item:
+                                    raise
                             created += 1
 
                         else:

@@ -11,6 +11,9 @@ from marketplace.models import Attribute
 
 logger = logging.getLogger(__name__)
 
+# Pillow >= 10 moved LANCZOS into Image.Resampling; keep backwards compat.
+_LANCZOS = getattr(PILImage, "Resampling", PILImage).LANCZOS
+
 # Maximum pixel dimensions accepted before normalization.
 # Images exceeding either limit are rejected to prevent CPU/memory DoS.
 MAX_IMAGE_WIDTH = 20_000
@@ -87,11 +90,11 @@ class ItemPhoto(models.Model):
             im = im.convert("RGB")
 
             # background: cover then blur (fills full canvas)
-            bg = ImageOps.fit(im, (NORMAL_W, NORMAL_H), method=Image.LANCZOS)
+            bg = ImageOps.fit(im, (NORMAL_W, NORMAL_H), method=_LANCZOS)
             bg = bg.filter(ImageFilter.GaussianBlur(28))
 
             # foreground: contain (no crop)
-            fg = ImageOps.contain(im, (NORMAL_W, NORMAL_H), method=Image.LANCZOS)
+            fg = ImageOps.contain(im, (NORMAL_W, NORMAL_H), method=_LANCZOS)
 
             # paste centered
             x = (NORMAL_W - fg.width) // 2
