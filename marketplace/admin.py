@@ -763,7 +763,7 @@ class ItemAdmin(admin.ModelAdmin):
     # Import Items (Excel + ZIP) — stores external_id ✅
     # -----------------------------
     def import_excel_view(self, request):
-        import os, tempfile, zipfile, openpyxl, requests
+        import os, re, tempfile, zipfile, openpyxl, requests
         from django.core.files.base import ContentFile
         from django.db import IntegrityError
         from django.db.models import Q
@@ -822,6 +822,15 @@ class ItemAdmin(admin.ModelAdmin):
                     q |= Q(phone__endswith=digits)
 
                 return UserModel.objects.filter(q).first()
+
+            # ---------------------------
+            # Exact-token filename match: "12" must NOT match "120.jpg"
+            # Splits filename (no ext) on non-alphanumeric chars and checks tokens.
+            # ---------------------------
+            def filename_matches_id(fn, ext_id):
+                base = os.path.splitext(fn)[0].lower()
+                tokens = re.split(r'[^a-z0-9]+', base)
+                return ext_id.lower() in tokens
 
             # ---------------------------
             # HELPERS (AR name = source of truth)
@@ -991,12 +1000,20 @@ class ItemAdmin(admin.ModelAdmin):
                                 is_approved=False,
                             )
 
-                            item = Item.objects.create(
-                                external_id=external_id,
-                                listing=listing,
-                                price=price,
-                                condition="new",
-                            )
+                            try:
+                                item = Item.objects.create(
+                                    external_id=external_id,
+                                    listing=listing,
+                                    price=price,
+                                    condition="new",
+                                )
+                            except IntegrityError:
+                                # Another row in the same sheet already created it;
+                                # clean up the orphan listing and fall through to update.
+                                listing.delete()
+                                item = Item.objects.filter(external_id=external_id).first()
+                                if not item:
+                                    raise
                             created += 1
 
                         else:
@@ -1020,22 +1037,32 @@ class ItemAdmin(admin.ModelAdmin):
                         ext_lower = external_id.lower()
 
                         # ---- ZIP ----
+                        zip_photos_added = 0
                         if photos_dir:
+                            existing_photo_names = set(
+                                os.path.basename(p.image.name)
+                                for p in ItemPhoto.objects.filter(item=item)
+                                if p.image
+                            )
                             for root, _, files in os.walk(photos_dir):
                                 for fn in files:
-                                    if ext_lower in fn.lower():
+                                    if filename_matches_id(fn, external_id):
+                                        saved_name = f"{external_id}_{fn}"
+                                        if saved_name in existing_photo_names:
+                                            continue
                                         try:
                                             fp = os.path.join(root, fn)
                                             with open(fp, "rb") as img:
                                                 c = ContentFile(img.read())
-                                                c.name = f"{external_id}_{fn}"
+                                                c.name = saved_name
                                                 ItemPhoto.objects.create(item=item, image=c)
                                             added_photos += 1
+                                            zip_photos_added += 1
                                         except:
                                             pass
 
-                        # ---- URL (comma-separated) ----
-                        if img_col is not None and row[img_col]:
+                        # ---- URL (comma-separated) — only if ZIP had no photos ----
+                        if zip_photos_added == 0 and img_col is not None and row[img_col]:
                             urls = [u.strip() for u in str(row[img_col]).split(",") if u.strip()]
                             for url in urls:
                                 try:
@@ -1080,17 +1107,27 @@ class ItemAdmin(admin.ModelAdmin):
 
                 activated_listing_ids = set()
 
+                existing_photo_names_by_item = {}
+
                 for root, _, files in os.walk(photos_dir):
                     for fn in files:
-                        low = fn.lower()
                         for ext_id, item in existing.items():
-                            if ext_id and ext_id.lower() in low:
+                            if ext_id and filename_matches_id(fn, ext_id):
+                                if item.pk not in existing_photo_names_by_item:
+                                    existing_photo_names_by_item[item.pk] = set(
+                                        os.path.basename(p.image.name)
+                                        for p in ItemPhoto.objects.filter(item=item)
+                                        if p.image
+                                    )
+                                if fn in existing_photo_names_by_item[item.pk]:
+                                    continue
                                 try:
                                     fp = os.path.join(root, fn)
                                     with open(fp, "rb") as img:
                                         c = ContentFile(img.read())
                                         c.name = fn
                                         ItemPhoto.objects.create(item=item, image=c)
+                                    existing_photo_names_by_item[item.pk].add(fn)
                                     added_photos += 1
                                     activated_listing_ids.add(item.listing_id)
                                 except:
