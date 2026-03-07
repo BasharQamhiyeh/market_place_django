@@ -129,8 +129,8 @@ def store_profile(request, store_id):
 
     base_qs = (
         Listing.objects
-        .filter(user=store.owner, is_active=True, is_approved=True, type="item")
-        .select_related("category", "city", "user")
+        .filter(user=store.owner, is_active=True, is_approved=True, type="item", item__isnull=False)
+        .select_related("category", "city", "user", "item")
         .order_by("-published_at")
     )
 
@@ -176,11 +176,7 @@ def store_profile(request, store_id):
         l.root_category_id = rid or ""
 
         # city id (prefer item.city_id if exists, else listing city)
-        try:
-            item_obj = l.item
-        except Exception:
-            item_obj = None
-        city_id = getattr(item_obj, "city_id", None) or getattr(l, "city_id", None) or ""
+        city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None) or ""
         l._city_id = city_id
 
     categories = Category.objects.filter(parent__isnull=True).order_by("id")
