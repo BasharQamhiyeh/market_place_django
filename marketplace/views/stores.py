@@ -176,7 +176,11 @@ def store_profile(request, store_id):
         l.root_category_id = rid or ""
 
         # city id (prefer item.city_id if exists, else listing city)
-        city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None) or ""
+        try:
+            item_obj = l.item
+        except Exception:
+            item_obj = None
+        city_id = getattr(item_obj, "city_id", None) or getattr(l, "city_id", None) or ""
         l._city_id = city_id
 
     categories = Category.objects.filter(parent__isnull=True).order_by("id")
