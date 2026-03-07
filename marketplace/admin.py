@@ -1037,6 +1037,7 @@ class ItemAdmin(admin.ModelAdmin):
                         ext_lower = external_id.lower()
 
                         # ---- ZIP ----
+                        zip_photos_added = 0
                         if photos_dir:
                             existing_photo_names = set(
                                 os.path.basename(p.image.name)
@@ -1056,11 +1057,12 @@ class ItemAdmin(admin.ModelAdmin):
                                                 c.name = saved_name
                                                 ItemPhoto.objects.create(item=item, image=c)
                                             added_photos += 1
+                                            zip_photos_added += 1
                                         except:
                                             pass
 
-                        # ---- URL (comma-separated) ----
-                        if img_col is not None and row[img_col]:
+                        # ---- URL (comma-separated) — only if ZIP had no photos ----
+                        if zip_photos_added == 0 and img_col is not None and row[img_col]:
                             urls = [u.strip() for u in str(row[img_col]).split(",") if u.strip()]
                             for url in urls:
                                 try:
