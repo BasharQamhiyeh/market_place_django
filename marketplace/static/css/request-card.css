@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  width: 100%;
+  min-width: 0;
 
   /* Container queries: card internals adapt to their own width */
   container-type: inline-size;

@@ -15,6 +15,10 @@
 /* Scope page styling (NO global body leak) */
 .list-requests-page {
   font-family: "Cairo", sans-serif;
+  background: #F1F1F1;
+  color: #111827;
+  line-height: 1.6;
+  min-height: 100%;
 }
 
 /* container shell */
@@ -25,7 +29,7 @@
   margin-bottom: 20px;
   box-shadow: 0 24px 60px rgba(15,23,42,.12);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 .list-requests-page .container-box::before{
   content:"";
@@ -509,6 +513,16 @@
   }
 }
 
+@media (min-width: 768px) {
+  .list-requests-page #filtersBox {
+    position: sticky;
+    top: 90px;
+    align-self: start;
+    max-height: calc(100vh - 110px);
+    overflow: auto;
+    z-index: 30;
+  }
+}
 
 /* Force desktop visibility (guards against any accidental global hide rules) */
 @media (min-width: 1024px) {
