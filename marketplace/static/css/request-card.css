@@ -217,6 +217,8 @@
   padding: 0.375rem 0.75rem;
   border-radius: 0.875rem; /* 14px */
   background: #ffffff;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .req-budget-label {
@@ -237,6 +239,7 @@
   align-items: center;
   gap: 0.625rem;
   min-width: 0;
+  flex: 1;
 }
 
 .req-avatar {
@@ -267,7 +270,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 7.5rem; /* 120px */
+  min-width: 0;
+  flex: 1;
 }
 
 /* ==================== CONTAINER QUERIES (desktop only — mobile always uses default sizes) ==================== */
