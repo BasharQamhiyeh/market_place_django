@@ -248,6 +248,9 @@
 
   /* ── Text-fit: shrink seller-name / price font when text is too long ── */
   function fitCardText(root) {
+    // Only run on sm+ screens (matches the CSS @media guard on container queries)
+    if (window.innerWidth < 640) return;
+
     const MIN_NAME  = 9;   // px floor for seller name
     const MIN_PRICE = 9;   // px floor for price
 
