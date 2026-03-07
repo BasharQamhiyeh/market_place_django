@@ -8,7 +8,7 @@ from django.db.models import Exists, OuterRef
 
 
 def home(request):
-    limit = int(request.GET.get("limit", 10))
+    limit = int(request.GET.get("limit", 15))
     latest_items = (
         Item.objects
         .filter(
