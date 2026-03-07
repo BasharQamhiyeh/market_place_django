@@ -134,7 +134,7 @@ def request_list(request):
     else:
         queryset = base_qs.order_by("-listing__created_at", "-listing__id")
 
-    PAGE_SIZE = 20
+    PAGE_SIZE = 16
     paginator = Paginator(queryset, PAGE_SIZE)
     page_number = request.GET.get("page") or "1"
     page_obj = paginator.get_page(page_number)

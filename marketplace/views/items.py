@@ -196,7 +196,7 @@ def item_list(request):
         "listing__user"
     ).prefetch_related("photos")
 
-    PAGE_SIZE = 20
+    PAGE_SIZE = 16
     paginator = Paginator(queryset, PAGE_SIZE)
     page_number = request.GET.get("page") or "1"
     page_obj = paginator.get_page(page_number)
