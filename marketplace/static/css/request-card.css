@@ -174,9 +174,9 @@
   display: flex;
   gap: 1rem;
   align-items: center;
-  font-size: 0.75rem; /* 12px */
-  font-weight: 800;
-  color: #9ca3af; /* gray-400 */
+  font-size: 0.6875rem !important; /* 11px */
+  font-weight: 400 !important;
+  color: #6b7280 !important; /* gray-500 */
   padding-bottom: 0.625rem;
   border-bottom: 2px solid #b7f3d0; /* light green */
 }
@@ -185,11 +185,12 @@
   display: inline-flex;
   gap: 0.375rem;
   align-items: center;
+  white-space: nowrap !important;
 }
 
 .req-meta-icon {
-  width: 1rem; /* 16px */
-  height: 1rem;
+  width: 0.875rem; /* 14px — matches .ad-ico */
+  height: 0.875rem;
   color: #16a34a; /* green-600 */
 }
 
@@ -267,14 +268,27 @@
 }
 
 .req-user-name {
-  font-weight: 900;
-  color: #374151; /* gray-700 */
-  font-size: 0.875rem; /* 14px */
+  font-weight: 500 !important;
+  color: #111827 !important; /* gray-900 */
+  font-size: 0.75rem !important; /* 12px */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
   flex: 1;
+}
+
+/* ── sm+ base: match .ad-meta (12px) and .ad-seller-name (14px) ── */
+@media (min-width: 640px) {
+  .req-meta      { font-size: 0.75rem !important; }    /* 12px */
+  .req-user-name { font-size: 0.875rem !important; }   /* 14px */
+}
+
+/* ── Mobile: match item-card mobile sizes ── */
+@media (max-width: 639px) {
+  .req-meta      { font-size: 0.8125rem !important; }  /* 13px */
+  .req-meta-icon { width: 0.9375rem !important; height: 0.9375rem !important; }
+  .req-user-name { font-size: 0.875rem !important; }   /* 14px */
 }
 
 /* ==================== CONTAINER QUERIES (desktop only — mobile always uses default sizes) ==================== */
@@ -289,7 +303,7 @@
     .req-pill          { font-size: 0.75rem; padding: 0.3rem 0.625rem; }
     .req-avatar        { width: 2rem; height: 2rem; }
     .req-avatar-fallback { width: 2rem; height: 2rem; font-size: 0.8125rem; }
-    .req-user-name     { font-size: 0.8125rem; }
+    .req-user-name     { font-size: 0.875rem; }
     .req-budget-price  { font-size: 0.8125rem; padding: 0.3rem 0.625rem; }
     .req-budget-label  { width: 1.625rem; height: 1.625rem; font-size: 0.5625rem; }
   }
@@ -303,7 +317,7 @@
     .req-pill          { font-size: 0.6875rem; padding: 0.25rem 0.5625rem; }
     .req-avatar        { width: 1.875rem; height: 1.875rem; }
     .req-avatar-fallback { width: 1.875rem; height: 1.875rem; font-size: 0.75rem; }
-    .req-user-name     { font-size: 0.75rem; }
+    .req-user-name     { font-size: 0.6875rem; }
     .req-budget-price  { font-size: 0.75rem; padding: 0.3rem 0.625rem; }
     .req-budget-label  { width: 1.5rem; height: 1.5rem; font-size: 0.5rem; }
     .req-footer        { padding-top: 0.5rem; }
