@@ -383,6 +383,7 @@
   align-items: center !important;
   gap: 10px !important;
   min-width: 0 !important;
+  flex: 1 !important;
 }
 
 /* mockup avatar: w-7 h-7 rounded-full border */
@@ -418,7 +419,8 @@
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 140px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
 }
 
 /* mockup price: px-4 py-1.5 rounded-xl text-xs sm:text-sm font-bold */
@@ -431,6 +433,7 @@
   background: var(--ad-orange) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 @media (min-width: 640px) {
@@ -449,13 +452,13 @@
 @container ad-card (max-width: 310px) {
   .ad-body          { padding: 12px !important; padding-top: 6px !important; gap: 6px !important; }
   .ad-title         { font-size: 13px !important; min-height: 40px !important; }
-  .ad-meta          { font-size: 10px !important; gap: 10px !important; margin-top: 8px !important; }
+  .ad-meta          { gap: 10px !important; margin-top: 8px !important; }
   .ad-ico           { width: 12px !important; height: 12px !important; }
   .ad-footer        { padding: 16px !important; }
   .ad-seller        { gap: 8px !important; }
-  .ad-footer img    { width: 34px !important; height: 34px !important; }
-  .ad-avatar-fallback { width: 34px !important; height: 34px !important; font-size: 13px !important; }
-  .ad-seller-name   { font-size: 11px !important; max-width: 100px !important; }
+  .ad-footer img    { width: 26px !important; height: 26px !important; }
+  .ad-avatar-fallback { width: 26px !important; height: 26px !important; font-size: 11px !important; }
+  .ad-seller-name   { font-size: 11px !important; }
   .ad-price         { font-size: 11px !important; padding: 5px 10px !important; }
   .ad-cat-badge     { font-size: 10px !important; padding: 4px 8px !important; }
   .ad-featured-tag  { font-size: 10px !important; padding: 4px 8px !important; }
@@ -465,13 +468,13 @@
 @container ad-card (max-width: 260px) {
   .ad-body          { padding: 8px !important; padding-top: 5px !important; gap: 4px !important; }
   .ad-title         { font-size: 11px !important; min-height: 32px !important; }
-  .ad-meta          { font-size: 9px !important; gap: 6px !important; margin-top: 5px !important; }
+  .ad-meta          { gap: 6px !important; margin-top: 5px !important; }
   .ad-ico           { width: 11px !important; height: 11px !important; }
   .ad-footer        { padding: 12px !important; }
   .ad-seller        { gap: 7px !important; }
-  .ad-footer img    { width: 30px !important; height: 30px !important; }
-  .ad-avatar-fallback { width: 30px !important; height: 30px !important; font-size: 12px !important; }
-  .ad-seller-name   { font-size: 9px !important; max-width: 70px !important; }
+  .ad-footer img    { width: 24px !important; height: 24px !important; }
+  .ad-avatar-fallback { width: 24px !important; height: 24px !important; font-size: 10px !important; }
+  .ad-seller-name   { font-size: 9px !important; }
   .ad-price         { font-size: 9px !important; padding: 3px 7px !important; border-radius: 6px !important; }
   .ad-cat-badge     { font-size: 9px !important; padding: 3px 6px !important; top: 8px !important; right: 8px !important; }
   .ad-featured-tag  { font-size: 9px !important; padding: 3px 6px !important; top: 8px !important; left: 8px !important; }
