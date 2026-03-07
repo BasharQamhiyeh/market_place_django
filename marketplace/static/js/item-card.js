@@ -245,4 +245,56 @@
       btn.removeAttribute("aria-busy");
     }
   });
+
+  /* ── Text-fit: shrink seller-name / price font when text is too long ── */
+  function fitCardText(root) {
+    // Only run on sm+ screens (matches the CSS @media guard on container queries)
+    if (window.innerWidth < 640) return;
+
+    const MIN_NAME  = 9;   // px floor for seller name
+    const MIN_PRICE = 9;   // px floor for price
+
+    // Fit seller names: reduce font-size until text fits without overflow
+    (root || document).querySelectorAll(".ad-seller-name").forEach(el => {
+      el.style.fontSize = "";  // reset to CSS value first
+      const base = parseFloat(getComputedStyle(el).fontSize);
+      let size = base;
+      while (el.scrollWidth > el.clientWidth && size > MIN_NAME) {
+        size -= 0.5;
+        el.style.fontSize = size + "px";
+      }
+    });
+
+    // Fit prices: reduce font-size if the footer is too tight
+    (root || document).querySelectorAll(".ad-footer").forEach(footer => {
+      const priceEl = footer.querySelector(".ad-price");
+      if (!priceEl) return;
+      priceEl.style.fontSize = "";  // reset
+      const base = parseFloat(getComputedStyle(priceEl).fontSize);
+      let size = base;
+      while (footer.scrollWidth > footer.clientWidth && size > MIN_PRICE) {
+        size -= 0.5;
+        priceEl.style.fontSize = size + "px";
+      }
+    });
+  }
+
+  // Run on initial load
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => fitCardText());
+  } else {
+    fitCardText();
+  }
+
+  // Re-run when new cards are injected (HTMX / infinite scroll / etc.)
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.classList?.contains("ad-card")) { fitCardText(node); }
+        else if (node.querySelector?.(".ad-card"))  { fitCardText(node); }
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+
 })();
