@@ -151,7 +151,7 @@ async function loadMoreChunk({ btnId, gridId, url, noMoreText }) {
     locked = true;
 
     const cols = gridCols(grid);
-    const limit = 3 * cols;
+    const limit = cols;
     const offset = grid.children.length;
 
     btn.disabled = true;
