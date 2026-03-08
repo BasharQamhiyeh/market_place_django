@@ -25,8 +25,7 @@ from .views.stores import store_profile, stores_list, stores_list_partial, store
     submit_store_review_ajax, store_reviews_list
 from .views.users import user_profile
 from .views.lost_found import (
-    report_list, report_detail, report_create, report_edit,
-    report_cancel, report_delete_photo, my_reports,
+    lost_found_page, ajax_report_save, ajax_report_delete,
 )
 
 urlpatterns = [
@@ -152,13 +151,9 @@ urlpatterns = [
     path('categories/browse/', categories_browse, name='categories_browse'),
 
     # ─── Lost & Found ───
-    path('lost-found/', report_list, name='report_list'),
-    path('lost-found/create/', report_create, name='report_create'),
-    path('lost-found/<int:report_id>/', report_detail, name='report_detail'),
-    path('lost-found/<int:report_id>/edit/', report_edit, name='report_edit'),
-    path('lost-found/<int:report_id>/cancel/', report_cancel, name='report_cancel'),
-    path('lost-found/photos/<int:photo_id>/delete/', report_delete_photo, name='report_delete_photo'),
-    path('my-reports/', my_reports, name='my_reports'),
+    path('lost-found/', lost_found_page, name='report_list'),
+    path('lost-found/ajax/save/', ajax_report_save, name='ajax_report_save'),
+    path('lost-found/ajax/delete/<int:report_id>/', ajax_report_delete, name='ajax_report_delete'),
 
     # path('api/', include('marketplace.api_urls')),
 ]

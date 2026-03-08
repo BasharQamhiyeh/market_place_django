@@ -1,288 +1,267 @@
+import base64
+import json
 import uuid
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.db.models import Q
-from django.http import JsonResponse, Http404
-from django.shortcuts import render, redirect, get_object_or_404
-from django.template.loader import render_to_string
+from django.core.files.base import ContentFile
+from django.core.serializers.json import DjangoJSONEncoder
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from marketplace.forms import ReportForm
 from marketplace.models import City
-from marketplace.models.lost_found import Report, ReportPhoto, ReportMatch
+from marketplace.models.lost_found import Report, ReportPhoto
 
 
 # ─────────────────────────────────────────────
-# List
+# Helpers
 # ─────────────────────────────────────────────
-def report_list(request):
-    report_type = request.GET.get("type", "")        # lost | found | ""
-    category    = request.GET.get("category", "")
-    city_id     = request.GET.get("city", "")
-    q           = request.GET.get("q", "").strip()
+def _report_to_js(report, is_own=False):
+    """Serialize a Report to the JS-compatible dict the SPA expects."""
+    photos = list(report.photos.order_by('id'))
+    main_idx = next((i for i, p in enumerate(photos) if p.is_main), 0)
 
-    qs = (
+    user = report.user
+    owner_name = (
+        f"{user.first_name} {user.last_name}".strip()
+        or user.username
+        or "مستخدم"
+    )
+
+    avatar = "https://i.pravatar.cc/100"
+    if user.profile_photo:
+        try:
+            avatar = user.profile_photo.url
+        except Exception:
+            pass
+
+    cat_map = dict(Report.CATEGORY_CHOICES)
+    cat_label = cat_map.get(report.category, "أخرى")
+
+    return {
+        "id": report.id,
+        "type": "مفقود" if report.type == Report.TYPE_LOST else "موجود",
+        "title": report.title,
+        "desc": report.description,
+        "cat": cat_label,
+        "city": report.city.name if report.city else "",
+        "area": report.area or "",
+        "date": report.created_at.strftime("%d/%m/%Y"),
+        "createdAt": int(report.created_at.timestamp() * 1000),
+        "owner": owner_name,
+        "avatar": avatar,
+        "showPhone": report.show_phone,
+        "phone": (user.phone or None) if report.show_phone else None,
+        "images": [p.image.url for p in photos],
+        "mainImageIndex": main_idx,
+        "isOwn": is_own,
+        "status": report.status,
+    }
+
+
+def _save_images(report, images_list, main_image_index, existing_photos=None):
+    """Create/keep photos for a report. Deletes removed existing ones on update."""
+    existing_url_map = {}
+    if existing_photos is not None:
+        existing_url_map = {p.image.url: p for p in existing_photos}
+
+    kept_ids = set()
+    for i, img_data in enumerate(images_list[:8]):
+        is_main = (i == main_image_index)
+        if img_data.startswith('data:image'):
+            try:
+                header, b64data = img_data.split(';base64,', 1)
+                ext = header.split('/')[-1].replace('jpeg', 'jpg').replace('jpg', 'jpg')
+                img_file = ContentFile(
+                    base64.b64decode(b64data),
+                    name=f"{uuid.uuid4()}.{ext}"
+                )
+                photo = ReportPhoto.objects.create(report=report, image=img_file, is_main=is_main)
+                kept_ids.add(photo.id)
+            except Exception:
+                pass
+        elif img_data:
+            # Existing URL — find the matching photo record
+            photo = existing_url_map.get(img_data)
+            if photo:
+                photo.is_main = is_main
+                photo.save(update_fields=['is_main'])
+                kept_ids.add(photo.id)
+
+    # Delete photos not in the submitted list (edit only)
+    if existing_photos is not None:
+        for photo in existing_photos:
+            if photo.id not in kept_ids:
+                try:
+                    photo.image.delete(save=False)
+                except Exception:
+                    pass
+                photo.delete()
+
+
+# ─────────────────────────────────────────────
+# Main page
+# ─────────────────────────────────────────────
+def lost_found_page(request):
+    # Active public reports
+    public_qs = (
         Report.objects
         .filter(status=Report.STATUS_ACTIVE, is_deleted=False)
         .select_related("user", "city")
         .prefetch_related("photos")
-        .order_by("-created_at")
+        .order_by("-created_at")[:300]
     )
 
-    if report_type in (Report.TYPE_LOST, Report.TYPE_FOUND):
-        qs = qs.filter(type=report_type)
-    if category:
-        qs = qs.filter(category=category)
-    if city_id:
-        qs = qs.filter(city_id=city_id)
-    if len(q) >= 2:
-        qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(area__icontains=q))
+    my_ids_set = set()
+    my_reports_qs = []
+    if request.user.is_authenticated:
+        my_reports_qs = list(
+            Report.objects
+            .filter(user=request.user, is_deleted=False)
+            .select_related("user", "city")
+            .prefetch_related("photos")
+            .order_by("-created_at")
+        )
+        my_ids_set = {r.id for r in my_reports_qs}
 
-    paginator  = Paginator(qs, 16)
-    page_obj   = paginator.get_page(request.GET.get("page", 1))
-    has_more   = page_obj.has_next()
-    total      = paginator.count
-    visible    = page_obj.end_index() if total else 0
+    # Build combined ads map (deduplicated by id)
+    ads_map = {}
+    for r in public_qs:
+        ads_map[r.id] = _report_to_js(r, is_own=(r.id in my_ids_set))
+    for r in my_reports_qs:
+        ads_map[r.id] = _report_to_js(r, is_own=True)
+
+    user_phone = ""
+    if request.user.is_authenticated:
+        user_phone = (request.user.phone or "").strip()
+
+    initial_data = {
+        "reports": list(ads_map.values()),
+        "myIds": list(my_ids_set),
+        "userPhone": user_phone,
+        "isAuthenticated": request.user.is_authenticated,
+        "csrfToken": get_token(request),
+        "loginUrl": "/login/",
+    }
 
     cities = City.objects.all().order_by("name")
 
-    ctx = {
-        "page_obj":   page_obj,
-        "reports":    page_obj.object_list,
-        "cities":     cities,
-        "has_more":   has_more,
-        "total_count": total,
-        "visible_count": visible,
-        "categories": Report.CATEGORY_CHOICES,
-        "filters": {
-            "type":     report_type,
-            "category": category,
-            "city":     city_id,
-            "q":        q,
-        },
-    }
-
-    if request.headers.get("HX-Request"):
-        html = render_to_string("partials/_report_results.html", ctx, request=request)
-        return JsonResponse({"html": html, "total_count": total, "visible_count": visible, "has_more": has_more})
-
-    return render(request, "lost_found_list.html", ctx)
-
-
-# ─────────────────────────────────────────────
-# Detail
-# ─────────────────────────────────────────────
-def report_detail(request, report_id):
-    report = get_object_or_404(
-        Report.objects.select_related("user", "city").prefetch_related("photos"),
-        id=report_id,
-        status=Report.STATUS_ACTIVE,
-        is_deleted=False,
-    )
-
-    # session-based view count
-    session_key = f"report_viewed_{report_id}"
-    if not request.session.get(session_key):
-        request.session[session_key] = True
-
-    owner = report.user
-    can_see_phone = report.show_phone and request.user.is_authenticated
-
-    raw_phone = (owner.phone or "").strip()
-    masked_phone = "07•• ••• •••"
-    if raw_phone:
-        masked_phone = raw_phone[:2] + "•• ••• •••"
-
-    is_owner = request.user.is_authenticated and request.user.pk == owner.pk
-
-    # Matches (only visible to owner)
-    matches = []
-    if is_owner:
-        if report.type == Report.TYPE_LOST:
-            matches = (
-                ReportMatch.objects
-                .filter(lost_report=report, found_report__status=Report.STATUS_ACTIVE, found_report__is_deleted=False)
-                .select_related("found_report__user", "found_report__city")
-                .prefetch_related("found_report__photos")
-                .order_by("-score")[:10]
-            )
-        else:
-            matches = (
-                ReportMatch.objects
-                .filter(found_report=report, lost_report__status=Report.STATUS_ACTIVE, lost_report__is_deleted=False)
-                .select_related("lost_report__user", "lost_report__city")
-                .prefetch_related("lost_report__photos")
-                .order_by("-score")[:10]
-            )
-
-    return render(request, "lost_found_detail.html", {
-        "report":         report,
-        "is_owner":       is_owner,
-        "can_see_phone":  can_see_phone,
-        "phone_full":     raw_phone if can_see_phone else "",
-        "phone_masked":   masked_phone,
-        "matches":        matches,
-    })
-
-
-# ─────────────────────────────────────────────
-# Create
-# ─────────────────────────────────────────────
-@login_required
-def report_create(request):
-    if request.method == "POST":
-        token = request.POST.get("form_token")
-        if not token or token != request.session.get("report_create_token"):
-            from django.http import HttpResponseBadRequest
-            return HttpResponseBadRequest("Invalid submission")
-        del request.session["report_create_token"]
-
-        form = ReportForm(request.POST)
-        images = request.FILES.getlist("images")
-
-        if form.is_valid():
-            d = form.cleaned_data
-            report = Report.objects.create(
-                user=request.user,
-                type=d["type"],
-                title=d["title"],
-                description=d.get("description") or "",
-                category=d["category"],
-                city=d.get("city"),
-                area=d.get("area") or "",
-                incident_date=d.get("incident_date"),
-                show_phone=d.get("show_phone", True),
-                contact_type=d.get("contact_type", Report.CONTACT_PHONE),
-                status=Report.STATUS_PENDING,
-            )
-
-            for i, img in enumerate(images[:8]):
-                ReportPhoto.objects.create(report=report, image=img, is_main=(i == 0))
-
-            messages.success(request, "✅ تم إرسال بلاغك وهو الآن قيد المراجعة.")
-            return redirect("my_reports")
-
-        request.session["report_create_token"] = str(uuid.uuid4())
-    else:
-        form = ReportForm()
-        request.session["report_create_token"] = str(uuid.uuid4())
-
-    return render(request, "lost_found_create.html", {
-        "form":       form,
-        "form_token": request.session["report_create_token"],
-        "cities":     City.objects.all().order_by("name"),
+    return render(request, "lost_found.html", {
+        "initial_data_json": json.dumps(initial_data, cls=DjangoJSONEncoder, ensure_ascii=False),
+        "cities": cities,
         "categories": Report.CATEGORY_CHOICES,
     })
 
 
 # ─────────────────────────────────────────────
-# Edit
-# ─────────────────────────────────────────────
-@login_required
-def report_edit(request, report_id):
-    report = get_object_or_404(
-        Report.objects.filter(user=request.user, is_deleted=False),
-        id=report_id,
-    )
-
-    if request.method == "POST":
-        token = request.POST.get("form_token")
-        if not token or token != request.session.get("report_edit_token"):
-            from django.http import HttpResponseBadRequest
-            return HttpResponseBadRequest("Invalid submission")
-        del request.session["report_edit_token"]
-
-        form = ReportForm(request.POST)
-        new_images = request.FILES.getlist("images")
-
-        if form.is_valid():
-            d = form.cleaned_data
-            report.type          = d["type"]
-            report.title         = d["title"]
-            report.description   = d.get("description") or ""
-            report.category      = d["category"]
-            report.city          = d.get("city")
-            report.area          = d.get("area") or ""
-            report.incident_date = d.get("incident_date")
-            report.show_phone    = d.get("show_phone", True)
-            report.contact_type  = d.get("contact_type", Report.CONTACT_PHONE)
-            report.status        = Report.STATUS_PENDING  # needs re-moderation
-            report.approved_by   = None
-            report.approved_at   = None
-            report.save()
-
-            for i, img in enumerate(new_images[:8]):
-                is_main = (i == 0) and not report.photos.filter(is_main=True).exists()
-                ReportPhoto.objects.create(report=report, image=img, is_main=is_main)
-
-            messages.success(request, "✅ تم تحديث البلاغ وهو الآن قيد المراجعة.")
-            return redirect("my_reports")
-
-        request.session["report_edit_token"] = str(uuid.uuid4())
-    else:
-        initial = {
-            "type":          report.type,
-            "title":         report.title,
-            "description":   report.description,
-            "category":      report.category,
-            "city":          report.city,
-            "area":          report.area,
-            "incident_date": report.incident_date,
-            "show_phone":    report.show_phone,
-            "contact_type":  report.contact_type,
-        }
-        form = ReportForm(initial=initial)
-        request.session["report_edit_token"] = str(uuid.uuid4())
-
-    return render(request, "lost_found_edit.html", {
-        "form":       form,
-        "report":     report,
-        "form_token": request.session["report_edit_token"],
-        "cities":     City.objects.all().order_by("name"),
-        "categories": Report.CATEGORY_CHOICES,
-    })
-
-
-# ─────────────────────────────────────────────
-# Delete photo (AJAX)
+# AJAX: Create or Update
 # ─────────────────────────────────────────────
 @login_required
 @require_POST
-def report_delete_photo(request, photo_id):
-    photo = get_object_or_404(ReportPhoto, id=photo_id, report__user=request.user)
-    photo.image.delete(save=False)
-    photo.delete()
+def ajax_report_save(request):
+    report_id    = request.POST.get("report_id", "").strip()
+    report_type  = request.POST.get("type", "").strip()   # 'lost' | 'found'
+    cat_label    = request.POST.get("cat", "").strip()    # Arabic label
+    title        = request.POST.get("title", "").strip()
+    desc         = request.POST.get("desc", "").strip()
+    city_name    = request.POST.get("city", "").strip()
+    area         = request.POST.get("area", "").strip()
+    show_phone   = request.POST.get("show_phone", "false") == "true"
+    images_json  = request.POST.get("images_json", "[]")
+    main_idx_str = request.POST.get("main_image_index", "0")
+
+    # Validate required fields
+    if not title:
+        return JsonResponse({"ok": False, "error": "العنوان مطلوب"})
+    if not cat_label:
+        return JsonResponse({"ok": False, "error": "التصنيف مطلوب"})
+    if not city_name:
+        return JsonResponse({"ok": False, "error": "المدينة مطلوبة"})
+    if report_type not in (Report.TYPE_LOST, Report.TYPE_FOUND):
+        return JsonResponse({"ok": False, "error": "نوع البلاغ غير صحيح"})
+
+    # Map Arabic label → DB key
+    cat_key = next(
+        (k for k, v in Report.CATEGORY_CHOICES if v == cat_label),
+        Report.CAT_OTHER
+    )
+
+    # Lookup city
+    city = City.objects.filter(name=city_name).first()
+
+    # Parse images
+    try:
+        images_list = json.loads(images_json)
+    except Exception:
+        images_list = []
+
+    try:
+        main_idx = int(main_idx_str)
+    except ValueError:
+        main_idx = 0
+
+    if report_id:
+        # ── UPDATE ──────────────────────────────
+        try:
+            report = Report.objects.get(id=report_id, user=request.user, is_deleted=False)
+        except Report.DoesNotExist:
+            return JsonResponse({"ok": False, "error": "البلاغ غير موجود"})
+
+        report.type        = report_type
+        report.title       = title
+        report.description = desc
+        report.category    = cat_key
+        report.city        = city
+        report.area        = area
+        report.show_phone  = show_phone
+        report.status      = Report.STATUS_PENDING
+        report.approved_by = None
+        report.approved_at = None
+        report.save()
+
+        existing_photos = list(report.photos.all())
+        _save_images(report, images_list, main_idx, existing_photos=existing_photos)
+    else:
+        # ── CREATE ──────────────────────────────
+        report = Report.objects.create(
+            user        = request.user,
+            type        = report_type,
+            title       = title,
+            description = desc,
+            category    = cat_key,
+            city        = city,
+            area        = area,
+            show_phone  = show_phone,
+            status      = Report.STATUS_PENDING,
+        )
+        _save_images(report, images_list, main_idx)
+
+    report.refresh_from_db()
+    report.photos.prefetch_related  # force fresh prefetch
+    return JsonResponse({
+        "ok": True,
+        "report": _report_to_js(
+            Report.objects.prefetch_related("photos").select_related("user", "city").get(pk=report.pk),
+            is_own=True
+        )
+    })
+
+
+# ─────────────────────────────────────────────
+# AJAX: Delete (soft)
+# ─────────────────────────────────────────────
+@login_required
+@require_POST
+def ajax_report_delete(request, report_id):
+    try:
+        report = Report.objects.get(id=report_id, user=request.user, is_deleted=False)
+    except Report.DoesNotExist:
+        return JsonResponse({"ok": False, "error": "البلاغ غير موجود"})
+
+    report.is_deleted = True
+    report.deleted_at = timezone.now()
+    report.save(update_fields=["is_deleted", "deleted_at"])
+
     return JsonResponse({"ok": True})
-
-
-# ─────────────────────────────────────────────
-# Soft-delete / cancel
-# ─────────────────────────────────────────────
-@login_required
-@require_POST
-def report_cancel(request, report_id):
-    report = get_object_or_404(Report, id=report_id, user=request.user, is_deleted=False)
-    report.is_deleted   = True
-    report.deleted_at   = timezone.now()
-    report.cancel_reason = request.POST.get("cancel_reason", "")
-    report.save(update_fields=["is_deleted", "deleted_at", "cancel_reason"])
-    messages.success(request, "تم حذف البلاغ.")
-    return redirect("my_reports")
-
-
-# ─────────────────────────────────────────────
-# My Reports (in my_account tab or standalone)
-# ─────────────────────────────────────────────
-@login_required
-def my_reports(request):
-    reports = (
-        Report.objects
-        .filter(user=request.user, is_deleted=False)
-        .select_related("city")
-        .prefetch_related("photos")
-        .order_by("-created_at")
-    )
-    return render(request, "my_reports.html", {"reports": reports})
