@@ -1,0 +1,14 @@
+{# partials/_report_results.html — HTMX partial #}
+{% if reports %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+    {% for report in reports %}
+      {% include "partials/_report_card.html" %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="text-center py-20 text-gray-400">
+    <div class="text-5xl mb-4">🔍</div>
+    <p class="text-lg font-semibold">لا توجد بلاغات تطابق بحثك</p>
+    <p class="text-sm mt-1">جرّب تغيير الفلاتر أو كلمة البحث</p>
+  </div>
+{% endif %}

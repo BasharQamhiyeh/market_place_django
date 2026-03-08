@@ -685,3 +685,77 @@ class StoreReviewForm(forms.ModelForm):
         model = StoreReview
         fields = ["rating", "comment"]
 
+
+class ReportForm(forms.Form):
+    from marketplace.models.lost_found import Report as _Report
+
+    TYPE_CHOICES = _Report.TYPE_CHOICES
+    CATEGORY_CHOICES = _Report.CATEGORY_CHOICES
+    CONTACT_TYPE_CHOICES = _Report.CONTACT_TYPE_CHOICES
+
+    type = forms.ChoiceField(
+        choices=TYPE_CHOICES,
+        label="نوع البلاغ",
+        widget=forms.RadioSelect(attrs={"class": "sr-only"}),
+    )
+    title = forms.CharField(
+        max_length=255,
+        label="العنوان",
+        widget=forms.TextInput(attrs={"class": "input-field", "placeholder": "مثلاً: فقدت محفظتي في منطقة الرابية"}),
+    )
+    description = forms.CharField(
+        required=False,
+        label="الوصف",
+        widget=forms.Textarea(attrs={"class": "input-field", "rows": 4,
+                                     "placeholder": "صف ما فقدته أو عثرت عليه بأكبر قدر من التفاصيل..."}),
+    )
+    category = forms.ChoiceField(
+        choices=CATEGORY_CHOICES,
+        label="الفئة",
+        widget=forms.Select(attrs={"class": "input-field"}),
+    )
+    city = forms.ModelChoiceField(
+        queryset=None,
+        required=False,
+        label="المحافظة",
+        empty_label="اختر المحافظة",
+        widget=forms.Select(attrs={"class": "input-field"}),
+    )
+    area = forms.CharField(
+        max_length=255,
+        required=False,
+        label="المنطقة / الحي",
+        widget=forms.TextInput(attrs={"class": "input-field", "placeholder": "مثلاً: الرابية، شارع المدينة"}),
+    )
+    incident_date = forms.DateField(
+        required=False,
+        label="تاريخ الحادثة",
+        widget=forms.DateInput(attrs={"class": "input-field", "type": "date"}),
+    )
+    show_phone = forms.BooleanField(
+        required=False,
+        label="إظهار رقم الهاتف للآخرين",
+        initial=True,
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
+    contact_type = forms.ChoiceField(
+        choices=CONTACT_TYPE_CHOICES,
+        label="طريقة التواصل",
+        initial="phone",
+        widget=forms.RadioSelect(attrs={"class": "sr-only"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        from marketplace.models import City as CityModel
+        super().__init__(*args, **kwargs)
+        self.fields["city"].queryset = CityModel.objects.all().order_by("name")
+
+    def clean_title(self):
+        from marketplace.validators import validate_no_links_or_html
+        return validate_no_links_or_html(self.cleaned_data["title"])
+
+    def clean_description(self):
+        from marketplace.validators import validate_no_links_or_html
+        val = self.cleaned_data.get("description") or ""
+        return validate_no_links_or_html(val) if val else val
+
