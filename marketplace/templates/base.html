@@ -473,6 +473,11 @@
 
         <div class="flex-1"></div>
 
+        <a href="{% url 'report_list' %}"
+           class="flex items-center gap-1.5 text-slate-600 text-xs font-semibold hover:text-[var(--rukn-green)] transition whitespace-nowrap">
+          🔍 مفقودات
+        </a>
+
         {# ✅ all sections -> categories_browse (keep data-open-categories for mobile modal if your JS uses it) #}
         <a href="{{ categories_browse_url }}"
            class="flex items-center gap-1 text-[#ff7a18] text-xs font-extrabold hover:gap-2 transition"
@@ -632,6 +637,7 @@
               <li><a href="{% url 'item_list' %}" class="nav-link">الإعلانات</a></li>
               <li><a href="{% url 'request_list' %}" class="nav-link">الطلبات</a></li>
               <li><a href="{% url 'stores_list' %}" class="nav-link">المتاجر</a></li>
+              <li><a href="{% url 'report_list' %}" class="nav-link">المفقودات والموجودات</a></li>
             </ul>
           </div>
 
