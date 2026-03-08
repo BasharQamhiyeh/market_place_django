@@ -9,3 +9,4 @@ from .chat import Conversation, Message
 from .notifications import Notification
 from .favorite import Favorite
 from .misc import Subscriber, IssuesReport, PhoneVerificationCode, PhoneVerification, MobileVerification, ContactMessage, FAQCategory, FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, TermsPage, TermsSection, SiteSettings
+from .lost_found import Report, ReportPhoto, ReportMatch

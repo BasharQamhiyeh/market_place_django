@@ -24,6 +24,7 @@ from .models import (
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
     FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction,
     TermsPage, TermsSection, SiteSettings,
+    Report, ReportPhoto, ReportMatch,
 )
 from .services.wallet import apply_points_transaction
 from .services.notifications import notify, K_WALLET, S_CHARGED
@@ -1783,6 +1784,54 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         obj = SiteSettings.get()
         return redirect(reverse("admin:marketplace_sitesettings_change", args=[obj.pk]))
+
+
+# ======================================================
+# ✅ Lost & Found
+# ======================================================
+class ReportPhotoInline(admin.TabularInline):
+    model = ReportPhoto
+    extra = 0
+    readonly_fields = ('image',)
+
+
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('id', 'type', 'title', 'category', 'city', 'user', 'status', 'created_at')
+    list_filter = ('type', 'status', 'category')
+    search_fields = ('title', 'description', 'user__phone', 'user__first_name')
+    readonly_fields = ('created_at', 'updated_at', 'approved_at', 'rejected_at')
+    inlines = [ReportPhotoInline]
+    actions = ['approve_reports', 'reject_reports']
+
+    def approve_reports(self, request, queryset):
+        now = timezone.now()
+        updated = queryset.filter(status=Report.STATUS_PENDING).update(
+            status=Report.STATUS_ACTIVE,
+            approved_by=request.user,
+            approved_at=now,
+        )
+        self.message_user(request, f"{updated} report(s) approved.")
+
+    approve_reports.short_description = "Approve selected reports"
+
+    def reject_reports(self, request, queryset):
+        now = timezone.now()
+        updated = queryset.filter(status=Report.STATUS_PENDING).update(
+            status=Report.STATUS_REJECTED,
+            rejected_by=request.user,
+            rejected_at=now,
+        )
+        self.message_user(request, f"{updated} report(s) rejected.")
+
+    reject_reports.short_description = "Reject selected reports"
+
+
+@admin.register(ReportMatch)
+class ReportMatchAdmin(admin.ModelAdmin):
+    list_display = ('id', 'lost_report', 'found_report', 'score', 'lost_notified', 'found_notified', 'created_at')
+    list_filter = ('lost_notified', 'found_notified')
+    readonly_fields = ('created_at',)
 
 
 # ======================================================

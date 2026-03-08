@@ -9,7 +9,8 @@ from .api_views import (
     FavoriteViewSet,
     ConversationViewSet, MessageViewSet,
     NotificationViewSet,
-    IssueReportAPI, SubscribeAPI
+    IssueReportAPI, SubscribeAPI,
+    ReportViewSet,
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 from .api_views import LoginAPI, LogoutAPI  # make sure LogoutAPI is imported
@@ -26,6 +27,7 @@ router.register(r"messages", MessageViewSet, basename="messages")
 router.register(r"notifications", NotificationViewSet, basename="notifications")
 router.register(r"issue-reports", IssueReportAPI, basename="issues")
 router.register(r"subscribe", SubscribeAPI, basename="subscribe")
+router.register(r"reports", ReportViewSet, basename="reports")
 
 urlpatterns = [
     # Auth

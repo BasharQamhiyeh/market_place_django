@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from .models import Item, Listing, Store, Notification, StoreFollow, ItemPhoto
 from .models.requests import Request
+from .models.lost_found import Report
 from . import moderation   # imports the moderation.py you already created
 from django.core.cache import cache
 from .models import Category
@@ -131,6 +132,39 @@ def delete_itemphoto_file(sender, instance, **kwargs):
 def clear_navbar_categories_cache(sender, instance, **kwargs):
     cache.delete("navbar_cats:v1:en")
     cache.delete("navbar_cats:v1:ar")
+
+
+@receiver(pre_save, sender=Report)
+def report_track_old_status(sender, instance: Report, **kwargs):
+    """Remember the old status so we can detect pending → active transitions."""
+    if not instance.pk:
+        instance._old_status = None
+        return
+    old = Report.objects.filter(pk=instance.pk).values('status').first()
+    instance._old_status = old['status'] if old else None
+
+
+@receiver(post_save, sender=Report)
+def run_matching_on_report_approval(sender, instance: Report, created: bool, **kwargs):
+    """
+    Trigger backend matching whenever a report transitions to active status.
+    Runs after commit to avoid long DB locks during the request.
+    """
+    old_status = getattr(instance, '_old_status', None)
+    became_active = instance.status == Report.STATUS_ACTIVE and old_status != Report.STATUS_ACTIVE
+
+    if not became_active:
+        return
+
+    from marketplace.services.lost_found_matching import find_matches_for_report
+
+    def _run():
+        try:
+            find_matches_for_report(instance)
+        except Exception:
+            logger.exception("Lost & Found matching failed for report #%s", instance.pk)
+
+    transaction.on_commit(_run)
 
 
 @receiver(post_save, sender=Request)

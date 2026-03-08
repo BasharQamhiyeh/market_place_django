@@ -13,7 +13,8 @@ from .models import (
     Category, Attribute, AttributeOption,
     Item, ItemPhoto, ItemAttributeValue, City,
     Conversation, Message, Notification, Favorite,
-    IssueReport, Subscriber, PhoneVerificationCode, User
+    IssueReport, Subscriber, PhoneVerificationCode, User,
+    Report, ReportPhoto, ReportMatch,
 )
 from .documents import ListingDocument
 from .utils.sms import send_sms_code
@@ -26,7 +27,8 @@ from .api_serializers import (
     ItemListSerializer, ItemDetailSerializer, ItemCreateUpdateSerializer, ItemPhotoSerializer,
     FavoriteSerializer,
     ConversationSerializer, MessageSerializer, NotificationSerializer,
-    IssueReportSerializer, SubscriberSerializer
+    IssueReportSerializer, SubscriberSerializer,
+    ReportListSerializer, ReportDetailSerializer, ReportCreateUpdateSerializer, ReportMatchSerializer,
 )
 from .api_permissions import IsOwnerOrReadOnly, IsConversationParticipant, IsMessageParticipant
 from django.conf import settings
@@ -429,3 +431,118 @@ class SubscribeAPI(mixins.CreateModelMixin, viewsets.GenericViewSet):
     serializer_class = SubscriberSerializer
     permission_classes = [AllowAny]
     queryset = Subscriber.objects.all()
+
+
+# -------------------------
+# Lost & Found
+# -------------------------
+class ReportViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return ReportCreateUpdateSerializer
+        if self.action == 'retrieve':
+            return ReportDetailSerializer
+        return ReportListSerializer
+
+    def get_queryset(self):
+        qs = Report.objects.filter(is_deleted=False).select_related('user', 'city')
+
+        # Public list: only approved reports
+        if self.action == 'list':
+            qs = qs.filter(status=Report.STATUS_ACTIVE)
+
+        report_type = self.request.query_params.get('type')
+        if report_type in (Report.TYPE_LOST, Report.TYPE_FOUND):
+            qs = qs.filter(type=report_type)
+
+        category = self.request.query_params.get('category')
+        if category:
+            qs = qs.filter(category=category)
+
+        city_id = self.request.query_params.get('city')
+        if city_id:
+            qs = qs.filter(city_id=city_id)
+
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(title__icontains=search) |
+                Q(description__icontains=search) |
+                Q(area__icontains=search)
+            )
+
+        return qs.order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user, status=Report.STATUS_PENDING)
+
+    def perform_destroy(self, instance):
+        if instance.user != self.request.user:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied()
+        cancel_reason = self.request.data.get('cancel_reason', '')
+        instance.is_deleted = True
+        instance.deleted_at = timezone.now()
+        instance.cancel_reason = cancel_reason
+        instance.save(update_fields=['is_deleted', 'deleted_at', 'cancel_reason'])
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='mine')
+    def mine(self, request):
+        qs = Report.objects.filter(
+            user=request.user, is_deleted=False
+        ).select_related('city').order_by('-created_at')
+        serializer = ReportListSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated], url_path='matches')
+    def matches(self, request, pk=None):
+        report = self.get_object()
+        if report.user != request.user:
+            return Response(status=403)
+
+        if report.type == Report.TYPE_LOST:
+            matches = ReportMatch.objects.filter(
+                lost_report=report,
+                found_report__status=Report.STATUS_ACTIVE,
+                found_report__is_deleted=False,
+            ).select_related('found_report__user', 'found_report__city').order_by('-score')
+        else:
+            matches = ReportMatch.objects.filter(
+                found_report=report,
+                lost_report__status=Report.STATUS_ACTIVE,
+                lost_report__is_deleted=False,
+            ).select_related('lost_report__user', 'lost_report__city').order_by('-score')
+
+        serializer = ReportMatchSerializer(
+            matches, many=True,
+            context={'request': request, 'report_id': report.pk}
+        )
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated], url_path='photos/(?P<photo_pk>[^/.]+)')
+    def delete_photo(self, request, pk=None, photo_pk=None):
+        report = self.get_object()
+        if report.user != request.user:
+            return Response(status=403)
+        try:
+            photo = report.photos.get(pk=photo_pk)
+        except ReportPhoto.DoesNotExist:
+            return Response(status=404)
+        photo.image.delete(save=False)
+        photo.delete()
+        return Response(status=204)
