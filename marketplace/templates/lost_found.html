@@ -2129,8 +2129,8 @@ function setView(view){
 }
 
 function refresh(){
-  els.lostCount.textContent  = state.ads.filter(a=>a.type==="مفقود").length;
-  els.foundCount.textContent = state.ads.filter(a=>a.type==="موجود").length;
+  els.lostCount.textContent  = state.ads.filter(a=>a.type==="مفقود" && a.status==="active").length;
+  els.foundCount.textContent = state.ads.filter(a=>a.type==="موجود" && a.status==="active").length;
   els.mineCount.textContent  = state.myIds.size;
 
   if(state.view === "mine"){
