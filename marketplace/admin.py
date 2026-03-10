@@ -1797,12 +1797,70 @@ class ReportPhotoInline(admin.TabularInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'title', 'category', 'city', 'user', 'status', 'created_at')
+    list_display = ('id', 'type', 'title', 'category', 'city', 'user', 'colored_status', 'created_at')
     list_filter = ('type', 'status', 'category')
     search_fields = ('title', 'description', 'user__phone', 'user__first_name')
-    readonly_fields = ('created_at', 'updated_at', 'approved_at', 'rejected_at')
+    readonly_fields = ('colored_status', 'created_at', 'updated_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
     inlines = [ReportPhotoInline]
     actions = ['approve_reports', 'reject_reports']
+
+    def colored_status(self, obj):
+        if obj.status == Report.STATUS_ACTIVE:
+            color, text = "green", "Approved"
+        elif obj.status == Report.STATUS_REJECTED:
+            color, text = "red", "Rejected"
+        else:
+            color, text = "orange", "Pending"
+        return format_html('<b style="color:{};">{}</b>', color, text)
+    colored_status.short_description = "Status"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path("<int:report_id>/approve/", self.admin_site.admin_view(self.approve_view), name="report_approve"),
+            path("<int:report_id>/reject/", self.admin_site.admin_view(self.reject_view), name="report_reject"),
+        ]
+        return custom + urls
+
+    def approve_view(self, request, report_id):
+        report = get_object_or_404(Report, id=report_id)
+        report.status = Report.STATUS_ACTIVE
+        report.approved_by = request.user
+        report.rejected_by = None
+        report.approved_at = timezone.now()
+        report.rejected_at = None
+        report.rejection_reason = None
+        report.save(update_fields=["status", "approved_by", "rejected_by", "approved_at", "rejected_at", "rejection_reason"])
+        self.message_user(request, "✅ Report approved.", messages.SUCCESS)
+        opts = self.model._meta
+        return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist"))
+
+    def reject_view(self, request, report_id):
+        report = get_object_or_404(Report, id=report_id)
+        if request.method == "POST":
+            reason = request.POST.get("reason") or "غير مذكور"
+            report.status = Report.STATUS_REJECTED
+            report.rejected_by = request.user
+            report.approved_by = None
+            report.rejected_at = timezone.now()
+            report.approved_at = None
+            report.rejection_reason = reason
+            report.save(update_fields=["status", "rejected_by", "approved_by", "rejected_at", "approved_at", "rejection_reason"])
+            self.message_user(request, "❌ Report rejected.", messages.ERROR)
+            opts = self.model._meta
+            return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist"))
+
+        opts = self.model._meta
+        context = {
+            "item": report,
+            "listing": report,
+            "opts": opts,
+            "original": report,
+            "app_label": opts.app_label,
+            IS_POPUP_VAR: False,
+            "has_view_permission": True,
+        }
+        return render(request, "admin/marketplace/reject_reason.html", context)
 
     def approve_reports(self, request, queryset):
         now = timezone.now()
@@ -1812,7 +1870,6 @@ class ReportAdmin(admin.ModelAdmin):
             approved_at=now,
         )
         self.message_user(request, f"{updated} report(s) approved.")
-
     approve_reports.short_description = "Approve selected reports"
 
     def reject_reports(self, request, queryset):
@@ -1823,7 +1880,6 @@ class ReportAdmin(admin.ModelAdmin):
             rejected_at=now,
         )
         self.message_user(request, f"{updated} report(s) rejected.")
-
     reject_reports.short_description = "Reject selected reports"
 
 
