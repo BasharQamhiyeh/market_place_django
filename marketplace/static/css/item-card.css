@@ -238,7 +238,7 @@
 .ad-hover-hint {
   position: absolute !important;
   top: calc(50% - 4px) !important;
-  left: 12px !important;
+  left: 4px !important;
   transform: translateY(-50%) !important;
 
   display: flex !important;
@@ -262,7 +262,7 @@
 .ad-hover-hint .txt {
   display: flex !important;
   flex-direction: column !important;
-  font-size: 11px !important;
+  font-size: 9px !important;
   font-weight: 900 !important;
   color: var(--ad-orange) !important;
   line-height: 1.1 !important;
