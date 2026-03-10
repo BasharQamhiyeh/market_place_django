@@ -19,6 +19,13 @@ class Conversation(models.Model):
         null=True,
         blank=True,
     )
+    report = models.ForeignKey(
+        "marketplace.Report",
+        on_delete=models.CASCADE,
+        related_name="conversations",
+        null=True,
+        blank=True,
+    )
 
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="buyer_conversations")
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="seller_conversations")
@@ -29,8 +36,9 @@ class Conversation(models.Model):
             # exactly one target
             models.CheckConstraint(
                 check=(
-                    (Q(listing__isnull=False) & Q(store__isnull=True)) |
-                    (Q(listing__isnull=True) & Q(store__isnull=False))
+                    (Q(listing__isnull=False) & Q(store__isnull=True)  & Q(report__isnull=True)) |
+                    (Q(listing__isnull=True)  & Q(store__isnull=False) & Q(report__isnull=True)) |
+                    (Q(listing__isnull=True)  & Q(store__isnull=True)  & Q(report__isnull=False))
                 ),
                 name="conversation_exactly_one_target",
             ),
@@ -46,11 +54,19 @@ class Conversation(models.Model):
                 condition=Q(store__isnull=False),
                 name="uniq_convo_store_buyer_seller",
             ),
+            # uniqueness for report conversations
+            models.UniqueConstraint(
+                fields=["report", "buyer", "seller"],
+                condition=Q(report__isnull=False),
+                name="uniq_convo_report_buyer_seller",
+            ),
         ]
 
     def __str__(self):
         if self.listing_id:
             return f"Conversation on {self.listing.title}"
+        if self.report_id:
+            return f"Conversation on report {self.report.title}"
         return f"Conversation with store {self.store.name}"
 
 

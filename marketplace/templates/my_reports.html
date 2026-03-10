@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ركن — بلاغاتي{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" dir="rtl">
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900">بلاغاتي</h1>
+        <p class="text-sm text-gray-500 mt-0.5">إدارة بلاغات المفقودات والموجودات</p>
+      </div>
+      <a href="{% url 'report_create' %}"
+         class="inline-flex items-center gap-2 bg-[var(--rukn-green)] text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition">
+        + بلاغ جديد
+      </a>
+    </div>
+
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm
+                    {% if msg.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+                    {% else %}bg-red-50 text-red-700 border border-red-200{% endif %}">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if reports %}
+      <div class="space-y-4">
+        {% for report in reports %}
+          <div class="container-box p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+
+            <!-- Photo -->
+            {% with photo=report.main_photo %}
+            <div class="w-20 h-20 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
+              {% if photo %}
+                <img src="{{ photo.image.url }}" class="w-full h-full object-cover" alt="{{ report.title }}">
+              {% else %}
+                <div class="w-full h-full flex items-center justify-center text-2xl">🔍</div>
+              {% endif %}
+            </div>
+            {% endwith %}
+
+            <!-- Info -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                {% if report.type == 'lost' %}
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold">🔍 مفقود</span>
+                {% else %}
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-bold">✋ موجود</span>
+                {% endif %}
+
+                {% if report.status == 'active' %}
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">✅ منشور</span>
+                {% elif report.status == 'pending' %}
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-bold">⏳ قيد المراجعة</span>
+                {% else %}
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-bold">❌ مرفوض</span>
+                {% endif %}
+              </div>
+
+              <h3 class="font-bold text-slate-800 truncate">{{ report.title }}</h3>
+
+              <div class="flex flex-wrap gap-3 text-xs text-gray-500 mt-1">
+                {% if report.city %}<span>📍 {{ report.city.name }}</span>{% endif %}
+                <span>🗂 {{ report.get_category_display }}</span>
+                <span>🕒 {{ report.created_at|date:"Y/m/d" }}</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2 flex-shrink-0">
+              {% if report.status == 'active' %}
+                <a href="{% url 'report_detail' report.id %}"
+                   class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 font-semibold text-slate-600 hover:border-[var(--rukn-green)] hover:text-[var(--rukn-green)] transition">
+                  عرض
+                </a>
+              {% endif %}
+              <a href="{% url 'report_edit' report.id %}"
+                 class="text-xs border border-gray-200 rounded-lg px-3 py-1.5 font-semibold text-slate-600 hover:border-[var(--rukn-green)] hover:text-[var(--rukn-green)] transition">
+                تعديل
+              </a>
+              <form method="post" action="{% url 'report_cancel' report.id %}"
+                    onsubmit="return confirm('هل أنت متأكد؟')">
+                {% csrf_token %}
+                <button type="submit"
+                        class="text-xs border border-red-200 rounded-lg px-3 py-1.5 font-semibold text-red-500 hover:bg-red-50 transition">
+                  حذف
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="text-center py-20 text-gray-400">
+        <div class="text-5xl mb-4">📋</div>
+        <p class="text-lg font-semibold text-slate-600">لا توجد بلاغات بعد</p>
+        <p class="text-sm mt-1 mb-5">أضف أول بلاغ لك الآن</p>
+        <a href="{% url 'report_create' %}"
+           class="inline-block bg-[var(--rukn-green)] text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition">
+          + أضف بلاغاً
+        </a>
+      </div>
+    {% endif %}
+
+  </main>
+</div>
+{% endblock %}

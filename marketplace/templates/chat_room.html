@@ -6,6 +6,8 @@
     {{ item.listing.title }}
   {% elif request_obj %}
     {{ request_obj.listing.title }}
+  {% elif report %}
+    {{ report.title }}
   {% else %}
     Chat
   {% endif %}
@@ -17,12 +19,16 @@
   <div class="bg-white border border-gray-200 rounded-xl shadow">
 
     <!-- HEADER -->
-    <div class="bg-gray-800 text-white px-4 py-3 rounded-t-xl">
-      <h5 class="text-lg font-semibold">
+    <div class=”bg-gray-800 text-white px-4 py-3 rounded-t-xl”>
+      <h5 class=”text-lg font-semibold”>
         {% if item %}
-          {% trans "Chat about" %} “{{ item.listing.title }}”
+          {% trans “Chat about” %} “{{ item.listing.title }}”
+        {% elif request_obj %}
+          {% trans “Chat about request” %} “{{ request_obj.listing.title }}”
+        {% elif report %}
+          محادثة بخصوص بلاغ “{{ report.title }}”
         {% else %}
-          {% trans "Chat about request" %} “{{ request_obj.listing.title }}”
+          محادثة
         {% endif %}
       </h5>
     </div>
@@ -94,6 +100,12 @@
           <a href="{% url 'request_detail' request_obj.id %}"
              class="bg-green-600 inline-block border border-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
             {% trans "Back to request" %}
+          </a>
+
+        {% elif report %}
+          <a href="{% url 'report_list' %}"
+             class="bg-purple-600 inline-block border border-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition">
+            العودة إلى البلاغات
           </a>
         {% endif %}
       </div>

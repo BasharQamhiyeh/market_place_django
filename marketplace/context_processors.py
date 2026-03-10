@@ -61,6 +61,7 @@ def navbar_counters(request):
         )
         .select_related(
             "listing",
+            "report",
             "buyer",
             "buyer__store",
             "seller",

@@ -5,7 +5,8 @@ from .models import (
     Category, Attribute, AttributeOption,
     Item, ItemPhoto, ItemAttributeValue, City,
     Conversation, Message, Notification, Favorite,
-    IssueReport, Subscriber, PhoneVerificationCode
+    IssueReport, Subscriber, PhoneVerificationCode,
+    Report, ReportPhoto, ReportMatch,
 )
 from .validators import validate_no_links_or_html
 
@@ -332,3 +333,122 @@ class SubscriberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscriber
         fields = ["id", "email", "subscribed_at"]
+
+
+# -------------------------
+# Lost & Found
+# -------------------------
+class ReportPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReportPhoto
+        fields = ["id", "image", "is_main", "created_at"]
+
+
+class ReportListSerializer(serializers.ModelSerializer):
+    city_name = serializers.CharField(source='city.name', read_only=True, default=None)
+    main_photo = serializers.SerializerMethodField()
+    owner_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Report
+        fields = [
+            "id", "type", "title", "category", "city_id", "city_name",
+            "area", "incident_date", "status", "created_at",
+            "main_photo", "owner_name",
+        ]
+
+    def get_main_photo(self, obj):
+        photo = obj.main_photo
+        if photo and photo.image:
+            request = self.context.get('request')
+            url = photo.image.url
+            return request.build_absolute_uri(url) if request else url
+        return None
+
+    def get_owner_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.username
+
+
+class ReportDetailSerializer(serializers.ModelSerializer):
+    city_name = serializers.CharField(source='city.name', read_only=True, default=None)
+    photos = ReportPhotoSerializer(many=True, read_only=True)
+    owner_name = serializers.SerializerMethodField()
+    owner_phone = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Report
+        fields = [
+            "id", "type", "title", "description", "category",
+            "city_id", "city_name", "area", "incident_date",
+            "show_phone", "contact_type", "status",
+            "created_at", "updated_at",
+            "photos", "owner_name", "owner_phone",
+        ]
+
+    def get_owner_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.username
+
+    def get_owner_phone(self, obj):
+        if obj.show_phone:
+            return obj.user.phone
+        return None
+
+
+class ReportCreateUpdateSerializer(serializers.ModelSerializer):
+    images = serializers.ListField(
+        child=serializers.ImageField(allow_empty_file=False),
+        write_only=True, required=False,
+    )
+    main_image_index = serializers.IntegerField(write_only=True, required=False, default=0)
+
+    class Meta:
+        model = Report
+        fields = [
+            "type", "title", "description", "category",
+            "city", "area", "incident_date",
+            "show_phone", "contact_type",
+            "images", "main_image_index",
+        ]
+
+    def validate_title(self, value):
+        return validate_no_links_or_html(value)
+
+    def validate_description(self, value):
+        if not value:
+            return value
+        return validate_no_links_or_html(value)
+
+    def create(self, validated_data):
+        images = validated_data.pop('images', [])
+        main_idx = validated_data.pop('main_image_index', 0)
+        report = Report.objects.create(**validated_data)
+        for i, img in enumerate(images):
+            ReportPhoto.objects.create(report=report, image=img, is_main=(i == main_idx))
+        return report
+
+    def update(self, instance, validated_data):
+        validated_data.pop('images', None)
+        validated_data.pop('main_image_index', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        # Reset to pending when edited (needs re-moderation)
+        instance.status = Report.STATUS_PENDING
+        instance.approved_by = None
+        instance.approved_at = None
+        instance.save()
+        return instance
+
+
+class ReportMatchSerializer(serializers.ModelSerializer):
+    matched_report = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReportMatch
+        fields = ["id", "score", "created_at", "matched_report"]
+
+    def get_matched_report(self, obj):
+        # Return the "other side" of the match relative to the requested report
+        report_id = self.context.get('report_id')
+        if report_id == obj.lost_report_id:
+            return ReportListSerializer(obj.found_report, context=self.context).data
+        return ReportListSerializer(obj.lost_report, context=self.context).data

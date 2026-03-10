@@ -12,7 +12,7 @@ from .views.api.search import search_suggestions
 from .views.api.wallet import api_wallet_summary
 from .views.auth import user_login, user_logout, register, ajax_send_signup_otp, ajax_verify_signup_otp, \
     complete_signup, forgot_password, verify_reset_code, reset_password
-from .views.chat import start_conversation, chat_room, user_inbox, start_conversation_request, start_store_conversation
+from .views.chat import start_conversation, chat_room, user_inbox, start_conversation_request, start_store_conversation, start_report_conversation
 from .views.home import home, home_more_items, home_more_requests
 from .views.items import item_list, item_detail, item_create, item_detail_more_similar, item_edit, delete_item, \
     cancel_item, delete_item_photo, my_items, reactivate_item, item_attributes_partial
@@ -24,6 +24,9 @@ from .views.requests import request_detail_more_similar, request_create, request
 from .views.stores import store_profile, stores_list, stores_list_partial, store_follow_toggle, \
     submit_store_review_ajax, store_reviews_list
 from .views.users import user_profile
+from .views.lost_found import (
+    lost_found_page, ajax_report_save, ajax_report_delete,
+)
 
 urlpatterns = [
     # --- Static ---
@@ -146,6 +149,12 @@ urlpatterns = [
     path('listing/<int:listing_id>/republish/', republish_listing_api, name='republish_listing'),
 
     path('categories/browse/', categories_browse, name='categories_browse'),
+
+    # ─── Lost & Found ───
+    path('lost-found/', lost_found_page, name='report_list'),
+    path('lost-found/ajax/save/', ajax_report_save, name='ajax_report_save'),
+    path('lost-found/ajax/delete/<int:report_id>/', ajax_report_delete, name='ajax_report_delete'),
+    path('lost-found/<int:report_id>/message/', start_report_conversation, name='start_report_conversation'),
 
     # path('api/', include('marketplace.api_urls')),
 ]
