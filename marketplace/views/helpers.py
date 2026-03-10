@@ -118,6 +118,10 @@ def _other_party(convo, me):
 
 
 def _convo_type_and_title(convo):
+  # report conversation
+  if convo.report_id:
+    return ("report", getattr(convo.report, "title", "") or "")
+
   # store conversation
   if convo.store_id:
     return ("store", "تواصل عام مع المتجر")

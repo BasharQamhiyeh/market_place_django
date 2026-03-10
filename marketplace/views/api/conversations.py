@@ -25,7 +25,7 @@ def api_my_conversations(request):
   qs = (
     Conversation.objects
     .filter(Q(buyer=me) | Q(seller=me))
-    .select_related("buyer", "seller", "listing", "store")
+    .select_related("buyer", "seller", "listing", "store", "report")
     .annotate(
       last_body=Subquery(last_msg_qs.values("body")[:1]),
       last_time=Subquery(last_msg_qs.values("created_at")[:1]),
@@ -75,7 +75,7 @@ def api_conversation_messages(request, conversation_id):
 
   convo = (
     Conversation.objects
-    .select_related("buyer", "seller", "store", "listing")
+    .select_related("buyer", "seller", "store", "listing", "report")
     .get(id=conversation_id)
   )
   if me not in [convo.buyer, convo.seller]:
