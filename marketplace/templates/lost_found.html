@@ -1632,7 +1632,7 @@ function oppositeType(type){ return type==="مفقود" ? "موجود" : "مفق
 function getMatchesForAd(targetAd, allAds, limit = 20) {
   const need = oppositeType(targetAd.type);
   return allAds
-    .filter(a => a.id !== targetAd.id && a.type === need)
+    .filter(a => a.id !== targetAd.id && a.type === need && a.status === 'active')
     .filter(a => {
       const sameCat = a.cat && targetAd.cat && a.cat === targetAd.cat;
       const titleMatch = overlapScore(a.title, targetAd.title, 2) > 0;
