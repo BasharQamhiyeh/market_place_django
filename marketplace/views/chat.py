@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Q
 
-from marketplace.models import Item, Conversation, Message, Request, Store
+from marketplace.models import Item, Conversation, Message, Request, Store, Report
 from marketplace.validators import validate_no_links_or_html
 
 
@@ -152,9 +152,54 @@ def start_store_conversation(request, store_id):
 
 
 @login_required
+def start_report_conversation(request, report_id):
+    report = get_object_or_404(Report, id=report_id, status="active", is_deleted=False)
+
+    seller = report.user  # report owner
+    buyer = request.user
+
+    if seller == buyer:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": False, "error": "self_message"}, status=400)
+        return redirect("report_list")
+
+    convo = Conversation.objects.filter(
+        report=report,
+        listing__isnull=True,
+        store__isnull=True,
+        buyer=buyer,
+        seller=seller,
+    ).first()
+
+    if not convo:
+        convo = Conversation.objects.create(report=report, buyer=buyer, seller=seller)
+
+    if request.method != "POST":
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JsonResponse({"ok": True, "conversation_id": convo.id})
+        return redirect("chat_room", conversation_id=convo.id)
+
+    body = (request.POST.get("body") or "").strip()
+    if not body:
+        return JsonResponse({"ok": False, "error": "empty"}, status=400)
+
+    try:
+        validate_no_links_or_html(body)
+    except ValidationError:
+        return JsonResponse({"ok": False, "error": "invalid"}, status=400)
+
+    Message.objects.create(conversation=convo, sender=request.user, body=body)
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"ok": True, "conversation_id": convo.id})
+
+    return redirect("chat_room", conversation_id=convo.id)
+
+
+@login_required
 def chat_room(request, conversation_id):
     conversation = get_object_or_404(
-        Conversation.objects.select_related("listing", "store", "buyer", "seller"),
+        Conversation.objects.select_related("listing", "store", "report", "buyer", "seller"),
         id=conversation_id
     )
 
@@ -164,6 +209,7 @@ def chat_room(request, conversation_id):
 
     listing = conversation.listing
     store = conversation.store
+    report = conversation.report
 
     item = None
     request_obj = None
@@ -205,7 +251,8 @@ def chat_room(request, conversation_id):
             "conversation": conversation,
             "messages": messages_qs,
             "listing": listing,
-            "store": store,          # ✅ NEW
+            "store": store,
+            "report": report,
             "item": item,
             "request_obj": request_obj,
         },

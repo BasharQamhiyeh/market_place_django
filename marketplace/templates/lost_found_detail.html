@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ركن — {{ report.title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen" dir="rtl">
+  <main class="max-w-screen-xl mx-auto px-4 sm:px-6 py-8">
+
+    <!-- Breadcrumb -->
+    <nav class="text-sm text-gray-500 mb-5">
+      <a href="{% url 'home' %}" class="hover:text-[var(--rukn-green)]">الرئيسية</a>
+      <span class="mx-1">/</span>
+      <a href="{% url 'report_list' %}" class="hover:text-[var(--rukn-green)]">البلاغات</a>
+      <span class="mx-1">/</span>
+      <span class="text-gray-800 font-medium">{{ report.title }}</span>
+    </nav>
+
+    <div class="flex flex-col lg:flex-row gap-6">
+
+      <!-- ───── LEFT: Main content ───── -->
+      <section class="w-full lg:w-[65%] space-y-5">
+
+        <!-- Type + Title card -->
+        <div class="container-box p-5 sm:p-6">
+          <div class="flex items-center gap-2 mb-3">
+            {% if report.type == 'lost' %}
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">🔍 بلاغ مفقود</span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">✋ بلاغ موجود</span>
+            {% endif %}
+            <span class="text-xs text-gray-400">#{{ report.id }}</span>
+          </div>
+
+          <h1 class="text-xl font-extrabold text-slate-900 mb-3">{{ report.title }}</h1>
+
+          <!-- Meta pills -->
+          <div class="flex flex-wrap gap-2 text-xs text-gray-600 mb-4">
+            {% if report.city %}
+              <span class="meta-pill">📍 {{ report.city.name }}{% if report.area %} — {{ report.area }}{% endif %}</span>
+            {% endif %}
+            {% if report.incident_date %}
+              <span class="meta-pill">📅 {{ report.incident_date|date:"Y/m/d" }}</span>
+            {% endif %}
+            <span class="meta-pill">🗂 {{ report.get_category_display }}</span>
+            <span class="meta-pill">🕒 {{ report.created_at|date:"Y/m/d" }}</span>
+          </div>
+
+          {% if report.description %}
+            <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{{ report.description }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Photos -->
+        {% with photos=report.photos.all %}
+        {% if photos %}
+        <div class="container-box p-5">
+          <h2 class="font-bold text-slate-800 mb-3 text-sm">الصور</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {% for photo in photos %}
+              <a href="{{ photo.image.url }}" target="_blank" class="block rounded-xl overflow-hidden border border-gray-100 hover:border-[var(--rukn-green)] transition">
+                <img src="{{ photo.image.url }}" alt="{{ report.title }}" class="w-full h-36 object-cover">
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- Matches (owner only) -->
+        {% if is_owner and matches %}
+        <div class="container-box p-5">
+          <h2 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span class="text-[var(--rukn-green)]">✨</span>
+            بلاغات مشابهة قد تهمّك
+            <span class="bg-[var(--rukn-green)] text-white text-xs font-bold rounded-full px-2 py-0.5">{{ matches|length }}</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {% for match in matches %}
+              {% if report.type == 'lost' %}
+                {% with matched=match.found_report %}
+                  {% include "partials/_report_card.html" with report=matched %}
+                {% endwith %}
+              {% else %}
+                {% with matched=match.lost_report %}
+                  {% include "partials/_report_card.html" with report=matched %}
+                {% endwith %}
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+      </section>
+
+      <!-- ───── RIGHT: Sidebar ───── -->
+      <aside class="w-full lg:w-[35%] space-y-4">
+
+        <!-- Contact card -->
+        <div class="container-box p-5">
+          <h2 class="font-bold text-slate-800 mb-4">معلومات التواصل</h2>
+
+          {% if request.user.is_authenticated %}
+            {% if report.contact_type == 'phone' and report.show_phone %}
+              <a href="tel:{{ phone_full }}"
+                 class="flex items-center gap-3 bg-[var(--rukn-green)] text-white rounded-xl px-4 py-3 font-bold text-sm hover:opacity-90 transition w-full justify-center mb-3">
+                📞 {{ phone_full }}
+              </a>
+            {% else %}
+              <p class="text-sm text-gray-600 mb-3">يفضل صاحب البلاغ التواصل عبر الرسائل الداخلية.</p>
+            {% endif %}
+
+            {% if not is_owner %}
+              <a href="{% url 'home' %}"
+                 class="flex items-center gap-2 justify-center border border-[var(--rukn-green)] text-[var(--rukn-green)] rounded-xl px-4 py-2.5 font-semibold text-sm hover:bg-green-50 transition w-full">
+                💬 راسل صاحب البلاغ
+              </a>
+            {% endif %}
+
+          {% else %}
+            <div class="text-center py-4">
+              <p class="text-sm text-gray-600 mb-3">سجّل دخولك لعرض بيانات التواصل</p>
+              <a href="{% url 'login' %}?next={{ request.path }}"
+                 class="inline-block bg-[var(--rukn-green)] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:opacity-90 transition">
+                تسجيل الدخول
+              </a>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Owner card -->
+        <div class="container-box p-5">
+          <h2 class="font-bold text-slate-800 mb-3 text-sm">صاحب البلاغ</h2>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-[var(--rukn-green)] text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+              {{ report.user.first_name|default:report.user.username|slice:":1"|upper }}
+            </div>
+            <div>
+              <p class="font-semibold text-slate-800 text-sm">
+                {% if report.user.first_name %}{{ report.user.first_name }} {{ report.user.last_name }}
+                {% else %}{{ report.user.username }}{% endif %}
+              </p>
+              <p class="text-xs text-gray-400 mt-0.5">عضو منذ {{ report.user.date_joined|date:"Y" }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner actions -->
+        {% if is_owner %}
+        <div class="container-box p-5 space-y-3">
+          <h2 class="font-bold text-slate-800 text-sm mb-2">إدارة البلاغ</h2>
+          <a href="{% url 'report_edit' report.id %}"
+             class="flex items-center gap-2 justify-center border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-[var(--rukn-green)] hover:text-[var(--rukn-green)] transition w-full">
+            ✏️ تعديل البلاغ
+          </a>
+          <form method="post" action="{% url 'report_cancel' report.id %}" onsubmit="return confirm('هل أنت متأكد من حذف هذا البلاغ؟')">
+            {% csrf_token %}
+            <button type="submit"
+                    class="flex items-center gap-2 justify-center border border-red-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition w-full">
+              🗑 حذف البلاغ
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+      </aside>
+    </div>
+
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ركن — تعديل البلاغ{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0" dir="rtl">
+  <div class="min-h-screen flex flex-col py-10 lg:py-16">
+
+    <header class="max-w-3xl mx-auto w-full mb-6">
+      <p class="text-[12px] tracking-[0.2em] uppercase text-[var(--rukn-green)] mb-1 font-semibold">ركن البلاغات</p>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900">تعديل البلاغ</h1>
+      <p class="text-xs text-[var(--muted)] mt-1">سيُعاد التحقق من بلاغك بعد الحفظ.</p>
+    </header>
+
+    <main class="max-w-3xl mx-auto w-full">
+      <div class="container-box p-6 sm:p-8">
+
+        {% if form.errors %}
+          <div class="mb-5 text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
+            ⚠️ يوجد أخطاء في النموذج، يرجى المراجعة.
+          </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6" data-single-submit>
+          {% csrf_token %}
+          <input type="hidden" name="form_token" value="{{ form_token }}">
+
+          <!-- Type -->
+          <div>
+            <label class="label mb-2 block">نوع البلاغ <span class="text-red-500">*</span></label>
+            <div class="flex gap-3">
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="type" value="lost"
+                       {% if form.type.value == 'lost' %}checked{% endif %} class="sr-only peer">
+                <div class="border-2 border-gray-200 peer-checked:border-red-500 peer-checked:bg-red-50 rounded-xl p-4 text-center transition">
+                  <span class="text-2xl">🔍</span>
+                  <p class="font-bold text-sm mt-1">مفقود</p>
+                </div>
+              </label>
+              <label class="flex-1 cursor-pointer">
+                <input type="radio" name="type" value="found"
+                       {% if form.type.value == 'found' %}checked{% endif %} class="sr-only peer">
+                <div class="border-2 border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 rounded-xl p-4 text-center transition">
+                  <span class="text-2xl">✋</span>
+                  <p class="font-bold text-sm mt-1">موجود</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="label">الفئة <span class="text-red-500">*</span></label>
+            <select name="category" class="input-field mt-1">
+              {% for val, lbl in categories %}
+                <option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Title -->
+          <div>
+            <label class="label">العنوان <span class="text-red-500">*</span></label>
+            <input type="text" name="title" value="{{ form.title.value|default_if_none:'' }}"
+                   class="input-field mt-1">
+            {% if form.title.errors %}<p class="field-error mt-1">{{ form.title.errors }}</p>{% endif %}
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="label">الوصف</label>
+            <textarea name="description" rows="4" class="input-field mt-1">{{ form.description.value|default_if_none:'' }}</textarea>
+          </div>
+
+          <!-- Location -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label">المحافظة</label>
+              <select name="city" class="input-field mt-1">
+                <option value="">اختر المحافظة</option>
+                {% for city in cities %}
+                  <option value="{{ city.id }}"
+                          {% if form.city.value|stringformat:"s" == city.id|stringformat:"s" %}selected{% endif %}>
+                    {{ city.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label class="label">المنطقة / الحي</label>
+              <input type="text" name="area" value="{{ form.area.value|default_if_none:'' }}"
+                     class="input-field mt-1">
+            </div>
+          </div>
+
+          <!-- Date -->
+          <div>
+            <label class="label">تاريخ الحادثة</label>
+            <input type="date" name="incident_date"
+                   value="{{ form.incident_date.value|default_if_none:'' }}"
+                   class="input-field mt-1" max="{% now 'Y-m-d' %}">
+          </div>
+
+          <!-- Existing photos -->
+          {% with existing_photos=report.photos.all %}
+          {% if existing_photos %}
+          <div>
+            <label class="label mb-2 block">الصور الحالية</label>
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {% for photo in existing_photos %}
+                <div class="relative group rounded-xl overflow-hidden border border-gray-100" id="photo-{{ photo.id }}">
+                  <img src="{{ photo.image.url }}" class="w-full h-24 object-cover">
+                  <button type="button"
+                          onclick="deletePhoto({{ photo.id }})"
+                          class="absolute top-1 end-1 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    ✕
+                  </button>
+                  {% if photo.is_main %}
+                    <span class="absolute bottom-1 start-1 bg-[var(--rukn-green)] text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">رئيسية</span>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          <!-- New photos -->
+          <div>
+            <label class="label">إضافة صور جديدة</label>
+            <div class="mt-2 border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-[var(--rukn-green)] transition"
+                 onclick="document.getElementById('imagesInput').click()">
+              <span class="text-2xl">📷</span>
+              <p class="text-xs text-gray-500 mt-1">اضغط لاختيار صور</p>
+              <input type="file" id="imagesInput" name="images" multiple accept="image/*" class="hidden"
+                     onchange="previewImages(this)">
+            </div>
+            <div id="imagePreviewGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-2"></div>
+          </div>
+
+          <!-- Contact -->
+          <div class="border border-gray-100 rounded-xl p-4 space-y-3">
+            <h3 class="font-bold text-slate-800 text-sm">خيارات التواصل</h3>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" name="show_phone"
+                     {% if form.show_phone.value %}checked{% endif %}
+                     class="w-4 h-4 accent-[var(--rukn-green)]">
+              <span class="text-sm">إظهار رقم الهاتف</span>
+            </label>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2">
+                <input type="radio" name="contact_type" value="phone"
+                       {% if form.contact_type.value != 'message' %}checked{% endif %}
+                       class="accent-[var(--rukn-green)]">
+                <span class="text-sm">موبايل</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="radio" name="contact_type" value="message"
+                       {% if form.contact_type.value == 'message' %}checked{% endif %}
+                       class="accent-[var(--rukn-green)]">
+                <span class="text-sm">رسائل داخلية</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit"
+                  class="w-full bg-[var(--rukn-green)] text-white font-bold py-3 rounded-xl hover:opacity-90 transition">
+            حفظ التعديلات
+          </button>
+        </form>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function previewImages(input) {
+  const grid = document.getElementById('imagePreviewGrid');
+  grid.innerHTML = '';
+  Array.from(input.files).slice(0, 8).forEach((f, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement('div');
+      div.className = 'rounded-xl overflow-hidden border border-gray-100';
+      div.innerHTML = `<img src="${e.target.result}" class="w-full h-24 object-cover">`;
+      grid.appendChild(div);
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function deletePhoto(photoId) {
+  if (!confirm('حذف هذه الصورة؟')) return;
+  fetch(`/lost-found/photos/${photoId}/delete/`, {
+    method: 'POST',
+    headers: {'X-CSRFToken': document.cookie.match(/csrftoken=([^;]+)/)?.[1] || ''},
+  }).then(r => r.json()).then(data => {
+    if (data.ok) document.getElementById(`photo-${photoId}`)?.remove();
+  });
+}
+</script>
+{% endblock %}

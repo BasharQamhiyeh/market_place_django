@@ -24,6 +24,7 @@ from .models import (
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
     FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction,
     TermsPage, TermsSection, SiteSettings,
+    Report, ReportPhoto, ReportMatch, LostReport, FoundReport,
 )
 from .services.wallet import apply_points_transaction
 from .services.notifications import notify, K_WALLET, S_CHARGED
@@ -1783,6 +1784,132 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         obj = SiteSettings.get()
         return redirect(reverse("admin:marketplace_sitesettings_change", args=[obj.pk]))
+
+
+# ======================================================
+# ✅ Lost & Found
+# ======================================================
+class ReportPhotoInline(admin.TabularInline):
+    model = ReportPhoto
+    extra = 0
+    readonly_fields = ('image',)
+
+
+class ReportAdminMixin:
+    """Shared logic for LostReportAdmin and FoundReportAdmin."""
+    list_display = ('id', 'title', 'category', 'city', 'user', 'colored_status', 'created_at')
+    list_filter = ('status', 'category')
+    search_fields = ('title', 'description', 'user__phone', 'user__first_name')
+    readonly_fields = ('colored_status', 'created_at', 'updated_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
+    inlines = [ReportPhotoInline]
+    actions = ['approve_reports', 'reject_reports']
+
+    # Subclasses set these to get distinct URL names
+    approve_url_name = None  # e.g. "lostreport_approve"
+    reject_url_name  = None  # e.g. "lostreport_reject"
+    report_type      = None  # Report.TYPE_LOST or Report.TYPE_FOUND
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(type=self.report_type)
+
+    def colored_status(self, obj):
+        if obj.status == Report.STATUS_ACTIVE:
+            color, text = "green", "Approved"
+        elif obj.status == Report.STATUS_REJECTED:
+            color, text = "red", "Rejected"
+        else:
+            color, text = "orange", "Pending"
+        return format_html('<b style="color:{};">{}</b>', color, text)
+    colored_status.short_description = "Status"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path("<int:report_id>/approve/", self.admin_site.admin_view(self.approve_view), name=self.approve_url_name),
+            path("<int:report_id>/reject/",  self.admin_site.admin_view(self.reject_view),  name=self.reject_url_name),
+        ]
+        return custom + urls
+
+    def approve_view(self, request, report_id):
+        report = get_object_or_404(Report, id=report_id)
+        report.status = Report.STATUS_ACTIVE
+        report.approved_by = request.user
+        report.rejected_by = None
+        report.approved_at = timezone.now()
+        report.rejected_at = None
+        report.rejection_reason = None
+        report.save(update_fields=["status", "approved_by", "rejected_by", "approved_at", "rejected_at", "rejection_reason"])
+        self.message_user(request, "✅ Report approved.", messages.SUCCESS)
+        opts = self.model._meta
+        return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist"))
+
+    def reject_view(self, request, report_id):
+        report = get_object_or_404(Report, id=report_id)
+        if request.method == "POST":
+            reason = request.POST.get("reason") or "غير مذكور"
+            report.status = Report.STATUS_REJECTED
+            report.rejected_by = request.user
+            report.approved_by = None
+            report.rejected_at = timezone.now()
+            report.approved_at = None
+            report.rejection_reason = reason
+            report.save(update_fields=["status", "rejected_by", "approved_by", "rejected_at", "approved_at", "rejection_reason"])
+            self.message_user(request, "❌ Report rejected.", messages.ERROR)
+            opts = self.model._meta
+            return redirect(reverse(f"admin:{opts.app_label}_{opts.model_name}_changelist"))
+
+        opts = self.model._meta
+        context = {
+            "item": report,
+            "listing": report,
+            "opts": opts,
+            "original": report,
+            "app_label": opts.app_label,
+            IS_POPUP_VAR: False,
+            "has_view_permission": True,
+        }
+        return render(request, "admin/marketplace/reject_reason.html", context)
+
+    def approve_reports(self, request, queryset):
+        now = timezone.now()
+        updated = queryset.filter(status=Report.STATUS_PENDING).update(
+            status=Report.STATUS_ACTIVE,
+            approved_by=request.user,
+            approved_at=now,
+        )
+        self.message_user(request, f"{updated} report(s) approved.")
+    approve_reports.short_description = "Approve selected reports"
+
+    def reject_reports(self, request, queryset):
+        now = timezone.now()
+        updated = queryset.filter(status=Report.STATUS_PENDING).update(
+            status=Report.STATUS_REJECTED,
+            rejected_by=request.user,
+            rejected_at=now,
+        )
+        self.message_user(request, f"{updated} report(s) rejected.")
+    reject_reports.short_description = "Reject selected reports"
+
+
+@admin.register(LostReport)
+class LostReportAdmin(ReportAdminMixin, admin.ModelAdmin):
+    approve_url_name = "lostreport_approve"
+    reject_url_name  = "lostreport_reject"
+    report_type      = Report.TYPE_LOST
+
+
+@admin.register(FoundReport)
+class FoundReportAdmin(ReportAdminMixin, admin.ModelAdmin):
+    approve_url_name = "foundreport_approve"
+    reject_url_name  = "foundreport_reject"
+    report_type      = Report.TYPE_FOUND
+
+
+@admin.register(ReportMatch)
+class ReportMatchAdmin(admin.ModelAdmin):
+    list_display = ('id', 'lost_report', 'found_report', 'score', 'lost_notified', 'found_notified', 'created_at')
+    list_filter = ('lost_notified', 'found_notified')
+    readonly_fields = ('created_at',)
 
 
 # ======================================================

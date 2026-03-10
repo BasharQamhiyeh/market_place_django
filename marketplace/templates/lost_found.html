@@ -1,0 +1,3614 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ركن | المفقودات والموجودات{% endblock %}
+
+{% block page_css %}
+<style>
+
+    :root {
+      --rukn-orange: #ff7a18;
+      --rukn-orange-dark: #e66a15;
+      --rukn-green: #10b981;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-50: #f8fafc;
+      --border: #e5e7eb;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #ffffff;
+      color: var(--slate-800);
+    }
+
+    .bg-mesh {
+      background-image:
+        radial-gradient(at 0% 0%, rgba(255,122,24,0.05) 0, transparent 50%),
+        radial-gradient(at 50% 0%, rgba(16,185,129,0.03) 0, transparent 50%);
+    }
+
+    .pro-shadow { box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.08); }
+
+    .rk-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid transparent;
+      border-radius: 1.5rem;
+    }
+    .rk-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--rukn-orange);
+      box-shadow: 0 20px 40px rgba(255, 122, 24, 0.1);
+    }
+
+    .topbar {
+      position: sticky; top: 0; width: 100%; z-index: 10001;
+      background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(14px);
+      border-bottom: 2px solid var(--border);
+    }
+
+    .lost-badge { background: #fee2e2; color: #dc2626; }
+    .found-badge { background: #dcfce7; color: #16a34a; }
+
+    .rk-modal {
+      animation: rkPop .18s ease-out;
+    }
+    @keyframes rkPop {
+      from { transform: translateY(8px) scale(.98); opacity: .7; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .rk-field { position: relative; }
+    .rk-field i {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: .65;
+    }
+    .rk-input { padding-right: 44px !important; }
+
+    .rk-type-btn {
+      display:flex; align-items:center; justify-content:center; gap:.5rem;
+      font-weight:800;
+    }
+    .rk-type-btn.active-lost  { background:#ef4444; color:#fff; }
+    .rk-type-btn.active-found { background:#10b981; color:#fff; }
+    .rk-type-btn.inactive     { background:#f3f4f6; color:#4b5563; }
+
+    .rk-submit-lost  { background: linear-gradient(90deg,#ef4444,#f97316); }
+    .rk-submit-found { background: linear-gradient(90deg,#10b981,#22c55e); }
+
+    #previewImg {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    #myAdsList,
+    #myMatchesList{
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding-bottom: 8px;
+      padding-top: 12px;
+    }
+
+    #myAdsList::-webkit-scrollbar,
+    #myMatchesList::-webkit-scrollbar{
+      height: 6px;
+    }
+
+    #myAdsList::-webkit-scrollbar-thumb,
+    #myMatchesList::-webkit-scrollbar-thumb{
+      border-radius: 999px;
+    }
+
+    .scroll-lost::-webkit-scrollbar-thumb{ background: #ef4444; }
+    .scroll-found::-webkit-scrollbar-thumb{ background: #10b981; }
+
+    .rk-uploader{
+      border: 2px dashed #fb923c;
+      background: #fff7ed;
+      border-radius: 18px;
+      padding: 18px;
+      position: relative;
+    }
+
+    .rk-uploader-inner{
+      min-height: 170px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+    }
+
+    .rk-uploader-icon{
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: #0f172a;
+      box-shadow: 0 10px 25px rgba(0,0,0,.06);
+    }
+
+    .rk-pick-btn{
+      background: #f97316;
+      color: #fff;
+      font-weight: 900;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 13px;
+      box-shadow: 0 10px 20px rgba(249,115,22,.22);
+      transition: .2s;
+    }
+    .rk-pick-btn:hover{ transform: translateY(-1px); opacity:.95; }
+    .rk-pick-btn:active{ transform: scale(.98); }
+
+    .rk-pick-btn-ghost{
+      background: #fff;
+      color:#f97316;
+      border: 1px solid rgba(249,115,22,.35);
+      box-shadow:none;
+    }
+
+    .rk-thumb{
+      position: relative;
+      border: 2px dashed #fb923c;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: .18s;
+    }
+
+    .rk-thumb img{
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      display:block;
+    }
+
+    .rk-thumb.is-main{
+      border-style: solid;
+      border-color: #fb923c;
+      box-shadow: 0 14px 28px rgba(249,115,22,.18);
+    }
+
+    .rk-thumb-remove{
+      position:absolute;
+      top:8px;
+      right:8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(15,23,42,.65);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 900;
+      z-index: 5;
+      border: 1px solid rgba(255,255,255,.25);
+    }
+    .rk-thumb-remove:hover{ background: rgba(239,68,68,.95); }
+
+    .rk-main-bar{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      background: #fb923c;
+      color:#fff;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 5px 6px;
+      text-align:center;
+      border-radius: 0;
+    }
+
+    .gallery-main{
+      border-radius: 20px;
+      overflow: hidden;
+      background: #f9fafb;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,.08);
+    }
+
+    .gallery-main img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .35s ease;
+    }
+
+    .gallery-main:hover img{
+      transform: scale(1.02);
+    }
+
+    .thumbs-row{
+      margin-top: 10px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      max-height: 96px;
+      align-items: center;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .thumbs-row::-webkit-scrollbar{ height: 6px; }
+    .thumbs-row::-webkit-scrollbar-thumb{
+      background: #d1d5db;
+      border-radius: 999px;
+    }
+
+    .thumbs-row.scroll-lost::-webkit-scrollbar-thumb{ background: #ef4444; }
+    .thumbs-row.scroll-found::-webkit-scrollbar-thumb{ background: #10b981; }
+
+    .thumb{
+      flex: 0 0 72px;
+      height: 72px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      background: #f3f4f6;
+      cursor: pointer;
+      position: relative;
+      transition: .25s;
+    }
+
+    .thumb img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb.active{
+      border-color: var(--rukn-orange);
+      box-shadow: 0 0 0 2px rgba(255,122,24,.25);
+    }
+
+    .details-main{
+      border-radius: 20px;
+      overflow: hidden;
+      background: #f8fafc;
+      border: 1px solid rgba(0,0,0,.08);
+    }
+
+    .details-main img{
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .rk-delete-modal{
+      animation: rkDeletePop .22s cubic-bezier(0.22, 1, 0.36, 1);
+      transform-origin: center;
+    }
+
+    @keyframes rkDeletePop{
+      from{
+        opacity: 0;
+        transform: translateY(10px) scale(.96);
+      }
+      to{
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .rk-dd{
+      position: relative;
+      z-index: 1;
+    }
+
+    .rk-dd-btn{
+      width: 100%;
+      min-height: 58px;
+      padding: 0 18px;
+      padding-right: 52px;
+      padding-left: 48px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow:
+        0 2px 6px rgba(15,23,42,.04),
+        0 8px 18px rgba(15,23,42,.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
+      text-align: right;
+    }
+
+    .rk-dd-btn:hover{
+      border-color: #fdba74;
+      background: linear-gradient(180deg, #ffffff 0%, #fffaf5 100%);
+      box-shadow:
+        0 4px 10px rgba(15,23,42,.05),
+        0 10px 20px rgba(249,115,22,.08);
+    }
+
+    .rk-dd.open .rk-dd-btn{
+      border-color: #f97316;
+      background: #fff;
+      box-shadow:
+        0 0 0 4px rgba(249,115,22,.12),
+        0 10px 22px rgba(249,115,22,.08);
+    }
+
+    .rk-dd-value{
+      font-size: 15px;
+      font-weight: 800;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rk-dd-value.placeholder{ color: #94a3b8; }
+
+    .rk-dd-icon{
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #94a3b8;
+      transition: color .25s ease;
+    }
+
+    .rk-dd-arrow{
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #94a3b8;
+      transition: transform .25s ease, color .25s ease;
+    }
+
+    .rk-dd.open .rk-dd-icon,
+    .rk-dd:hover .rk-dd-icon,
+    .rk-dd.open .rk-dd-arrow,
+    .rk-dd:hover .rk-dd-arrow{
+      color: #f97316;
+    }
+
+    .rk-dd.open .rk-dd-arrow{
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    .rk-dd-menu{
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      left: 0;
+      z-index: 70;
+      display: none;
+      background: rgba(255,255,255,.98);
+      backdrop-filter: blur(10px);
+      border: 1px solid #fed7aa;
+      border-radius: 24px;
+      box-shadow:
+        0 16px 30px rgba(15,23,42,.10),
+        0 6px 14px rgba(249,115,22,.06);
+      padding: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    .rk-dd.open .rk-dd-menu{
+      display: block;
+      animation: rkDropdownIn .18s ease;
+    }
+
+    @keyframes rkDropdownIn{
+      from{
+        opacity: 0;
+        transform: translateY(8px) scale(.98);
+      }
+      to{
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .rk-dd-menu::-webkit-scrollbar{ width: 6px; }
+    .rk-dd-menu::-webkit-scrollbar-thumb{
+      background: #fdba74;
+      border-radius: 999px;
+    }
+
+    .rk-dd-option{
+      width: 100%;
+      border: 0;
+      background: transparent;
+      border-radius: 18px;
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #334155;
+      text-align: right;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .rk-dd-option:hover{
+      background: #fff7ed;
+      color: #ea580c;
+    }
+
+    .rk-dd-option.active{
+      background: linear-gradient(90deg, #fff7ed, #ffedd5);
+      color: #c2410c;
+    }
+
+    .rk-dd-check{
+      opacity: 0;
+      transform: scale(.85);
+      transition: .18s ease;
+    }
+
+    .rk-dd-option.active .rk-dd-check{
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .rk-dd-hidden{ display: none; }
+
+    @media (max-width: 640px){
+      .rk-dd-btn{
+        min-height: 56px;
+        padding-right: 48px;
+        padding-left: 44px;
+        font-size: 16px;
+      }
+
+      .rk-dd-value{ font-size: 16px; }
+
+      .rk-dd-menu{
+        border-radius: 22px;
+        max-height: 240px;
+      }
+
+      .rk-dd-option{
+        padding: 14px 14px;
+        font-size: 15px;
+      }
+    }
+
+    @media (min-width: 768px){
+      #imageSourceModal{
+        display: none !important;
+      }
+    }
+
+    #dGalleryMain,
+    #dGalleryMain img {
+      cursor: zoom-in;
+    }
+	
+	@media (max-width: 767px) {
+  #formModal {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #formModal .rk-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #adForm {
+    padding-bottom: 32px;
+  }
+
+  #btnSubmitAd,
+  #btnCancelEdit {
+    position: relative;
+    z-index: 40;
+    pointer-events: auto;
+  }
+
+  #btnSubmitAd {
+    min-height: 56px;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+  }
+
+  .rk-thumb img {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+#btnSubmitAd,
+#btnCancelEdit {
+  position: relative;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+
+  
+
+/* ── Modal sizing inside base layout (navbar z-index=5000) ── */
+#formModal,
+#detailsModal,
+#deleteModal {
+  /* must be above topbar z-index:5000 */
+}
+#detailsModal .p-4.sm\:p-5 {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 767px) {
+  #formModal > div,
+  #detailsModal > div {
+    max-height: 92dvh;
+    border-radius: 1rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<script id="rukn-lf-data" type="application/json">{{ initial_data_json|safe }}</script>
+
+<section class="relative py-12 px-6 overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50/50 via-white to-white">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-blue-100/20 rounded-full blur-3xl -z-10 pointer-events-none"></div>
+
+  <div class="max-w-5xl mx-auto text-center space-y-6 relative z-10">
+
+    <div class="inline-flex items-center gap-3 px-6 py-2 bg-white backdrop-blur-md rounded-full border border-blue-100 shadow-sm transition-transform hover:scale-105">
+      <span class="relative flex h-3 w-3">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1e3a8a] opacity-40"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-[#1e3a8a]"></span>
+      </span>
+      <span class="text-xs md:text-sm text-[#1e3a8a] font-bold tracking-wide flex gap-2 items-center">
+        <span>ركن البلاغات</span>
+        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+        <span class="text-slate-500 font-medium">نظام ذكي لاستعادة المفقودات</span>
+      </span>
+    </div>
+
+    <div class="space-y-4">
+      <h2 class="text-4xl md:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight leading-[1.15]">
+        نعيد <span class="text-[#1e3a8a] relative">الأمانة
+          <svg class="absolute -bottom-2 left-0 w-full h-3 text-blue-200/40 -z-10" viewBox="0 0 100 12" preserveAspectRatio="none" fill="currentColor">
+            <path d="M0,10 C30,0 70,0 100,10 L100,12 C70,2 30,2 0,12 Z"></path>
+          </svg>
+        </span> لأصحابها <br>
+        <span class="text-slate-400 font-light">بكل سهولة وطمأنينة</span>
+      </h2>
+
+      <p class="text-lg md:text-xl text-slate-700 font-medium max-w-3xl mx-auto leading-relaxed">
+        <span class="text-[#1e3a8a] font-bold">ركن البلاغات</span> هو مساحة مخصصة داخل
+        <span class="text-orange-500 font-bold">منصة ركن</span>، تربط بين
+        <span class="text-red-600 font-bold">«ما تم فقدانه»</span> و
+        <span class="text-green-600 font-bold">«ما تم العثور عليه»</span>
+        في بيئة آمنة وموثوقة. سجّل بلاغك الآن وكن جزءًا من تعزيز قيم التكافل والأمانة في مجتمعنا.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto text-slate-700">
+      <div class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50/50 rounded-lg border border-blue-100 hover:shadow-sm transition-all">
+        <i data-lucide="shield-check" class="w-5 h-5 text-blue-600"></i>
+        <span class="text-sm font-bold whitespace-nowrap">خصوصية تامة</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 px-4 py-2 bg-orange-50/50 rounded-lg border border-orange-100 hover:shadow-sm transition-all">
+        <i data-lucide="zap" class="w-5 h-5 text-orange-500"></i>
+        <span class="text-sm font-bold whitespace-nowrap">مطابقة فورية</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 px-4 py-2 bg-red-50/50 rounded-lg border border-red-100 hover:shadow-sm transition-all">
+        <i data-lucide="map-pin" class="w-5 h-5 text-red-600"></i>
+        <span class="text-sm font-bold whitespace-nowrap">تحديد دقيق</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 px-4 py-2 bg-green-50/50 rounded-lg border border-green-100 hover:shadow-sm transition-all">
+        <i data-lucide="heart" class="w-5 h-5 text-green-500"></i>
+        <span class="text-sm font-bold whitespace-nowrap">مجاني بالكامل</span>
+      </div>
+    </div>
+
+    <div>
+      <button id="btnOpenForm" type="button"
+        class="group relative overflow-hidden bg-[#1e3a8a] text-white px-12 py-4 rounded-2xl text-lg font-bold shadow-lg transition-all duration-300 hover:-translate-y-1 active:scale-95 w-full sm:w-auto">
+        <div class="relative z-10 flex items-center justify-center gap-3">
+          <i data-lucide="plus-circle" class="w-6 h-6 transition-transform group-hover:rotate-90"></i>
+          <span class="tracking-wide">تقديم بلاغ (فقدان / عثور)</span>
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<section class="max-w-6xl mx-auto px-4 pb-3">
+  <div class="relative bg-white/80 backdrop-blur-md p-2 rounded-[2rem] border border-slate-100 shadow-2xl shadow-blue-900/5">
+    <div class="grid grid-cols-2 gap-2 md:flex md:flex-nowrap md:gap-2 md:items-center">
+      <button id="tabLost" type="button"
+        class="relative group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl
+               transition-all duration-500 hover:bg-red-50/50 active:scale-95 overflow-hidden focus:outline-none">
+        <div class="flex items-center gap-3 relative z-10">
+          <div class="w-8 h-8 flex items-center justify-center rounded-xl border-2 border-red-600 bg-white text-red-600 group-hover:scale-110 transition-transform">
+            <i data-lucide="help-circle" class="w-4 h-4"></i>
+          </div>
+          <div class="flex flex-col items-start">
+            <span class="text-sm font-black text-slate-800">المفقودات</span>
+            <span class="text-[10px] text-red-600/70 font-bold uppercase tracking-tighter leading-none mt-1">أغراض تم فقدانها</span>
+          </div>
+        </div>
+
+        <span id="lostCount" class="relative z-10 ml-2 px-2 py-0.5 text-[11px] font-black rounded-lg bg-red-600 text-white shadow-sm">0</span>
+      </button>
+
+      <div class="hidden md:block w-px h-10 bg-slate-100"></div>
+
+      <button id="tabFound" type="button"
+        class="relative group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl
+               transition-all duration-500 hover:bg-emerald-50/50 active:scale-95 overflow-hidden focus:outline-none">
+        <div class="flex items-center gap-3 relative z-10">
+          <div class="w-8 h-8 flex items-center justify-center rounded-xl border-2 border-green-600 bg-white text-green-600 group-hover:scale-110 transition-transform">
+            <i data-lucide="package-check" class="w-4 h-4"></i>
+          </div>
+          <div class="flex flex-col items-start">
+            <span class="text-sm font-black text-slate-800">الموجودات</span>
+            <span class="text-[10px] text-green-600/70 font-bold uppercase tracking-tighter leading-none mt-1">أغراض تم العثور عليها</span>
+          </div>
+        </div>
+
+        <span id="foundCount" class="relative z-10 ml-2 px-2 py-0.5 text-[11px] font-black rounded-lg bg-green-600 text-white shadow-sm">0</span>
+      </button>
+
+      <div class="hidden md:block w-px h-10 bg-slate-100"></div>
+
+      <button id="tabMine" type="button"
+        class="relative group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl
+               transition-all duration-500 hover:bg-blue-50/50 active:scale-95 overflow-hidden focus:outline-none
+               col-span-2 md:col-span-1">
+
+        <div class="flex items-center gap-3 relative z-10">
+          <div class="w-8 h-8 flex items-center justify-center rounded-xl border-2 border-blue-900 bg-white text-[#1e3a8a] group-hover:scale-110 transition-transform">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          </div>
+          <div class="flex flex-col items-start">
+            <span class="text-sm font-black text-slate-800">بلاغاتي</span>
+            <span class="text-[10px] text-blue-600/70 font-bold uppercase tracking-tighter leading-none mt-1">إدارة ومتابعة بلاغاتك</span>
+          </div>
+        </div>
+
+        <span id="mineCount" class="relative z-10 ml-2 px-2 py-0.5 text-[11px] font-black rounded-lg bg-[#1e3a8a] text-white shadow-sm">0</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-6xl mx-auto px-4 py-3">
+  <div class="flex flex-col md:flex-row gap-4 items-stretch">
+    <div class="md:w-72 relative">
+      <button id="dropdownButton"
+        class="w-full flex items-center justify-between px-5 py-4 bg-white border border-gray-200 rounded-2xl shadow-sm transition-all duration-300 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+        <div class="flex items-center gap-3">
+          <i data-lucide="layers" class="w-5 h-5 text-blue-500"></i>
+          <span id="selectedOption" class="text-gray-700 font-medium">اختر القسم...</span>
+        </div>
+
+        <i data-lucide="chevron-down" id="dropdownArrow" class="w-5 h-5 text-gray-400 transition-transform duration-300"></i>
+      </button>
+
+      <div id="dropdownMenu"
+        class="absolute z-50 w-full mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden opacity-0 invisible scale-95 transition-all duration-200 origin-top">
+        <ul class="py-1">
+          <li onclick="selectOption('الكل', '')" class="px-5 py-3 hover:bg-blue-50 text-gray-700 cursor-pointer transition-colors flex items-center gap-2">الكل</li>
+          {% for val, label in categories %}
+          <li onclick="selectOption('{{ label }}', '{{ label }}')" class="px-5 py-3 hover:bg-blue-50 text-gray-700 cursor-pointer transition-colors flex items-center gap-2">{{ label }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="flex-1 relative group">
+      <button id="searchBtn" type="button"
+        class="absolute left-4 inset-y-0 w-10 flex items-center justify-center text-gray-400 hover:text-blue-600 transition-all">
+        <i data-lucide="search" class="w-5 h-5"></i>
+      </button>
+
+      <button id="clearBtn" type="button"
+        class="absolute right-4 inset-y-0 hidden w-10 items-center justify-center text-gray-400 hover:text-blue-600 transition-all duration-200">
+        <i data-lucide="x" class="w-5 h-5 stroke-[2.5]"></i>
+      </button>
+
+      <input id="searchInput" type="text"
+        placeholder="ابحث عن غرض أو موقع..."
+        class="w-full pl-16 pr-16 py-4 text-lg bg-white rounded-2xl border border-gray-200 shadow-sm
+               focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" />
+    </div>
+  </div>
+</section>
+
+<section id="myAdsSection" class="max-w-6xl mx-auto px-4 py-6 hidden">
+  <div class="space-y-8">
+    <div class="bg-gradient-to-b from-white to-gray-50 rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div class="flex items-center justify-between mb-8">
+        <h3 class="font-bold text-base text-gray-800 flex items-center gap-2">
+          <span class="w-1.5 h-6 bg-orange-500 rounded-full"></span>
+          بلاغاتي
+        </h3>
+      </div>
+
+      <div class="relative">
+        <button id="myAdsLeft"
+          class="absolute left-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 hidden sm:flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+          <i data-lucide="arrow-left"></i>
+        </button>
+
+        <button id="myAdsRight"
+          class="absolute right-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 hidden sm:flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+          <i data-lucide="arrow-right"></i>
+        </button>
+
+        <div id="myAdsList"
+          class="flex gap-5 px-2 overflow-x-auto overflow-y-hidden pb-4 snap-x snap-mandatory scroll-smooth cursor-grab">
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-b from-white to-gray-50 rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-base text-gray-800 flex items-center gap-2">
+          <span class="w-1.5 h-6 bg-green-500 rounded-full"></span>
+          <span>البلاغات المتطابقة</span>
+          <span id="matchesCount" class="px-2 py-0.5 text-[11px] font-black rounded-lg bg-gray-400 text-white shadow-sm">0</span>
+        </h3>
+      </div>
+
+      <div class="relative">
+        <button id="myMatchesLeft"
+          class="absolute left-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 hidden sm:flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+          <i data-lucide="arrow-left"></i>
+        </button>
+
+        <button id="myMatchesRight"
+          class="absolute right-0 top-[40%] -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white/95 border border-slate-200 hidden sm:flex items-center justify-center text-slate-600 hover:text-[#ff7a18] hover:border-[#ff7a18] transition shadow-md">
+          <i data-lucide="arrow-right"></i>
+        </button>
+
+        <div id="myMatchesList"
+          class="flex gap-5 px-2 overflow-x-auto overflow-y-hidden pb-4 snap-x snap-mandatory scroll-smooth">
+          <div class="flex flex-col items-center justify-center text-center w-full py-10 text-gray-400">
+            <i data-lucide="layers" class="w-8 h-8 mb-2"></i>
+            <p class="text-sm">اختر بلاغاً لعرض البلاغات المتطابقة</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mainListSection" class="max-w-6xl mx-auto px-4 pb-16">
+  <div class="bg-gradient-to-b from-gray-50 to-white rounded-2xl border border-gray-100 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+        <span class="w-1.5 h-6 bg-blue-900 rounded-full"></span>
+        قائمة البلاغات
+      </h2>
+    </div>
+
+    <div id="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[200px]">
+      <div class="col-span-full flex flex-col items-center justify-center text-center py-16 text-gray-400">
+        <i data-lucide="inbox" class="w-10 h-10 mb-3"></i>
+        <p class="text-sm font-medium">لا توجد بلاغات حالياً</p>
+        <p class="text-xs mt-1 text-gray-400">عند إضافة بلاغات ستظهر هنا</p>
+      </div>
+    </div>
+
+    <div class="flex justify-center mt-8">
+      <button id="loadMoreBtn" type="button"
+        class="px-6 py-3 rounded-2xl font-black text-white shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed">
+        عرض المزيد من البلاغات
+      </button>
+    </div>
+  </div>
+</section>
+
+<div id="detailsModal"
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[11000] p-4">
+  <div class="bg-white w-full max-w-3xl lg:max-w-4xl rounded-2xl shadow-2xl border border-gray-100
+              flex flex-col overflow-hidden" style="max-height:88vh;"
+       onclick="event.stopPropagation()">
+
+    <div id="detailsHeader" class="px-6 py-5 border-b bg-gradient-to-r from-gray-50 to-white">
+      <div class="flex items-start justify-between gap-4">
+        <div class="space-y-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="dType" class="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full font-black border"></span>
+            <span id="dCatTop" class="inline-flex items-center text-xs px-3 py-1 rounded-full font-black border"></span>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <h2 id="dTitle" class="font-black text-xl md:text-2xl text-gray-900"></h2>
+
+            <span id="dLocationBadge"
+                  class="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full font-bold border bg-white/70">
+              <i data-lucide="map-pin" class="w-4 h-4"></i>
+              <span id="dLocation"></span>
+            </span>
+
+            <span id="dDateBadge"
+                  class="inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full font-bold border bg-white/70">
+              <i data-lucide="calendar" class="w-4 h-4"></i>
+              <span id="dDate"></span>
+            </span>
+          </div>
+        </div>
+
+        <button id="btnCloseDetails" type="button"
+                class="w-9 h-9 flex items-center justify-center rounded-lg border bg-white/70 transition">
+          <i id="closeIcon" data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-4 sm:p-5 flex-1 overflow-y-auto overscroll-contain min-h-0">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-5">
+
+        <div class="lg:col-span-3 space-y-4">
+          <div class="space-y-3">
+            <div id="dGalleryMain"
+                 class="details-main relative w-full h-[38dvh] sm:h-auto sm:aspect-[4/3] lg:aspect-[16/10]">
+              <div id="dBlurBg"
+                   class="absolute inset-0 bg-center bg-cover blur-2xl scale-110 brightness-90 hidden"
+                   aria-hidden="true"></div>
+
+              <div id="dImageOverlay"
+                   class="absolute inset-0 bg-black/10 hidden"
+                   aria-hidden="true"></div>
+
+              <img id="dImage"
+                   class="relative z-10 w-full h-full object-contain hidden"
+                   loading="eager"
+                   alt="صورة البلاغ الرئيسية" />
+            </div>
+
+            <div id="dThumbs" class="thumbs-row hidden max-h-24"></div>
+
+            <div id="dNoImage"
+                 class="flex flex-col items-center justify-center text-gray-400 text-sm hidden rounded-2xl border bg-gray-50 py-10">
+              <i data-lucide="image-off" class="w-8 h-8 mb-2"></i>
+              لا توجد صورة
+            </div>
+          </div>
+
+          <div class="rounded-2xl border bg-white p-4 sm:p-5 space-y-2 sm:space-y-3">
+            <div class="text-xs text-gray-500 font-black">الوصف</div>
+            <div id="dDesc" class="leading-relaxed text-gray-700 bg-gray-50 rounded-xl p-4 border"></div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2">
+          <div id="ownerBox" class="rounded-2xl border bg-white overflow-hidden">
+            <div class="p-5 flex items-center justify-between gap-4 border-b bg-gray-50">
+              <div class="flex items-center gap-4">
+                <img id="dAvatar"
+                     class="w-14 h-14 rounded-full object-cover border shadow-sm hidden"
+                     loading="eager" />
+                <div id="dAvatarInitials"
+                     class="w-14 h-14 rounded-full border shadow-sm bg-orange-100 text-orange-600 flex items-center justify-center text-xl font-black hidden"></div>
+                <div class="text-right">
+                  <div id="dOwner" class="font-black text-sm text-gray-900"></div>
+                  <div class="text-xs text-gray-500 font-semibold mt-1">صاحب البلاغ</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="text-xs font-black text-gray-700 flex items-center gap-2">
+                  <i data-lucide="phone-call" class="w-4 h-4"></i>
+                  <span>تفضيلات التواصل</span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap sm:justify-between">
+                <button id="dContact"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black border transition"></button>
+
+                <div id="quickActions" class="hidden flex items-center gap-2">
+                  <a id="callBtn" href="#"
+                     class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border bg-gray-50 flex items-center justify-center
+                            text-gray-500 hover:bg-green-50 hover:text-green-700 hover:border-green-300 transition"
+                     title="اتصال">
+                    <i data-lucide="phone" class="w-5 h-5"></i>
+                  </a>
+
+                  <a id="whatsappBtn" href="#"
+                     target="_blank" rel="noopener"
+                     class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border bg-gray-50 flex items-center justify-center
+                            text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition"
+                     title="واتساب">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                  </a>
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <button id="toggleMessageBox"
+                        type="button"
+                        class="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl
+                               bg-white border border-orange-200 text-orange-600
+                               text-xs sm:text-sm font-black shadow-sm hover:bg-orange-50/60 transition">
+                  <span class="flex items-center gap-2">
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                    <span>تواصل مع صاحب البلاغ عبر ركن</span>
+                  </span>
+                  <i id="messageChevron" data-lucide="chevron-down" class="w-4 h-4 transition-transform"></i>
+                </button>
+
+                <div id="messageBox" class="mt-3 hidden rounded-2xl border bg-white p-4">
+                  <form id="messageForm" class="space-y-3 text-right">
+                    <p class="text-[11px] text-gray-500 font-semibold">
+                      يُرجى عدم مشاركة بيانات حساسة (كلمات المرور/البنوك/الهوية).
+                    </p>
+
+                    <textarea id="messageText" rows="4"
+                              placeholder="اكتب رسالتك هنا..."
+                              class="w-full border border-gray-200 rounded-2xl py-3 px-3 text-sm
+                                     focus:outline-none focus:border-orange-400"></textarea>
+
+                    <p id="messageError" class="text-red-600 text-xs font-black hidden">
+                      ⚠️ اكتب رسالتك أولاً قبل الإرسال
+                    </p>
+
+                    <button type="submit"
+                            class="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-orange-500 text-white font-black
+                                   hover:opacity-95 transition">
+                      إرسال الرسالة
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="formModal"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-[11000] flex items-center justify-center p-4">
+
+  <div class="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-gray-100 overflow-y-auto rk-modal"
+       style="max-height:88vh;" onclick="event.stopPropagation()">
+
+    <div class="px-6 py-5 border-b bg-gradient-to-r from-orange-50 to-white sticky top-0 z-10">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="formTitle" class="font-black text-xl text-gray-800 flex items-center gap-2">
+            <span class="w-2 h-6 bg-orange-500 rounded-full inline-block"></span>
+            إضافة بلاغ مفقود / موجود
+          </h2>
+          <p class="text-xs text-gray-500 font-semibold mt-1">
+            عبّي البيانات الأساسية وسنساعدك بالوصول لأفضل تطابق
+          </p>
+        </div>
+
+        <button id="btnCloseForm" type="button"
+          class="w-10 h-10 flex items-center justify-center rounded-xl border bg-white/70 text-gray-500 hover:bg-red-50 hover:text-red-600 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <form id="adForm" class="p-6 md:p-8">
+  <div class="space-y-5">
+
+    <!-- السطر الأول -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-black text-gray-800 mb-2">نوع البلاغ</label>
+
+        <div class="flex w-full rounded-2xl border overflow-hidden shadow-sm bg-white">
+          <button id="typeLost" type="button"
+            class="rk-type-btn rk-type-btn active-lost flex-1 py-3 transition">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+            بلاغ عن مفقود
+          </button>
+
+          <button id="typeFound" type="button"
+            class="rk-type-btn rk-type-btn inactive flex-1 py-3 transition">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            بلاغ عن موجود
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-black text-gray-800 mb-2">التصنيف</label>
+
+        <div class="rk-dd" data-dd="category">
+          <input type="hidden" id="fCategory" value="">
+
+          <span class="rk-dd-icon">
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+          </span>
+
+          <button type="button" class="rk-dd-btn">
+            <span class="rk-dd-value placeholder">اختر التصنيف</span>
+          </button>
+
+          <span class="rk-dd-arrow">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </span>
+
+          <div class="rk-dd-menu">
+            {% for val, label in categories %}
+            <button type="button" class="rk-dd-option" data-value="{{ label }}">
+              <span>{{ label }}</span>
+              <i data-lucide="check" class="rk-dd-check w-4 h-4"></i>
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- السطر الثاني -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="rk-field">
+        <label class="block text-sm font-black text-gray-800 mb-2">عنوان البلاغ</label>
+        <input id="fTitle"
+          class="rk-input w-full px-4 py-3 bg-gray-50 hover:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 focus:bg-white outline-none transition"
+          placeholder="مثال: محفظة سوداء جلدية"/>
+      </div>
+
+      <div class="rk-field">
+        <label class="block text-sm font-black text-gray-800 mb-2">الوصف</label>
+        <textarea id="fDesc" rows="3"
+          class="w-full px-4 py-3 bg-gray-50 hover:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 focus:bg-white outline-none transition resize-none"
+          placeholder="اكتب أي تفاصيل إضافية تساعد في التعرف على الغرض..."></textarea>
+      </div>
+    </div>
+
+    <!-- السطر الثالث -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-black text-gray-800 mb-2">المدينة</label>
+
+        <div class="rk-dd" data-dd="city">
+          <input type="hidden" id="fCity" value="">
+
+          <span class="rk-dd-icon">
+            <i data-lucide="map-pinned" class="w-5 h-5"></i>
+          </span>
+
+          <button type="button" class="rk-dd-btn">
+            <span class="rk-dd-value placeholder">اختر المدينة</span>
+          </button>
+
+          <span class="rk-dd-arrow">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </span>
+
+          <div class="rk-dd-menu">
+            {% for city in cities %}
+            <button type="button" class="rk-dd-option" data-value="{{ city.name }}">
+              <span>{{ city.name }}</span>
+              <i data-lucide="check" class="rk-dd-check w-4 h-4"></i>
+            </button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="rk-field">
+        <label class="block text-sm font-black text-gray-800 mb-2">المنطقة</label>
+        <input id="fArea"
+          class="w-full px-4 py-3 bg-gray-50 hover:bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-400/40 focus:border-orange-400 focus:bg-white outline-none transition"
+          placeholder="مثال: وسط البلد"/>
+      </div>
+    </div>
+
+    <!-- السطر الرابع -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+      <div class="pt-2">
+        <div class="bg-gray-100/75 rounded-xl px-3 py-3 sm:px-4 sm:py-3 border border-gray-200 h-full">
+          <label class="flex items-start gap-3 cursor-pointer select-none">
+            <input type="checkbox" id="showPhone" class="mt-1 w-5 h-5 accent-[var(--rukn-orange)]">
+            <div>
+              <span class="block text-sm font-black text-gray-800">
+                إظهار رقم الهاتف في البلاغ
+              </span>
+              <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                عند تفعيل هذا الخيار سيتم عرض رقمك (المسجّل في حسابك) للمهتمين.
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-black text-gray-800 mb-2">إضافة الصور</label>
+
+        <div id="uploadBox"
+             class="rk-uploader border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50/50 p-2 h-full">
+          <input type="file" id="fImagesGallery" accept="image/*" multiple class="hidden">
+          <input type="file" id="fImagesCamera" accept="image/*" capture="environment" class="hidden">
+
+          <div class="rk-uploader-inner !min-h-[140px]">
+            <div class="rk-uploader-icon">
+              <i data-lucide="camera" class="w-8 h-8"></i>
+            </div>
+
+            <div class="text-center">
+              <div class="font-black text-gray-800">أضف صور لبلاغك</div>
+              <div class="text-xs text-gray-500 font-semibold mt-1 leading-relaxed">
+                يمكنك إضافة أكثر من صورة
+              </div>
+            </div>
+
+            <div class="mt-3 flex items-center justify-center gap-2">
+              <button type="button" id="btnPickGallery" class="rk-pick-btn">
+                اختيار الصور
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- الصور بعرض الصفحة بالكامل -->
+    <div id="thumbsBar" class="hidden">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-xs font-black text-gray-700">الصور المضافة</div>
+        <button type="button" id="removeAllImages"
+                class="text-xs font-black text-red-600 hover:text-red-700 transition">
+          حذف الكل
+        </button>
+      </div>
+
+      <div id="thumbsGrid"
+           class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 border border-gray-200 rounded-2xl p-3 bg-white w-full">
+      </div>
+    </div>
+
+    <!-- مودال مصدر الصورة -->
+    <div id="imageSourceModal"
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[9999] items-center justify-center p-4">
+      <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-gray-100 p-5"
+           onclick="event.stopPropagation()">
+        <div class="text-center mb-4">
+          <h3 class="text-lg font-black text-gray-800">اختر مصدر الصورة</h3>
+          <p class="text-xs text-gray-500 font-semibold mt-1">
+            يمكنك التقاط صورة الآن أو اختيارها من الاستديو
+          </p>
+        </div>
+
+        <div class="grid gap-3">
+          <button type="button" id="btnOpenCamera"
+            class="w-full py-3 rounded-2xl bg-orange-500 text-white font-black hover:opacity-95 transition">
+            <i data-lucide="camera" class="w-5 h-5 inline-block ml-2"></i>
+            فتح الكاميرا
+          </button>
+
+          <button type="button" id="btnOpenGallery"
+            class="w-full py-3 rounded-2xl bg-white border border-orange-200 text-orange-600 font-black hover:bg-orange-50 transition">
+            <i data-lucide="image" class="w-5 h-5 inline-block ml-2"></i>
+            فتح الاستديو
+          </button>
+
+          <button type="button" id="btnCloseImageSource"
+            class="w-full py-3 rounded-2xl bg-gray-100 text-gray-700 font-black hover:bg-gray-200 transition">
+            إلغاء
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- الأزرار -->
+    <div class="flex flex-col sm:flex-row gap-4 pt-8 mt-4 border-t border-gray-100 sticky bottom-0 bg-white relative z-30">
+      <button id="btnSubmitAd" type="button"
+  class="flex-[2] py-3.5 rounded-2xl font-black text-lg text-white shadow-lg hover:-translate-y-0.5 transition-all rk-submit-lost">
+  نشر البلاغ
+</button>
+
+      <button id="btnCancelEdit" type="button"
+        class="hidden flex-1 py-3.5 rounded-xl font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
+        إلغاء التعديل
+      </button>
+    </div>
+
+  </div>
+</form>
+
+  </div>
+</div>
+
+
+<div id="deleteModal"
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[12000] flex items-center justify-center p-4">
+  <div class="rk-delete-modal bg-white w-full max-w-sm rounded-[28px] shadow-2xl border border-red-100 overflow-hidden relative"
+       onclick="event.stopPropagation()">
+
+    <button id="btnCloseDeleteModal" type="button"
+            class="absolute top-4 left-4 w-9 h-9 rounded-full bg-gray-100 text-gray-400
+                   hover:bg-red-50 hover:text-red-500 transition flex items-center justify-center">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+
+    <div class="px-6 pt-6 pb-3 text-center">
+      <div class="mx-auto mb-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-red-50 to-orange-50
+                  border border-red-100 flex items-center justify-center shadow-sm">
+        <i data-lucide="trash-2" class="w-7 h-7 text-red-600"></i>
+      </div>
+
+      <h3 class="text-xl font-black text-gray-900">تأكيد حذف البلاغ</h3>
+
+      <p id="deleteModalText"
+         class="mt-3 text-sm leading-7 text-gray-500 font-semibold">
+        هل أنت متأكد من حذف البلاغ؟
+      </p>
+    </div>
+
+    <div class="px-6 pb-6 pt-3 grid grid-cols-2 gap-3">
+      <button id="btnCancelDelete" type="button"
+              class="py-3.5 rounded-2xl font-black text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200">
+        إلغاء
+      </button>
+
+      <button id="btnConfirmDelete" type="button"
+              class="py-3.5 rounded-2xl font-black text-white bg-gradient-to-r from-red-600 to-red-500
+                     hover:from-red-700 hover:to-red-600 shadow-lg shadow-red-200/70 transition-all duration-200">
+        حذف البلاغ
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"
+     class="fixed inset-0 flex items-center justify-center z-[9999] hidden">
+  <div id="toastBox"
+       class="flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border bg-white text-gray-800">
+    <div id="toastIcon"
+         class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold">
+      ✓
+    </div>
+    <div class="text-sm font-bold" id="toastText">تمت العملية بنجاح</div>
+  </div>
+</div>
+
+<div id="lightbox"
+     class="fixed inset-0 bg-black/80 hidden z-[99999] items-center justify-center p-4"
+     onclick="hideLightbox()">
+  <div class="relative w-full max-w-5xl" onclick="event.stopPropagation()">
+    <button type="button" onclick="hideLightbox()"
+      class="absolute -top-12 right-0 text-white/90 hover:text-white transition">
+      <i data-lucide="x" class="w-7 h-7"></i>
+    </button>
+
+    <button type="button" id="lbNext"
+      class="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full
+             bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+      <i data-lucide="chevron-left" class="w-6 h-6"></i>
+    </button>
+
+    <button type="button" id="lbPrev"
+      class="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full
+             bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+      <i data-lucide="chevron-right" class="w-6 h-6"></i>
+    </button>
+
+    <img id="lbImg" class="w-full max-h-[80vh] object-contain rounded-2xl" alt="عرض الصورة" />
+    <div id="lbDots" class="flex gap-2 justify-center mt-4"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="https://unpkg.com/heic2any/dist/heic2any.min.js"></script>
+
+<script>
+
+/* ========= PERF: LUCIDE ONCE ========= */
+let lucideQueued = false;
+function renderLucideOnce() {
+  if (lucideQueued) return;
+  lucideQueued = true;
+  requestAnimationFrame(() => {
+    if (window.lucide?.createIcons) window.lucide.createIcons();
+    lucideQueued = false;
+  });
+}
+
+</script>
+
+<script>
+
+(function initUploader(){
+  window.currentImagesData = window.currentImagesData || [];
+  window.mainImageIndex = window.mainImageIndex ?? 0;
+
+  function $(id){ return document.getElementById(id); }
+
+  function renderThumbs(){
+    const imgs = window.currentImagesData || [];
+    const thumbsBar  = $("thumbsBar");
+    const thumbsGrid = $("thumbsGrid");
+
+    if(!thumbsBar || !thumbsGrid) return;
+
+    if(!imgs.length){
+      thumbsBar.classList.add("hidden");
+      thumbsGrid.innerHTML = "";
+      return;
+    }
+
+    thumbsBar.classList.remove("hidden");
+
+    thumbsGrid.innerHTML = imgs.map((item, idx)=>{
+      const isMain = idx === (window.mainImageIndex || 0);
+      const src = item?.url || "";
+      return `
+        <button type="button"
+                class="rk-thumb ${isMain ? "is-main" : ""}"
+                onclick="window.setMainImageAt(${idx})">
+
+          <img src="${src}" alt="thumb"/>
+
+          <span class="rk-thumb-remove"
+                onclick="event.stopPropagation(); window.removeImageAt(${idx});">×</span>
+
+          ${isMain ? `<div class="rk-main-bar">الصورة الرئيسية ⭐</div>` : ``}
+        </button>
+      `;
+    }).join("");
+
+    renderLucideOnce();
+  }
+
+  window.renderThumbs = renderThumbs;
+
+  window.removeImageAt = function(idx){
+    const imgs = window.currentImagesData || [];
+    if(idx < 0 || idx >= imgs.length) return;
+
+    const item = imgs[idx];
+    if(item?.isObjectUrl && item?.url){
+      try { URL.revokeObjectURL(item.url); } catch {}
+    }
+
+    imgs.splice(idx, 1);
+    window.currentImagesData = imgs;
+
+    if(!imgs.length){
+      window.mainImageIndex = 0;
+    } else {
+      const main = window.mainImageIndex || 0;
+      if(idx < main) window.mainImageIndex = main - 1;
+      if(idx === main) window.mainImageIndex = Math.min(main, imgs.length - 1);
+    }
+
+    window.renderThumbs?.();
+  };
+
+  window.setMainImageAt = function(idx){
+    const imgs = window.currentImagesData || [];
+    if(idx < 0 || idx >= imgs.length) return;
+    window.mainImageIndex = idx;
+    window.renderThumbs?.();
+  };
+
+  async function addFilesAsThumbs(fileList){
+    const files = Array.from(fileList || []);
+
+    for (const file of files) {
+      if (!file) continue;
+
+      const maxMB = 12;
+      if (file.size > maxMB * 1024 * 1024) {
+        showToast?.("حجم الصورة كبير جدًا", "danger");
+        continue;
+      }
+	  
+	  
+      let finalFile = file;
+
+      const name = (file.name || "").toLowerCase();
+      const isHeic =
+        (file.type && /heic|heif/i.test(file.type)) ||
+        name.endsWith(".heic") || name.endsWith(".heif");
+
+      if (isHeic && window.heic2any) {
+        try {
+          const converted = await heic2any({
+            blob: file,
+            toType: "image/jpeg",
+            quality: 0.85
+          });
+
+          const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+
+          finalFile = new File(
+            [convertedBlob],
+            file.name.replace(/\.(heic|heif)$/i, ".jpg"),
+            { type: "image/jpeg" }
+          );
+        } catch (e) {
+          console.error("HEIC convert failed:", e);
+          showToast?.("تعذر تحويل صورة HEIC", "danger");
+          continue;
+        }
+      }
+
+      const url = URL.createObjectURL(finalFile);
+      window.currentImagesData.push({
+        file: finalFile,
+        url,
+        isObjectUrl: true
+      });
+    }
+
+    if (window.currentImagesData.length && (window.mainImageIndex == null)) {
+      window.mainImageIndex = 0;
+    }
+
+    window.renderThumbs?.();
+  }
+
+  function bindUploaderEvents(){
+    const uploadBox       = $("uploadBox");
+    const btnPickGallery  = $("btnPickGallery");
+    const fImagesGallery  = $("fImagesGallery");
+    const fImagesCamera   = $("fImagesCamera");
+    const removeAll       = $("removeAllImages");
+
+    const imageSourceModal    = $("imageSourceModal");
+    const btnOpenCamera       = $("btnOpenCamera");
+    const btnOpenGallery      = $("btnOpenGallery");
+    const btnCloseImageSource = $("btnCloseImageSource");
+
+    if(!uploadBox || !btnPickGallery || !fImagesGallery || !fImagesCamera) return;
+    if(uploadBox.dataset.bound === "1") return;
+    uploadBox.dataset.bound = "1";
+
+    function isMobileDevice() {
+      return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+        || window.matchMedia("(max-width: 767px)").matches;
+    }
+
+    function openSourceModal(){
+      if (isMobileDevice()) {
+        imageSourceModal?.classList.remove("hidden");
+        imageSourceModal?.classList.add("flex");
+        renderLucideOnce();
+        return;
+      }
+      fImagesGallery.click();
+    }
+
+    function closeSourceModal(){
+      imageSourceModal?.classList.add("hidden");
+      imageSourceModal?.classList.remove("flex");
+    }
+
+    btnPickGallery.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openSourceModal();
+    });
+
+    uploadBox.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      openSourceModal();
+    });
+
+    btnOpenCamera?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeSourceModal();
+      fImagesCamera.click();
+    });
+
+    btnOpenGallery?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeSourceModal();
+      fImagesGallery.click();
+    });
+
+    btnCloseImageSource?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeSourceModal();
+    });
+
+    imageSourceModal?.addEventListener("click", (e) => {
+      if(e.target === imageSourceModal) closeSourceModal();
+    });
+
+    fImagesGallery.addEventListener("change", async (e) => {
+      await addFilesAsThumbs(e.target.files);
+      fImagesGallery.value = "";
+    });
+
+    fImagesCamera.addEventListener("change", async (e) => {
+      await addFilesAsThumbs(e.target.files);
+      fImagesCamera.value = "";
+    });
+
+    removeAll?.addEventListener("click",(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+
+      (window.currentImagesData || []).forEach(it => {
+        if(it?.isObjectUrl && it?.url){
+          try { URL.revokeObjectURL(it.url); } catch {}
+        }
+      });
+
+      window.currentImagesData = [];
+      window.mainImageIndex = 0;
+      window.renderThumbs?.();
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", bindUploaderEvents);
+})();
+
+</script>
+
+<script>
+
+function ageColorClass(dateStr) {
+  if (!dateStr) return "text-gray-400";
+  const [day, month, year] = dateStr.split("/").map(Number);
+  const date = new Date(year, month - 1, day);
+  const now = new Date();
+  const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 1) return "text-green-600";
+  if (diffDays <= 7) return "text-orange-500";
+  return "text-red-500";
+}
+
+</script>
+
+<script>
+
+/* ========= DATA FROM SERVER ========= */
+const rkLFData = JSON.parse(document.getElementById('rukn-lf-data').textContent);
+const seedAds = rkLFData.reports || [];
+
+const CURRENT_USER_PHONE = rkLFData.userPhone || "";
+
+/* ========= MATCH ========= */
+function normalizeText(str){
+  return (str || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[^\u0600-\u06FFa-z0-9\s]/gi, " ")
+    .replace(/\s+/g, " ");
+}
+
+function tokens(str){
+  const t = normalizeText(str).split(" ").filter(Boolean);
+  const stop = new Set(["في","من","على","عند","قرب","ال","هذا","هذه","مع","الى","إلى"]);
+  return t.filter(w => w.length > 2 && !stop.has(w));
+}
+function overlapScore(a,b,max){
+  const A=new Set(tokens(a)), B=new Set(tokens(b));
+  let c=0;
+  for(const w of A) if(B.has(w)) c++;
+  return Math.min(max,c);
+}
+function oppositeType(type){ return type==="مفقود" ? "موجود" : "مفقود"; }
+function getMatchesForAd(targetAd, allAds, limit = 20) {
+  const need = oppositeType(targetAd.type);
+  return allAds
+    .filter(a => a.id !== targetAd.id && a.type === need && a.status === 'active')
+    .filter(a => {
+      const sameCat = a.cat && targetAd.cat && a.cat === targetAd.cat;
+      const titleMatch = overlapScore(a.title, targetAd.title, 2) > 0;
+      const descMatch  = overlapScore(a.desc, targetAd.desc, 2) > 0;
+      return sameCat || titleMatch || descMatch;
+    })
+    .slice(0, limit);
+}
+
+/* ========= HELPERS ========= */
+const $ = (id)=>document.getElementById(id);
+
+function escapeHtml(s){
+  return (s ?? "")
+    .toString()
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function setMatchesCountUI(count, selectedType){
+  const el = document.getElementById("matchesCount");
+  if(!el) return;
+
+  el.textContent = String(count ?? 0);
+  el.classList.remove("bg-green-600","bg-red-600","bg-gray-400");
+
+  if(!selectedType){
+    el.classList.add("bg-gray-400");
+    return;
+  }
+
+  if(selectedType === "مفقود"){
+    el.classList.add("bg-green-600");
+  } else {
+    el.classList.add("bg-red-600");
+  }
+}
+
+function formatJordanPhoneDisplay(phone){
+  const p = (phone || "").toString().trim();
+  if(/^07\d{8}$/.test(p)) return p;
+  if(/^7\d{8}$/.test(p)) return "0" + p;
+  if(/^9627\d{8}$/.test(p)) return "0" + p.slice(3);
+  return p;
+}
+
+function fileToDataURL(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function blobToDataURL(blob){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function imageItemToPersistedUrl(item){
+  if (!item) return null;
+
+  if (!item.file && item.url) {
+    return item.url;
+  }
+
+  if (item.file) {
+    const compressedBlob = await compressImageFile(item.file, {
+      maxWidth: 1280,
+      maxHeight: 1280,
+      quality: 0.78
+    });
+
+    return await blobToDataURL(compressedBlob);
+  }
+
+  return null;
+}
+
+async function loadImageFromFile(file){
+  const url = URL.createObjectURL(file);
+
+  try{
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = url;
+    });
+    return img;
+  } catch (e){
+    try { URL.revokeObjectURL(url); } catch {}
+    const dataUrl = await fileToDataURL(file);
+
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = dataUrl;
+    });
+    return img;
+  }
+}
+
+async function compressImageFile(file, {maxWidth=1280, maxHeight=1280, quality=0.78} = {}){
+  if(!file) return null;
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try{
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = objectUrl;
+    });
+
+    const ratio = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+    const w = Math.max(1, Math.round(img.width * ratio));
+    const h = Math.max(1, Math.round(img.height * ratio));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Canvas context unavailable");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (b) => b ? resolve(b) : reject(new Error("toBlob failed")),
+        "image/jpeg",
+        quality
+      );
+    });
+
+    return blob;
+  } finally {
+    try { URL.revokeObjectURL(objectUrl); } catch {}
+  }
+}
+
+/* ========= ELEMENTS ========= */
+const els = {
+  tabMine:$("tabMine"), tabLost:$("tabLost"), tabFound:$("tabFound"),
+  mineCount:$("mineCount"), lostCount:$("lostCount"), foundCount:$("foundCount"),
+  searchInput:$("searchInput"),
+  myAdsSection:$("myAdsSection"), myAdsList:$("myAdsList"), myMatchesList:$("myMatchesList"),
+  list:$("list"),
+
+  detailsModal:$("detailsModal"),
+  btnCloseDetails:$("btnCloseDetails"),
+  detailsHeader:$("detailsHeader"),
+  dTitle:$("dTitle"),
+  dType:$("dType"),
+  dDate:$("dDate"),
+  dLocation:$("dLocation"),
+  dDateBadge:$("dDateBadge"),
+  dLocationBadge:$("dLocationBadge"),
+  dDesc:$("dDesc"),
+  dContact:$("dContact"),
+  dAvatar:$("dAvatar"), dAvatarInitials:$("dAvatarInitials"),
+  dOwner:$("dOwner"),
+  dImage:$("dImage"),
+  dNoImage:$("dNoImage"),
+
+  formModal:$("formModal"), btnOpenForm:$("btnOpenForm"), btnCloseForm:$("btnCloseForm"),
+  formTitle:$("formTitle"),
+  typeLost:$("typeLost"), typeFound:$("typeFound"),
+  fCategory:$("fCategory"), fTitle:$("fTitle"), fDesc:$("fDesc"),
+  fCity:$("fCity"), fArea:$("fArea"),
+  searchBtn: $("searchBtn"),
+  loadMoreBtn: $("loadMoreBtn"),
+  btnSubmitAd:$("btnSubmitAd"), btnCancelEdit:$("btnCancelEdit"),
+  showPhone: $("showPhone"),
+  clearBtn: $("clearBtn"),
+};
+
+function setupOwnerBoxUI(ad){
+  const quickActions  = document.getElementById("quickActions");
+  const callBtn       = document.getElementById("callBtn");
+  const whatsappBtn   = document.getElementById("whatsappBtn");
+
+  const toggleBtn     = document.getElementById("toggleMessageBox");
+  const messageBox    = document.getElementById("messageBox");
+  const chevron       = document.getElementById("messageChevron");
+
+  const messageForm   = document.getElementById("messageForm");
+  const messageText   = document.getElementById("messageText");
+  const messageError  = document.getElementById("messageError");
+
+  const rawPhone = (ad.phone || "").toString().trim();
+  const displayPhone = formatJordanPhoneDisplay(rawPhone);
+  const canShowPhone = !!ad.showPhone && /^07\d{8}$/.test(displayPhone);
+
+  if(els.dContact){
+    els.dContact.className =
+      "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black border transition bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100";
+
+    els.dContact.innerHTML = canShowPhone
+      ? `<i data-lucide="eye" class="w-4 h-4"></i><span>اضغط لعرض الرقم</span>`
+      : `<i data-lucide="mail" class="w-4 h-4"></i><span>تواصل عبر الرسائل</span>`;
+
+    if(quickActions) quickActions.classList.add("hidden");
+
+    els.dContact.onclick = () => {
+      if(canShowPhone){
+        const hidden = quickActions?.classList.contains("hidden");
+
+        if(hidden){
+          quickActions.classList.remove("hidden");
+
+          if(callBtn) callBtn.href = `tel:${displayPhone}`;
+
+          const waNumber = `962${displayPhone.slice(1)}`;
+          if(whatsappBtn) whatsappBtn.href = `https://wa.me/${waNumber}`;
+
+          els.dContact.innerHTML =
+            `<i data-lucide="phone-call" class="w-4 h-4"></i><span>${displayPhone}</span>`;
+        } else {
+          quickActions.classList.add("hidden");
+          els.dContact.innerHTML =
+            `<i data-lucide="eye" class="w-4 h-4"></i><span>اضغط لعرض الرقم</span>`;
+        }
+
+        renderLucideOnce();
+      } else {
+        if(typeof showToast === "function"){
+          showToast("المعلن يفضّل التواصل عن طريق الرسائل", "info");
+        } else {
+          alert("المعلن يفضّل التواصل عن طريق الرسائل");
+        }
+
+        if(messageBox && chevron){
+          messageBox.classList.remove("hidden");
+          chevron.classList.add("rotate-180");
+          renderLucideOnce();
+        }
+      }
+    };
+  }
+
+  if(toggleBtn && messageBox && chevron){
+    if(!toggleBtn.dataset.bound){
+      toggleBtn.dataset.bound = "1";
+      toggleBtn.addEventListener("click", ()=>{
+        const open = !messageBox.classList.contains("hidden");
+        if(open){
+          messageBox.classList.add("hidden");
+          chevron.classList.remove("rotate-180");
+        } else {
+          messageBox.classList.remove("hidden");
+          chevron.classList.add("rotate-180");
+        }
+        renderLucideOnce();
+      });
+    }
+  }
+
+  if(messageForm && messageText && messageError){
+    // Always update the report id so the bound listener uses the current report
+    messageForm.dataset.reportId = (ad && ad.id) ? String(ad.id) : "";
+
+    if(!messageForm.dataset.bound){
+      messageForm.dataset.bound = "1";
+      messageForm.addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        const text = (messageText.value || "").trim();
+        if(!text){
+          messageError.classList.remove("hidden");
+          return;
+        }
+        messageError.classList.add("hidden");
+
+        const reportId = messageForm.dataset.reportId;
+        if(!reportId){ showToast("حدث خطأ: لا يوجد بلاغ", "error"); return; }
+
+        const csrf = (document.cookie.match(/csrftoken=([^;]+)/) || [])[1] || "";
+        const formData = new FormData();
+        formData.append("body", text);
+
+        try {
+          const res = await fetch(`/lost-found/${reportId}/message/`, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-CSRFToken": csrf, "X-Requested-With": "XMLHttpRequest" },
+            body: formData,
+          });
+
+          if(res.redirected){
+            // Not authenticated — redirect to login
+            window.location.href = res.url;
+            return;
+          }
+
+          const data = await res.json().catch(() => ({}));
+          if(res.ok && data.ok){
+            messageText.value = "";
+            showToast("تم إرسال الرسالة عبر ركن", "success");
+          } else if(data.error === "self_message"){
+            showToast("لا يمكنك مراسلة نفسك", "error");
+          } else if(data.error === "invalid"){
+            showToast("لا يُسمح بإرسال روابط أو HTML", "error");
+          } else {
+            showToast("حدث خطأ أثناء الإرسال", "error");
+          }
+        } catch(err){
+          showToast("حدث خطأ أثناء الإرسال", "error");
+        }
+      });
+    }
+  }
+}
+
+/* ========= STATE ========= */
+const state = {
+  view: "lost",
+  selectedType: "مفقود",
+  selectedMyAdId: null,
+  ads: [],
+  myIds: new Set(),
+  editingId: null,
+  seenMatches: {},
+  _matchesCount: null,
+  visibleCount: 8,
+  selectedCategory: "",
+  pendingDeleteId: null
+};
+
+function recomputeMatchesCount() {
+  state._matchesCount = {};
+  state.ads.forEach(a => {
+    state._matchesCount[a.id] = getMatchesForAd(a, state.ads).length;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});
+
+function init(){
+  state.ads = seedAds.slice().map(normalizeAd);
+  state.myIds = new Set(rkLFData.myIds || []);
+  state.seenMatches = {};
+  recomputeMatchesCount();
+  bindEvents();
+  bindLiveValidation();
+  setView(state.view);
+  refresh();
+  renderLucideOnce();
+}
+
+function normalizeAd(ad){
+  return {
+    id: Number(ad.id),
+    type: ad.type || "مفقود",
+    title: ad.title || "",
+    desc: ad.desc || "",
+    cat: ad.cat || "أخرى",
+    city: ad.city || "",
+    area: ad.area || "",
+    date: formatDate(ad.date),
+    createdAt: ad.createdAt ?? null,
+    owner: ad.owner || "مستخدم",
+    avatar: ad.avatar || "",
+    showPhone: (ad.showPhone != null)
+      ? !!ad.showPhone
+      : (ad.contactType === "موبايل" && !!ad.phone),
+    phone: ad.phone || null,
+    contactType: "رسائل داخل الموقع",
+    images: Array.isArray(ad.images)
+      ? ad.images.filter(Boolean)
+      : (ad.image ? [ad.image] : []),
+    mainImageIndex: Number.isInteger(ad.mainImageIndex) ? ad.mainImageIndex : 0,
+    status: ad.status || 'active',
+  };
+}
+
+function on(el, ev, fn){
+  if(!el) return;
+  el.addEventListener(ev, fn);
+}
+
+function bindEvents(){
+  on(els.tabMine, "click", ()=>setView("mine"));
+  on(els.tabLost, "click", ()=>setView("lost"));
+  on(els.tabFound,"click", ()=>setView("found"));
+
+  on(els.btnOpenForm,"click", (e) => {
+    e.preventDefault();
+    openFormForCreate();
+  });
+
+  on(els.btnCloseForm,"click", hideForm);
+  on(els.btnCancelEdit,"click", cancelEdit);
+  on(els.btnCloseDetails,"click", hideDetails);
+
+  on(els.searchInput, "input", ()=>{});
+  on(els.searchBtn, "click", ()=>refresh());
+
+  on(els.searchInput, "keydown", (e)=>{
+    if(e.key === "Enter") refresh();
+  });
+
+  on(els.formModal, "click", (e)=>{ 
+    if(e.target===els.formModal) hideForm(); 
+  });
+
+  on(els.detailsModal, "click", (e)=>{ 
+    if(e.target===els.detailsModal) hideDetails(); 
+  });
+
+  on(els.typeLost, "click", ()=>setType("مفقود"));
+  on(els.typeFound,"click", ()=>setType("موجود"));
+
+  const adForm = document.getElementById("adForm");
+
+  if (adForm) {
+    adForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      submitForm();
+    });
+  }
+
+  function handleSubmitPress(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (els.btnSubmitAd?.disabled) return;
+    submitForm();
+  }
+
+  if (els.btnSubmitAd) {
+    els.btnSubmitAd.addEventListener("click", handleSubmitPress);
+    els.btnSubmitAd.addEventListener("touchstart", handleSubmitPress, { passive: false });
+  }
+
+  on(els.list, "click", (e)=>{
+    const btn = e.target.closest("[data-open-id]");
+    if(!btn) return;
+    e.stopPropagation();
+    openDetails(Number(btn.dataset.openId));
+  });
+
+  on(els.myAdsList, "click", (e)=>{
+    const editBtn = e.target.closest("[data-edit-id]");
+    if(editBtn){ 
+      e.stopPropagation(); 
+      openFormForEdit(Number(editBtn.dataset.editId)); 
+      return; 
+    }
+
+    const deleteBtn = e.target.closest("[data-delete-id]");
+    if(deleteBtn){ 
+      e.stopPropagation(); 
+      deleteMyAd(Number(deleteBtn.dataset.deleteId)); 
+      return; 
+    }
+
+    const card = e.target.closest("[data-my-ad-id]");
+    if(card){ 
+      selectMyAd(Number(card.dataset.myAdId)); 
+    }
+  });
+
+  on(els.myMatchesList, "click", (e)=>{
+    const btn = e.target.closest("[data-open-id]");
+    if(!btn) return;
+    e.stopPropagation();
+    openDetails(Number(btn.dataset.openId));
+  });
+
+  on(els.loadMoreBtn, "click", ()=>{
+    state.visibleCount += 4;
+    refresh();
+  });
+}
+
+
+function setView(view){
+  if (els.searchInput) els.searchInput.value = "";
+
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) {
+    clearBtn.classList.add("hidden");
+    clearBtn.classList.remove("flex");
+  }
+
+  if (typeof resetCategoryFilter === "function") resetCategoryFilter();
+
+  state.view = view;
+
+  els.tabLost.className =
+    "relative group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl transition-all duration-500 hover:bg-red-50/50 active:scale-95 overflow-hidden focus:outline-none w-full md:flex-1";
+  els.tabFound.className =
+    "relative group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl transition-all duration-500 hover:bg-emerald-50/50 active:scale-95 overflow-hidden focus:outline-none w-full md:flex-1";
+  els.tabMine.className =
+    "relative group flex items-center justify-center gap-3 px-6 py-4 rounded-2xl transition-all duration-500 hover:bg-blue-50/50 active:scale-95 overflow-hidden focus:outline-none w-full col-span-2 md:col-span-1 md:flex-1";
+
+  const mainSection = document.getElementById("mainListSection");
+
+  if(view === "lost"){
+    els.tabLost.className += " border-b-2 border-red-500 bg-red-50 rounded-2xl";
+    els.myAdsSection.classList.add("hidden");
+    mainSection.classList.remove("hidden");
+  } else if(view === "found"){
+    els.tabFound.className += " border-b-2 border-green-500 bg-green-50 rounded-2xl";
+    els.myAdsSection.classList.add("hidden");
+    mainSection.classList.remove("hidden");
+  } else {
+    els.tabMine.className += " border-b-2 border-blue-500 bg-blue-50 rounded-2xl";
+    els.myAdsSection.classList.remove("hidden");
+    mainSection.classList.add("hidden");
+  }
+
+  state.visibleCount = 8;
+  refresh();
+}
+
+function refresh(){
+  els.lostCount.textContent  = state.ads.filter(a=>a.type==="مفقود" && a.status==="active").length;
+  els.foundCount.textContent = state.ads.filter(a=>a.type==="موجود" && a.status==="active").length;
+  els.mineCount.textContent  = state.myIds.size;
+
+  if(state.view === "mine"){
+    els.list.innerHTML = "";
+    renderMyPanel();
+  } else {
+    renderMainList();
+  }
+
+  requestAnimationFrame(() => {
+    window.__rkUpdateArrows?.myAdsList?.();
+    window.__rkUpdateArrows?.myMatchesList?.();
+  });
+
+  renderLucideOnce();
+}
+
+function matchesQuery(ad, q){
+  if (state.selectedCategory && ad.cat !== state.selectedCategory) return false;
+  if(!q) return true;
+  const nq = normalizeText(q);
+  return [ad.title, ad.desc, ad.cat, ad.city, ad.area]
+    .some(v => normalizeText(v).includes(nq));
+}
+
+function renderUnifiedCard(ad, opts = {}) {
+  const { mode = "details", selected = false } = opts;
+  const isLost = ad.type === "مفقود";
+
+  const baseBorder = isLost ? "border-red-500" : "border-green-500";
+  const selectedBorder = isLost ? "border-red-700" : "border-green-700";
+  const borderColor = selected ? selectedBorder : baseBorder;
+
+  const catChip =
+    isLost
+      ? "bg-white/90 text-red-700 border border-red-500"
+      : "bg-white/90 text-green-700 border border-green-500";
+
+  const locationText = [ad.city, ad.area].filter(Boolean).join(" - ");
+
+  const cover =
+    ad.images?.[ad.mainImageIndex ?? 0] ||
+    ad.images?.[0] ||
+    null;
+
+  const imageBlock = cover
+    ? `
+      <div class="relative w-full aspect-[4/3] overflow-hidden bg-gray-50">
+        <img src="${cover}" loading="eager"
+             class="absolute inset-0 w-full h-full object-cover blur-md scale-110 brightness-90"
+             alt="" aria-hidden="true"/>
+        <div class="absolute inset-0 bg-black/10"></div>
+        <img src="${cover}" loading="eager"
+             class="relative z-10 w-full h-full object-contain"
+             alt="صورة البلاغ"/>
+      </div>
+    `
+    : `
+      <div class="relative w-full aspect-[4/3] overflow-hidden bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+        لا توجد صورة
+      </div>
+    `;
+
+  const bottomHoverBg = isLost ? "group-hover:bg-red-50" : "group-hover:bg-green-50";
+  const timeText = timeAgo(ad);
+
+  const leftAction =
+    (mode === "matches")
+      ? `
+        <div class="shrink-0 flex items-center gap-1">
+          <button type="button"
+                  data-edit-id="${ad.id}"
+                  class="px-2 py-1 rounded-lg text-[13px] font-black border bg-white/70 hover:bg-white transition text-blue-700 border-blue-200">
+            تعديل
+          </button>
+
+          <button type="button"
+                  data-delete-id="${ad.id}"
+                  class="px-2 py-1 rounded-lg text-[13px] font-black border bg-white/70 hover:bg-white transition text-red-600 border-red-200">
+            حذف
+          </button>
+        </div>
+      `
+      : `
+        <div class="shrink-0 flex items-center gap-2 text-blue-700">
+          <div class="leading-tight text-[11px] font-black text-left">
+            <div>عرض</div>
+            <div>البلاغ</div>
+          </div>
+          <i data-lucide="chevrons-left"
+             class="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1"></i>
+        </div>
+      `;
+
+  const openAttr = (mode === "matches") ? "" : `data-open-id="${ad.id}"`;
+
+  return `
+    <div class="bg-white rounded-3xl border-2 ${borderColor}
+                shadow-sm transition-all duration-300 group
+                hover:-translate-y-1 hover:shadow-xl overflow-hidden"
+         ${mode === "matches" ? `data-my-ad-id="${ad.id}"` : ""}>
+
+      <div class="relative">
+        ${imageBlock}
+
+        <div class="absolute top-3 right-3 z-20">
+          <div class="${catChip} inline-flex items-center text-xs font-black px-3 py-1 rounded-full shadow-sm">
+            ${escapeHtml(ad.cat)}
+          </div>
+        </div>
+
+        ${mode === "matches" && ad.status !== 'active' ? `
+        <div class="absolute top-3 left-3 z-20">
+          <div class="${ad.status === 'rejected' ? 'bg-red-100 text-red-700 border border-red-400' : 'bg-yellow-100 text-yellow-700 border border-yellow-400'} inline-flex items-center text-xs font-black px-3 py-1 rounded-full shadow-sm">
+            ${ad.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'}
+          </div>
+        </div>` : ''}
+      </div>
+
+      <div ${openAttr}
+           class="p-4 space-y-3 text-right cursor-pointer transition-colors duration-300 ${bottomHoverBg}">
+
+        <h3 class="font-bold text-gray-800 text-lg line-clamp-1">
+          ${escapeHtml(ad.title)}
+        </h3>
+
+        <div class="flex items-center justify-between gap-3 text-sm">
+          <div class="flex items-center gap-1 text-gray-500 min-w-0">
+            <i data-lucide="map-pin" class="w-4 h-4 shrink-0"></i>
+            <span class="truncate">${escapeHtml(locationText)}</span>
+          </div>
+
+          ${leftAction}
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t">
+          <div class="flex items-center gap-2">
+            ${ad.avatar
+              ? `<img src="${ad.avatar}" class="w-8 h-8 rounded-full border object-cover" alt=""/>`
+              : `<div class="w-8 h-8 rounded-full border bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">${escapeHtml((ad.owner||"?").slice(0,1).toUpperCase())}</div>`
+            }
+            <span class="text-sm font-semibold text-gray-700">
+              ${escapeHtml(ad.owner)}
+            </span>
+          </div>
+
+          <div class="text-xs font-bold text-gray-500 flex items-center gap-1">
+            <i data-lucide="calendar" class="w-4 h-4"></i>
+            <span>${timeText}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMainList(){
+  els.list.innerHTML = "";
+  if(state.view === "mine") return;
+
+  const forced = (state.view === "lost") ? "مفقود" : "موجود";
+  const q = els.searchInput.value || "";
+
+  const all = state.ads
+    .filter(a => a.type === forced)
+    .filter(a => a.status === 'active')
+    .filter(a => matchesQuery(a, q));
+
+  const shown = all.slice(0, state.visibleCount);
+
+  if (!shown.length) {
+    els.list.innerHTML = `
+      <div class="col-span-full flex flex-col items-center justify-center text-center py-16 text-gray-400">
+        <i data-lucide="inbox" class="w-10 h-10 mb-3"></i>
+        <p class="text-sm font-medium">لا توجد نتائج مطابقة</p>
+        <p class="text-xs mt-1 text-gray-400">جرّب تغيير البحث أو القسم</p>
+      </div>
+    `;
+  } else {
+    els.list.innerHTML = shown.map(a=>renderUnifiedCard(a,{mode:"details"})).join("");
+  }
+
+  const btn = els.loadMoreBtn;
+  if(btn){
+    const isLost = forced === "مفقود";
+    btn.classList.remove("bg-red-600","hover:bg-red-700","bg-green-600","hover:bg-green-700");
+    btn.classList.add(isLost ? "bg-red-600" : "bg-green-600");
+    btn.classList.add(isLost ? "hover:bg-red-700" : "hover:bg-green-700");
+
+    const reachedEnd = state.visibleCount >= all.length;
+
+    if(all.length <= 8 || reachedEnd){
+      btn.disabled = true;
+      btn.textContent = "تم عرض جميع البلاغات";
+    } else {
+      btn.disabled = false;
+      btn.textContent = "عرض المزيد من البلاغات";
+    }
+  }
+}
+
+function renderMyPanel(){
+  if(state.view!=="mine") return;
+
+  const q = els.searchInput.value || "";
+  const myAds = state.ads
+    .filter(a => state.myIds.has(a.id))
+    .filter(a => matchesQuery(a, q))
+    .sort((a,b)=>b.id-a.id);
+
+  if(!myAds.length){
+    setMatchesCountUI(0, null);
+
+    els.myAdsList.innerHTML = `
+      <div class="text-sm text-gray-500">
+        لا توجد بلاغات حتى الآن
+      </div>
+    `;
+
+    els.myMatchesList.innerHTML = `
+      <div class="text-sm text-gray-500">
+        اختر بلاغاً لعرض البلاغات المتطابقة
+      </div>
+    `;
+
+    requestAnimationFrame(() => {
+      window.__rkUpdateArrows?.myAdsList?.();
+      window.__rkUpdateArrows?.myMatchesList?.();
+    });
+
+    return;
+  }
+
+  if(state.selectedMyAdId && !myAds.some(a=>a.id===state.selectedMyAdId)){
+    state.selectedMyAdId = null;
+  }
+
+  els.myAdsList.innerHTML = myAds.map(ad => {
+    const selected = state.selectedMyAdId === ad.id;
+    return `
+      <div class="snap-center w-[78vw] min-w-[78vw] sm:w-[260px] sm:min-w-[260px]">
+        ${renderUnifiedCard(ad, { mode:"matches", selected, showMineActions:true })}
+      </div>
+    `;
+  }).join("");
+
+  if(!state.selectedMyAdId){
+    // Auto-select the first report so matches are shown immediately
+    state.selectedMyAdId = myAds[0].id;
+    state.seenMatches[myAds[0].id] = true;
+  }
+
+  const target = myAds.find(a => a.id === state.selectedMyAdId);
+
+  const lists = [els.myAdsList, els.myMatchesList];
+  lists.forEach(el => {
+    if (!el) return;
+    el.classList.remove("scroll-lost", "scroll-found");
+
+    if (target.type === "مفقود") {
+      el.classList.add("scroll-lost");
+    } else {
+      el.classList.add("scroll-found");
+    }
+  });
+
+  const allMatches = getMatchesForAd(target, state.ads, state.ads.length);
+  setMatchesCountUI(allMatches.length, target.type);
+  const scored = allMatches.slice(0, 12);
+
+  if(!scored.length){
+    els.myMatchesList.innerHTML = `
+      <div class="text-sm text-gray-500">
+        لا توجد بلاغات متطابقة
+      </div>
+    `;
+
+    requestAnimationFrame(() => {
+      window.__rkUpdateArrows?.myAdsList?.();
+      window.__rkUpdateArrows?.myMatchesList?.();
+    });
+
+    return;
+  }
+
+  els.myMatchesList.innerHTML = scored.map(ad => `
+    <div class="snap-center w-[78vw] min-w-[78vw] sm:w-[260px] sm:min-w-[260px]">
+      ${renderUnifiedCard(ad, { mode:"details" })}
+    </div>
+  `).join("");
+
+  requestAnimationFrame(() => {
+    window.__rkUpdateArrows?.myAdsList?.();
+    window.__rkUpdateArrows?.myMatchesList?.();
+  });
+}
+
+function selectMyAd(id){
+  state.selectedMyAdId = id;
+  state.seenMatches[id] = true;
+  renderMyPanel();
+  renderLucideOnce();
+}
+
+function openDetails(id){
+  const ad = state.ads.find(a => a.id === id);
+  if(!ad) return;
+
+  const isLost = ad.type === "مفقود";
+
+  const closeBtn  = document.getElementById("btnCloseDetails");
+  if (closeBtn) {
+    closeBtn.classList.remove(
+      "border-red-200","bg-red-50","text-red-600","hover:bg-red-100","hover:text-red-700",
+      "border-green-200","bg-green-50","text-green-600","hover:bg-green-100","hover:text-green-700"
+    );
+
+    if (isLost) {
+      closeBtn.classList.add("border-red-200","bg-red-50","text-red-600","hover:bg-red-100","hover:text-red-700");
+    } else {
+      closeBtn.classList.add("border-green-200","bg-green-50","text-green-600","hover:bg-green-100","hover:text-green-700");
+    }
+  }
+
+  const theme = isLost ? {
+    header: "from-red-50 to-white",
+    typeBadge: "bg-red-600 text-white border-red-600",
+    metaBadge: "border-red-200 text-red-800 bg-white/70",
+    catBadge: "border-red-200 text-red-800 bg-red-50",
+    contact: "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+  } : {
+    header: "from-green-50 to-white",
+    typeBadge: "bg-green-600 text-white border-green-600",
+    metaBadge: "border-green-200 text-green-800 bg-white/70",
+    catBadge: "border-green-200 text-green-800 bg-green-50",
+    contact: "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+  };
+
+  els.detailsHeader.className = `px-6 py-5 border-b bg-gradient-to-r ${theme.header}`;
+  els.dTitle.textContent = ad.title;
+
+  els.dType.className = `inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full font-black border ${theme.typeBadge}`;
+  els.dType.innerHTML = `
+    <i data-lucide="${isLost ? "alert-triangle" : "check-circle"}" class="w-4 h-4"></i>
+    <span>${ad.type}</span>
+  `;
+
+  els.dDate.textContent = ad.date || "";
+  els.dLocation.textContent = [ad.city, ad.area].filter(Boolean).join(" – ");
+
+  els.dDateBadge.className =
+    `inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full font-bold border ${theme.metaBadge}`;
+  els.dLocationBadge.className =
+    `inline-flex items-center gap-2 text-xs px-3 py-1 rounded-full font-bold border ${theme.metaBadge}`;
+
+  const dCatTop = document.getElementById("dCatTop");
+  if(dCatTop){
+    dCatTop.textContent = ad.cat || "أخرى";
+    dCatTop.className =
+      `inline-flex items-center text-xs px-3 py-1 rounded-full font-black border ${theme.catBadge}`;
+  }
+
+  els.dDesc.textContent = ad.desc || "لا يوجد وصف إضافي";
+
+  const imgs = ad.images || [];
+  let currentIndex = Number.isInteger(ad.mainImageIndex) ? ad.mainImageIndex : 0;
+  if (currentIndex >= imgs.length) currentIndex = 0;
+
+  const thumbs  = document.getElementById("dThumbs");
+  const main    = document.getElementById("dImage");
+  const blurBg  = document.getElementById("dBlurBg");
+  const overlay = document.getElementById("dImageOverlay");
+  const mainBox = document.getElementById("dGalleryMain");
+
+  if (thumbs) {
+    thumbs.classList.remove("scroll-lost", "scroll-found");
+    thumbs.classList.add(isLost ? "scroll-lost" : "scroll-found");
+  }
+
+  function buildThumbs(){
+    if(!thumbs) return;
+
+    thumbs.innerHTML = "";
+    imgs.forEach((src, index) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "thumb" + (index === currentIndex ? " active" : "");
+      btn.dataset.index = String(index);
+      btn.innerHTML = `<img src="${src}" alt="صورة مصغرة ${index + 1} للبلاغ">`;
+
+      btn.addEventListener("click", () => {
+        setMainImage(index);
+      });
+
+      thumbs.appendChild(btn);
+    });
+  }
+
+  function setMainImage(index){
+    currentIndex = index;
+    const src = imgs[index];
+
+    if(main){
+      main.src = src;
+      main.classList.remove("hidden");
+    }
+
+    if(blurBg){
+      blurBg.style.backgroundImage = `url("${src}")`;
+      blurBg.classList.remove("hidden");
+    }
+
+    if(overlay){
+      overlay.classList.remove("hidden");
+    }
+
+    document.querySelectorAll("#dThumbs .thumb").forEach(t => t.classList.remove("active"));
+    const activeThumb = document.querySelector(`#dThumbs .thumb[data-index="${index}"]`);
+    if(activeThumb) activeThumb.classList.add("active");
+  }
+
+  if(imgs.length){
+    if(mainBox) mainBox.classList.remove("hidden");
+    if(main) main.classList.remove("hidden");
+    if(blurBg) blurBg.classList.remove("hidden");
+    if(overlay) overlay.classList.remove("hidden");
+    if(thumbs) thumbs.classList.remove("hidden");
+
+    setMainImage(currentIndex);
+    buildThumbs();
+
+    if(mainBox){
+      mainBox.style.cursor = "zoom-in";
+      mainBox.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showLightbox(imgs, currentIndex);
+      };
+    }
+
+    if(main) main.style.cursor = "zoom-in";
+    els.dNoImage.classList.add("hidden");
+
+  } else {
+    if(main) main.classList.add("hidden");
+    if(blurBg) blurBg.classList.add("hidden");
+    if(overlay) overlay.classList.add("hidden");
+    if(mainBox) mainBox.classList.add("hidden");
+    if(thumbs){
+      thumbs.classList.add("hidden");
+      thumbs.innerHTML = "";
+    }
+    els.dNoImage.classList.remove("hidden");
+  }
+
+  els.dOwner.textContent = ad.owner || "مستخدم";
+  if(ad.avatar){
+    els.dAvatar.src = ad.avatar;
+    els.dAvatar.classList.remove("hidden");
+    els.dAvatarInitials?.classList.add("hidden");
+  } else {
+    els.dAvatar.classList.add("hidden");
+    if(els.dAvatarInitials){
+      els.dAvatarInitials.textContent = (ad.owner||"?").slice(0,1).toUpperCase();
+      els.dAvatarInitials.classList.remove("hidden");
+    }
+  }
+  setupOwnerBoxUI(ad);
+
+  els.dContact.className =
+    `inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-black border transition ${theme.contact}`;
+
+  lockPageScroll();
+  els.detailsModal.classList.remove("hidden");
+  els.detailsModal.classList.add("flex");
+  renderLucideOnce();
+}
+
+function hideDetails(){
+  els.detailsModal.classList.add("hidden");
+  els.detailsModal.classList.remove("flex");
+  unlockPageScroll();
+}
+
+function setType(type){
+  state.selectedType = type;
+
+  if(type === "مفقود"){
+    els.typeLost.classList.add("active-lost");
+    els.typeLost.classList.remove("inactive","active-found");
+
+    els.typeFound.classList.add("inactive");
+    els.typeFound.classList.remove("active-found","active-lost");
+
+    els.btnSubmitAd.classList.add("rk-submit-lost");
+    els.btnSubmitAd.classList.remove("rk-submit-found");
+  } else {
+    els.typeFound.classList.add("active-found");
+    els.typeFound.classList.remove("inactive","active-lost");
+
+    els.typeLost.classList.add("inactive");
+    els.typeLost.classList.remove("active-lost","active-found");
+
+    els.btnSubmitAd.classList.add("rk-submit-found");
+    els.btnSubmitAd.classList.remove("rk-submit-lost");
+  }
+
+  renderLucideOnce();
+}
+
+function openFormForCreate(){
+  if (!rkLFData.isAuthenticated) {
+    window.location.href = rkLFData.loginUrl + '?next=' + encodeURIComponent(window.location.pathname);
+    return;
+  }
+  state.editingId = null;
+  els.formTitle.textContent = "إضافة بلاغ مفقود / موجود";
+  els.btnSubmitAd.textContent = "نشر البلاغ";
+  els.btnCancelEdit.classList.add("hidden");
+
+  els.fCategory.value = "";
+  setCustomDropdownValue("fCategory", "", "اختر التصنيف");
+
+  els.fTitle.value = "";
+  els.fDesc.value = "";
+  els.fCity.value = "";
+  setCustomDropdownValue("fCity", "", "اختر المدينة");
+  els.fArea.value = "";
+
+  const fImagesGallery = document.getElementById("fImagesGallery");
+  const fImagesCamera  = document.getElementById("fImagesCamera");
+
+  if (fImagesGallery) fImagesGallery.value = "";
+  if (fImagesCamera)  fImagesCamera.value = "";
+
+  (window.currentImagesData || []).forEach(it => {
+    if(it?.isObjectUrl && it?.url){
+      try { URL.revokeObjectURL(it.url); } catch {}
+    }
+  });
+
+  window.currentImagesData = [];
+  window.mainImageIndex = 0;
+  window.renderThumbs?.();
+
+  if (els.showPhone) els.showPhone.checked = false;
+
+  setType("مفقود");
+
+  lockPageScroll();
+  els.formModal.classList.remove("hidden");
+  els.formModal.classList.add("flex");
+  renderLucideOnce();
+}
+
+function openFormForEdit(id){
+  const ad = state.ads.find(a => a.id === id);
+  if(!ad || !state.myIds.has(id)) return;
+
+  lockPageScroll();
+
+  state.editingId = id;
+  els.formTitle.textContent = "تعديل البلاغ";
+  els.btnSubmitAd.textContent = "تحديث البلاغ";
+  els.btnCancelEdit.classList.remove("hidden");
+
+  setType(ad.type);
+  els.fCategory.value = ad.cat;
+  setCustomDropdownValue("fCategory", ad.cat, "اختر التصنيف");
+
+  els.fTitle.value = ad.title;
+  els.fDesc.value = ad.desc || "";
+  els.fCity.value = ad.city;
+  setCustomDropdownValue("fCity", ad.city, "اختر المدينة");
+  els.fArea.value = ad.area;
+
+  if(els.showPhone) els.showPhone.checked = !!ad.showPhone;
+
+  window.currentImagesData = (ad.images || []).map(u => ({
+    file: null,
+    url: u,
+    isObjectUrl: false
+  }));
+
+  window.mainImageIndex = Number.isInteger(ad.mainImageIndex) ? ad.mainImageIndex : 0;
+  if (window.mainImageIndex >= window.currentImagesData.length) {
+    window.mainImageIndex = 0;
+  }
+
+  window.renderThumbs?.();
+
+  els.formModal.classList.remove("hidden");
+  els.formModal.classList.add("flex");
+  renderLucideOnce();
+}
+
+function hideForm(){
+  els.formModal.classList.add("hidden");
+  els.formModal.classList.remove("flex");
+  unlockPageScroll();
+}
+
+function cancelEdit(){
+  state.editingId = null;
+  hideForm();
+}
+
+function formatDate(input) {
+  if (typeof input === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(input)) {
+    return input;
+  }
+  const d = input ? new Date(input) : new Date();
+  if (isNaN(d)) return "";
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function timeAgo(ad) {
+  const baseTime = ad.createdAt
+    ? new Date(ad.createdAt)
+    : (() => {
+        const [d, m, y] = ad.date.split("/").map(Number);
+        return new Date(y, m - 1, d);
+      })();
+
+  const now = new Date();
+  const diffMs = now - baseTime;
+
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours   = Math.floor(diffMs / (1000 * 60 * 60));
+  const days    = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const weeks   = Math.floor(days / 7);
+  const months  = Math.floor(days / 30);
+
+  if (minutes < 1) return "الآن";
+  if (minutes === 1) return "منذ دقيقة";
+  if (minutes === 2) return "منذ دقيقتين";
+  if (minutes < 60) return `منذ ${minutes} دقائق`;
+
+  if (hours === 1) return "منذ ساعة";
+  if (hours === 2) return "منذ ساعتين";
+  if (hours < 24) return `منذ ${hours} ساعات`;
+
+  if (days === 1) return "منذ يوم";
+  if (days === 2) return "منذ يومين";
+  if (days < 7) return `منذ ${days} أيام`;
+
+  if (weeks === 1) return "منذ أسبوع";
+  if (weeks === 2) return "منذ أسبوعين";
+  if (weeks < 4) return `منذ ${weeks} أسابيع`;
+
+  if (months === 1) return "منذ شهر";
+  if (months === 2) return "منذ شهرين";
+  return `منذ ${months} أشهر`;
+}
+
+function focusField(inputEl){
+  if(!inputEl) return;
+
+  const target = getFieldVisualTarget(inputEl);
+
+  if(target.classList.contains("rk-dd")){
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.add("open");
+
+    const btn = target.querySelector(".rk-dd-btn");
+    if(btn){
+      setTimeout(() => {
+        btn.focus({ preventScroll: true });
+      }, 50);
+    }
+    return;
+  }
+
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  setTimeout(() => {
+    inputEl.focus({ preventScroll: true });
+
+    if(
+      typeof inputEl.setSelectionRange === "function" &&
+      typeof inputEl.value === "string"
+    ){
+      const len = inputEl.value.length;
+      inputEl.setSelectionRange(len, len);
+    }
+  }, 50);
+}
+
+async function submitForm(){
+  const btn = els.btnSubmitAd;
+  if (!btn) return;
+  if (btn.dataset.loading === "1") return;
+
+  btn.dataset.loading = "1";
+  btn.disabled = true;
+  btn.classList.add("opacity-70","cursor-not-allowed");
+
+  try{
+    clearFieldError(els.fCategory,"errCategory");
+    clearFieldError(els.fTitle,"errTitle");
+    clearFieldError(els.fDesc,"errDesc");
+    clearFieldError(els.fCity,"errCity");
+    clearFieldError(els.fArea,"errArea");
+    clearFieldError(els.showPhone,"errShowPhone");
+
+    if(!els.fCategory.value){
+      setFieldError(els.fCategory,"هذا الحقل مطلوب","errCategory");
+      focusField(els.fCategory);
+      return;
+    }
+
+    if(!(els.fTitle.value||"").trim()){
+      setFieldError(els.fTitle,"هذا الحقل مطلوب","errTitle");
+      focusField(els.fTitle);
+      return;
+    }
+
+    if(!(els.fDesc.value||"").trim()){
+      setFieldError(els.fDesc,"هذا الحقل مطلوب","errDesc");
+      focusField(els.fDesc);
+      return;
+    }
+
+    if(!els.fCity.value){
+      setFieldError(els.fCity,"هذا الحقل مطلوب","errCity");
+      focusField(els.fCity);
+      return;
+    }
+
+    if(!(els.fArea.value||"").trim()){
+      setFieldError(els.fArea,"هذا الحقل مطلوب","errArea");
+      focusField(els.fArea);
+      return;
+    }
+
+    const showPhone = !!els.showPhone?.checked;
+    const phoneVal  = (CURRENT_USER_PHONE || "").toString().trim();
+
+    if(showPhone && !phoneVal){
+      setFieldError(els.showPhone,"لا يوجد رقم هاتف محفوظ في الحساب","errShowPhone");
+      return;
+    }
+
+    let images = [];
+const rawImages = window.currentImagesData || [];
+
+for (const item of rawImages) {
+  try {
+    const img = await imageItemToPersistedUrl(item);
+    if (img) images.push(img);
+  } catch (err) {
+    console.error("Image processing failed:", err);
+    showToast("تعذر معالجة إحدى الصور، حاول بصورة أصغر", "danger");
+    return;
+  }
+}
+
+
+    let mainIdx = Number(window.mainImageIndex ?? 0);
+    if (mainIdx < 0 || mainIdx >= images.length) mainIdx = 0;
+
+    const fd = new FormData();
+    fd.append("csrfmiddlewaretoken", rkLFData.csrfToken);
+    fd.append("report_id", state.editingId ? String(state.editingId) : "");
+    fd.append("type", state.selectedType === "مفقود" ? "lost" : "found");
+    fd.append("cat", els.fCategory.value);
+    fd.append("title", els.fTitle.value.trim());
+    fd.append("desc", els.fDesc.value.trim());
+    fd.append("city", els.fCity.value);
+    fd.append("area", els.fArea.value.trim());
+    fd.append("show_phone", String(showPhone));
+    fd.append("images_json", JSON.stringify(images));
+    fd.append("main_image_index", String(mainIdx));
+
+    let resp, data;
+    try {
+      resp = await fetch("/lost-found/ajax/save/", { method: "POST", body: fd });
+      data = await resp.json();
+    } catch (fetchErr) {
+      showToast("خطأ في الاتصال بالخادم", "danger");
+      return;
+    }
+
+    if (!data.ok) {
+      showToast(data.error || "حدث خطأ أثناء الحفظ", "danger");
+      return;
+    }
+
+    const saved = normalizeAd(data.report);
+
+    if (state.editingId == null) {
+      state.ads.unshift(saved);
+      state.myIds.add(saved.id);
+      state.selectedMyAdId = saved.id;
+      state.seenMatches[saved.id] = true;
+      recomputeMatchesCount();
+      setView("mine");
+      showToast("تم نشر البلاغ - سيظهر بعد المراجعة", "success");
+    } else {
+      const editIdx = state.ads.findIndex(a => a.id === state.editingId);
+      if (editIdx !== -1) state.ads[editIdx] = saved;
+      state.editingId = null;
+      recomputeMatchesCount();
+      setView("mine");
+      showToast("تم تحديث البلاغ بنجاح", "success");
+    }
+
+    hideForm();
+    refresh();
+
+  } catch (err) {
+    console.error("submitForm error:", err);
+    showToast("حدث خطأ أثناء نشر البلاغ", "danger");
+  } finally {
+    btn.dataset.loading = "0";
+    btn.disabled = false;
+    btn.classList.remove("opacity-70","cursor-not-allowed");
+  }
+}
+
+
+function openDeleteModal(id){
+  const ad = state.ads.find(a => a.id === id);
+  if(!ad || !state.myIds.has(id)) return;
+
+  state.pendingDeleteId = id;
+
+  const label = ad.type === "مفقود" ? "تم إيجاده" : "تم تسليمه";
+  const deleteModalText = document.getElementById("deleteModalText");
+  if (deleteModalText) {
+    deleteModalText.textContent = `هل أنت متأكد من حذف البلاغ؟ (${label})`;
+  }
+
+  const deleteModal = document.getElementById("deleteModal");
+  if (deleteModal){
+    lockPageScroll();
+    deleteModal.classList.remove("hidden");
+    deleteModal.classList.add("flex");
+    renderLucideOnce();
+  }
+}
+
+function closeDeleteModal(){
+  state.pendingDeleteId = null;
+  const deleteModal = document.getElementById("deleteModal");
+  if (deleteModal){
+    deleteModal.classList.add("hidden");
+    deleteModal.classList.remove("flex");
+    unlockPageScroll();
+  }
+}
+
+function deleteMyAd(id){
+  openDeleteModal(id);
+}
+
+const toast = document.getElementById("toast");
+const toastText = document.getElementById("toastText");
+const toastIcon = document.getElementById("toastIcon");
+let toastTimer = null;
+
+function showToast(message, type="success"){
+  toastText.textContent = message;
+
+  if(type === "success"){
+    toastIcon.textContent = "✓";
+    toastIcon.className = "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold bg-green-600";
+  } else if(type === "danger"){
+    toastIcon.textContent = "!";
+    toastIcon.className = "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold bg-red-600";
+  } else {
+    toastIcon.textContent = "i";
+    toastIcon.className = "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold bg-blue-900";
+  }
+
+  toast.classList.remove("hidden");
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{
+    toast.classList.add("hidden");
+  }, 2200);
+}
+
+let __lbImages = [];
+let __lbIndex = 0;
+
+function showLightbox(images, startIndex = 0){
+  const safeImages = Array.isArray(images) ? images.filter(Boolean) : [];
+  if (!safeImages.length) return;
+
+  __lbImages = safeImages;
+  __lbIndex = Math.max(0, Math.min(startIndex, __lbImages.length - 1));
+
+  const lb = document.getElementById("lightbox");
+  if (!lb) return;
+
+  lb.classList.remove("hidden");
+  lb.classList.add("flex");
+
+  lockPageScroll();
+  renderLightbox();
+  renderLucideOnce?.();
+}
+
+function hideLightbox(){
+  const lb = document.getElementById("lightbox");
+  if (!lb) return;
+
+  lb.classList.add("hidden");
+  lb.classList.remove("flex");
+
+  unlockPageScroll();
+}
+
+function renderLightbox(){
+  const img  = document.getElementById("lbImg");
+  const dots = document.getElementById("lbDots");
+  const prev = document.getElementById("lbPrev");
+  const next = document.getElementById("lbNext");
+
+  if (!img || !dots || !__lbImages.length) return;
+
+  img.src = __lbImages[__lbIndex];
+  img.alt = `صورة ${__lbIndex + 1}`;
+
+  dots.innerHTML = __lbImages.map((_, i) => `
+    <button type="button"
+      class="w-2.5 h-2.5 rounded-full transition ${i === __lbIndex ? "bg-white" : "bg-white/40 hover:bg-white/70"}"
+      onclick="event.stopPropagation(); __lbIndex=${i}; renderLightbox();">
+    </button>
+  `).join("");
+
+  if (prev) prev.style.display = __lbImages.length > 1 ? "flex" : "none";
+  if (next) next.style.display = __lbImages.length > 1 ? "flex" : "none";
+
+  if (prev) {
+    prev.onclick = (e) => {
+      e.stopPropagation();
+      __lbIndex = (__lbIndex - 1 + __lbImages.length) % __lbImages.length;
+      renderLightbox();
+    };
+  }
+
+  if (next) {
+    next.onclick = (e) => {
+      e.stopPropagation();
+      __lbIndex = (__lbIndex + 1) % __lbImages.length;
+      renderLightbox();
+    };
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  const lb = document.getElementById("lightbox");
+  if (!lb || lb.classList.contains("hidden")) return;
+
+  if (e.key === "Escape") {
+    hideLightbox();
+  } else if (e.key === "ArrowLeft") {
+    __lbIndex = (__lbIndex - 1 + __lbImages.length) % __lbImages.length;
+    renderLightbox();
+  } else if (e.key === "ArrowRight") {
+    __lbIndex = (__lbIndex + 1) % __lbImages.length;
+    renderLightbox();
+  }
+});
+
+function getFieldVisualTarget(inputEl){
+  return inputEl.closest(".rk-dd") || inputEl;
+}
+
+function ensureErrorEl(inputEl, id){
+  let el = document.getElementById(id);
+  if(el) return el;
+
+  el = document.createElement("p");
+  el.id = id;
+  el.className = "mt-2 text-xs font-black text-red-600 hidden";
+
+  const target = getFieldVisualTarget(inputEl);
+  target.insertAdjacentElement("afterend", el);
+
+  return el;
+}
+
+function setFieldError(inputEl, msg, id){
+  const err = ensureErrorEl(inputEl, id);
+  err.textContent = msg;
+  err.classList.remove("hidden");
+
+  const target = getFieldVisualTarget(inputEl);
+
+  if(target.classList.contains("rk-dd")){
+    const btn = target.querySelector(".rk-dd-btn");
+    if(btn){
+      btn.classList.add("border-red-500","ring-2","ring-red-200");
+    }
+  } else {
+    inputEl.classList.add("border-red-500","ring-2","ring-red-200");
+  }
+}
+
+function clearFieldError(inputEl, id){
+  const err = document.getElementById(id);
+  if(err){
+    err.classList.add("hidden");
+    err.textContent = "";
+  }
+
+  const target = getFieldVisualTarget(inputEl);
+
+  if(target.classList.contains("rk-dd")){
+    const btn = target.querySelector(".rk-dd-btn");
+    if(btn){
+      btn.classList.remove("border-red-500","ring-2","ring-red-200");
+    }
+  } else if (inputEl?.classList) {
+    inputEl.classList.remove("border-red-500","ring-2","ring-red-200");
+  }
+}
+
+function bindLiveValidation(){
+  const map = [
+    [els.fCategory, "errCategory"],
+    [els.fTitle, "errTitle"],
+    [els.fDesc, "errDesc"],
+    [els.fCity, "errCity"],
+    [els.fArea, "errArea"],
+    [els.showPhone, "errShowPhone"]
+  ];
+
+  map.forEach(([el,id])=>{
+    if(!el) return;
+    const ev = (el.type === "checkbox") ? "change" : "input";
+    el.addEventListener(ev, ()=> clearFieldError(el, id));
+    el.addEventListener("change", ()=> clearFieldError(el, id));
+  });
+}
+
+</script>
+
+<script>
+
+(() => {
+  const searchInputEl = document.getElementById("searchInput");
+  const clearBtnEl = document.getElementById("clearBtn");
+  if (!searchInputEl || !clearBtnEl) return;
+
+  function toggleClearBtn() {
+    if (searchInputEl.value.trim() !== "") {
+      clearBtnEl.classList.remove("hidden");
+      clearBtnEl.classList.add("flex");
+    } else {
+      clearBtnEl.classList.add("hidden");
+      clearBtnEl.classList.remove("flex");
+    }
+  }
+
+  searchInputEl.addEventListener("input", toggleClearBtn);
+
+  clearBtnEl.addEventListener("click", () => {
+    searchInputEl.value = "";
+    searchInputEl.focus();
+    toggleClearBtn();
+    state.visibleCount = 8;
+    refresh();
+  });
+
+  searchInputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      searchInputEl.value = "";
+      searchInputEl.blur();
+      toggleClearBtn();
+      refresh();
+    }
+  });
+})();
+
+</script>
+
+<script>
+
+const topbar = document.querySelector(".topbar");
+const categoriesRow = document.getElementById("categoriesRow");
+
+function updateTopbarHeight() {
+  if (!topbar) return;
+  document.documentElement.style.setProperty("--topbar-height", `${topbar.offsetHeight}px`);
+}
+
+updateTopbarHeight();
+window.addEventListener("resize", updateTopbarHeight);
+window.addEventListener("load", updateTopbarHeight);
+
+let isHidden = false;
+let ticking = false;
+
+window.addEventListener("scroll", () => {
+  if (!categoriesRow) return;
+
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+
+      if (!isHidden && y > 80) {
+        categoriesRow.classList.add("hide");
+        isHidden = true;
+      }
+
+      if (isHidden && y < 10) {
+        categoriesRow.classList.remove("hide");
+        isHidden = false;
+      }
+
+      ticking = false;
+    });
+
+    ticking = true;
+  }
+});
+
+function initHorizontalSlider({ rowId, leftBtnId, rightBtnId, scrollAmount }) {
+  const row = document.getElementById(rowId);
+  const leftBtn = document.getElementById(leftBtnId);
+  const rightBtn = document.getElementById(rightBtnId);
+
+  if (!row || !leftBtn || !rightBtn) return;
+
+  function updateArrows() {
+    const hasCards = row.querySelectorAll(".snap-center").length > 0;
+    const hasOverflow = row.scrollWidth > row.clientWidth + 5;
+    const show = hasCards && hasOverflow;
+
+    if (show) {
+      leftBtn.classList.add("hidden");
+      rightBtn.classList.add("hidden");
+
+      leftBtn.classList.add("sm:flex");
+      rightBtn.classList.add("sm:flex");
+
+      leftBtn.classList.remove("sm:hidden");
+      rightBtn.classList.remove("sm:hidden");
+    } else {
+      leftBtn.classList.add("hidden");
+      rightBtn.classList.add("hidden");
+
+      leftBtn.classList.add("sm:hidden");
+      rightBtn.classList.add("sm:hidden");
+
+      leftBtn.classList.remove("sm:flex");
+      rightBtn.classList.remove("sm:flex");
+    }
+  }
+
+  rightBtn.addEventListener("click", () => {
+    row.scrollBy({ left: scrollAmount, behavior: "smooth" });
+  });
+
+  leftBtn.addEventListener("click", () => {
+    row.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+  });
+
+  let isDown = false;
+  let startX = 0;
+  let scrollLeft = 0;
+
+  row.addEventListener("mousedown", (e) => {
+    isDown = true;
+    row.classList.add("cursor-grabbing");
+    startX = e.pageX - row.offsetLeft;
+    scrollLeft = row.scrollLeft;
+  });
+
+  row.addEventListener("mouseleave", () => {
+    isDown = false;
+    row.classList.remove("cursor-grabbing");
+  });
+
+  row.addEventListener("mouseup", () => {
+    isDown = false;
+    row.classList.remove("cursor-grabbing");
+  });
+
+  row.addEventListener("mousemove", (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - row.offsetLeft;
+    const walk = (x - startX) * 1.6;
+    row.scrollLeft = scrollLeft - walk;
+  });
+
+  row.addEventListener("touchstart", () => {
+    row.classList.remove("cursor-grab");
+  }, { passive: true });
+
+  row.addEventListener("scroll", updateArrows, { passive: true });
+  window.addEventListener("resize", updateArrows);
+
+  requestAnimationFrame(updateArrows);
+
+  window.__rkUpdateArrows = window.__rkUpdateArrows || {};
+  window.__rkUpdateArrows[rowId] = updateArrows;
+}
+
+initHorizontalSlider({
+  rowId: "myAdsList",
+  leftBtnId: "myAdsLeft",
+  rightBtnId: "myAdsRight",
+  scrollAmount: 360
+});
+
+initHorizontalSlider({
+  rowId: "myMatchesList",
+  leftBtnId: "myMatchesLeft",
+  rightBtnId: "myMatchesRight",
+  scrollAmount: 360
+});
+
+renderLucideOnce();
+
+</script>
+
+<script>
+
+let __scrollY = 0;
+let __scrollLockCount = 0;
+
+function lockPageScroll() {
+  __scrollLockCount++;
+
+  if (__scrollLockCount > 1) return;
+
+  __scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${__scrollY}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+  document.body.style.overflow = "hidden";
+}
+
+function unlockPageScroll() {
+  if (__scrollLockCount === 0) return;
+
+  __scrollLockCount--;
+
+  if (__scrollLockCount > 0) return;
+
+  const top = document.body.style.top;
+
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  document.body.style.overflow = "";
+
+  const y = top ? Math.abs(parseInt(top, 10)) : __scrollY;
+  window.scrollTo(0, y);
+}
+
+</script>
+
+<script>
+
+const dropdownButton = document.getElementById('dropdownButton');
+const dropdownMenu = document.getElementById('dropdownMenu');
+const dropdownArrow = document.getElementById('dropdownArrow');
+
+if (dropdownButton && dropdownMenu && dropdownArrow) {
+  dropdownButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isVisible = !dropdownMenu.classList.contains('invisible');
+
+    if (isVisible) {
+      dropdownMenu.classList.add('invisible', 'opacity-0', 'scale-95');
+      dropdownArrow.style.transform = 'rotate(0deg)';
+    } else {
+      dropdownMenu.classList.remove('invisible', 'opacity-0', 'scale-95');
+      dropdownArrow.style.transform = 'rotate(180deg)';
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    const clickedInside = dropdownButton.contains(e.target) || dropdownMenu.contains(e.target);
+    if (clickedInside) return;
+
+    dropdownMenu.classList.add("invisible", "opacity-0", "scale-95");
+    dropdownArrow.style.transform = "rotate(0deg)";
+  });
+}
+
+function selectOption(label, value) {
+  state.selectedCategory = value || "";
+  state.visibleCount = 8;
+  document.getElementById("selectedOption").innerText = label || "اختر القسم...";
+
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  const dropdownArrow = document.getElementById("dropdownArrow");
+  if (dropdownMenu) dropdownMenu.classList.add("invisible", "opacity-0", "scale-95");
+  if (dropdownArrow) dropdownArrow.style.transform = "rotate(0deg)";
+
+  refresh();
+}
+
+function resetCategoryFilter(){
+  state.selectedCategory = "";
+  const sel = document.getElementById("selectedOption");
+  if(sel) sel.innerText = "اختر القسم...";
+}
+
+function initCustomDropdowns() {
+  const dropdowns = document.querySelectorAll(".rk-dd");
+
+  function closeAll(except = null) {
+    dropdowns.forEach(dd => {
+      if (dd !== except) dd.classList.remove("open");
+    });
+  }
+
+  dropdowns.forEach(dd => {
+    const btn = dd.querySelector(".rk-dd-btn");
+    const valueEl = dd.querySelector(".rk-dd-value");
+    const hiddenInput = dd.querySelector("input[type='hidden']");
+    const options = dd.querySelectorAll(".rk-dd-option");
+
+    if (!btn || !valueEl || !hiddenInput) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = dd.classList.contains("open");
+      closeAll(dd);
+      dd.classList.toggle("open", !isOpen);
+    });
+
+    options.forEach(opt => {
+      opt.addEventListener("click", () => {
+        const value = opt.dataset.value || "";
+        hiddenInput.value = value;
+        valueEl.textContent = value;
+        valueEl.classList.remove("placeholder");
+
+        options.forEach(o => o.classList.remove("active"));
+        opt.classList.add("active");
+
+        dd.classList.remove("open");
+
+        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+
+        clearFieldError(
+          hiddenInput,
+          hiddenInput.id === "fCategory" ? "errCategory" : "errCity"
+        );
+      });
+    });
+  });
+
+  document.addEventListener("click", () => closeAll());
+}
+
+function setCustomDropdownValue(inputId, value, placeholderText = "اختر...") {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  const dd = input.closest(".rk-dd");
+  if (!dd) return;
+
+  const valueEl = dd.querySelector(".rk-dd-value");
+  const options = dd.querySelectorAll(".rk-dd-option");
+
+  input.value = value || "";
+
+  options.forEach(opt => {
+    const active = (opt.dataset.value === value);
+    opt.classList.toggle("active", active);
+  });
+
+  if (value) {
+    valueEl.textContent = value;
+    valueEl.classList.remove("placeholder");
+  } else {
+    valueEl.textContent = placeholderText;
+    valueEl.classList.add("placeholder");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initCustomDropdowns();
+  renderLucideOnce?.();
+
+  const deleteModal = document.getElementById("deleteModal");
+  const btnConfirmDelete = document.getElementById("btnConfirmDelete");
+  const btnCancelDelete = document.getElementById("btnCancelDelete");
+  const btnCloseDeleteModal = document.getElementById("btnCloseDeleteModal");
+
+  if (deleteModal){
+    deleteModal.addEventListener("click", (e)=>{
+      if(e.target === deleteModal) closeDeleteModal();
+    });
+  }
+  if (btnCancelDelete) btnCancelDelete.addEventListener("click", closeDeleteModal);
+  if (btnCloseDeleteModal) btnCloseDeleteModal.addEventListener("click", closeDeleteModal);
+
+  if (btnConfirmDelete){
+    btnConfirmDelete.addEventListener("click", async ()=>{
+      const id = state.pendingDeleteId;
+      if(!id) return;
+      btnConfirmDelete.disabled = true;
+      try {
+        const fd = new FormData();
+        fd.append("csrfmiddlewaretoken", rkLFData.csrfToken);
+        const resp = await fetch(`/lost-found/ajax/delete/${id}/`, { method: "POST", body: fd });
+        const data = await resp.json();
+        if (!data.ok) { showToast(data.error || "حدث خطأ أثناء الحذف", "danger"); return; }
+        const ad = state.ads.find(a => a.id === id);
+        const label = ad?.type === "مفقود" ? "تم إيجاده" : "تم تسليمه";
+        state.ads = state.ads.filter(a => a.id !== id);
+        state.myIds.delete(id);
+        if(state.selectedMyAdId === id) state.selectedMyAdId = null;
+        recomputeMatchesCount();
+        refresh();
+        closeDeleteModal();
+        showToast(`تم حذف البلاغ بنجاح (${label})`, "success");
+      } catch(e) {
+        showToast("خطأ في الاتصال بالخادم", "danger");
+      } finally {
+        btnConfirmDelete.disabled = false;
+      }
+    });
+  }
+});
+
+</script>
+
+
+{% endblock %}

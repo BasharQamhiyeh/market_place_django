@@ -44,6 +44,8 @@ function typeLineHtml(c){
     return `<span style="color:#c2410c;font-weight:900;">بخصوص إعلان: ${c.title || ""}</span>`;
   if(c?.type === "request")
     return `<span style="color:#16a34a;font-weight:900;">بخصوص طلب: ${c.title || ""}</span>`;
+  if(c?.type === "report")
+    return `<span style="color:#7c3aed;font-weight:900;">بخصوص بلاغ: ${c.title || ""}</span>`;
   return `<span style="color:#2563eb;font-weight:900;">تواصل عام مع المتجر</span>`;
 }
 
