@@ -30,7 +30,7 @@ def _report_to_js(report, is_own=False):
         or "مستخدم"
     )
 
-    avatar = "https://i.pravatar.cc/100"
+    avatar = ""
     if user.profile_photo:
         try:
             avatar = user.profile_photo.url

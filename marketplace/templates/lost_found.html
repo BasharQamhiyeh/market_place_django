@@ -916,8 +916,10 @@
             <div class="p-5 flex items-center justify-between gap-4 border-b bg-gray-50">
               <div class="flex items-center gap-4">
                 <img id="dAvatar"
-                     class="w-14 h-14 rounded-full object-cover border shadow-sm"
+                     class="w-14 h-14 rounded-full object-cover border shadow-sm hidden"
                      loading="eager" />
+                <div id="dAvatarInitials"
+                     class="w-14 h-14 rounded-full border shadow-sm bg-orange-100 text-orange-600 flex items-center justify-center text-xl font-black hidden"></div>
                 <div class="text-right">
                   <div id="dOwner" class="font-black text-sm text-gray-900"></div>
                   <div class="text-xs text-gray-500 font-semibold mt-1">صاحب البلاغ</div>
@@ -1332,6 +1334,7 @@
 {% endblock %}
 
 {% block scripts %}
+{{ block.super }}
 <script src="https://unpkg.com/heic2any/dist/heic2any.min.js"></script>
 
 <script>
@@ -1806,7 +1809,7 @@ const els = {
   dLocationBadge:$("dLocationBadge"),
   dDesc:$("dDesc"),
   dContact:$("dContact"),
-  dAvatar:$("dAvatar"),
+  dAvatar:$("dAvatar"), dAvatarInitials:$("dAvatarInitials"),
   dOwner:$("dOwner"),
   dImage:$("dImage"),
   dNoImage:$("dNoImage"),
@@ -2009,7 +2012,7 @@ function normalizeAd(ad){
     date: formatDate(ad.date),
     createdAt: ad.createdAt ?? null,
     owner: ad.owner || "مستخدم",
-    avatar: ad.avatar || "https://i.pravatar.cc/100",
+    avatar: ad.avatar || "",
     showPhone: (ad.showPhone != null)
       ? !!ad.showPhone
       : (ad.contactType === "موبايل" && !!ad.phone),
@@ -2305,7 +2308,10 @@ function renderUnifiedCard(ad, opts = {}) {
 
         <div class="flex items-center justify-between pt-3 border-t">
           <div class="flex items-center gap-2">
-            <img src="${ad.avatar}" class="w-8 h-8 rounded-full border" alt=""/>
+            ${ad.avatar
+              ? `<img src="${ad.avatar}" class="w-8 h-8 rounded-full border object-cover" alt=""/>`
+              : `<div class="w-8 h-8 rounded-full border bg-orange-100 text-orange-600 flex items-center justify-center text-xs font-bold">${escapeHtml((ad.owner||"?").slice(0,1).toUpperCase())}</div>`
+            }
             <span class="text-sm font-semibold text-gray-700">
               ${escapeHtml(ad.owner)}
             </span>
@@ -2621,7 +2627,17 @@ function openDetails(id){
   }
 
   els.dOwner.textContent = ad.owner || "مستخدم";
-  els.dAvatar.src = ad.avatar || "https://i.pravatar.cc/100";
+  if(ad.avatar){
+    els.dAvatar.src = ad.avatar;
+    els.dAvatar.classList.remove("hidden");
+    els.dAvatarInitials?.classList.add("hidden");
+  } else {
+    els.dAvatar.classList.add("hidden");
+    if(els.dAvatarInitials){
+      els.dAvatarInitials.textContent = (ad.owner||"?").slice(0,1).toUpperCase();
+      els.dAvatarInitials.classList.remove("hidden");
+    }
+  }
   setupOwnerBoxUI(ad);
 
   els.dContact.className =
