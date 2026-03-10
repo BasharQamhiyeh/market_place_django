@@ -99,6 +99,22 @@ class ReportPhoto(models.Model):
         return f"Photo for report {self.report_id}"
 
 
+class LostReport(Report):
+    """Proxy model — shows only lost reports in the admin."""
+    class Meta:
+        proxy = True
+        verbose_name = "Lost Report"
+        verbose_name_plural = "Lost Reports"
+
+
+class FoundReport(Report):
+    """Proxy model — shows only found reports in the admin."""
+    class Meta:
+        proxy = True
+        verbose_name = "Found Report"
+        verbose_name_plural = "Found Reports"
+
+
 class ReportMatch(models.Model):
     """
     Stores a match between a lost report and a found report.

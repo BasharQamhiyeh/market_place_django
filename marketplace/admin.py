@@ -24,7 +24,7 @@ from .models import (
     City, Favorite, IssuesReport, Message, Listing, Request, Store, StoreReview, ContactMessage, FAQCategory,
     FAQQuestion, PrivacyPolicyPage, PrivacyPolicySection, CategoryPhoto, PointsTransaction,
     TermsPage, TermsSection, SiteSettings,
-    Report, ReportPhoto, ReportMatch,
+    Report, ReportPhoto, ReportMatch, LostReport, FoundReport,
 )
 from .services.wallet import apply_points_transaction
 from .services.notifications import notify, K_WALLET, S_CHARGED
@@ -1795,14 +1795,22 @@ class ReportPhotoInline(admin.TabularInline):
     readonly_fields = ('image',)
 
 
-@admin.register(Report)
-class ReportAdmin(admin.ModelAdmin):
-    list_display = ('id', 'type', 'title', 'category', 'city', 'user', 'colored_status', 'created_at')
-    list_filter = ('type', 'status', 'category')
+class ReportAdminMixin:
+    """Shared logic for LostReportAdmin and FoundReportAdmin."""
+    list_display = ('id', 'title', 'category', 'city', 'user', 'colored_status', 'created_at')
+    list_filter = ('status', 'category')
     search_fields = ('title', 'description', 'user__phone', 'user__first_name')
     readonly_fields = ('colored_status', 'created_at', 'updated_at', 'approved_by', 'approved_at', 'rejected_by', 'rejected_at')
     inlines = [ReportPhotoInline]
     actions = ['approve_reports', 'reject_reports']
+
+    # Subclasses set these to get distinct URL names
+    approve_url_name = None  # e.g. "lostreport_approve"
+    reject_url_name  = None  # e.g. "lostreport_reject"
+    report_type      = None  # Report.TYPE_LOST or Report.TYPE_FOUND
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(type=self.report_type)
 
     def colored_status(self, obj):
         if obj.status == Report.STATUS_ACTIVE:
@@ -1817,8 +1825,8 @@ class ReportAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom = [
-            path("<int:report_id>/approve/", self.admin_site.admin_view(self.approve_view), name="report_approve"),
-            path("<int:report_id>/reject/", self.admin_site.admin_view(self.reject_view), name="report_reject"),
+            path("<int:report_id>/approve/", self.admin_site.admin_view(self.approve_view), name=self.approve_url_name),
+            path("<int:report_id>/reject/",  self.admin_site.admin_view(self.reject_view),  name=self.reject_url_name),
         ]
         return custom + urls
 
@@ -1881,6 +1889,20 @@ class ReportAdmin(admin.ModelAdmin):
         )
         self.message_user(request, f"{updated} report(s) rejected.")
     reject_reports.short_description = "Reject selected reports"
+
+
+@admin.register(LostReport)
+class LostReportAdmin(ReportAdminMixin, admin.ModelAdmin):
+    approve_url_name = "lostreport_approve"
+    reject_url_name  = "lostreport_reject"
+    report_type      = Report.TYPE_LOST
+
+
+@admin.register(FoundReport)
+class FoundReportAdmin(ReportAdminMixin, admin.ModelAdmin):
+    approve_url_name = "foundreport_approve"
+    reject_url_name  = "foundreport_reject"
+    report_type      = Report.TYPE_FOUND
 
 
 @admin.register(ReportMatch)
