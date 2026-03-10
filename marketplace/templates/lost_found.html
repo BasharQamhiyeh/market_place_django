@@ -2412,20 +2412,9 @@ function renderMyPanel(){
   }).join("");
 
   if(!state.selectedMyAdId){
-    setMatchesCountUI(0, null);
-
-    els.myMatchesList.innerHTML = `
-      <div class="text-sm text-gray-500">
-        اختر بلاغاً من الأعلى لعرض المطابقات
-      </div>
-    `;
-
-    requestAnimationFrame(() => {
-      window.__rkUpdateArrows?.myAdsList?.();
-      window.__rkUpdateArrows?.myMatchesList?.();
-    });
-
-    return;
+    // Auto-select the first report so matches are shown immediately
+    state.selectedMyAdId = myAds[0].id;
+    state.seenMatches[myAds[0].id] = true;
   }
 
   const target = myAds.find(a => a.id === state.selectedMyAdId);
