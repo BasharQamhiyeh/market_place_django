@@ -2240,6 +2240,13 @@ function renderUnifiedCard(ad, opts = {}) {
             ${escapeHtml(ad.cat)}
           </div>
         </div>
+
+        ${mode === "matches" && ad.status !== 'active' ? `
+        <div class="absolute top-3 left-3 z-20">
+          <div class="${ad.status === 'rejected' ? 'bg-red-100 text-red-700 border border-red-400' : 'bg-yellow-100 text-yellow-700 border border-yellow-400'} inline-flex items-center text-xs font-black px-3 py-1 rounded-full shadow-sm">
+            ${ad.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'}
+          </div>
+        </div>` : ''}
       </div>
 
       <div ${openAttr}
@@ -2285,6 +2292,7 @@ function renderMainList(){
 
   const all = state.ads
     .filter(a => a.type === forced)
+    .filter(a => a.status === 'active')
     .filter(a => matchesQuery(a, q));
 
   const shown = all.slice(0, state.visibleCount);
