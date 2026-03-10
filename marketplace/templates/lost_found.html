@@ -1981,7 +1981,8 @@ function normalizeAd(ad){
     images: Array.isArray(ad.images)
       ? ad.images.filter(Boolean)
       : (ad.image ? [ad.image] : []),
-    mainImageIndex: Number.isInteger(ad.mainImageIndex) ? ad.mainImageIndex : 0
+    mainImageIndex: Number.isInteger(ad.mainImageIndex) ? ad.mainImageIndex : 0,
+    status: ad.status || 'active',
   };
 }
 
