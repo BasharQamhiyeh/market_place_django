@@ -237,7 +237,7 @@
 /* Hint (pointer on "عرض الإعلان") */
 .ad-hover-hint {
   position: absolute !important;
-  top: calc(50% - 4px) !important;
+  top: calc(50% - 14px) !important;
   left: 4px !important;
   transform: translateY(-50%) !important;
 
