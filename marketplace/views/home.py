@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, F, Max, Q
 from django.db.models import Exists, OuterRef
 
 
@@ -53,12 +53,19 @@ def home(request):
 
     stores = (
         Store.objects
-        .filter(is_active=True)  # if you have this field, otherwise remove
+        .filter(is_active=True)
         .annotate(
-            avg_rating=Avg("reviews__rating"),
-            reviews_count=Count("reviews"),
+            latest_item_at=Max(
+                "owner__listings__published_at",
+                filter=Q(
+                    owner__listings__is_active=True,
+                    owner__listings__is_approved=True,
+                    owner__listings__is_deleted=False,
+                    owner__listings__type="item",
+                )
+            )
         )
-        .order_by("-avg_rating", "-reviews_count")[:12]
+        .order_by(F("latest_item_at").desc(nulls_last=True))[:12]
     )
 
     context = {

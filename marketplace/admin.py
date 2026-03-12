@@ -221,6 +221,7 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
     list_display = (
         "name",
         "parent",
+        "show_in_header",
         "photo_preview",
     )
 
@@ -229,6 +230,9 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         "subtitle",
         "description",
         "parent",
+        "show_in_header",
+        "header_question",
+        "header_action",
     )
 
     search_fields = ("name",)
