@@ -422,8 +422,8 @@
                         <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
                           <i class="fas fa-bullhorn"></i>
                         </div>
-                        <p class="text-sm font-bold text-slate-800">هل تريد نشر إعلان؟</p>
-                        <p class="text-xs text-slate-500 mt-1">انشر إعلانك الآن مجاناً</p>
+                        <p class="text-sm font-bold text-slate-800">{{ cat.header_question }}</p>
+                        <p class="text-xs text-slate-500 mt-1">{{ cat.header_action }}</p>
                         <a href="{% url 'item_list' %}"
                            class="mt-4 bg-[#ff7a18] text-white text-[11px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all">
                           انشر إعلانك
@@ -455,8 +455,8 @@
                         <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-3">
                           <i class="fas fa-bullhorn"></i>
                         </div>
-                        <p class="text-sm font-bold text-slate-800">هل تريد نشر إعلان؟</p>
-                        <p class="text-xs text-slate-500 mt-1">انشر إعلانك الآن مجاناً</p>
+                        <p class="text-sm font-bold text-slate-800">{{ cat.header_question }}</p>
+                        <p class="text-xs text-slate-500 mt-1">{{ cat.header_action }}</p>
                         {# ✅ FIXED: Link to item_list instead of "#" #}
                         <a href="{% url 'item_list' %}"
                            class="mt-4 bg-[#ff7a18] text-white text-[11px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#e66a15] shadow-lg shadow-orange-200 transition-all">

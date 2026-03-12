@@ -9,6 +9,22 @@ class Category(models.Model):
         "self", on_delete=models.CASCADE,
         related_name="subcategories", null=True, blank=True
     )
+    show_in_header = models.BooleanField(
+        default=False,
+        help_text="Prioritise this category in the header navigation.",
+    )
+    header_question = models.CharField(
+        max_length=255,
+        blank=True,
+        default="هل تريد نشر إعلان؟",
+        help_text="Promo question shown in the mega-menu (level-1 categories only).",
+    )
+    header_action = models.CharField(
+        max_length=255,
+        blank=True,
+        default="انشر إعلانك الآن مجاناً",
+        help_text="Promo action text shown in the mega-menu (level-1 categories only).",
+    )
 
     @property
     def photo_url(self):

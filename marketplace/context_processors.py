@@ -135,6 +135,13 @@ def _pick_url(cat: Category) -> str:
     return f"/category/{cat.id}/"
 
 
+def _sorted_for_header(queryset, limit):
+    """Return items sorted: show_in_header=True first, then by id ASC, capped at limit."""
+    items = list(queryset)
+    items.sort(key=lambda c: (0 if c.show_in_header else 1, c.id))
+    return items[:limit]
+
+
 def navbar_categories(request):
     lang = (translation.get_language() or "en").lower()
     key = f"navbar_cats:{CACHE_VER}:{'ar' if lang.startswith('ar') else 'en'}"
@@ -143,20 +150,18 @@ def navbar_categories(request):
     if cached is not None:
         return {"navbar_categories": cached}
 
-    order_field = "id"
-
     # Level 3 - grandchildren
     grandchild_qs = (
         Category.objects
-        .only("id", "name", "parent_id")
-        .order_by(order_field, "id")
+        .only("id", "name", "parent_id", "show_in_header")
+        .order_by("id")
     )
 
     # Level 2 - children with their subcategories prefetched
     child_qs = (
         Category.objects
-        .only("id", "name", "parent_id")
-        .order_by(order_field, "id")
+        .only("id", "name", "parent_id", "show_in_header")
+        .order_by("id")
         .prefetch_related(Prefetch("subcategories", queryset=grandchild_qs))
     )
 
@@ -164,22 +169,27 @@ def navbar_categories(request):
     top_qs = (
         Category.objects
         .filter(parent__isnull=True)
-        .only("id", "name")
-        .order_by(order_field, "id")
+        .only("id", "name", "show_in_header", "header_question", "header_action")
+        .order_by("id")
         .prefetch_related(Prefetch("subcategories", queryset=child_qs))
     )
 
+    # Evaluate queryset once; sort level-1: show_in_header=True first, then id ASC
+    all_top = list(top_qs)
+    all_top.sort(key=lambda c: (0 if c.show_in_header else 1, c.id))
+
     tree = []
-    for top in top_qs:
+    for top in all_top:
         children = []
-        for ch in top.subcategories.all():
-            grandchildren = []
-            for gc in ch.subcategories.all():
-                grandchildren.append({
+        for ch in _sorted_for_header(top.subcategories.all(), limit=3):
+            grandchildren = [
+                {
                     "id": gc.id,
                     "name": getattr(gc, "name", ""),
                     "url": _pick_url(gc),
-                })
+                }
+                for gc in _sorted_for_header(ch.subcategories.all(), limit=3)
+            ]
 
             children.append({
                 "id": ch.id,
@@ -193,6 +203,8 @@ def navbar_categories(request):
             "name": getattr(top, "name", ""),
             "url": _pick_url(top),
             "children": children,
+            "header_question": top.header_question or "هل تريد نشر إعلان؟",
+            "header_action": top.header_action or "انشر إعلانك الآن مجاناً",
         })
 
     cache.set(key, tree, CACHE_TTL_SECONDS)
