@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_GET
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, F
 from django.db.models import Exists, OuterRef
 
 
@@ -58,7 +58,7 @@ def home(request):
             avg_rating=Avg("reviews__rating"),
             reviews_count=Count("reviews"),
         )
-        .order_by("-avg_rating", "-reviews_count")[:12]
+        .order_by(F("avg_rating").desc(nulls_last=True), F("reviews_count").desc(nulls_last=True))[:12]
     )
 
     context = {
