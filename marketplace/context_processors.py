@@ -1,8 +1,9 @@
+from collections import defaultdict
+
 from django.db.models import Q, Max
 from .models import Notification, Message, Favorite, Conversation
 from django.core.cache import cache
 from django.utils import translation
-from django.db.models import Prefetch
 from .models import Category
 
 
@@ -117,7 +118,7 @@ def navbar_counters(request):
     }
 
 
-CACHE_VER = "v1"
+CACHE_VER = "v2"
 CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 
 
@@ -135,11 +136,8 @@ def _pick_url(cat: Category) -> str:
     return f"/category/{cat.id}/"
 
 
-def _sorted_for_header(queryset, limit):
-    """Return items sorted: show_in_header=True first, then by id ASC, capped at limit."""
-    items = list(queryset)
-    items.sort(key=lambda c: (0 if c.show_in_header else 1, c.id))
-    return items[:limit]
+def _header_sort_key(cat):
+    return (0 if cat.show_in_header else 1, cat.id)
 
 
 def navbar_categories(request):
@@ -150,57 +148,42 @@ def navbar_categories(request):
     if cached is not None:
         return {"navbar_categories": cached}
 
-    # Level 3 - grandchildren
-    grandchild_qs = (
+    # Single query for all categories — avoids nested prefetch issues
+    all_cats = list(
         Category.objects
-        .only("id", "name", "parent_id", "show_in_header")
+        .only("id", "name", "parent_id", "show_in_header", "header_question", "header_action")
         .order_by("id")
     )
 
-    # Level 2 - children with their subcategories prefetched
-    child_qs = (
-        Category.objects
-        .only("id", "name", "parent_id", "show_in_header")
-        .order_by("id")
-        .prefetch_related(Prefetch("subcategories", queryset=grandchild_qs))
-    )
-
-    # Level 1 - top level
-    top_qs = (
-        Category.objects
-        .filter(parent__isnull=True)
-        .only("id", "name", "show_in_header", "header_question", "header_action")
-        .order_by("id")
-        .prefetch_related(Prefetch("subcategories", queryset=child_qs))
-    )
-
-    # Evaluate queryset once; sort level-1: show_in_header=True first, then id ASC
-    all_top = list(top_qs)
-    all_top.sort(key=lambda c: (0 if c.show_in_header else 1, c.id))
+    # Group by parent_id, each group sorted: show_in_header=True first, then id ASC
+    by_parent = defaultdict(list)
+    for cat in all_cats:
+        by_parent[cat.parent_id].append(cat)
+    for group in by_parent.values():
+        group.sort(key=_header_sort_key)
 
     tree = []
-    for top in all_top:
+    for top in by_parent[None]:          # level-1 (already sorted)
         children = []
-        for ch in _sorted_for_header(top.subcategories.all(), limit=3):
+        for ch in by_parent.get(top.id, [])[:3]:    # level-2: top 3
             grandchildren = [
                 {
                     "id": gc.id,
-                    "name": getattr(gc, "name", ""),
+                    "name": gc.name,
                     "url": _pick_url(gc),
                 }
-                for gc in _sorted_for_header(ch.subcategories.all(), limit=3)
+                for gc in by_parent.get(ch.id, [])[:3]  # level-3: top 3
             ]
-
             children.append({
                 "id": ch.id,
-                "name": getattr(ch, "name", ""),
+                "name": ch.name,
                 "url": _pick_url(ch),
                 "children": grandchildren,
             })
 
         tree.append({
             "id": top.id,
-            "name": getattr(top, "name", ""),
+            "name": top.name,
             "url": _pick_url(top),
             "children": children,
             "header_question": top.header_question or "هل تريد نشر إعلان؟",
