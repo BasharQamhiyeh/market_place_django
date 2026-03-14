@@ -150,30 +150,21 @@ def store_profile(request, store_id):
             if item:
                 item.is_favorited = l.id in fav_listing_ids
 
-    # --------- build root categories for chips (from ALL listings) ---------
-    # Build parent map once (categories table usually small)
-    cats = Category.objects.all().only("id", "parent_id", "name")
-    parent_map = {c.id: c.parent_id for c in cats}
-
-    def root_id(cat_id: int):
-        cur = cat_id
-        while cur and parent_map.get(cur):
-            cur = parent_map[cur]
-        return cur
-
-    cat_ids = list(base_qs.exclude(category_id__isnull=True).values_list("category_id", flat=True).distinct())
-    root_ids = sorted({root_id(cid) for cid in cat_ids if cid})
+    # --------- build category chips from the actual category on each listing ---------
+    cat_ids = list(
+        base_qs.exclude(category_id__isnull=True)
+        .values_list("category_id", flat=True)
+        .distinct()
+    )
 
     store_categories = list(
-        Category.objects.filter(id__in=root_ids, parent__isnull=True).order_by("id")
+        Category.objects.filter(id__in=cat_ids).order_by("id")
     )
 
     # --------- attach filter data to the 30 rendered cards (NO extra DB hits) ---------
     for l in listings:
-        # ✅ category is on Listing (you already select_related("category"))
         cat = getattr(l, "category", None)
-        rid = root_id(cat.id) if cat else ""
-        l.root_category_id = rid or ""
+        l.root_category_id = cat.id if cat else ""
 
         # city id (prefer item.city_id if exists, else listing city)
         city_id = getattr(l.item, "city_id", None) or getattr(l, "city_id", None) or ""
