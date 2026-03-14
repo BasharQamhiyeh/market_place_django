@@ -401,9 +401,25 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
             ids.extend(self._collect_ids(sub))
         return ids
 
+    @staticmethod
+    def _nullify_orphaned_listings(ids):
+        """
+        Set category=NULL on active listings that have no linked Item or Request
+        (orphaned rows left by failed bulk imports or other partial writes).
+        These are not real user-facing listings so they must not block deletion.
+        """
+        from marketplace.models import Listing
+        Listing.objects.filter(
+            category_id__in=ids,
+            is_deleted=False,
+            item__isnull=True,
+            request__isnull=True,
+        ).update(category=None)
+
     def delete_model(self, request, obj):
         from marketplace.models import Listing
         ids = self._collect_ids(obj)
+        self._nullify_orphaned_listings(ids)
         count = Listing.objects.filter(category_id__in=ids, is_deleted=False).count()
         if count:
             self.message_user(
@@ -419,6 +435,7 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         all_ids = []
         for obj in queryset:
             all_ids.extend(self._collect_ids(obj))
+        self._nullify_orphaned_listings(all_ids)
         count = Listing.objects.filter(category_id__in=all_ids, is_deleted=False).count()
         if count:
             self.message_user(
@@ -1083,29 +1100,29 @@ class ItemAdmin(admin.ModelAdmin):
                         item = Item.objects.filter(external_id=external_id).first()
 
                         if not item:
-                            # ✅ create as pending first; will be activated only if photo exists
-                            listing = Listing.objects.create(
-                                type="item",
-                                user=owner_user,
-                                title=title,
-                                description=desc or "",
-                                category=assigned_category,
-                                city=city,
-                                is_active=False,
-                                is_approved=False,
-                            )
-
                             try:
-                                item = Item.objects.create(
-                                    external_id=external_id,
-                                    listing=listing,
-                                    price=price,
-                                    condition="new",
-                                )
+                                # Wrap both creates in a savepoint so any failure
+                                # rolls back the Listing automatically — no orphans.
+                                with transaction.atomic():
+                                    listing = Listing.objects.create(
+                                        type="item",
+                                        user=owner_user,
+                                        title=title,
+                                        description=desc or "",
+                                        category=assigned_category,
+                                        city=city,
+                                        is_active=False,
+                                        is_approved=False,
+                                    )
+                                    item = Item.objects.create(
+                                        external_id=external_id,
+                                        listing=listing,
+                                        price=price,
+                                        condition="new",
+                                    )
                             except IntegrityError:
-                                # Another row in the same sheet already created it;
-                                # clean up the orphan listing and fall through to update.
-                                listing.delete()
+                                # Duplicate external_id — another row already created it;
+                                # the savepoint was rolled back so no orphan exists.
                                 item = Item.objects.filter(external_id=external_id).first()
                                 if not item:
                                     raise
