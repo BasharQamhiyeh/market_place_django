@@ -178,3 +178,24 @@ def reindex_listing_on_request_save(sender, instance: Request, created: bool, **
     """
     if created:
         instance.listing.save()
+
+
+# ------------------------------------------------------------------ #
+# Invalidate navbar category cache whenever a Category is saved/deleted
+# ------------------------------------------------------------------ #
+def _clear_navbar_cache():
+    from .context_processors import CACHE_VER
+    cache.delete_many([
+        f"navbar_cats:{CACHE_VER}:ar",
+        f"navbar_cats:{CACHE_VER}:en",
+    ])
+
+
+@receiver(post_save, sender=Category)
+def invalidate_navbar_cache_on_save(sender, **kwargs):
+    _clear_navbar_cache()
+
+
+@receiver(post_delete, sender=Category)
+def invalidate_navbar_cache_on_delete(sender, **kwargs):
+    _clear_navbar_cache()

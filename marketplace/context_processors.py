@@ -118,12 +118,8 @@ def navbar_counters(request):
     }
 
 
-CACHE_VER = "v2"
+CACHE_VER = "v4"
 CACHE_TTL_SECONDS = 60 * 60  # 1 hour
-
-
-def _pick_name(cat: Category, lang: str) -> str:
-    return (getattr(cat, "name", "") or "").strip()
 
 
 def _pick_url(cat: Category) -> str:
@@ -136,10 +132,6 @@ def _pick_url(cat: Category) -> str:
     return f"/category/{cat.id}/"
 
 
-def _header_sort_key(cat):
-    return (0 if cat.show_in_header else 1, cat.id)
-
-
 def navbar_categories(request):
     lang = (translation.get_language() or "en").lower()
     key = f"navbar_cats:{CACHE_VER}:{'ar' if lang.startswith('ar') else 'en'}"
@@ -148,31 +140,41 @@ def navbar_categories(request):
     if cached is not None:
         return {"navbar_categories": cached}
 
-    # Single query for all categories — avoids nested prefetch issues
+    # Load ALL categories. Sort each sibling group so that categories with
+    # header_order set come first (in their assigned order), followed by the
+    # rest ordered by id. The header then takes the first 6 (level-1) or
+    # first 3 (level-2/3) from each sorted group.
     all_cats = list(
         Category.objects
-        .only("id", "name", "parent_id", "show_in_header", "header_question", "header_action")
+        .only("id", "name", "parent_id", "header_order", "header_icon", "header_question", "header_action")
         .order_by("id")
     )
 
-    # Group by parent_id, each group sorted: show_in_header=True first, then id ASC
     by_parent = defaultdict(list)
     for cat in all_cats:
         by_parent[cat.parent_id].append(cat)
+
+    # Sort key: pinned (header_order set) → by header_order ASC;
+    #           unpinned (header_order None) → by id ASC, after all pinned.
+    def _sort_key(c):
+        if c.header_order is not None:
+            return (0, c.header_order)
+        return (1, c.id)
+
     for group in by_parent.values():
-        group.sort(key=_header_sort_key)
+        group.sort(key=_sort_key)
 
     tree = []
-    for top in by_parent[None]:          # level-1 (already sorted)
+    for top in by_parent[None][:6]:          # level-1: up to 6
         children = []
-        for ch in by_parent.get(top.id, [])[:3]:    # level-2: top 3
+        for ch in by_parent.get(top.id, [])[:3]:    # level-2: up to 3
             grandchildren = [
                 {
                     "id": gc.id,
                     "name": gc.name,
                     "url": _pick_url(gc),
                 }
-                for gc in by_parent.get(ch.id, [])[:3]  # level-3: top 3
+                for gc in by_parent.get(ch.id, [])[:3]  # level-3: up to 3
             ]
             children.append({
                 "id": ch.id,
@@ -186,6 +188,7 @@ def navbar_categories(request):
             "name": top.name,
             "url": _pick_url(top),
             "children": children,
+            "header_icon": top.header_icon or "megaphone",
             "header_question": top.header_question or "هل تريد نشر إعلان؟",
             "header_action": top.header_action or "انشر إعلانك الآن مجاناً",
         })
