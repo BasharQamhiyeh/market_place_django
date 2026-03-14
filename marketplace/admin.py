@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render
 from django.contrib.admin.views.main import IS_POPUP_VAR
 from django.utils.html import format_html
 from django.db import models
+from django.db.models import F
 from django.core.files.base import ContentFile
 import tempfile, os, zipfile, openpyxl
 from django.urls import reverse
@@ -313,13 +314,20 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         "description",
         "parent",
         "header_order",
-        "header_question",
-        "header_action",
     )
 
     search_fields = ("name",)
     list_filter = ("parent",)
-    ordering = ("parent__id", "id")
+    # header_order nulls last within each parent group, then by id
+    ordering = (F("parent__id").asc(nulls_first=True), F("header_order").asc(nulls_last=True), "id")
+
+    def get_fields(self, request, obj=None):
+        base = list(self.fields)
+        # Show header_question / header_action only for level-1 categories
+        # that already have a header position assigned.
+        if obj and obj.parent_id is None and obj.header_order is not None:
+            base += ["header_question", "header_action"]
+        return base
 
     inlines = [CategoryPhotoInline, AttributeInline]
 
