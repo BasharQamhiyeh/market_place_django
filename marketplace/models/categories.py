@@ -17,6 +17,12 @@ class Category(models.Model):
             "Leave empty to hide from the header. Each number may only be used once per sibling group."
         ),
     )
+    header_icon = models.CharField(
+        max_length=64,
+        blank=True,
+        default="megaphone",
+        help_text="Lucide icon name shown in the mega-menu promo card (e.g. megaphone, car, home, tag).",
+    )
     header_question = models.CharField(
         max_length=255,
         blank=True,

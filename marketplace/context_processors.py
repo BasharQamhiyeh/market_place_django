@@ -146,7 +146,7 @@ def navbar_categories(request):
     # first 3 (level-2/3) from each sorted group.
     all_cats = list(
         Category.objects
-        .only("id", "name", "parent_id", "header_order", "header_question", "header_action")
+        .only("id", "name", "parent_id", "header_order", "header_icon", "header_question", "header_action")
         .order_by("id")
     )
 
@@ -188,6 +188,7 @@ def navbar_categories(request):
             "name": top.name,
             "url": _pick_url(top),
             "children": children,
+            "header_icon": top.header_icon or "megaphone",
             "header_question": top.header_question or "هل تريد نشر إعلان؟",
             "header_action": top.header_action or "انشر إعلانك الآن مجاناً",
         })

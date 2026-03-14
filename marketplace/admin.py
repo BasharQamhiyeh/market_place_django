@@ -326,7 +326,7 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         # Show header_question / header_action only for level-1 categories
         # that already have a header position assigned.
         if obj and obj.parent_id is None and obj.header_order is not None:
-            base += ["header_question", "header_action"]
+            base += ["header_icon", "header_question", "header_action"]
         return base
 
     inlines = [CategoryPhotoInline, AttributeInline]
