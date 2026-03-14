@@ -404,11 +404,11 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
     def delete_model(self, request, obj):
         from marketplace.models import Listing
         ids = self._collect_ids(obj)
-        count = Listing.objects.filter(category_id__in=ids).count()
+        count = Listing.objects.filter(category_id__in=ids, is_deleted=False).count()
         if count:
             self.message_user(
                 request,
-                f"❌ لا يمكن حذف هذا القسم لأنه يحتوي على {count} منتج/إعلان. يرجى نقل المنتجات أو حذفها أولاً.",
+                f"❌ لا يمكن حذف هذا القسم لأنه يحتوي على {count} منتج/إعلان نشط. يرجى نقل المنتجات أو حذفها أولاً.",
                 level=messages.ERROR,
             )
             return
@@ -419,11 +419,11 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         all_ids = []
         for obj in queryset:
             all_ids.extend(self._collect_ids(obj))
-        count = Listing.objects.filter(category_id__in=all_ids).count()
+        count = Listing.objects.filter(category_id__in=all_ids, is_deleted=False).count()
         if count:
             self.message_user(
                 request,
-                f"❌ لا يمكن حذف الأقسام المحددة لأنها تحتوي على {count} منتج/إعلان. يرجى نقل المنتجات أو حذفها أولاً.",
+                f"❌ لا يمكن حذف الأقسام المحددة لأنها تحتوي على {count} منتج/إعلان نشط. يرجى نقل المنتجات أو حذفها أولاً.",
                 level=messages.ERROR,
             )
             return
