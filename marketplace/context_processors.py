@@ -118,12 +118,8 @@ def navbar_counters(request):
     }
 
 
-CACHE_VER = "v2"
+CACHE_VER = "v3"
 CACHE_TTL_SECONDS = 60 * 60  # 1 hour
-
-
-def _pick_name(cat: Category, lang: str) -> str:
-    return (getattr(cat, "name", "") or "").strip()
 
 
 def _pick_url(cat: Category) -> str:
@@ -136,10 +132,6 @@ def _pick_url(cat: Category) -> str:
     return f"/category/{cat.id}/"
 
 
-def _header_sort_key(cat):
-    return (0 if cat.show_in_header else 1, cat.id)
-
-
 def navbar_categories(request):
     lang = (translation.get_language() or "en").lower()
     key = f"navbar_cats:{CACHE_VER}:{'ar' if lang.startswith('ar') else 'en'}"
@@ -148,31 +140,31 @@ def navbar_categories(request):
     if cached is not None:
         return {"navbar_categories": cached}
 
-    # Single query for all categories — avoids nested prefetch issues
+    # Only load categories that have been explicitly placed in the header.
+    # ORDER BY header_order so each group is already in the right order.
     all_cats = list(
         Category.objects
-        .only("id", "name", "parent_id", "show_in_header", "header_question", "header_action")
-        .order_by("id")
+        .filter(header_order__isnull=False)
+        .only("id", "name", "parent_id", "header_order", "header_question", "header_action")
+        .order_by("parent_id", "header_order")
     )
 
-    # Group by parent_id, each group sorted: show_in_header=True first, then id ASC
+    # Group by parent_id — order within each group is guaranteed by the DB sort above.
     by_parent = defaultdict(list)
     for cat in all_cats:
         by_parent[cat.parent_id].append(cat)
-    for group in by_parent.values():
-        group.sort(key=_header_sort_key)
 
     tree = []
-    for top in by_parent[None]:          # level-1 (already sorted)
+    for top in by_parent[None]:          # level-1, ordered by header_order 1–6
         children = []
-        for ch in by_parent.get(top.id, [])[:3]:    # level-2: top 3
+        for ch in by_parent.get(top.id, []):    # level-2, ordered by header_order 1–3
             grandchildren = [
                 {
                     "id": gc.id,
                     "name": gc.name,
                     "url": _pick_url(gc),
                 }
-                for gc in by_parent.get(ch.id, [])[:3]  # level-3: top 3
+                for gc in by_parent.get(ch.id, [])  # level-3, ordered by header_order 1–3
             ]
             children.append({
                 "id": ch.id,

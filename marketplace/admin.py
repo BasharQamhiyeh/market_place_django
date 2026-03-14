@@ -213,15 +213,97 @@ class CategoryPhotoInline(nested_admin.NestedStackedInline):
         js = ("admin/js/category_photo_preview.js",)
 
 
+class CategoryAdminForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        instance = kwargs.get("instance")
+
+        # Resolve the current parent to determine level and taken slots.
+        # On a POST submission use the submitted parent_id; fall back to the
+        # instance's saved parent for GET (edit) requests.
+        parent = None
+        if instance and instance.pk:
+            parent = instance.parent
+        post_data = args[0] if args else None
+        if post_data:
+            raw_parent_id = post_data.get("parent")
+            if raw_parent_id:
+                try:
+                    parent = Category.objects.get(pk=int(raw_parent_id))
+                except (Category.DoesNotExist, ValueError, TypeError):
+                    parent = None
+
+        max_order = 6 if parent is None else 3
+
+        # Build a map of taken slot → category name (excluding self)
+        siblings_qs = Category.objects.filter(
+            parent=parent, header_order__isnull=False
+        )
+        if instance and instance.pk:
+            siblings_qs = siblings_qs.exclude(pk=instance.pk)
+        taken = dict(siblings_qs.values_list("header_order", "name"))
+
+        choices = [("", "— not in header —")]
+        for i in range(1, max_order + 1):
+            if i in taken:
+                choices.append((i, f"{i}  (taken by '{taken[i]}')"))
+            else:
+                choices.append((i, str(i)))
+
+        self.fields["header_order"] = forms.TypedChoiceField(
+            choices=choices,
+            coerce=lambda v: int(v) if v not in (None, "") else None,
+            required=False,
+            empty_value=None,
+            label="Header position",
+            help_text=(
+                f"Position 1–{max_order} in the header navigation. "
+                "Numbers already assigned to sibling categories are shown as taken."
+            ),
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        header_order = cleaned_data.get("header_order")
+        parent = cleaned_data.get("parent")
+
+        if header_order is not None:
+            max_order = 6 if parent is None else 3
+            if not (1 <= header_order <= max_order):
+                level_label = "top-level" if parent is None else "sub-level"
+                self.add_error(
+                    "header_order",
+                    f"Position must be between 1 and {max_order} for {level_label} categories.",
+                )
+            else:
+                conflict_qs = Category.objects.filter(parent=parent, header_order=header_order)
+                if self.instance and self.instance.pk:
+                    conflict_qs = conflict_qs.exclude(pk=self.instance.pk)
+                conflict = conflict_qs.first()
+                if conflict:
+                    self.add_error(
+                        "header_order",
+                        f"Position {header_order} is already taken by '{conflict.name}'. "
+                        "Clear it there first, then assign it here.",
+                    )
+
+        return cleaned_data
+
+
 @admin.register(Category)
 class CategoryAdmin(nested_admin.NestedModelAdmin):
+    form = CategoryAdminForm
     change_list_template = "admin/categories_changelist.html"
     change_form_template = "admin/marketplace/category/change_form.html"
 
     list_display = (
         "name",
         "parent",
-        "show_in_header",
+        "header_order",
         "photo_preview",
     )
 
@@ -230,7 +312,7 @@ class CategoryAdmin(nested_admin.NestedModelAdmin):
         "subtitle",
         "description",
         "parent",
-        "show_in_header",
+        "header_order",
         "header_question",
         "header_action",
     )

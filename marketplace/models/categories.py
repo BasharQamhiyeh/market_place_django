@@ -9,9 +9,13 @@ class Category(models.Model):
         "self", on_delete=models.CASCADE,
         related_name="subcategories", null=True, blank=True
     )
-    show_in_header = models.BooleanField(
-        default=False,
-        help_text="Prioritise this category in the header navigation.",
+    header_order = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Position in the header navigation (1–6 for top-level, 1–3 for sub-levels). "
+            "Leave empty to hide from the header. Each number may only be used once per sibling group."
+        ),
     )
     header_question = models.CharField(
         max_length=255,
@@ -41,6 +45,20 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+        constraints = [
+            # Top-level categories (parent IS NULL): header_order unique across all top-level
+            models.UniqueConstraint(
+                fields=["header_order"],
+                condition=models.Q(parent__isnull=True) & models.Q(header_order__isnull=False),
+                name="unique_header_order_top_level",
+            ),
+            # Sub-level categories (parent IS NOT NULL): header_order unique within each parent
+            models.UniqueConstraint(
+                fields=["parent", "header_order"],
+                condition=models.Q(parent__isnull=False) & models.Q(header_order__isnull=False),
+                name="unique_header_order_per_parent",
+            ),
+        ]
 
 
 class CategoryPhoto(models.Model):
