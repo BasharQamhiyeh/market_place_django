@@ -6,6 +6,7 @@ Usage:
     python manage.py seed_test_data
 """
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.utils import timezone
 
 from marketplace.models import Category, Item, Listing, User
@@ -67,18 +68,19 @@ class Command(BaseCommand):
             if Listing.objects.filter(title=title).exists():
                 self.stdout.write(f"  Skipped (exists): {title}")
                 continue
-            listing = Listing.objects.create(
-                type="item",
-                user=user,
-                category=cat_map[cat_name],
-                title=title,
-                description=f"وصف تجريبي لـ {title}",
-                is_active=True,
-                is_approved=True,
-                approved_at=timezone.now(),
-                published_at=timezone.now(),
-            )
-            Item.objects.create(listing=listing, price=price, condition="used")
+            with transaction.atomic():
+                listing = Listing.objects.create(
+                    type="item",
+                    user=user,
+                    category=cat_map[cat_name],
+                    title=title,
+                    description=f"وصف تجريبي لـ {title}",
+                    is_active=True,
+                    is_approved=True,
+                    approved_at=timezone.now(),
+                    published_at=timezone.now(),
+                )
+                Item.objects.create(listing=listing, price=price, condition="used")
             self.stdout.write(f"  Created item: {title}")
 
         # requests
@@ -86,18 +88,19 @@ class Command(BaseCommand):
             if Listing.objects.filter(title=title).exists():
                 self.stdout.write(f"  Skipped (exists): {title}")
                 continue
-            listing = Listing.objects.create(
-                type="request",
-                user=user,
-                category=cat_map[cat_name],
-                title=title,
-                description=f"وصف تجريبي لـ {title}",
-                is_active=True,
-                is_approved=True,
-                approved_at=timezone.now(),
-                published_at=timezone.now(),
-            )
-            Request.objects.create(listing=listing, budget=budget, condition_preference="any")
+            with transaction.atomic():
+                listing = Listing.objects.create(
+                    type="request",
+                    user=user,
+                    category=cat_map[cat_name],
+                    title=title,
+                    description=f"وصف تجريبي لـ {title}",
+                    is_active=True,
+                    is_approved=True,
+                    approved_at=timezone.now(),
+                    published_at=timezone.now(),
+                )
+                Request.objects.create(listing=listing, budget=budget, condition_preference="any")
             self.stdout.write(f"  Created request: {title}")
 
         self.stdout.write(self.style.SUCCESS("\nDone! Search for 'آيفون' or 'سيارة' to test."))

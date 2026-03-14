@@ -316,6 +316,9 @@ def submit_store_review_ajax(request, store_id):
     subject = (request.POST.get("subject") or "").strip()
     comment = (request.POST.get("comment") or "").strip()
 
+    if store.owner == request.user:
+        return JsonResponse({"ok": False, "message": "لا يمكنك تقييم متجرك الخاص."}, status=403)
+
     try:
         rating_int = int(rating)
     except Exception:
