@@ -6,6 +6,7 @@
 
 {% block base_css %}
 <link rel="stylesheet" href="{% static 'css/post-request.css' %}">
+<script src="https://unpkg.com/lucide@latest"></script>
 {% endblock %}
 
 {% block content %}
@@ -28,7 +29,7 @@
         </div>
 
         <div class="hidden sm:flex items-center gap-2 bg-white/80 border border-green-100 rounded-full px-4 py-2 shadow-sm">
-          <span class="text-xl">📝</span>
+          <span class="hero-badge-icon" aria-hidden="true"><i data-lucide="file-pen-line"></i></span>
           <span class="text-xs text-[var(--muted)]">
             طلب واضح + تفاصيل دقيقة = عروض أفضل
           </span>
@@ -59,7 +60,7 @@
 
             <!-- SECTION 1 -->
             <h3 class="text-xl font-bold text-[var(--rukn-green)] flex items-center gap-2 mb-2">
-              <span class="section-step">١</span>
+              <span class="section-step">1</span>
               <span>تفاصيل الطلب</span>
             </h3>
 
@@ -125,7 +126,7 @@
             <!-- SECTION 2 -->
             <div class="pt-9">
               <h3 class="text-xl font-bold text-[var(--rukn-green)] flex items-center gap-2 mb-2">
-                <span class="section-step">٢</span>
+                <span class="section-step">2</span>
                 <span>تفاصيل المنتج المطلوب</span>
               </h3>
 
@@ -161,7 +162,8 @@
 
                   <button type="button" id="aiBtn"
                           class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[var(--rukn-green)] text-white rounded-lg font-semibold shadow hover:scale-105 w-full sm:w-auto justify-center text-sm">
-                    توليد وصف سريع
+                    <i data-lucide="sparkles" class="inline-icon text-white"></i>
+                    <span>توليد وصف سريع</span>
                   </button>
                 </div>
 
@@ -183,7 +185,7 @@
             <!-- SECTION 3 -->
             <div class="pt-9">
               <h3 class="text-xl font-bold text-[var(--rukn-green)] flex items-center gap-2 mb-2">
-                <span class="section-step">٣</span>
+                <span class="section-step">3</span>
                 <span>الموقع وطرق التواصل</span>
               </h3>
 
@@ -208,7 +210,7 @@
 
                   <div id="cityList" class="absolute z-[9999] mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-lg hidden">
                     <div class="p-2 border-b border-green-100">
-                      <input id="citySearch" type="text" placeholder="🔍 بحث..." class="w-full border border-gray-200 rounded-lg py-1.5 px-3 text-sm">
+                      <input id="citySearch" type="text" placeholder="ابحث هنا..." class="w-full border border-gray-200 rounded-lg py-1.5 px-3 text-sm">
                     </div>
                     <ul id="cityOptions" class="max-h-52 overflow-y-auto text-sm">
                       {% for value, label in form.city.field.choices %}
@@ -245,13 +247,13 @@
             <!-- SECTION 4 -->
             <div class="pt-9">
               <h3 class="text-xl font-bold text-[var(--rukn-green)] flex items-center gap-2 mb-2">
-                <span class="section-step">٤</span>
+                <span class="section-step">4</span>
                 <span>شروط النشر</span>
               </h3>
 
               <div id="termsBox" class="border border-gray-200 rounded-2xl p-4 sm:p-5 space-y-4 text-sm">
                 <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xl">📜</span>
+                  <span class="terms-summary-icon" aria-hidden="true"><i data-lucide="scroll-text"></i></span>
                   <div><p class="label">ملخص الشروط</p></div>
                 </div>
 
@@ -328,32 +330,32 @@
           <section class="container-box p-5 sm:p-6 h-fit lg:sticky lg:top-0">
             <div class="relative z-10 pt-4">
               <h2 class="text-xl font-bold text-[var(--rukn-green)] mb-4 text-center lg:text-right flex items-center gap-2 justify-center lg:justify-start">
-                💡 نصائح لطلب ناجح
+                <span class="section-title-icon"><i data-lucide="lightbulb"></i></span> نصائح لطلب ناجح
               </h2>
 
               <div class="space-y-3 text-sm text-[var(--muted)]">
                 <div class="tip-card p-3 text-right">
-                  <div class="font-semibold text-gray-800 mb-1 text-sm">🎯 حدد ما تريد بدقة</div>
+                  <div class="tip-title"><span class="tip-title-icon" aria-hidden="true"><i data-lucide="target"></i></span><span>حدد ما تريد بدقة</span></div>
                   <p class="leading-relaxed text-xs sm:text-sm">كلما كان طلبك أوضح، حصلت على عروض أنسب.</p>
                 </div>
                 <div class="tip-card p-3 text-right">
-                  <div class="font-semibold text-gray-800 mb-1 text-sm">📝 وصف واضح ومختصر</div>
+                  <div class="tip-title"><span class="tip-title-icon" aria-hidden="true"><i data-lucide="square-pen"></i></span><span>وصف واضح ومختصر</span></div>
                   <p class="leading-relaxed text-xs sm:text-sm">اذكر المواصفات والشروط المهمة مثل الموديل واللون.</p>
                 </div>
                 <div class="tip-card p-3 text-right">
-                  <div class="font-semibold text-gray-800 mb-1 text-sm">💰 ميزانية منطقية</div>
+                  <div class="tip-title"><span class="tip-title-icon" aria-hidden="true"><i data-lucide="wallet"></i></span><span>ميزانية منطقية</span></div>
                   <p class="leading-relaxed text-xs sm:text-sm">ضع ميزانية واقعية لزيادة فرص حصولك على عروض مناسبة.</p>
                 </div>
                 <div class="tip-card p-3 text-right">
-                  <div class="font-semibold text-gray-800 mb-1 text-sm">📍 موقع واضح</div>
+                  <div class="tip-title"><span class="tip-title-icon" aria-hidden="true"><i data-lucide="map-pinned"></i></span><span>موقع واضح</span></div>
                   <p class="leading-relaxed text-xs sm:text-sm">اختيار المدينة الصحيحة يساعد البائعين القريبين منك.</p>
                 </div>
                 <div class="tip-card p-3 text-right">
-                  <div class="font-semibold text-gray-800 mb-1 text-sm">⏱️ تفاعل سريع</div>
+                  <div class="tip-title"><span class="tip-title-icon" aria-hidden="true"><i data-lucide="clock-3"></i></span><span>تفاعل سريع</span></div>
                   <p class="leading-relaxed text-xs sm:text-sm">الرد السريع يزيد احتمالية الوصول لصفقة أفضل.</p>
                 </div>
                 <div class="tip-card p-3 text-right">
-                  <div class="font-semibold text-gray-800 mb-1 text-sm">✅ وضوح الشروط</div>
+                  <div class="tip-title"><span class="tip-title-icon" aria-hidden="true"><i data-lucide="badge-check"></i></span><span>وضوح الشروط</span></div>
                   <p class="leading-relaxed text-xs sm:text-sm">وضح التسليم/الدفع وأي شروط إضافية لتجنب سوء الفهم.</p>
                 </div>
               </div>
@@ -368,7 +370,7 @@
     <div id="successPopup" class="success-popup-bg hidden">
       <div class="success-popup">
         <div class="flex flex-col items-center mb-4">
-          <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-[var(--rukn-green)] text-3xl mb-3">✓</div>
+          <div class="success-icon-box"><i data-lucide="circle-check-big"></i></div>
           <h2 class="text-lg font-extrabold text-gray-900 mb-1">تم إرسال طلبك بنجاح</h2>
           <p class="text-sm text-gray-500 text-center leading-relaxed">
             شكرًا لك! تم إرسال طلب الشراء الخاص بك وسيتمكن البائعون من الاطلاع عليه وتقديم عروضهم المناسبة.
@@ -419,4 +421,5 @@
 {% block scripts %}
   {{ block.super }}
   <script src="{% static 'js/post-request-django.js' %}"></script>
+  <script>if (window.lucide) lucide.createIcons();</script>
 {% endblock %}

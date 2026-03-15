@@ -33,6 +33,20 @@ body {
     margin-top: 0.25rem;
     margin-bottom: 0.5rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.field-error::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: currentColor;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>') center / contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>') center / contain no-repeat;
 }
 
 .label {
@@ -456,3 +470,84 @@ body {
   white-space: nowrap;
 }
 
+
+/* ===== Lucide icon helpers ===== */
+.icon-badge, .icon-badge-sm {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rukn-orange);
+    background: rgba(255,122,24,.08);
+    border: 1px solid rgba(255,122,24,.12);
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+.icon-badge {
+    width: 2.25rem;
+    height: 2.25rem;
+}
+.icon-badge-sm {
+    width: 2rem;
+    height: 2rem;
+}
+.icon-badge svg,
+.icon-badge-sm svg,
+.tip-icon,
+.section-title-icon,
+.inline-icon,
+.success-icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    stroke-width: 2.1;
+}
+.icon-hero {
+    width: 4.5rem;
+    height: 4.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1.25rem;
+    color: var(--rukn-orange);
+    background: rgba(255,122,24,.10);
+    border: 1px solid rgba(255,122,24,.14);
+}
+.icon-hero svg {
+    width: 2rem;
+    height: 2rem;
+}
+.section-title-icon {
+    color: var(--rukn-orange);
+}
+.tip-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--rukn-orange);
+    flex-shrink: 0;
+}
+.inline-icon {
+    width: 1rem;
+    height: 1rem;
+}
+.success-icon {
+    width: 1.7rem;
+    height: 1.7rem;
+}
+.preview-remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, .56);
+    color: white;
+    border: none;
+    border-radius: 999px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.preview-remove-btn svg {
+    width: .8rem;
+    height: .8rem;
+}

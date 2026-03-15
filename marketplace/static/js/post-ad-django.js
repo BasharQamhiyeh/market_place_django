@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     field.classList.add("error-border");
     const p = document.createElement("p");
     p.className = "field-error js-error";
-    p.textContent = "⚠️ " + message;
+    p.textContent = message;
     field.insertAdjacentElement("afterend", p);
     field.scrollIntoView({ behavior: "smooth", block: "center" });
     if (typeof field.focus === "function") field.focus();
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clearErrors();
     const p = document.createElement("p");
     p.className = "field-error js-error";
-    p.textContent = "⚠️ " + message;
+    p.textContent = message;
     elem.insertAdjacentElement("afterend", p);
     elem.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -464,7 +464,9 @@ syncOtherForBlock(block);
 
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.textContent = "✕";
+      btn.className = "preview-remove-btn";
+      btn.setAttribute("aria-label", "حذف الصورة");
+      btn.innerHTML = '<i data-lucide="x"></i>';
 
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -494,6 +496,7 @@ syncOtherForBlock(block);
       div.appendChild(btn);
       previewContainer.appendChild(div);
     });
+    if (window.lucide) lucide.createIcons();
   }
 
     // ===== Existing photos: choose main (edit) =====
@@ -695,7 +698,7 @@ syncOtherForBlock(block);
 
     const search = document.createElement("input");
     search.type = "text";
-    search.placeholder = "🔍 بحث...";
+    search.placeholder = "بحث...";
     search.className = "w-full border border-orange-100 rounded-lg py-1.5 px-3 text-sm";
     searchBoxWrap.appendChild(search);
 
@@ -840,10 +843,10 @@ syncOtherForBlock(block);
 
     const condTxt = conditionVal?.value === "used" ? "مستعمل بحالة جيدة" : "جديد وغير مستخدم";
     descField.value =
-      `📦 ${title}\n` +
-      `• الحالة: ${condTxt}\n` +
-      `• المنتج بحالة ممتازة ومرفق صور واضحة.\n` +
-      `✅ تواصل للشراء أو الاستفسار.`;
+      `${title}\n` +
+      `الحالة: ${condTxt}\n` +
+      `- المنتج بحالة ممتازة ومرفق صور واضحة.\n` +
+      `تواصل للشراء أو الاستفسار.`;
   });
 
   // ===== Submit validation =====

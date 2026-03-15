@@ -387,3 +387,160 @@ body {
   border-radius: 999px;
   white-space: nowrap;
 }
+
+/* ── Lucide icon helpers ─────────────────────────────────────────── */
+
+/* field-error: flex layout + warning triangle via mask */
+.field-error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.field-error::before {
+    content: "";
+    display: inline-block;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    background-color: #dc2626;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+/* Hero badge icon (header badge) */
+.hero-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: rgba(22,163,74,.10);
+    border: 1px solid rgba(22,163,74,.18);
+    color: var(--rukn-green);
+    flex-shrink: 0;
+}
+
+.hero-badge-icon svg {
+    width: 1.1rem !important;
+    height: 1.1rem !important;
+    stroke-width: 2;
+    stroke: #16a34a !important;
+    display: block;
+}
+
+/* Terms summary icon */
+.terms-summary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: rgba(22,163,74,.10);
+    border: 1px solid rgba(22,163,74,.20);
+    color: #16a34a;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.terms-summary-icon svg {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+    stroke-width: 2;
+    stroke: #16a34a !important;
+    display: block;
+}
+
+/* Section title icon (tips heading) */
+.section-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: #16a34a;
+    flex-shrink: 0;
+}
+
+.section-title-icon svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    stroke-width: 2;
+    stroke: #16a34a !important;
+    display: block;
+}
+
+/* Tip card title icon */
+.tip-title {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.tip-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6rem;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: rgba(22,163,74,.12);
+    border: 1px solid rgba(22,163,74,.25);
+    color: #16a34a;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.tip-title-icon svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+    stroke-width: 2;
+    stroke: #16a34a !important;
+    display: block;
+}
+
+/* AI button icon sizing */
+#aiBtn svg {
+    width: 1rem !important;
+    height: 1rem !important;
+    stroke-width: 2;
+    stroke: white !important;
+    display: block;
+}
+
+/* Success icon box */
+.success-icon-box {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: #dcfce7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #16a34a;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+}
+
+.success-icon-box svg {
+    width: 2rem !important;
+    height: 2rem !important;
+    stroke-width: 2;
+    stroke: #16a34a !important;
+    display: block;
+}
