@@ -28,9 +28,9 @@ def moderate_item(item) -> Tuple[str, Optional[str]]:
 
     if not settings.OPENAI_API_KEY:
         logger.info(
-            "OPENAI_API_KEY is not configured. Item %s auto-approved.", item.id
+            "OPENAI_API_KEY is not configured. Item %s queued for manual review.", item.id
         )
-        return "approve", None
+        return "manual", None
 
     client = OpenAI(
         api_key=settings.OPENAI_API_KEY,
