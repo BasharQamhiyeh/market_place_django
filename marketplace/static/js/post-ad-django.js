@@ -99,11 +99,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const existingPhotos = document.getElementById("existingPhotos"); // container for current photos (optional)
   const selectedMainPhotoInput = document.getElementById("selected_main_photo"); // hidden input (optional)
 
-    // ✅ init: if template didn't set selected_main_photo, read it from the DOM
+    // ✅ init: sync hidden input ↔ DOM .main class
     if (existingPhotos && selectedMainPhotoInput) {
-      if (!(selectedMainPhotoInput.value || "").trim()) {
+      const val = (selectedMainPhotoInput.value || "").trim();
+      if (!val) {
+        // hidden input empty → read from DOM
         const mainBox = existingPhotos.querySelector(".upload-preview.main[data-photo-id]");
         if (mainBox) selectedMainPhotoInput.value = mainBox.getAttribute("data-photo-id") || "";
+      } else {
+        // hidden input has a value → make sure the DOM reflects it
+        existingPhotos.querySelectorAll(".upload-preview").forEach(el => el.classList.remove("main"));
+        const target = existingPhotos.querySelector(`.upload-preview[data-photo-id="${val}"]`);
+        if (target) target.classList.add("main");
       }
     }
 

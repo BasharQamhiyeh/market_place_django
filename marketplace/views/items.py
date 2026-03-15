@@ -732,6 +732,12 @@ def item_edit(request, item_id):
         resp["Location"] += "#tab-ads"
         return resp
 
+    # Ensure at least one photo is marked as main so the edit page highlights it
+    photos = list(item.photos.order_by("id"))
+    if photos and not any(p.is_main for p in photos):
+        photos[0].is_main = True
+        ItemPhoto.objects.filter(pk=photos[0].pk).update(is_main=True)
+
     return render(
         request,
         "item_edit.html",
@@ -742,7 +748,7 @@ def item_edit(request, item_id):
             "category": category,
             "category_tree_json": category_tree_json,
             "selected_category_path_json": selected_path_json,
-            "existing_photos": item.photos.all(),
+            "existing_photos": photos,
         },
     )
 
