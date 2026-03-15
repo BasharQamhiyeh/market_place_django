@@ -578,7 +578,8 @@
   function handleUserAccount(e) {
     e.stopPropagation();
     if (window.innerWidth > 991) { toggleUserMenu(); return; }
-    const userName = window.RUKN?.username || "المستخدم";
+    const r = window.RUKN || {};
+    const userName = r.storeName || r.username || r.firstName || "المستخدم";
     const avatarUrl = window.RUKN?.avatar;
     const avatarHTML = avatarUrl
       ? `<img src="${avatarUrl}" class="w-16 h-16 rounded-full mx-auto mb-2 object-cover">`
