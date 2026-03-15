@@ -77,13 +77,15 @@
           <p class="text-slate-400 text-xs font-bold leading-loose mb-6">اختر الخطوة المناسبة وسنرشدك مباشرة</p>
 
           <div class="grid grid-cols-1 gap-3 text-sm font-black">
-            <a href="#account" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
+            <a href="{% url 'register' %}" class="flex items-center justify-center gap-2 py-3 transition rounded-[14px] px-[22px]"
+               style="background:#fff; color:#ff7a18; border:2px solid #ff7a18; font-weight:800; cursor:pointer; box-shadow:0 10px 25px rgba(255,122,24,.15);">
               <i data-lucide="user"></i> إنشاء حساب
             </a>
-            <a href="#ads" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
+            <a href="{% url 'create_item' %}" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
               <i data-lucide="megaphone"></i> أضف إعلانك
             </a>
-            <a href="#requests" class="flex items-center justify-center gap-2 rukn-btn py-3 transition">
+            <a href="{% url 'create_request' %}" class="flex items-center justify-center gap-2 py-3 transition rounded-[14px] px-[22px]"
+               style="background:#22c55e; color:#fff; border:none; font-weight:800; cursor:pointer; box-shadow:0 10px 25px rgba(34,197,94,.25);">
               <i data-lucide="clipboard-list"></i> أضف طلبك
             </a>
           </div>
@@ -127,9 +129,15 @@
         <h4 class="font-black mb-4">ما الذي تبحث عنه؟</h4>
         <p class="text-slate-400 text-xs font-bold leading-loose mb-6">اختر الخطوة المناسبة وسنرشدك مباشرة</p>
         <div class="grid grid-cols-1 gap-3 text-sm font-black">
-          <a href="#account" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="user"></i> إنشاء حساب</a>
-          <a href="#ads" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="megaphone"></i> أضف إعلانك</a>
-          <a href="#requests" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="clipboard-list"></i> أضف طلبك</a>
+          <a href="{% url 'register' %}" class="flex items-center justify-center gap-2 py-3 transition rounded-[14px] px-[22px]"
+             style="background:#fff; color:#ff7a18; border:2px solid #ff7a18; font-weight:800; cursor:pointer; box-shadow:0 10px 25px rgba(255,122,24,.15);">
+            <i data-lucide="user"></i> إنشاء حساب
+          </a>
+          <a href="{% url 'create_item' %}" class="flex items-center justify-center gap-2 rukn-btn py-3 transition"><i data-lucide="megaphone"></i> أضف إعلانك</a>
+          <a href="{% url 'create_request' %}" class="flex items-center justify-center gap-2 py-3 transition rounded-[14px] px-[22px]"
+             style="background:#22c55e; color:#fff; border:none; font-weight:800; cursor:pointer; box-shadow:0 10px 25px rgba(34,197,94,.25);">
+            <i data-lucide="clipboard-list"></i> أضف طلبك
+          </a>
         </div>
       </div>
     </div>
