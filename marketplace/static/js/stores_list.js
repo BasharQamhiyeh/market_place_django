@@ -3,7 +3,7 @@
   "use strict";
 
   const filtersForm = document.getElementById("storesFiltersForm");
-  const searchInput = document.getElementById("searchInput");
+  const searchInput = document.getElementById("storesSearchInput");
   const catLeft     = document.getElementById("catLeft");
   const catRight    = document.getElementById("catRight");
   const catScroll   = document.getElementById("categoryFilters");
