@@ -314,6 +314,10 @@
     ui.centerModalContent.innerHTML = html;
     ui.centerModal.classList.remove("hidden");
     safeLucide();
+    // Close modal when any link inside it is clicked (handles same-page hash navigation)
+    ui.centerModalContent.querySelectorAll("a[href]").forEach(a => {
+      a.addEventListener("click", () => closeCenterModal(), { once: true });
+    });
   }
 
   function closeCenterModal() {
