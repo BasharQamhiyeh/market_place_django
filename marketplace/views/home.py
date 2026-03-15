@@ -65,7 +65,8 @@ def home(request):
                 )
             )
         )
-        .order_by(F("latest_item_at").desc(nulls_last=True))[:12]
+        .filter(latest_item_at__isnull=False)
+        .order_by(F("latest_item_at").desc())[:12]
     )
 
     context = {
