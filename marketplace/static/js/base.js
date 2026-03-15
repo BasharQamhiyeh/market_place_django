@@ -314,6 +314,10 @@
     ui.centerModalContent.innerHTML = html;
     ui.centerModal.classList.remove("hidden");
     safeLucide();
+    // Close modal when any link inside it is clicked (handles same-page hash navigation)
+    ui.centerModalContent.querySelectorAll("a[href]").forEach(a => {
+      a.addEventListener("click", () => closeCenterModal(), { once: true });
+    });
   }
 
   function closeCenterModal() {
@@ -574,14 +578,19 @@
   function handleUserAccount(e) {
     e.stopPropagation();
     if (window.innerWidth > 991) { toggleUserMenu(); return; }
-    const userName = window.RUKN?.username || "المستخدم";
-    const userAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ff7a18&color=fff`;
+    const r = window.RUKN || {};
+    const userName = r.storeName || r.username || r.firstName || "المستخدم";
+    const avatarUrl = window.RUKN?.avatar;
+    const avatarHTML = avatarUrl
+      ? `<img src="${avatarUrl}" class="w-16 h-16 rounded-full mx-auto mb-2 object-cover">`
+      : `<div class="w-16 h-16 rounded-full mx-auto mb-2 bg-orange-500 flex items-center justify-center text-white text-xl font-bold">${(userName.slice(0,1)||"?").toUpperCase()}</div>`;
     openCenterModal(`
       ${popupHeaderHTML("الحساب")}
       <div style="padding:16px">
         <div class="text-center mb-4">
-          <img src="${userAvatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
+          ${avatarHTML}
           <div class="font-bold">${userName}</div>
+          <div class="text-sm font-semibold text-orange-600 mt-1">رصيد المحفظة : ${r.points || 0} نقطة</div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           ${accountItemHTML("user", "الملف الشخصي", "/my-account/#tab-info")}

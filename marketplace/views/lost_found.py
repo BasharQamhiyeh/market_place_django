@@ -25,8 +25,8 @@ def _report_to_js(report, is_own=False):
 
     user = report.user
     owner_name = (
-        f"{user.first_name} {user.last_name}".strip()
-        or user.username
+        user.username
+        or f"{user.first_name} {user.last_name}".strip()
         or "مستخدم"
     )
 

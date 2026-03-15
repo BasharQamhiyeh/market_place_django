@@ -80,6 +80,12 @@
 
     maybeLoadTabExtras(key);
 
+    // Scroll the active tab button into view inside the sticky tab bar
+    const activeBtn = btns.find((b) => b.dataset.tab === key);
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    }
+
     if (opts.forceTop) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => window.scrollTo(0, 0));
