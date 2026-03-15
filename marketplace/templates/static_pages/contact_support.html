@@ -294,6 +294,13 @@
               <p class="text-[10px] text-slate-500 font-bold">قد يتم إيقاف الحساب في حال مخالفة شروط الاستخدام أو نشر محتوى مخالف. يمكنك التواصل مع الدعم لمعرفة السبب وتقديم طلب مراجعة.</p>
             </div>
           </div>
+          <div class="mt-6 text-center">
+            <a href="{% url 'faq' %}"
+               class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl border-2 border-[#ff7a18] text-[#ff7a18] font-black text-sm hover:bg-[#fff5ed] transition-colors">
+              <i data-lucide="circle-help" class="w-4 h-4"></i>
+              المزيد من الأسئلة الشائعة
+            </a>
+          </div>
         </section>
       </div>
 
@@ -352,10 +359,8 @@
 
   function resetContactMethod(){
     contactMethodInput.value = "";
-    phoneBtn.classList.remove("active","bg-orange-500","text-white");
-    emailBtn.classList.remove("active","bg-orange-500","text-white");
-    phoneBtn.classList.add("text-slate-500","bg-white");
-    emailBtn.classList.add("text-slate-500","bg-white");
+    phoneBtn.classList.remove("active");
+    emailBtn.classList.remove("active");
     phoneField.classList.add("hidden");
     emailField.classList.add("hidden");
     removeBoxError(contactContainer, methodError);
@@ -369,18 +374,14 @@
     removeBoxError(contactContainer, methodError);
 
     if(method === "phone"){
-      phoneBtn.classList.add("bg-orange-500","text-white");
-      phoneBtn.classList.remove("text-gray-600","bg-white");
-      emailBtn.classList.remove("bg-orange-500","text-white");
-      emailBtn.classList.add("text-gray-600","bg-white");
+      phoneBtn.classList.add("active");
+      emailBtn.classList.remove("active");
       phoneField.classList.remove("hidden");
       emailField.classList.add("hidden");
       removeError(email,emailError);
     }else{
-      emailBtn.classList.add("bg-orange-500","text-white");
-      emailBtn.classList.remove("text-gray-600","bg-white");
-      phoneBtn.classList.remove("bg-orange-500","text-white");
-      phoneBtn.classList.add("text-gray-600","bg-white");
+      emailBtn.classList.add("active");
+      phoneBtn.classList.remove("active");
       emailField.classList.remove("hidden");
       phoneField.classList.add("hidden");
       removeError(phone,phoneError);
