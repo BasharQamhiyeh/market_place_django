@@ -7,9 +7,7 @@
   const catLeft     = document.getElementById("catLeft");
   const catRight    = document.getElementById("catRight");
   const catScroll   = document.getElementById("categoryFilters");
-  const resultsWrap = document.getElementById("resultsWrap");
-
-  if (!filtersForm || !resultsWrap) return;
+  if (!filtersForm) return;
 
   const STORES_URL = "/stores/";
   const PARTIAL_URL = "/stores/partial/";
@@ -71,11 +69,12 @@
     })
       .then(r => r.text())
       .then(html => {
-        // replace the results wrapper
+        // look up fresh each time — replaceWith() removes the old node
+        const current = document.getElementById("resultsWrap");
         const tmp = document.createElement("div");
         tmp.innerHTML = html;
         const newWrap = tmp.firstElementChild;
-        if (newWrap) resultsWrap.replaceWith(newWrap);
+        if (current && newWrap) current.replaceWith(newWrap);
 
         syncChipsUI();
 
