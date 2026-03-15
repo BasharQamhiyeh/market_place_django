@@ -39,7 +39,8 @@
       "isAuthenticated": {{ request.user.is_authenticated|yesno:"true,false" }},
       "userId": {% if request.user.is_authenticated and request.user.user_id %}{{ request.user.user_id }}{% else %}null{% endif %},
       "username": "{{ request.user.username|default:''|escapejs }}",
-      "isStore": {% if request.user.is_authenticated and request.user.store %}true{% else %}false{% endif %}
+      "isStore": {% if request.user.is_authenticated and request.user.store %}true{% else %}false{% endif %},
+      "isStaff": {% if request.user.is_authenticated and request.user.is_staff %}true{% else %}false{% endif %}
     }
   </script>
 

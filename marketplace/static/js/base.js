@@ -587,8 +587,10 @@
           ${accountItemHTML("user", "الملف الشخصي", "/my-account/#tab-info")}
           ${accountItemHTML("bullhorn", "إعلاناتي", "/my-account/#tab-ads")}
           ${accountItemHTML("shopping-cart", "طلباتي", "/my-account/#tab-requests")}
+          ${accountItemHTML("flag", "بلاغاتي", "/lost-found/?tab=mine")}
           ${accountItemHTML("wallet", "المحفظة", "/my-account/#tab-wallet")}
           ${accountItemHTML("user-plus", "دعوة الأصدقاء", "/my-account/#tab-wallet")}
+          ${window.RUKN?.isStaff ? accountItemHTML("tachometer-alt", "لوحة التحكم", "/admin/") : ""}
         </div>
         <a href="/logout/" class="account-item text-red-500 w-full" style="margin-top:12px;display:flex;">
           <i class="fas fa-sign-out-alt"></i>
