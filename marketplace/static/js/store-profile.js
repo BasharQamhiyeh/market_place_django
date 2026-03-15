@@ -215,6 +215,18 @@ function bindStoreFilters() {
   categoryFilter.addEventListener("change", apply);
   cityFilter.addEventListener("change", apply);
   apply();
+
+  // Category chips in "عن المتجر" tab → switch to ads tab filtered by that category
+  document.querySelectorAll(".store-cat-chip[data-filter-cat]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const catId = btn.getAttribute("data-filter-cat");
+      if (categoryFilter.querySelector(`option[value="${catId}"]`)) {
+        categoryFilter.value = catId;
+      }
+      setActiveTab("ads", true);
+      apply();
+    });
+  });
 }
 
 /* ========= Phone Reveal (login gated + allow flag like item page) ========= */
