@@ -579,12 +579,15 @@
     e.stopPropagation();
     if (window.innerWidth > 991) { toggleUserMenu(); return; }
     const userName = window.RUKN?.username || "المستخدم";
-    const userAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=ff7a18&color=fff`;
+    const avatarUrl = window.RUKN?.avatar;
+    const avatarHTML = avatarUrl
+      ? `<img src="${avatarUrl}" class="w-16 h-16 rounded-full mx-auto mb-2 object-cover">`
+      : `<div class="w-16 h-16 rounded-full mx-auto mb-2 bg-orange-500 flex items-center justify-center text-white text-xl font-bold">${(userName.slice(0,1)||"?").toUpperCase()}</div>`;
     openCenterModal(`
       ${popupHeaderHTML("الحساب")}
       <div style="padding:16px">
         <div class="text-center mb-4">
-          <img src="${userAvatar}" class="w-16 h-16 rounded-full mx-auto mb-2">
+          ${avatarHTML}
           <div class="font-bold">${userName}</div>
         </div>
         <div class="grid grid-cols-2 gap-3">

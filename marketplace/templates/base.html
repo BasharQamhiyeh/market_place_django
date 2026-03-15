@@ -40,7 +40,8 @@
       "userId": {% if request.user.is_authenticated and request.user.user_id %}{{ request.user.user_id }}{% else %}null{% endif %},
       "username": "{{ request.user.username|default:''|escapejs }}",
       "isStore": {% if request.user.is_authenticated and request.user.store %}true{% else %}false{% endif %},
-      "isStaff": {% if request.user.is_authenticated and request.user.is_staff %}true{% else %}false{% endif %}
+      "isStaff": {% if request.user.is_authenticated and request.user.is_staff %}true{% else %}false{% endif %},
+      "avatar": "{% if request.user.is_authenticated and request.user.profile_photo %}{{ request.user.profile_photo.url|escapejs }}{% elif request.user.is_authenticated and request.user.store and request.user.store.logo %}{{ request.user.store.logo.url|escapejs }}{% endif %}"
     }
   </script>
 
