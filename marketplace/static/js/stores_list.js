@@ -10,6 +10,10 @@
 
   if (!filtersForm) return;
 
+  const STORES_URL = document.getElementById("storesSearchForm")
+    ? document.getElementById("storesSearchForm").action   // e.g. /stores/
+    : "/stores/";
+
   // ── helpers ──────────────────────────────────────────────────────────────
 
   function getSelectedCategories() {
@@ -34,6 +38,14 @@
       if (!id) btn.classList.toggle("active", selected.length === 0);
       else     btn.classList.toggle("active", selected.includes(id));
     });
+  }
+
+  function buildStoresUrl(q, categories) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    categories.forEach(id => params.append("categories", id));
+    const qs = params.toString();
+    return qs ? `${STORES_URL}?${qs}` : STORES_URL;
   }
 
   function toggleCategory(categoryId) {
@@ -63,35 +75,42 @@
     if (window.htmx) window.htmx.trigger(chip, "filtersChanged");
   });
 
-  // ── htmx:configRequest: inject q + page reset + update push-url ──────────
+  // ── htmx:configRequest: inject q for chips; fix push-url for both ────────
 
   document.body.addEventListener("htmx:configRequest", (e) => {
     const elt = e.detail.elt;
-    if (!elt || !elt.classList || !elt.classList.contains("category-chip")) return;
+    if (!elt) return;
 
-    // always send the current search value alongside chip filters
-    if (searchInput) {
-      e.detail.parameters.q = searchInput.value;
+    const isChip   = elt.classList && elt.classList.contains("category-chip");
+    const isSearch = elt.id === "searchInput";
+
+    if (isChip) {
+      // pass current search query alongside the category filters
+      if (searchInput) e.detail.parameters.q = searchInput.value;
+
+      // reset pagination
+      if (elt.dataset.resetPage === "1") {
+        e.detail.parameters.page = "1";
+        delete elt.dataset.resetPage;
+      }
+
+      // set correct push URL (shows /stores/?q=...&categories=...)
+      const q        = (searchInput ? searchInput.value : "") || "";
+      const selected = getSelectedCategories();
+      elt.setAttribute("hx-push-url", buildStoresUrl(q, selected));
     }
 
-    // reset pagination when filter changes
-    if (elt.dataset.resetPage === "1") {
-      e.detail.parameters.page = "1";
-      delete elt.dataset.resetPage;
+    if (isSearch) {
+      // fix push URL: replace /partial/ path with the main stores URL
+      const q        = e.detail.parameters.q || "";
+      const selected = getSelectedCategories();
+      searchInput.setAttribute("hx-push-url", buildStoresUrl(q, selected));
     }
-
-    // keep browser URL in sync with selected state
-    const selected = getSelectedCategories();
-    const params   = new URLSearchParams();
-    if (searchInput && searchInput.value) params.set("q", searchInput.value);
-    selected.forEach(id => params.append("categories", id));
-    const qs = params.toString();
-    elt.setAttribute("hx-push-url", qs ? `${window.location.pathname}?${qs}` : window.location.pathname);
   });
 
   document.body.addEventListener("htmx:afterSwap", () => syncChipsUI());
 
-  // ── search button: trigger HTMX on the input ──────────────────────────────
+  // ── search button: trigger HTMX on the input ─────────────────────────────
 
   const searchForm = document.getElementById("storesSearchForm");
   if (searchForm) {
@@ -101,13 +120,13 @@
     });
   }
 
-  // ── arrow scroll ──────────────────────────────────────────────────────────
+  // ── arrow scroll ─────────────────────────────────────────────────────────
 
   if (catLeft && catScroll) {
-    catLeft.addEventListener("click", () => catScroll.scrollBy({ left: -240, behavior: "smooth" }));
+    catLeft.addEventListener("click",  () => catScroll.scrollBy({ left: -240, behavior: "smooth" }));
   }
   if (catRight && catScroll) {
-    catRight.addEventListener("click", () => catScroll.scrollBy({ left: 240, behavior: "smooth" }));
+    catRight.addEventListener("click", () => catScroll.scrollBy({ left:  240, behavior: "smooth" }));
   }
 
   syncChipsUI();
