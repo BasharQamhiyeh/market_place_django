@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clearErrors();
     const p = document.createElement("p");
     p.className = "field-error js-error";
-    p.textContent = "⚠️ " + message;
+    p.textContent = message;
     elem.insertAdjacentElement("afterend", p);
     elem.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     field.classList.add("error-border");
     const p = document.createElement("p");
     p.className = "field-error js-error";
-    p.textContent = "⚠️ " + message;
+    p.textContent = message;
     field.insertAdjacentElement("afterend", p);
     field.scrollIntoView({ behavior: "smooth", block: "center" });
     if (typeof field.focus === "function") field.focus();
@@ -511,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const search = document.createElement("input");
     search.type = "text";
-    search.placeholder = "🔍 بحث...";
+    search.placeholder = "ابحث هنا...";
     search.className = "w-full border border-green-100 rounded-lg py-1.5 px-3 text-sm";
     searchBoxWrap.appendChild(search);
 
@@ -625,11 +625,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cond === "used") conditionText = "مستعمل بحالة جيدة";
 
     descField.value =
-      `🔎 طلب شراء: ${title}\n` +
-      `• الحالة المطلوبة: ${conditionText}.\n` +
-      `• أفضّل أن يكون المنتج بحالة جيدة وخالٍ من العيوب المؤثرة على الاستخدام.\n` +
-      `• أرحّب بالعروض المناسبة ضمن الميزانية المذكورة.\n` +
-      `✅ الرجاء تزويدي بتفاصيل المنتج وصور واضحة عند التواصل.`;
+      `طلب شراء: ${title}\n` +
+      `الحالة المطلوبة: ${conditionText}.\n` +
+      `أفضّل أن يكون المنتج بحالة جيدة وخالٍ من العيوب المؤثرة على الاستخدام.\n` +
+      `أرحّب بالعروض المناسبة ضمن الميزانية المذكورة.\n` +
+      `الرجاء تزويدي بتفاصيل المنتج وصور واضحة عند التواصل.`;
   });
 
   // ===== Popups =====

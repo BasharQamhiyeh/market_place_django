@@ -387,3 +387,142 @@ body {
   border-radius: 999px;
   white-space: nowrap;
 }
+
+/* ── Lucide icon helpers ─────────────────────────────────────────── */
+
+/* field-error: flex layout + warning triangle via mask */
+.field-error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.field-error::before {
+    content: "";
+    display: inline-block;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    background-color: #dc2626;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'/%3E%3Cline x1='12' y1='9' x2='12' y2='13'/%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'/%3E%3C/svg%3E");
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+/* Hero badge icon (header badge) */
+.hero-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: rgba(22,163,74,.10);
+    border: 1px solid rgba(22,163,74,.18);
+    color: var(--rukn-green);
+    flex-shrink: 0;
+}
+
+.hero-badge-icon svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    stroke-width: 2;
+}
+
+/* Terms summary icon */
+.terms-summary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: rgba(22,163,74,.08);
+    border: 1px solid rgba(22,163,74,.12);
+    color: var(--rukn-green);
+    flex-shrink: 0;
+}
+
+.terms-summary-icon svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    stroke-width: 2;
+}
+
+/* Section title icon (tips heading) */
+.section-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: var(--rukn-green);
+    flex-shrink: 0;
+}
+
+.section-title-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 2;
+}
+
+/* Tip card title icon */
+.tip-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.tip-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: rgba(22,163,74,.08);
+    border: 1px solid rgba(22,163,74,.12);
+    color: var(--rukn-green);
+    flex-shrink: 0;
+}
+
+.tip-title-icon svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    stroke-width: 2;
+}
+
+/* AI button icon sizing */
+#aiBtn svg {
+    width: 1rem;
+    height: 1rem;
+    stroke-width: 2;
+}
+
+/* Success icon box */
+.success-icon-box {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    background: #dcfce7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rukn-green);
+    margin-bottom: 0.75rem;
+}
+
+.success-icon-box svg {
+    width: 2rem;
+    height: 2rem;
+    stroke-width: 2;
+}
