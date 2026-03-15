@@ -296,10 +296,9 @@
             </p>
           </div>
 
-          {# زر يفتح login modal بدل href="#" #}
-          <button type="button" class="js-open-login bg-blue-600 text-white font-black px-8 py-4 rounded-2xl hover:scale-105 transition-transform inline-block shadow-lg shadow-emerald-200 whitespace-nowrap">
+          <a href="{% url 'register' %}" class="bg-blue-600 text-white font-black px-8 py-4 rounded-2xl hover:scale-105 transition-transform inline-block shadow-lg shadow-emerald-200 whitespace-nowrap">
             أنشئ حسابك الآن
-          </button>
+          </a>
         </div>
       </div>
 
@@ -321,43 +320,13 @@
           <a href="{% url 'home' %}" class="bg-white text-orange-600 font-black px-12 py-5 rounded-2xl text-xl hover:scale-105 transition-transform inline-block">
             تصفح الإعلانات
           </a>
-          <button type="button" class="js-open-login bg-orange-600 text-white font-black px-12 py-5 rounded-2xl text-xl hover:scale-105 transition-transform inline-block">
+          <a href="{% url 'register' %}" class="bg-orange-600 text-white font-black px-12 py-5 rounded-2xl text-xl hover:scale-105 transition-transform inline-block">
             سجل مجاناً
-          </button>
+          </a>
         </div>
       </div>
     </div>
   </section>
 </main>
-
-<script>
-  // فتح login modal (بنفس فكرة about page)
-  // حاولنا "بأقل افتراضات": لو عندك زر/دالة جاهزة في base ستشتغل، وإلا ما راح تكسر الصفحة.
-  (function () {
-    function openLogin() {
-      // 1) لو عندك function جاهزة
-      if (typeof window.openLoginModal === "function") {
-        window.openLoginModal();
-        return;
-      }
-      // 2) لو عندك modal id="loginModal"
-      const m = document.getElementById("loginModal");
-      if (m) {
-        m.classList.remove("hidden");
-        m.classList.add("flex");
-        document.body.classList.add("overflow-hidden");
-        return;
-      }
-      // 3) fallback: روح لصفحة login لو موجودة
-      try {
-        window.location.href = "{% url 'login' %}";
-      } catch (e) {}
-    }
-
-    document.querySelectorAll(".js-open-login").forEach(btn => {
-      btn.addEventListener("click", openLogin);
-    });
-  })();
-</script>
 
 {% endblock %}
