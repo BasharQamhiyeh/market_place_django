@@ -236,7 +236,7 @@
                                 class="border border-gray-200 bg-white rounded-2xl px-4 py-2.5 text-sm font-bold
                                        focus:border-orange-300 focus:ring-4 focus:ring-orange-100 outline-none transition w-full sm:w-48">
                           <option value="all">جميع الأقسام</option>
-                          {% for c in categories %}
+                          {% for c in store_categories %}
                             <option value="{{ c.id }}">{{ c }}</option>
                           {% endfor %}
                         </select>
@@ -390,12 +390,13 @@
                         {% if store_categories %}
                           <div class="flex flex-wrap gap-2">
                             {% for c in store_categories %}
-                              <a href="{% url 'item_list' %}?category={{ c.id }}"
-                                 class="inline-flex items-center justify-center px-4 py-2 rounded-full
-                                        border border-orange-200 bg-orange-50 text-[var(--rukn-orange)]
-                                        text-xs font-extrabold hover:bg-orange-100 hover:border-orange-300 transition">
+                              <button type="button"
+                                      data-filter-cat="{{ c.id }}"
+                                      class="store-cat-chip inline-flex items-center justify-center px-4 py-2 rounded-full
+                                             border border-orange-200 bg-orange-50 text-[var(--rukn-orange)]
+                                             text-xs font-extrabold hover:bg-orange-100 hover:border-orange-300 transition cursor-pointer">
                                 {{ c }}
-                              </a>
+                              </button>
                             {% endfor %}
                           </div>
                         {% else %}
