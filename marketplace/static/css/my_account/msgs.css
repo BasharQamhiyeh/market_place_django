@@ -407,6 +407,20 @@
   gap:6px;
 }
 
+/* ---------- Mobile compose: input full-width, buttons on next row ---------- */
+@media (max-width: 767px) {
+  .chat-compose {
+    flex-wrap: wrap;
+  }
+  .chat-compose input {
+    flex: 0 0 100%;
+  }
+  .chat-send,
+  .chat-back {
+    flex: 1;
+  }
+}
+
 /* Empty state - matches fav tab style */
 .msgs-empty{
   display: flex;
