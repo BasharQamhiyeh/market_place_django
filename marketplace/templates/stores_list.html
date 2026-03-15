@@ -44,7 +44,7 @@
                            hx-trigger="keyup changed delay:400ms, search"
                            hx-target="#resultsWrap"
                            hx-swap="outerHTML"
-                           hx-push-url="{% url 'stores_list' %}"
+                           hx-push-url="true"
                            hx-include="#storesFiltersForm"
                            class="w-full pl-16 pr-4 py-4 rounded-xl text-slate-700 font-semibold
                                   placeholder:text-slate-400 bg-slate-50 border border-slate-200
@@ -172,5 +172,6 @@
 
 {% block scripts %}
 {{ block.super }}
+<script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-SKLvsTfTXjLovvMBH48fomBAbCjN5ZI9hQN2dTiHLn9E7JAi2Yx9bLa3TcIjIkS" crossorigin="anonymous"></script>
 <script src="{% static 'js/stores_list.js' %}"></script>
 {% endblock %}
