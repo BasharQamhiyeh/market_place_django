@@ -587,7 +587,7 @@
           ${accountItemHTML("user", "الملف الشخصي", "/my-account/#tab-info")}
           ${accountItemHTML("bullhorn", "إعلاناتي", "/my-account/#tab-ads")}
           ${accountItemHTML("shopping-cart", "طلباتي", "/my-account/#tab-requests")}
-          ${accountItemHTML("flag", "بلاغاتي", "/lost-found/?tab=mine")}
+          ${!window.RUKN?.isStore ? accountItemHTML("flag", "بلاغاتي", "/lost-found/?tab=mine") : ""}
           ${accountItemHTML("wallet", "المحفظة", "/my-account/#tab-wallet")}
           ${accountItemHTML("user-plus", "دعوة الأصدقاء", "/my-account/#tab-wallet")}
           ${window.RUKN?.isStaff ? accountItemHTML("tachometer-alt", "لوحة التحكم", "/admin/") : ""}

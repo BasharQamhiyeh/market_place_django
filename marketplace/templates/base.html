@@ -349,7 +349,9 @@
                 <a href="{% url 'my_account' %}#tab-info" class="menu-item"><i class="fas fa-user"></i> الملف الشخصي</a>
                 <a href="{% url 'my_account' %}#tab-ads" class="menu-item"><i class="fas fa-bullhorn"></i> إعلاناتي</a>
                 <a href="{% url 'my_account' %}#tab-requests" class="menu-item"><i class="fas fa-shopping-cart"></i> طلباتي</a>
+                {% if not request.user.store %}
                 <a href="{% url 'report_list' %}?tab=mine" class="menu-item"><i class="fas fa-flag"></i> بلاغاتي</a>
+                {% endif %}
                 <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-wallet"></i> المحفظة</a>
                 <a id="inviteFriendsLink"
                    href="#"
