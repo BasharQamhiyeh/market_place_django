@@ -39,7 +39,8 @@
       "isAuthenticated": {{ request.user.is_authenticated|yesno:"true,false" }},
       "userId": {% if request.user.is_authenticated and request.user.user_id %}{{ request.user.user_id }}{% else %}null{% endif %},
       "username": "{{ request.user.username|default:''|escapejs }}",
-      "isStore": {% if request.user.is_authenticated and request.user.store %}true{% else %}false{% endif %}
+      "isStore": {% if request.user.is_authenticated and request.user.store %}true{% else %}false{% endif %},
+      "isStaff": {% if request.user.is_authenticated and request.user.is_staff %}true{% else %}false{% endif %}
     }
   </script>
 
@@ -348,6 +349,9 @@
                 <a href="{% url 'my_account' %}#tab-info" class="menu-item"><i class="fas fa-user"></i> الملف الشخصي</a>
                 <a href="{% url 'my_account' %}#tab-ads" class="menu-item"><i class="fas fa-bullhorn"></i> إعلاناتي</a>
                 <a href="{% url 'my_account' %}#tab-requests" class="menu-item"><i class="fas fa-shopping-cart"></i> طلباتي</a>
+                {% if not request.user.store %}
+                <a href="{% url 'report_list' %}?tab=mine" class="menu-item"><i class="fas fa-flag"></i> بلاغاتي</a>
+                {% endif %}
                 <a href="{% url 'my_account' %}#tab-wallet" class="menu-item"><i class="fas fa-wallet"></i> المحفظة</a>
                 <a id="inviteFriendsLink"
                    href="#"

@@ -1995,6 +1995,8 @@ function init(){
   recomputeMatchesCount();
   bindEvents();
   bindLiveValidation();
+  const urlTab = new URLSearchParams(window.location.search).get("tab");
+  if(urlTab === "mine") state.view = "mine";
   setView(state.view);
   refresh();
   renderLucideOnce();
