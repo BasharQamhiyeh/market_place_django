@@ -590,6 +590,7 @@
         <div class="text-center mb-4">
           ${avatarHTML}
           <div class="font-bold">${userName}</div>
+          <div class="text-sm font-semibold text-orange-600 mt-1">رصيد المحفظة : ${r.points || 0} نقطة</div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           ${accountItemHTML("user", "الملف الشخصي", "/my-account/#tab-info")}
